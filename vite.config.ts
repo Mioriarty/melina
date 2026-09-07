@@ -5,8 +5,14 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// GitHub Pages serves a project site from a subdirectory, so the production
+// build is rooted at /melina/. Dev and tests stay at / — the deploy workflow
+// can override this for a fork or a user-page (`/`) deployment.
+const BASE = process.env.VITE_BASE_PATH ?? '/melina/'
+
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  base: command === 'build' ? BASE : '/',
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
@@ -28,8 +34,8 @@ export default defineConfig({
         background_color: '#fcfcfa',
         display: 'standalone',
         orientation: 'any',
-        start_url: '/',
-        scope: '/',
+        // start_url and scope are deliberately absent: the plugin fills them
+        // from Vite's base, so they follow the subdirectory automatically.
         icons: [
           { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },
@@ -47,8 +53,10 @@ export default defineConfig({
         // Verovio is ~7 MB of wasm embedded in JavaScript. Precaching it
         // would mean every visitor downloads an engraver before seeing the
         // homescreen, so it is excluded here and cached on first use by the
-        // runtime rule below instead.
-        globIgnores: ['**/verovio-*.js'],
+        // runtime rule below instead. 404.html is a byte-for-byte copy of
+        // index.html for GitHub Pages' deep-link fallback; precaching it
+        // would only duplicate the shell.
+        globIgnores: ['**/verovio-*.js', '**/404.html'],
         maximumFileSizeToCacheInBytes: 2 * 1024 * 1024,
         runtimeCaching: [
           {
@@ -80,4 +88,4 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     restoreMocks: true,
   },
-})
+}))

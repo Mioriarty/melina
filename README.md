@@ -30,13 +30,29 @@ yet — they show as _Coming soon_. **Interval Hearing** is next.
 |                     |                                                  |
 | ------------------- | ------------------------------------------------ |
 | `npm run dev`       | dev server                                       |
-| `npm run build`     | typecheck + production build                     |
+| `npm run build`     | typecheck + production build + SPA fallback      |
 | `npm run preview`   | serve the production build                       |
 | `npm run typecheck` | `tsc -b`                                         |
 | `npm run lint`      | oxlint                                           |
 | `npm run format`    | Prettier, including Tailwind class ordering      |
 | `npm test`          | Vitest                                           |
 | `npm run icons`     | regenerate the PWA icons from `scripts/mark.mjs` |
+
+## Deployment
+
+Pushing to `main` builds the app and publishes it to GitHub Pages at
+<https://mioriarty.github.io/melina/> — see
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). Enable it once
+under **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+
+Two things follow from living in a subdirectory rather than at a domain root:
+
+- The production build sets Vite's `base` to `/melina/`, and the router takes
+  its basename from `import.meta.env.BASE_URL`. Dev and tests stay at `/`.
+  Override with `VITE_BASE_PATH` for a fork or a user-page deployment.
+- GitHub Pages has no SPA rewrite, so `scripts/spa-fallback.mjs` copies
+  `index.html` to `404.html` after the build. A deep link then boots the app
+  and React Router resolves the route.
 
 ## Stack
 

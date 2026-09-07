@@ -136,6 +136,25 @@ Parallax is driven by a single `--scroll` custom property that `PathView`
 publishes once per animation frame; the decoration layer reads it in CSS. Never
 re-render React on scroll.
 
+## Deployment
+
+GitHub Pages, from `.github/workflows/deploy.yml` on every push to `main`. The
+site is a **project page**, so it is served from `/melina/`, not from a domain
+root, and two things depend on that:
+
+- `base` is `/melina/` for `vite build` only — dev and Vitest stay at `/`, which
+  is why route assertions in tests can keep using bare `/train/...` paths. The
+  router's basename comes from `import.meta.env.BASE_URL`, never from a
+  hardcoded string. `VITE_BASE_PATH` overrides it.
+- Pages serves `404.html` for any path with no file behind it, so
+  `scripts/spa-fallback.mjs` copies `index.html` there after the build. Without
+  it, every deep link and every refresh inside an exercise is a dead end on the
+  first visit — the service worker's `navigateFallback` only covers later ones.
+
+The PWA manifest deliberately omits `start_url` and `scope`; vite-plugin-pwa
+fills both from `base`. Hardcoding `/` there installed an app that opened on a
+blank page.
+
 ## Accessibility
 
 - Every interactive element is keyboard-reachable, and focus is always visible.
