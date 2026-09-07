@@ -10,11 +10,27 @@ import {
   parseIntervalKey,
   type Interval,
 } from '@/lib/music/interval'
-import { chromaticValue, pitchKey } from '@/lib/music/pitch'
+import { chromaticValue, parsePitch, pitchKey } from '@/lib/music/pitch'
 import { createRandom } from '@/lib/utils/seededRandom'
 
-import { allowedIntervals, buildQuestion, dealIntervals, generateRound } from './generate'
-import { DEFAULT_SETTINGS, type IntervalReadingSettings } from './settings'
+import {
+  allowedIntervals,
+  buildQuestion,
+  dealIntervals,
+  firstNote,
+  generateRound,
+  playOrder,
+  secondNote,
+  type RoundSpec,
+} from './generate'
+
+const DEFAULT_SETTINGS: RoundSpec = {
+  clefs: ['treble', 'bass'],
+  keySignatures: ['0'],
+  intervals: [...DEFAULT_INTERVAL_KEYS],
+  directions: ['harmonic'],
+  questionsPerRound: 20,
+}
 
 const SEEDS = Array.from({ length: 40 }, (_, i) => 1000 + i * 7919)
 
@@ -123,10 +139,11 @@ describe('generateRound', () => {
   })
 
   it('only uses the allowed clefs, keys and intervals', () => {
-    const settings: IntervalReadingSettings = {
+    const settings: RoundSpec = {
       clefs: ['alto'],
       keySignatures: ['3f', '4s'],
       intervals: ['m3', 'P5', 'A4'],
+      directions: ['ascending', 'descending'],
       questionsPerRound: 20,
     }
 
@@ -177,10 +194,68 @@ describe('generateRound', () => {
     }
   })
 
+  it('only uses the allowed directions', () => {
+    for (const directions of [
+      ['harmonic'],
+      ['descending'],
+      ['ascending', 'harmonic'],
+    ] as const) {
+      const round = generateRound(createRandom(11), {
+        ...DEFAULT_SETTINGS,
+        directions: [...directions],
+      })
+      for (const question of round) {
+        expect(directions).toContain(question.direction)
+      }
+    }
+  })
+
   it('returns nothing when the settings allow nothing', () => {
     expect(
       generateRound(createRandom(1), { ...DEFAULT_SETTINGS, intervals: [] }),
     ).toEqual([])
     expect(generateRound(createRandom(1), { ...DEFAULT_SETTINGS, clefs: [] })).toEqual([])
+    expect(
+      generateRound(createRandom(1), { ...DEFAULT_SETTINGS, directions: [] }),
+    ).toEqual([])
+  })
+})
+
+describe('note order', () => {
+  const question = {
+    lower: parsePitch('C4')!,
+    upper: parsePitch('E4')!,
+    interval: parseIntervalKey('M3')!,
+    clef: 'treble' as const,
+    keySignature: '0' as const,
+    direction: 'ascending' as const,
+  }
+
+  it('shows the lower note first when playing up or together', () => {
+    for (const direction of ['ascending', 'harmonic'] as const) {
+      const q = { ...question, direction }
+      expect(pitchKey(firstNote(q))).toBe('C4')
+      expect(pitchKey(secondNote(q))).toBe('E4')
+    }
+  })
+
+  it('shows the upper note first when playing down', () => {
+    // The note heard first is the note shown first.
+    const q = { ...question, direction: 'descending' as const }
+    expect(pitchKey(firstNote(q))).toBe('E4')
+    expect(pitchKey(secondNote(q))).toBe('C4')
+  })
+
+  it('plays melodic intervals in the order they are shown', () => {
+    const up = playOrder({ ...question, direction: 'ascending' }).map(pitchKey)
+    expect(up).toEqual(['C4', 'E4'])
+
+    const down = playOrder({ ...question, direction: 'descending' }).map(pitchKey)
+    expect(down).toEqual(['E4', 'C4'])
+  })
+
+  it('plays a harmonic interval low note first, for a stable arpeggiation', () => {
+    const together = playOrder({ ...question, direction: 'harmonic' }).map(pitchKey)
+    expect(together).toEqual(['C4', 'E4'])
   })
 })

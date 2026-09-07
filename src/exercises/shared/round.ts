@@ -1,9 +1,9 @@
 import type { Interval } from '@/lib/music/interval'
 
-import type { Question } from './generate'
+import type { IntervalQuestion } from './generate'
 
 export interface Answered {
-  question: Question
+  question: IntervalQuestion
   chosen: Interval
   correct: boolean
   /** Time from the question appearing to the answer, in milliseconds. */
@@ -18,8 +18,6 @@ export type Phase =
   /** Answered; the keyboard shows the result. */
   | { name: 'revealed'; index: number; answer: Answered }
   | { name: 'summary' }
-
-export const EXERCISE_ID = 'intervals/reading'
 
 /** How long a correct answer stays on screen before the next question. */
 export const CORRECT_DELAY_MS = 750

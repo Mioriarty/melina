@@ -14,6 +14,11 @@ export type Status = 'ready' | 'planned'
 export interface ExerciseDef {
   id: string
   title: string
+  /**
+   * Label for tight spaces, where the category name is already on screen.
+   * Falls back to `title`.
+   */
+  short?: string
   blurb: string
   status: Status
 }
@@ -38,18 +43,21 @@ export const CATEGORIES: readonly CategoryDef[] = [
     exercises: [
       {
         id: 'hearing',
+        short: 'Hearing',
         title: 'Interval Hearing',
         blurb: 'Identify an interval played melodically or harmonically.',
-        status: 'planned',
+        status: 'ready',
       },
       {
         id: 'reading',
+        short: 'Reading',
         title: 'Interval Reading',
         blurb: 'Name the interval you see on the staff.',
         status: 'ready',
       },
       {
         id: 'singing',
+        short: 'Singing',
         title: 'Interval Singing',
         blurb: 'Sing the target interval from a given root.',
         status: 'planned',
@@ -239,14 +247,20 @@ export function getExercise(
  * planned, so linking to `exercises[0]` dead-ends on a placeholder and leaves
  * the built exercise unreachable.
  *
- * Once a category has more than one built exercise this needs to become a
- * choice rather than a guess.
+ * This is only the landing point. Once a category has more than one built
+ * exercise the others are reached from the setup screen's switcher, so
+ * nothing becomes unreachable.
  */
 export function categoryPath(category: CategoryDef): string {
   const target =
     category.exercises.find((exercise) => exercise.status === 'ready') ??
     category.exercises[0]
   return target === undefined ? '/' : `/train/${category.id}/${target.id}`
+}
+
+/** The exercises in a category that are actually built. */
+export function readyExercises(category: CategoryDef): readonly ExerciseDef[] {
+  return category.exercises.filter((exercise) => exercise.status === 'ready')
 }
 
 export function exercisePath(categoryId: string, exerciseId: string): string {

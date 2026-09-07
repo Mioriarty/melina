@@ -22,6 +22,13 @@ export interface IntervalReadingSettings {
   questionsPerRound: number
 }
 
+/**
+ * Reading always engraves the two notes as a chord — there is nothing to
+ * hear, so there is no order to choose. The shared generator still wants a
+ * direction, and this is it.
+ */
+export const READING_DIRECTIONS = ['harmonic'] as const
+
 export const ROUND_LENGTHS = [10, 20, 30] as const
 
 export const DEFAULT_SETTINGS: IntervalReadingSettings = {

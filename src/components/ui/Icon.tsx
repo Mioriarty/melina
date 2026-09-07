@@ -27,6 +27,7 @@ import {
   IoSwapVerticalOutline,
   IoTrendingUpOutline,
   IoTrophyOutline,
+  IoVolumeHighOutline,
 } from 'react-icons/io5'
 
 /**
@@ -63,6 +64,7 @@ const ICONS = {
   swapVertical: IoSwapVerticalOutline,
   trendingUp: IoTrendingUpOutline,
   trophy: IoTrophyOutline,
+  volume: IoVolumeHighOutline,
   wrong: IoCloseCircle,
 } as const
 

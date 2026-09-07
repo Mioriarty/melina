@@ -57,14 +57,15 @@ Two things follow from living in a subdirectory rather than at a domain root:
 ## Stack
 
 React 19 · TypeScript (strict) · Tailwind v4 · Vite 8 · react-router · Dexie
-(IndexedDB) · Verovio (notation, Leland font) · Ionicons via react-icons ·
-vite-plugin-pwa
+(IndexedDB) · Verovio (notation, Leland font) · smplr (sampled instruments) ·
+Ionicons via react-icons · vite-plugin-pwa
 
 The interval theory is implemented from scratch in `src/lib/music/` rather than
 taken from a library: intervals are modelled by spelling, so a diminished second
 and a perfect unison are different things.
 
-Sampled-instrument playback arrives with Interval Hearing.
+Verovio and the instrument samples are both loaded on demand and cached at
+runtime, so the initial download stays around 585 KiB.
 
 ## Contributing
 

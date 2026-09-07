@@ -1,6 +1,7 @@
 import {
   intervalKey,
   isValidInterval,
+  parseIntervalKey,
   type Interval,
   type IntervalQuality,
 } from './interval'
@@ -79,4 +80,49 @@ export const CATALOG_KEYS: readonly string[] = CATALOG.map(intervalKey)
 /** Catalog entries for a keyboard row, already in column order. */
 export function catalogRow(number: number): readonly Interval[] {
   return CATALOG.filter((interval) => interval.number === number)
+}
+
+/**
+ * The intervals a *hearing* exercise may ask.
+ *
+ * The ear can only tell apart what actually sounds different, and spelling is
+ * inaudible. An augmented second and a minor third are both three semitones;
+ * a diminished second and a perfect unison are both zero; an augmented fourth
+ * and a diminished fifth are both six. Offering both spellings of the same
+ * sound would make the question unanswerable however well you listen, so
+ * hearing offers **exactly one interval per semitone count** — the plain
+ * spelling wherever one exists.
+ *
+ * Six semitones is the one gap: there is no perfect, major or minor fourth or
+ * fifth of that size, so the tritone is represented by the augmented fourth
+ * and the diminished fifth is left out. That keeps the tritone available
+ * without ever asking which of its two names you heard.
+ *
+ * Reading is unaffected — there the spelling is on the page to be read.
+ */
+export const HEARABLE_INTERVAL_KEYS: readonly string[] = [
+  'P1',
+  'm2',
+  'M2',
+  'm3',
+  'M3',
+  'P4',
+  'A4',
+  'P5',
+  'm6',
+  'M6',
+  'm7',
+  'M7',
+  'P8',
+]
+
+export const HEARABLE_CATALOG: readonly Interval[] = HEARABLE_INTERVAL_KEYS.map((key) => {
+  const interval = parseIntervalKey(key)
+  if (interval === undefined) throw new Error(`invalid hearable interval: ${key}`)
+  return interval
+})
+
+/** Whether a given interval can be told apart by ear from the rest of the set. */
+export function isHearable(interval: Interval): boolean {
+  return HEARABLE_INTERVAL_KEYS.includes(intervalKey(interval))
 }

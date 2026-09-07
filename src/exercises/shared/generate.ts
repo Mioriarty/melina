@@ -1,10 +1,6 @@
 import { getClef, type ClefId } from '@/lib/music/clef'
-import {
-  intervalKey,
-  parseIntervalKey,
-  transpose,
-  type Interval,
-} from '@/lib/music/interval'
+import { isMelodic, leadingNote, type PlayDirection } from '@/lib/music/direction'
+import { parseIntervalKey, transpose, type Interval } from '@/lib/music/interval'
 import { alterationInKey, type KeySignatureId } from '@/lib/music/keySignature'
 import {
   LETTERS,
@@ -17,14 +13,33 @@ import {
 } from '@/lib/music/pitch'
 import { randomPick, type Random } from '@/lib/utils/seededRandom'
 
-import type { IntervalReadingSettings } from './settings'
+/**
+ * Question generation, shared by every interval exercise.
+ *
+ * Reading and hearing ask the same thing of the generator — two correctly
+ * spelled pitches forming a given interval, inside a clef's comfortable
+ * range — and differ only in whether the notes are sounded together or one
+ * after the other. Keeping one generator means a spelling bug can only exist
+ * in one place.
+ */
 
-export interface Question {
+export interface IntervalQuestion {
   lower: Pitch
   upper: Pitch
   interval: Interval
   clef: ClefId
   keySignature: KeySignatureId
+  direction: PlayDirection
+}
+
+/** What a round may draw on. Both exercises' settings satisfy this. */
+export interface RoundSpec {
+  clefs: readonly ClefId[]
+  keySignatures: readonly KeySignatureId[]
+  /** Interval keys, e.g. `P5`. */
+  intervals: readonly string[]
+  directions: readonly PlayDirection[]
+  questionsPerRound: number
 }
 
 /** How often the root simply takes the accidental the key signature implies. */
@@ -78,9 +93,9 @@ export function dealIntervals(
   return deck.slice(0, count)
 }
 
-/** The intervals a settings object actually permits, as parsed objects. */
-export function allowedIntervals(settings: IntervalReadingSettings): readonly Interval[] {
-  return settings.intervals
+/** The intervals a spec actually permits, as parsed objects. */
+export function allowedIntervals(spec: RoundSpec): readonly Interval[] {
+  return spec.intervals
     .map(parseIntervalKey)
     .filter((interval): interval is Interval => interval !== undefined)
 }
@@ -105,7 +120,8 @@ export function buildQuestion(
   interval: Interval,
   clefId: ClefId,
   keySignature: KeySignatureId,
-): Question | undefined {
+  direction: PlayDirection = 'harmonic',
+): IntervalQuestion | undefined {
   const clef = getClef(clefId)
   const lowestStep = diatonicValue(clef.lowest)
   const highestStep = diatonicValue(clef.highest)
@@ -138,7 +154,7 @@ export function buildQuestion(
       continue
     }
 
-    return { lower, upper, interval, clef: clefId, keySignature }
+    return { lower, upper, interval, clef: clefId, keySignature, direction }
   }
 
   return undefined
@@ -151,27 +167,30 @@ export function buildQuestion(
  * intervals be dealt evenly, and means a round can never stall halfway
  * through because one interval will not fit the chosen clef.
  */
-export function generateRound(
-  random: Random,
-  settings: IntervalReadingSettings,
-): Question[] {
-  const allowed = allowedIntervals(settings)
-  if (allowed.length === 0 || settings.clefs.length === 0) return []
+export function generateRound(random: Random, spec: RoundSpec): IntervalQuestion[] {
+  const allowed = allowedIntervals(spec)
+  if (allowed.length === 0 || spec.clefs.length === 0 || spec.directions.length === 0) {
+    return []
+  }
 
-  const dealt = dealIntervals(random, allowed, settings.questionsPerRound)
-  const questions: Question[] = []
+  const dealt = dealIntervals(random, allowed, spec.questionsPerRound)
+  const questions: IntervalQuestion[] = []
 
   for (const interval of dealt) {
     // A given interval may not fit every clef, so try a few pairings before
     // giving up on it rather than dropping the question.
-    let question: Question | undefined
+    let question: IntervalQuestion | undefined
     for (let attempt = 0; attempt < 8 && question === undefined; attempt += 1) {
-      const clef = randomPick(random, settings.clefs as [ClefId, ...ClefId[]])
+      const clef = randomPick(random, spec.clefs as [ClefId, ...ClefId[]])
       const keySignature = randomPick(
         random,
-        settings.keySignatures as [KeySignatureId, ...KeySignatureId[]],
+        spec.keySignatures as [KeySignatureId, ...KeySignatureId[]],
       )
-      question = buildQuestion(random, interval, clef, keySignature)
+      const direction = randomPick(
+        random,
+        spec.directions as [PlayDirection, ...PlayDirection[]],
+      )
+      question = buildQuestion(random, interval, clef, keySignature, direction)
     }
     if (question !== undefined) questions.push(question)
   }
@@ -179,6 +198,19 @@ export function generateRound(
   return questions
 }
 
-export function questionKey(question: Question): string {
-  return intervalKey(question.interval)
+/** The note sounded and shown first, given the question's direction. */
+export function firstNote(question: IntervalQuestion): Pitch {
+  return leadingNote(question.direction) === 'upper' ? question.upper : question.lower
+}
+
+/** The note that only appears once the answer is in. */
+export function secondNote(question: IntervalQuestion): Pitch {
+  return leadingNote(question.direction) === 'upper' ? question.lower : question.upper
+}
+
+/** The pair in the order they are heard. */
+export function playOrder(question: IntervalQuestion): readonly [Pitch, Pitch] {
+  return isMelodic(question.direction)
+    ? [firstNote(question), secondNote(question)]
+    : [question.lower, question.upper]
 }

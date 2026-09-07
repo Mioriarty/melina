@@ -90,9 +90,10 @@ describe('App', () => {
 
   it('hides the app header inside an exercise', async () => {
     // Exercises fill the screen and carry their own navigation, so the shell
-    // chrome would only be taking up room. Uses the placeholder route, which
-    // renders synchronously rather than pulling in the notation engraver.
-    window.history.pushState({}, '', '/train/intervals/hearing')
+    // chrome would only be taking up room. Uses an exercise that is still
+    // planned, so this renders the placeholder synchronously rather than
+    // lazily pulling in the engraver and the sampler.
+    window.history.pushState({}, '', '/train/intervals/singing')
     try {
       render(<App />)
       expect(await screen.findByRole('link', { name: /back to the path/i })).toBeTruthy()

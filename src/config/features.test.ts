@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { CATEGORIES, categoryPath } from './curriculum'
+import { CATEGORIES, categoryPath, readyExercises } from './curriculum'
 import { FEATURES } from './features'
 
 describe('feature flags', () => {
@@ -42,6 +42,26 @@ describe('curriculum', () => {
         category.exercises.length,
         `${category.id} has no exercises`,
       ).toBeGreaterThan(0)
+    }
+  })
+
+  it('keeps at least one unbuilt exercise, which the shell tests rely on', () => {
+    // App.test.tsx renders a planned exercise to check the header is hidden
+    // without lazily pulling in the engraver and the sampler. If everything
+    // ships, that test needs a different approach rather than a silent pass.
+    const planned = CATEGORIES.flatMap((category) =>
+      category.exercises.filter((exercise) => exercise.status !== 'ready'),
+    )
+    expect(planned.length).toBeGreaterThan(0)
+  })
+
+  it('gives every built exercise a short label for tight spaces', () => {
+    for (const category of CATEGORIES) {
+      for (const exercise of readyExercises(category)) {
+        // The switcher shows siblings side by side, where the full title
+        // repeats the category name in every pill.
+        expect(exercise.short, `${exercise.title} needs a short label`).toBeTruthy()
+      }
     }
   })
 

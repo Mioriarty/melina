@@ -3,34 +3,34 @@ import { Link } from 'react-router'
 
 import { Icon } from '@/components/ui/Icon'
 import { ExerciseSwitcher } from '@/exercises/shared/ExerciseSwitcher'
-import { CATALOG, QUALITY_ORDER } from '@/lib/music/catalog'
+import { INSTRUMENTS } from '@/lib/audio/instruments'
+import { HEARABLE_CATALOG, QUALITY_ORDER } from '@/lib/music/catalog'
 import { CLEFS } from '@/lib/music/clef'
+import { PLAY_DIRECTIONS } from '@/lib/music/direction'
 import { intervalKey, intervalName, numberName, qualityLabel } from '@/lib/music/interval'
 import { KEY_SIGNATURES } from '@/lib/music/keySignature'
 import { cn } from '@/lib/utils/cn'
 
-import { ROUND_LENGTHS, type IntervalReadingSettings } from './settings'
+import { ROUND_LENGTHS, type IntervalHearingSettings } from './settings'
 
 export interface SetupScreenProps {
-  settings: IntervalReadingSettings
-  onChange: (settings: IntervalReadingSettings) => void
+  settings: IntervalHearingSettings
+  onChange: (settings: IntervalHearingSettings) => void
   onStart: () => void
 }
 
 /**
  * What to practise, before a round starts.
  *
- * A screen rather than a modal: choosing the material is part of deciding
- * what to work on, not an aside from it, and it keeps the round itself free
- * of chrome. Owns its own scrolling, because the app shell deliberately does
- * not scroll, and carries its own link back to the path, because exercises
- * run without the header.
+ * The same shape as the reading setup, plus the two things only a hearing
+ * exercise needs: which instrument plays the notes, and whether an interval
+ * may be sounded upwards, downwards or all at once.
  */
 export function SetupScreen({ settings, onChange, onStart }: SetupScreenProps) {
   /** Toggle a value in one of the list settings, never emptying it. */
-  function toggle<K extends 'clefs' | 'keySignatures' | 'intervals'>(
+  function toggle<K extends 'clefs' | 'keySignatures' | 'intervals' | 'directions'>(
     field: K,
-    value: IntervalReadingSettings[K][number],
+    value: IntervalHearingSettings[K][number],
   ) {
     const current = settings[field] as readonly string[]
     const next = current.includes(value as string)
@@ -42,7 +42,9 @@ export function SetupScreen({ settings, onChange, onStart }: SetupScreenProps) {
     onChange({ ...settings, [field]: next })
   }
 
-  const intervalNumbers = [...new Set(CATALOG.map((interval) => interval.number))]
+  const intervalNumbers = [
+    ...new Set(HEARABLE_CATALOG.map((interval) => interval.number)),
+  ]
 
   return (
     <div className="h-full overflow-y-auto overscroll-contain">
@@ -59,13 +61,47 @@ export function SetupScreen({ settings, onChange, onStart }: SetupScreenProps) {
           <p className="text-sm tracking-wide text-ink-faint uppercase">
             Interval Training
           </p>
-          <h1 className="mt-1 text-title">Interval Reading</h1>
+          <h1 className="mt-1 text-title">Interval Hearing</h1>
           <p className="mt-2 leading-relaxed text-ink-muted">
-            Name the interval on the staff. Choose what you want to be asked.
+            Name the interval you hear. One note is shown; the other appears with the
+            answer.
           </p>
 
-          <ExerciseSwitcher categoryId="intervals" current="reading" />
+          <ExerciseSwitcher categoryId="intervals" current="hearing" />
         </header>
+
+        <Section title="Instrument">
+          <div className="flex flex-wrap gap-2">
+            {INSTRUMENTS.map((instrument) => (
+              <Chip
+                key={instrument.id}
+                selected={settings.instrument === instrument.id}
+                onClick={() => onChange({ ...settings, instrument: instrument.id })}
+                label={`${instrument.label}. ${instrument.hint}`}
+              >
+                {instrument.label}
+              </Chip>
+            ))}
+          </div>
+        </Section>
+
+        <Section
+          title="How it is played"
+          hint="Ascending and simultaneous intervals show their lower note first; descending ones show the upper note."
+        >
+          <div className="flex flex-wrap gap-2">
+            {PLAY_DIRECTIONS.map((direction) => (
+              <Chip
+                key={direction.id}
+                selected={settings.directions.includes(direction.id)}
+                onClick={() => toggle('directions', direction.id)}
+                label={`${direction.label}. ${direction.hint}`}
+              >
+                {direction.label}
+              </Chip>
+            ))}
+          </div>
+        </Section>
 
         <Section title="Clefs">
           <div className="flex flex-wrap gap-2">
@@ -100,7 +136,10 @@ export function SetupScreen({ settings, onChange, onStart }: SetupScreenProps) {
           </div>
         </Section>
 
-        <Section title="Intervals">
+        <Section
+          title="Intervals"
+          hint="Only intervals that sound different from one another. An augmented second is a minor third to the ear, so the ambiguous spellings are left to Interval Reading."
+        >
           <div className="grid gap-1.5">
             {intervalNumbers.map((number) => (
               <div key={number} className="flex flex-wrap items-center gap-2">
@@ -108,7 +147,9 @@ export function SetupScreen({ settings, onChange, onStart }: SetupScreenProps) {
                   {numberName(number)}
                 </span>
                 {QUALITY_ORDER.filter((quality) =>
-                  CATALOG.some((i) => i.number === number && i.quality === quality),
+                  HEARABLE_CATALOG.some(
+                    (i) => i.number === number && i.quality === quality,
+                  ),
                 ).map((quality) => {
                   const key = intervalKey({ number, quality })
                   return (

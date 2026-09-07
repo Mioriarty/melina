@@ -68,6 +68,21 @@ export default defineConfig(({ command }) => ({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
+          {
+            // Instrument samples, streamed by smplr. Cached on first use so
+            // an instrument you have practised with still plays offline.
+            // Never precached: the piano alone is tens of megabytes, and
+            // which instrument you use is your choice, not the installer's.
+            urlPattern: ({ url }) =>
+              url.origin === 'https://smpldsnds.github.io' ||
+              url.origin === 'https://gleitz.github.io',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'melina-samples',
+              expiration: { maxEntries: 600, maxAgeSeconds: 60 * 60 * 24 * 180 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
         ],
       },
     }),

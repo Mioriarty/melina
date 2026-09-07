@@ -48,23 +48,19 @@ export function accidentalAttributes(value: Pitch, keySignature: KeySignatureId)
   return value.alteration === implied ? ` accid.ges="${name}"` : ` accid="${name}"`
 }
 
-function noteElement(value: Pitch, keySignature: KeySignatureId): string {
+function noteElement(value: Pitch, keySignature: KeySignatureId, duration = ''): string {
   const pname = value.letter.toLowerCase()
-  return `<note pname="${pname}" oct="${value.octave}"${accidentalAttributes(value, keySignature)}/>`
+  const dur = duration === '' ? '' : ` ${duration}`
+  return `<note pname="${pname}" oct="${value.octave}"${dur}${accidentalAttributes(value, keySignature)}/>`
 }
 
 /**
- * One measure, one staff, two notes stacked as a chord.
+ * The document around a single measure of content.
  *
- * `@right="invis"` hides the barline so the example reads as a fragment
- * rather than as a one-bar piece.
+ * `@right="invis"` hides the closing barline so the example reads as a
+ * fragment rather than as a one-bar piece.
  */
-export function harmonicIntervalMei({
-  lower,
-  upper,
-  clef,
-  keySignature,
-}: HarmonicIntervalOptions): string {
+function document(clef: ClefId, keySignature: KeySignatureId, layer: string): string {
   const { sign, line } = getClef(clef)
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -88,10 +84,7 @@ export function harmonicIntervalMei({
             <measure n="1" right="invis">
               <staff n="1">
                 <layer n="1">
-                  <chord dur="1">
-                    ${noteElement(lower, keySignature)}
-                    ${noteElement(upper, keySignature)}
-                  </chord>
+                  ${layer}
                 </layer>
               </staff>
             </measure>
@@ -101,4 +94,65 @@ export function harmonicIntervalMei({
     </body>
   </music>
 </mei>`
+}
+
+/** Two notes stacked as a chord — a harmonic interval. */
+export function harmonicIntervalMei({
+  lower,
+  upper,
+  clef,
+  keySignature,
+}: HarmonicIntervalOptions): string {
+  return document(
+    clef,
+    keySignature,
+    `<chord dur="1">
+                    ${noteElement(lower, keySignature)}
+                    ${noteElement(upper, keySignature)}
+                  </chord>`,
+  )
+}
+
+export interface SingleNoteOptions {
+  pitch: Pitch
+  clef: ClefId
+  keySignature: KeySignatureId
+}
+
+/**
+ * One note alone.
+ *
+ * Used by the hearing exercise, which shows the note it starts from and only
+ * reveals its partner once the answer is in.
+ */
+export function singleNoteMei({ pitch, clef, keySignature }: SingleNoteOptions): string {
+  return document(clef, keySignature, noteElement(pitch, keySignature, 'dur="1"'))
+}
+
+export interface MelodicIntervalOptions {
+  /** In the order they are heard, which is also the order they are drawn. */
+  first: Pitch
+  second: Pitch
+  clef: ClefId
+  keySignature: KeySignatureId
+}
+
+/**
+ * Two notes side by side — a melodic interval.
+ *
+ * Drawn in the order they sound, so a descending interval reads downwards
+ * across the staff exactly as it was played.
+ */
+export function melodicIntervalMei({
+  first,
+  second,
+  clef,
+  keySignature,
+}: MelodicIntervalOptions): string {
+  return document(
+    clef,
+    keySignature,
+    `${noteElement(first, keySignature, 'dur="2"')}
+                  ${noteElement(second, keySignature, 'dur="2"')}`,
+  )
 }

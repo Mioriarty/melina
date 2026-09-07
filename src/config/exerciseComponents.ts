@@ -11,6 +11,9 @@ import { lazy, type ComponentType, type LazyExoticComponent } from 'react'
 type ExerciseComponent = LazyExoticComponent<ComponentType>
 
 const EXERCISE_COMPONENTS: Record<string, ExerciseComponent> = {
+  'intervals/hearing': lazy(
+    () => import('@/exercises/interval-hearing/IntervalHearingExercise'),
+  ),
   'intervals/reading': lazy(
     () => import('@/exercises/interval-reading/IntervalReadingExercise'),
   ),

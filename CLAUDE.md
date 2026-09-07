@@ -31,6 +31,7 @@ Four config files, deliberately separate:
 - `config/musicMarks.ts` — decorative notation geometry
 - `config/features.ts` — _what is switched on_ (feature flags)
 - `config/exerciseComponents.ts` — which exercises have a real implementation
+- `lib/audio/instruments.ts` — the instruments notes can be played with
 
 An exercise lives in `src/exercises/<name>/` and is reached through
 `exerciseComponents.ts`; anything absent falls back to the placeholder page, so a
@@ -225,7 +226,53 @@ The question generator anchors a note's accidental to the key signature ~78% of 
 time. Picking uniformly at random is what produced F♭ in D major and A♯♯ in C major
 — valid spellings that no one would ever write.
 
+## Audio — `src/lib/audio/`
+
+Sampled, not synthesised: ear training is about timbre as much as pitch, and a
+sine wave teaches you to recognise a sine wave. `smplr` streams a Steinway
+(`SplendidGrandPiano`) and an orchestral harp (`Soundfont`, MusyngKite kit).
+
+Two rules the browser imposes, both easy to get wrong:
+
+- **An AudioContext must be created and resumed inside a user gesture.** That
+  gesture is the "Start round" tap, which calls `unlockAudio()`. Do this in the
+  handler itself, not in an effect afterwards.
+- A context can be **suspended again** whenever a tab is backgrounded, so
+  `playInterval` resumes defensively before every note.
+
+Sample requests are cached at runtime (`melina-samples`), never precached — the
+piano alone is tens of megabytes, and which instrument you practise with is your
+choice, not the installer's. `smplr` itself is a small lazy chunk and _is_
+precached, so only the samples need the network.
+
+The instrument type is imported from smplr rather than declared by hand, so an
+upstream API change is a type error. Declaring it structurally hid the fact that
+`output.setVolume` had been deprecated in favour of `output.volume`.
+
+## Exercises — `src/exercises/`
+
+`shared/` holds everything both interval exercises use: the generator, the
+setup → round → summary state machine (`useIntervalRound`), the in-round screen,
+and the summary. Reading and hearing differ only in what notation they show and
+whether there is a play button beside it, so anything else belongs in `shared/`.
+
+**Hearing offers only intervals that sound different from one another** —
+`HEARABLE_INTERVAL_KEYS` in `lib/music/catalog.ts`. Spelling is inaudible: an
+augmented second _is_ a minor third to the ear, a diminished second _is_ a
+perfect unison. Offering both names for one sound makes a question unanswerable
+however well you listen, so the set holds exactly one interval per semitone
+count. Six semitones has no plain spelling, so the tritone is the augmented
+fourth and the diminished fifth is dropped. `catalog.test.ts` enforces the
+uniqueness property rather than the list, so a well-meant addition fails loudly.
+Reading is unaffected — there the spelling is on the page to be read.
+
+`PlayDirection` (`harmonic | ascending | descending`) decides three things at
+once: how the interval is played, how it is engraved, and **which note is on
+screen before the answer**. The note heard first is the note shown first, so a
+descending interval reveals its upper note and everything else its lower one —
+that rule lives in `leadingNote()` and nowhere else.
+
 ## Not yet built
 
-Interval Hearing is next, and brings audio: `smplr` for sampled instruments. That
-needs its own offline-caching design, like Verovio got.
+Melodic dictation is next. Everything after Interval Training is still a
+placeholder page.
