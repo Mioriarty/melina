@@ -1,17 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
+import { exerciseTitleKey } from '@/config/curriculum'
 import { IntervalRoundScreen } from '@/exercises/shared/IntervalRoundScreen'
+import { LevelsScreen } from '@/exercises/shared/LevelsScreen'
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
 import { allowedIntervals, type RoundSpec } from '@/exercises/shared/generate'
 import { useIntervalRound } from '@/exercises/shared/useIntervalRound'
+import { useMusicNames } from '@/hooks/useMusicNames'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
-import { getClef } from '@/lib/music/clef'
-import { getKeySignature } from '@/lib/music/keySignature'
-import { pitchSpokenName } from '@/lib/music/pitch'
 import { harmonicIntervalMei } from '@/lib/notation/mei'
 import { preloadEngraver } from '@/lib/notation/verovio'
 
+import { READING_DIFFICULTIES } from './difficulties'
 import { SetupScreen } from './SetupScreen'
 import {
   INTERVAL_READING_SETTINGS,
@@ -28,6 +30,8 @@ const EXERCISE_ID = 'intervals/reading'
  * you can name what you see. Setup, then a fixed round, then a summary.
  */
 export default function IntervalReadingExercise() {
+  const { t } = useTranslation(['exercise', 'common'])
+  const names = useMusicNames()
   const stored = useSetting(INTERVAL_READING_SETTINGS)
   const writeSettings = useSettingWriter(INTERVAL_READING_SETTINGS)
   const reducedMotion = useReducedMotion()
@@ -56,8 +60,27 @@ export default function IntervalReadingExercise() {
   if (settings === undefined) {
     return (
       <div className="grid h-full place-items-center">
-        <p className="text-sm text-ink-faint">Loading…</p>
+        <p className="text-sm text-ink-faint">{t('common:loading')}</p>
       </div>
+    )
+  }
+
+  if (round.phase.name === 'levels') {
+    return (
+      <LevelsScreen
+        titleKey={exerciseTitleKey('intervals', 'reading')}
+        blurbKey="exercise:intervals.reading.levelsBlurb"
+        group="reading"
+        levels={READING_DIFFICULTIES}
+        onPick={(level) => {
+          // Persist the level so Custom opens where you just were, and start
+          // from the level itself rather than waiting for state to settle.
+          setDraft(level.settings)
+          writeSettings(level.settings)
+          round.start({ ...level.settings, directions: READING_DIRECTIONS })
+        }}
+        onCustom={round.toSetup}
+      />
     )
   }
 
@@ -69,7 +92,8 @@ export default function IntervalReadingExercise() {
           setDraft(next)
           writeSettings(next)
         }}
-        onStart={round.start}
+        onStart={() => round.start()}
+        onBack={round.toLevels}
       />
     )
   }
@@ -78,17 +102,14 @@ export default function IntervalReadingExercise() {
     return (
       <RoundSummary
         answers={round.answers}
-        onPlayAgain={round.start}
-        onChangeSettings={round.toSetup}
+        onPlayAgain={() => round.start()}
+        onChangeSettings={round.toLevels}
       />
     )
   }
 
   const question = round.questions[round.phase.index]
   if (question === undefined) return null
-
-  const clef = getClef(question.clef)
-  const signature = getKeySignature(question.keySignature)
 
   return (
     <IntervalRoundScreen
@@ -97,11 +118,16 @@ export default function IntervalReadingExercise() {
       questions={round.questions}
       options={options}
       mei={harmonicIntervalMei(question)}
-      scoreLabel={`${clef.label} clef, key signature of ${signature.major} major: ${pitchSpokenName(question.lower)} and ${pitchSpokenName(question.upper)}`}
+      scoreLabel={t('score.twoNotes', {
+        clef: names.clefSpoken(question.clef),
+        key: names.keyMajorName(question.keySignature),
+        first: names.pitchSpoken(question.lower),
+        second: names.pitchSpoken(question.upper),
+      })}
       reducedMotion={reducedMotion}
       onAnswer={round.answer}
       onNext={round.next}
-      onQuit={round.toSetup}
+      onQuit={round.toLevels}
     />
   )
 }

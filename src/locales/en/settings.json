@@ -1,0 +1,9 @@
+{
+  "title": "Settings",
+  "blurb": "Everything here stays on this device.",
+  "language": {
+    "title": "Language",
+    "hint": "Changes every label in the app, including the names of notes and keys.",
+    "label": "Interface language"
+  }
+}

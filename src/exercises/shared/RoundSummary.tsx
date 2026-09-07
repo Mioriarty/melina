@@ -1,8 +1,9 @@
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 
 import { Icon } from '@/components/ui/Icon'
-import { getClef } from '@/lib/music/clef'
-import { intervalKey, intervalName, type Interval } from '@/lib/music/interval'
+import { useMusicNames } from '@/hooks/useMusicNames'
+import { intervalKey, type Interval } from '@/lib/music/interval'
 import { cn } from '@/lib/utils/cn'
 
 import type { Answered } from './round'
@@ -26,6 +27,9 @@ export function RoundSummary({
   onPlayAgain,
   onChangeSettings,
 }: RoundSummaryProps) {
+  const { t } = useTranslation(['exercise', 'common'])
+  const names = useMusicNames()
+
   const correct = answers.filter((answer) => answer.correct).length
   const total = answers.length
   const accuracy = total === 0 ? 0 : Math.round((correct / total) * 100)
@@ -46,7 +50,7 @@ export function RoundSummary({
       answered: new Set<string>(),
     }
     entry.count += 1
-    entry.answered.add(intervalName(answer.chosen).toLowerCase())
+    entry.answered.add(names.interval(answer.chosen))
     misses.set(key, entry)
   }
 
@@ -55,7 +59,7 @@ export function RoundSummary({
   return (
     // Owns its scrolling: the app shell deliberately does not scroll.
     <div className="h-full overflow-y-auto overscroll-contain">
-      <div className="pb-safe mx-auto w-full max-w-lg px-4 py-8 sm:px-6">
+      <div className="pb-page mx-auto w-full max-w-lg px-4 pt-8 sm:px-6">
         <div className="text-center">
           <span
             className={cn(
@@ -66,7 +70,7 @@ export function RoundSummary({
             <Icon name={accuracy === 100 ? 'trophy' : 'checkmark'} size={30} />
           </span>
 
-          <h1 className="mt-5 text-title">Round complete</h1>
+          <h1 className="mt-5 text-title">{t('exercise:summary.title')}</h1>
           <p className="mt-2 text-ink-muted">
             <span className="tabular text-[1.75rem] font-semibold text-ink">
               {correct}
@@ -78,7 +82,7 @@ export function RoundSummary({
 
         {ranked.length > 0 && (
           <section className="mt-8 border-t border-rule pt-6">
-            <h2 className="text-heading">What to work on</h2>
+            <h2 className="text-heading">{t('exercise:summary.workOn')}</h2>
             <ul className="mt-3 grid gap-2">
               {ranked.map((entry) => (
                 <li
@@ -86,14 +90,16 @@ export function RoundSummary({
                   className="flex items-start gap-3 rounded-2xl border border-rule bg-paper-raised p-3"
                 >
                   <span className="tabular grid h-9 w-9 shrink-0 place-items-center rounded-full bg-wrong/10 text-[0.8125rem] font-semibold text-wrong">
-                    {entry.count}×
+                    {t('exercise:summary.missCount', { times: entry.count })}
                   </span>
                   <span className="min-w-0">
                     <span className="font-serif text-[1.0625rem] font-semibold">
-                      {intervalName(entry.interval)}
+                      {names.interval(entry.interval)}
                     </span>
                     <span className="mt-0.5 block text-sm leading-snug text-ink-muted">
-                      You answered {[...entry.answered].join(', ')}
+                      {t('exercise:summary.youAnswered', {
+                        answers: [...entry.answered].join(', '),
+                      })}
                     </span>
                   </span>
                 </li>
@@ -104,18 +110,20 @@ export function RoundSummary({
 
         {ranked.length === 0 && total > 0 && (
           <p className="mt-8 text-center leading-relaxed text-ink-muted">
-            Every one correct. Try adding a clef, a key signature, or the augmented and
-            diminished intervals.
+            {t('exercise:summary.allCorrect')}
           </p>
         )}
 
         <section className="mt-8 border-t border-rule pt-6">
-          <h2 className="mb-3 text-heading">This round</h2>
+          <h2 className="mb-3 text-heading">{t('exercise:summary.thisRound')}</h2>
           <ol className="flex flex-wrap gap-1.5">
             {answers.map((answer, index) => (
               <li
                 key={index}
-                title={`${intervalName(answer.question.interval)} · ${getClef(answer.question.clef).label}`}
+                title={t('exercise:summary.questionLabel', {
+                  interval: names.interval(answer.question.interval),
+                  clef: names.clef(answer.question.clef),
+                })}
                 className={cn(
                   'grid h-8 w-8 place-items-center rounded-lg text-[0.6875rem] font-semibold',
                   answer.correct
@@ -136,7 +144,7 @@ export function RoundSummary({
             className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-accent font-medium text-white transition-colors hover:bg-accent-hover active:bg-accent-press"
           >
             <Icon name="refresh" size={18} />
-            Practise again
+            {t('exercise:summary.playAgain')}
           </button>
           <button
             type="button"
@@ -144,7 +152,7 @@ export function RoundSummary({
             className="flex min-h-12 items-center justify-center gap-2 rounded-full border border-rule bg-paper-raised font-medium text-ink transition-colors hover:border-accent hover:text-accent"
           >
             <Icon name="options" size={18} />
-            Change settings
+            {t('exercise:summary.changeSettings')}
           </button>
         </div>
 
@@ -154,7 +162,7 @@ export function RoundSummary({
             className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-ink-muted transition-colors hover:text-accent"
           >
             <Icon name="arrowBack" size={16} />
-            Back to the path
+            {t('common:backToPath')}
           </Link>
         </div>
       </div>

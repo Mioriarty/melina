@@ -1,4 +1,7 @@
+import { useTranslation } from 'react-i18next'
 import { Outlet } from 'react-router'
+
+import { useLanguage } from '@/hooks/useLanguage'
 
 import { TopNav } from './TopNav'
 
@@ -21,15 +24,21 @@ export interface AppShellProps {
  *
  * Uses `100dvh` rather than `vh` so mobile browser chrome does not cover the
  * bottom of the layout.
+ *
+ * Also the one place the stored language is applied, because it wraps every
+ * route — including the exercises, which render without the header.
  */
 export function AppShell({ header = true }: AppShellProps) {
+  const { t } = useTranslation()
+  useLanguage()
+
   return (
     <div className="flex h-[100dvh] flex-col overflow-hidden">
       <a
         href="#main"
         className="sr-only rounded-full bg-accent px-4 py-2 text-white focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:ring-accent"
       >
-        Skip to content
+        {t('skipToContent')}
       </a>
 
       {header && <TopNav />}

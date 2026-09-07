@@ -1,0 +1,70 @@
+{
+  "reading": {
+    "first-steps": {
+      "title": "Erste Schritte",
+      "blurb": "Violinschlüssel, C-Dur, im Notensystem. Fünf Intervalle, nichts versteckt."
+    },
+    "treble-and-bass": {
+      "title": "Violin & Bass",
+      "blurb": "Beide gängigen Schlüssel, C-Dur, die alltäglichen Intervalle."
+    },
+    "ledger-lines": {
+      "title": "Hilfslinien",
+      "blurb": "Violin und Bass im vollen Umfang, sodass Töne das System verlassen."
+    },
+    "sharp-keys": {
+      "title": "Kreuztonarten",
+      "blurb": "Bis zu vier Kreuze. Die Vorzeichen fangen an zu arbeiten."
+    },
+    "flat-keys": {
+      "title": "B-Tonarten",
+      "blurb": "Bis zu vier Bs, wo die Auflösungszeichen überraschen."
+    },
+    "c-clefs": {
+      "title": "C-Schlüssel",
+      "blurb": "Nur Alt und Tenor. Alles Bekannte, verschoben."
+    },
+    "tritone": {
+      "title": "Der Tritonus",
+      "blurb": "Nur Quarten und Quinten. Übermäßig oder vermindert?"
+    },
+    "everything": {
+      "title": "Alles",
+      "blurb": "Alle vier Schlüssel, alle fünfzehn Tonarten, jede Schreibweise im Katalog."
+    }
+  },
+  "hearing": {
+    "open-intervals": {
+      "title": "Offene Intervalle",
+      "blurb": "Prime, Quarte, Quinte, Oktave. Aufwärts, im System, in C."
+    },
+    "thirds-and-sixths": {
+      "title": "Terzen & Sexten",
+      "blurb": "Groß gegen klein, an den zwei Stellen, wo es am meisten zählt."
+    },
+    "steps-and-sevenths": {
+      "title": "Sekunden & Septimen",
+      "blurb": "Sekunden und Septimen — die engen und ihre Umkehrungen."
+    },
+    "ascending": {
+      "title": "Alles aufwärts",
+      "blurb": "Jedes Intervall, immer aufwärts. Der übliche Anfang."
+    },
+    "descending": {
+      "title": "Alles abwärts",
+      "blurb": "Jedes Intervall, immer abwärts. Schwerer, als es klingt."
+    },
+    "harmonic": {
+      "title": "Zusammen gespielt",
+      "blurb": "Beide Töne gleichzeitig, ohne melodische Gestalt zum Anlehnen."
+    },
+    "harp": {
+      "title": "Auf der Harfe",
+      "blurb": "Dieselben Intervalle auf einem anderen Instrument. Klangfarbe weg, Ohren auf."
+    },
+    "everything": {
+      "title": "Alles",
+      "blurb": "Alle Intervalle, alle drei Richtungen, alle vier Schlüssel."
+    }
+  }
+}

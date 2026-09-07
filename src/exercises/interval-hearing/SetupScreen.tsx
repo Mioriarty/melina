@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react'
-import { Link } from 'react-router'
+import { useTranslation } from 'react-i18next'
 
 import { Icon } from '@/components/ui/Icon'
-import { ExerciseSwitcher } from '@/exercises/shared/ExerciseSwitcher'
+import { useMusicNames } from '@/hooks/useMusicNames'
 import { INSTRUMENTS } from '@/lib/audio/instruments'
 import { HEARABLE_CATALOG, QUALITY_ORDER } from '@/lib/music/catalog'
 import { CLEFS } from '@/lib/music/clef'
 import { PLAY_DIRECTIONS } from '@/lib/music/direction'
-import { intervalKey, intervalName, numberName, qualityLabel } from '@/lib/music/interval'
+import { intervalKey } from '@/lib/music/interval'
 import { KEY_SIGNATURES } from '@/lib/music/keySignature'
 import { cn } from '@/lib/utils/cn'
 
@@ -17,6 +17,8 @@ export interface SetupScreenProps {
   settings: IntervalHearingSettings
   onChange: (settings: IntervalHearingSettings) => void
   onStart: () => void
+  /** Back to the level list, which is where this screen is reached from. */
+  onBack: () => void
 }
 
 /**
@@ -26,7 +28,10 @@ export interface SetupScreenProps {
  * exercise needs: which instrument plays the notes, and whether an interval
  * may be sounded upwards, downwards or all at once.
  */
-export function SetupScreen({ settings, onChange, onStart }: SetupScreenProps) {
+export function SetupScreen({ settings, onChange, onStart, onBack }: SetupScreenProps) {
+  const { t } = useTranslation(['exercise', 'curriculum'])
+  const names = useMusicNames()
+
   /** Toggle a value in one of the list settings, never emptying it. */
   function toggle<K extends 'clefs' | 'keySignatures' | 'intervals' | 'directions'>(
     field: K,
@@ -48,62 +53,68 @@ export function SetupScreen({ settings, onChange, onStart }: SetupScreenProps) {
 
   return (
     <div className="h-full overflow-y-auto overscroll-contain">
-      <div className="pb-safe mx-auto w-full max-w-2xl px-4 py-4 sm:px-6">
+      <div className="pb-page mx-auto w-full max-w-2xl px-4 pt-4 sm:px-6">
         <header className="mb-6">
-          <Link
-            to="/"
+          <button
+            type="button"
+            onClick={onBack}
             className="mb-1 -ml-2 inline-flex h-11 items-center gap-1.5 rounded-full pr-3 pl-2 text-sm font-medium text-ink-muted transition-colors hover:bg-accent-tint hover:text-accent"
           >
             <Icon name="arrowBack" size={18} />
-            Path
-          </Link>
+            {t('exercise:setup.back')}
+          </button>
 
           <p className="text-sm tracking-wide text-ink-faint uppercase">
-            Interval Training
+            {t('curriculum:categories.intervals.title')}
           </p>
-          <h1 className="mt-1 text-title">Interval Hearing</h1>
+          <h1 className="mt-1 text-title">
+            {t('curriculum:categories.intervals.exercises.hearing.title')}
+          </h1>
           <p className="mt-2 leading-relaxed text-ink-muted">
-            Name the interval you hear. One note is shown; the other appears with the
-            answer.
+            {t('exercise:intervals.hearing.setupBlurb')}
           </p>
-
-          <ExerciseSwitcher categoryId="intervals" current="hearing" />
         </header>
 
-        <Section title="Instrument">
+        <Section title={t('exercise:setup.instrument')}>
           <div className="flex flex-wrap gap-2">
             {INSTRUMENTS.map((instrument) => (
               <Chip
                 key={instrument.id}
                 selected={settings.instrument === instrument.id}
                 onClick={() => onChange({ ...settings, instrument: instrument.id })}
-                label={`${instrument.label}. ${instrument.hint}`}
+                label={t('exercise:setup.chipLabel', {
+                  label: names.instrument(instrument.id),
+                  hint: names.instrumentHint(instrument.id),
+                })}
               >
-                {instrument.label}
+                {names.instrument(instrument.id)}
               </Chip>
             ))}
           </div>
         </Section>
 
         <Section
-          title="How it is played"
-          hint="Ascending and simultaneous intervals show their lower note first; descending ones show the upper note."
+          title={t('exercise:setup.direction.title')}
+          hint={t('exercise:setup.direction.hint')}
         >
           <div className="flex flex-wrap gap-2">
             {PLAY_DIRECTIONS.map((direction) => (
               <Chip
-                key={direction.id}
-                selected={settings.directions.includes(direction.id)}
-                onClick={() => toggle('directions', direction.id)}
-                label={`${direction.label}. ${direction.hint}`}
+                key={direction}
+                selected={settings.directions.includes(direction)}
+                onClick={() => toggle('directions', direction)}
+                label={t('exercise:setup.chipLabel', {
+                  label: names.direction(direction),
+                  hint: names.directionHint(direction),
+                })}
               >
-                {direction.label}
+                {names.direction(direction)}
               </Chip>
             ))}
           </div>
         </Section>
 
-        <Section title="Clefs">
+        <Section title={t('exercise:setup.clefs')}>
           <div className="flex flex-wrap gap-2">
             {CLEFS.map((clef) => (
               <Chip
@@ -111,15 +122,15 @@ export function SetupScreen({ settings, onChange, onStart }: SetupScreenProps) {
                 selected={settings.clefs.includes(clef.id)}
                 onClick={() => toggle('clefs', clef.id)}
               >
-                {clef.label}
+                {names.clef(clef.id)}
               </Chip>
             ))}
           </div>
         </Section>
 
         <Section
-          title="Key signatures"
-          hint="The signature is drawn on the staff; notes may still take any accidental."
+          title={t('exercise:setup.keySignatures.title')}
+          hint={t('exercise:setup.keySignatures.hint')}
         >
           <div className="flex flex-wrap gap-2">
             {KEY_SIGNATURES.map((signature) => (
@@ -127,24 +138,26 @@ export function SetupScreen({ settings, onChange, onStart }: SetupScreenProps) {
                 key={signature.id}
                 selected={settings.keySignatures.includes(signature.id)}
                 onClick={() => toggle('keySignatures', signature.id)}
-                label={`${signature.major} major, ${signature.minor.replace('m', ' minor')}`}
+                label={names.keyName(signature.id)}
               >
-                {signature.major}
-                <span className="ml-1 text-ink-faint">/{signature.minor}</span>
+                {names.keyMajor(signature.id)}
+                <span className="ml-1 text-ink-faint">
+                  /{names.keyMinor(signature.id)}
+                </span>
               </Chip>
             ))}
           </div>
         </Section>
 
         <Section
-          title="Intervals"
-          hint="Only intervals that sound different from one another. An augmented second is a minor third to the ear, so the ambiguous spellings are left to Interval Reading."
+          title={t('exercise:setup.intervals.title')}
+          hint={t('exercise:setup.intervals.hearingHint')}
         >
           <div className="grid gap-1.5">
             {intervalNumbers.map((number) => (
               <div key={number} className="flex flex-wrap items-center gap-2">
                 <span className="w-[4.5rem] shrink-0 font-serif text-[0.9375rem] font-semibold text-ink-muted">
-                  {numberName(number)}
+                  {names.number(number)}
                 </span>
                 {QUALITY_ORDER.filter((quality) =>
                   HEARABLE_CATALOG.some(
@@ -157,9 +170,9 @@ export function SetupScreen({ settings, onChange, onStart }: SetupScreenProps) {
                       key={key}
                       selected={settings.intervals.includes(key)}
                       onClick={() => toggle('intervals', key)}
-                      label={intervalName({ number, quality })}
+                      label={names.interval({ number, quality })}
                     >
-                      {qualityLabel(quality)}
+                      {names.quality(quality)}
                     </Chip>
                   )
                 })}
@@ -168,7 +181,7 @@ export function SetupScreen({ settings, onChange, onStart }: SetupScreenProps) {
           </div>
         </Section>
 
-        <Section title="Questions per round">
+        <Section title={t('exercise:setup.questionsPerRound')}>
           <div className="flex flex-wrap gap-2">
             {ROUND_LENGTHS.map((length) => (
               <Chip
@@ -187,7 +200,7 @@ export function SetupScreen({ settings, onChange, onStart }: SetupScreenProps) {
           onClick={onStart}
           className="mt-8 flex min-h-12 w-full items-center justify-center rounded-full bg-accent font-medium text-white transition-colors hover:bg-accent-hover active:bg-accent-press"
         >
-          Start round
+          {t('exercise:setup.start')}
         </button>
       </div>
     </div>

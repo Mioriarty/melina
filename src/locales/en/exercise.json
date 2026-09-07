@@ -1,0 +1,74 @@
+{
+  "notFound": {
+    "title": "Not found",
+    "body": "That exercise does not exist. It may have been renamed."
+  },
+  "inDevelopment": "In development",
+  "preparing": "Preparing the exercise…",
+  "intervals": {
+    "hearing": {
+      "levelsBlurb": "Name the interval you hear. Pick a level, or set it up yourself.",
+      "setupBlurb": "Name the interval you hear. One note is shown; the other appears with the answer."
+    },
+    "reading": {
+      "levelsBlurb": "Name the interval written on the staff. Pick a level, or set it up yourself.",
+      "setupBlurb": "Name the interval on the staff. Choose what you want to be asked."
+    }
+  },
+  "levels": {
+    "custom": {
+      "title": "Custom",
+      "blurb": "Choose the clefs, keys and intervals yourself."
+    }
+  },
+  "setup": {
+    "back": "Levels",
+    "chipLabel": "{{label}}. {{hint}}",
+    "instrument": "Instrument",
+    "direction": {
+      "title": "How it is played",
+      "hint": "Ascending and simultaneous intervals show their lower note first; descending ones show the upper note."
+    },
+    "clefs": "Clefs",
+    "keySignatures": {
+      "title": "Key signatures",
+      "hint": "The signature is drawn on the staff; notes may still take any accidental."
+    },
+    "intervals": {
+      "title": "Intervals",
+      "hearingHint": "Only intervals that sound different from one another. An augmented second is a minor third to the ear, so the ambiguous spellings are left to Interval Reading."
+    },
+    "questionsPerRound": "Questions per round",
+    "start": "Start round"
+  },
+  "round": {
+    "question": "What interval is this?",
+    "end": "End this round",
+    "progress": "Question {{current}} of {{total}}",
+    "correct": "Correct",
+    "next": "Next question",
+    "keyboardLabel": "Interval answers"
+  },
+  "score": {
+    "pending": "Drawing the notation",
+    "failed": "The notation could not be drawn.",
+    "oneNote": "{{clef}}, key signature of {{key}}: {{first}}",
+    "twoNotes": "{{clef}}, key signature of {{key}}: {{first}} and {{second}}"
+  },
+  "play": {
+    "again": "Play the interval again",
+    "loading": "Loading the instrument",
+    "unavailable": "Playback unavailable"
+  },
+  "summary": {
+    "title": "Round complete",
+    "workOn": "What to work on",
+    "missCount": "{{times}}×",
+    "youAnswered": "You answered {{answers}}",
+    "allCorrect": "Every one correct. Try adding a clef, a key signature, or the augmented and diminished intervals.",
+    "thisRound": "This round",
+    "questionLabel": "{{interval}} · {{clef}}",
+    "playAgain": "Practise again",
+    "changeSettings": "Change settings"
+  }
+}

@@ -22,7 +22,8 @@ The name comes from the toki pona word for melody.
 **The curriculum registry is the single source of truth.** `src/config/curriculum.ts`
 defines every category and exercise. The top navigation, the homescreen map and the
 routes all derive from it. **Never hardcode a category or exercise list in a
-component** — add it to the registry and the UI follows.
+component** — add it to the registry and the UI follows. The registry holds ids,
+icons and status only; titles and blurbs are translated (see below).
 
 Four config files, deliberately separate:
 
@@ -45,6 +46,48 @@ flagged-on modules are reachable. Enabling a module is a one-line change in
 account — everything is local. Bump the version and add a `.stores()` block to
 migrate; never edit an existing version in place or installed clients will not
 upgrade.
+
+## Internationalisation — `src/lib/i18n/` and `src/locales/`
+
+English and German, through i18next and `react-i18next`. **No user-visible string
+is written in a component.** `src/locales/<lang>/<namespace>.json` holds every one
+of them, bundled into the app rather than fetched — a language that only arrives
+over the network is a language that is missing on a train.
+
+Namespaces map to areas of the app so a string can be found from where it appears:
+`common`, `path`, `curriculum`, `levels`, `exercise`, `music`, `settings`.
+
+Three kinds of key:
+
+- **Written by hand** in the JSON, read with `t('exercise:round.question')`.
+- **Derived from a registry id.** `curriculum.ts` and `difficulty.ts` build these
+  (`categoryTitleKey`, `exerciseShortKey`, `difficultyTitleKey`, …) so a rename in
+  the registry moves the key with it and nothing spells the mapping out twice.
+- **Music vocabulary**, reached through the `useMusicNames` hook.
+
+**`lib/music` and `lib/audio` carry no display strings at all.** A clef, a key
+signature, an interval quality and a pitch letter are all named differently in
+German — B♭ major is "B-Dur", the note English calls B is H, and the quality
+inflects ("reine Quinte", not "Rein Quinte") — so none of it survives a sentence
+assembled from English parts. The data files keep ids and arithmetic; the names
+live in the `music` namespace and are read through `useMusicNames`, which is a
+hook so the labels re-render when the language changes.
+
+The chosen language is a Dexie setting (`UI_LANGUAGE`), not React state, so it
+survives a reload and reaches every screen. `null` means "never chose one", which
+is different from choosing English: it lets the browser's own preference keep
+deciding. `main.tsx` reads it before the first paint so a German browser does not
+flash German at someone who picked English, and `useLanguage` (called once, in
+`AppShell`) keeps i18next and `document.documentElement.lang` in step afterwards.
+
+`locales.test.ts` is the guard that makes adding a language safe: a missing key
+does not crash — i18next quietly falls back — so it walks every namespace and
+insists the languages hold exactly the same keys with exactly the same
+placeholders, then checks that every key built at runtime from a registry id
+actually resolves.
+
+The PWA manifest and the `<meta name="description">` in `index.html` stay English:
+both are read at build and install time, before any of this runs.
 
 ## Style
 
@@ -185,6 +228,9 @@ at any supported width. The last two are regression guards for real bugs.
 
 ## Music theory — `src/lib/music/`
 
+Ids and arithmetic only — every name a player reads is translated. See
+**Internationalisation**.
+
 **A pitch is a spelling, not a frequency.** `Pitch` carries a letter, an alteration
 and an octave, and everything runs on two independent axes: `diatonicValue` (letter
 position) and `chromaticValue` (semitones). That is what makes C→D♭♭ a diminished
@@ -249,12 +295,51 @@ The instrument type is imported from smplr rather than declared by hand, so an
 upstream API change is a type error. Declaring it structurally hid the fact that
 `output.setVolume` had been deprecated in favour of `output.volume`.
 
+## The path is made of stations, not categories
+
+`stations()` in `config/curriculum.ts` derives the homescreen stops: a category
+with **built exercises contributes one station per exercise**, and one with
+nothing built yet contributes a single locked station for itself. Interval
+Reading and Interval Hearing are different games, so they get separate stops
+rather than one that has to guess which you meant.
+
+A station carries `titleKey` and `blurbKey`, not a title — the words come from
+`curriculum.json`.
+
+Positions in `pathLayout.ts` are hand-placed by **station id**, so shipping an
+exercise means adding a coordinate. `orderedPathNodes` falls back to the end of
+the path for an unplaced station so nothing can silently vanish, and
+`pathLayout.test.ts` asserts the fallback is never actually reached.
+
 ## Exercises — `src/exercises/`
 
 `shared/` holds everything both interval exercises use: the generator, the
-setup → round → summary state machine (`useIntervalRound`), the in-round screen,
-and the summary. Reading and hearing differ only in what notation they show and
-whether there is a play button beside it, so anything else belongs in `shared/`.
+levels → setup → round → summary state machine (`useIntervalRound`), the levels
+screen, the in-round screen, and the summary. Reading and hearing differ only in
+what notation they show and whether there is a play button beside it, so
+anything else belongs in `shared/`.
+
+**Levels are the landing screen**, not the settings form. Each exercise defines
+a `difficulties.ts` of named presets, and picking one starts a round in the same
+tap — the presets exist so that practising is one tap rather than a trip through
+six sets of checkboxes. Custom is last and opens the full settings screen. They
+are levels, not a difficulty ladder: "Descending" is not harder than "Flat Keys",
+it is a different weakness.
+
+A preset is an id and a settings object; its name and one-line description live in
+`levels.json` under `<group>.<id>`.
+
+Levels are data, so `shared/difficulties.test.ts` checks what types cannot — that
+every preset names real clefs, keys and intervals, is named and described in every
+language, round-trips through the defensive settings parser unchanged, and
+actually generates a **full** round. A
+level too narrow to place its intervals would otherwise serve a short round in
+silence.
+
+`staffOnly` narrows a clef to its five lines, removing ledger lines entirely —
+the difference between reading an interval and counting lines above the staff.
+Because that range is barely more than an octave, `generateRound` retries
+without it rather than dropping a wide interval from the round.
 
 **Hearing offers only intervals that sound different from one another** —
 `HEARABLE_INTERVAL_KEYS` in `lib/music/catalog.ts`. Spelling is inaudible: an
@@ -276,3 +361,7 @@ that rule lives in `leadingNote()` and nowhere else.
 
 Melodic dictation is next. Everything after Interval Training is still a
 placeholder page.
+
+Settings holds one setting — the interface language. It is reached only from the
+button at the far left of the top bar; there is no station for it on the path,
+because it is not something you practise.

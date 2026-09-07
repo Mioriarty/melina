@@ -1,0 +1,74 @@
+{
+  "notFound": {
+    "title": "Nicht gefunden",
+    "body": "Diese Übung gibt es nicht. Vielleicht wurde sie umbenannt."
+  },
+  "inDevelopment": "In Arbeit",
+  "preparing": "Übung wird vorbereitet…",
+  "intervals": {
+    "hearing": {
+      "levelsBlurb": "Benenne das Intervall, das du hörst. Wähle ein Level oder stelle es selbst ein.",
+      "setupBlurb": "Benenne das Intervall, das du hörst. Ein Ton steht da; der andere erscheint mit der Antwort."
+    },
+    "reading": {
+      "levelsBlurb": "Benenne das Intervall im Notensystem. Wähle ein Level oder stelle es selbst ein.",
+      "setupBlurb": "Benenne das Intervall im Notensystem. Wähle, was du gefragt werden möchtest."
+    }
+  },
+  "levels": {
+    "custom": {
+      "title": "Eigene Einstellung",
+      "blurb": "Wähle Schlüssel, Tonarten und Intervalle selbst."
+    }
+  },
+  "setup": {
+    "back": "Level",
+    "chipLabel": "{{label}}. {{hint}}",
+    "instrument": "Instrument",
+    "direction": {
+      "title": "Art des Erklingens",
+      "hint": "Aufwärts und gleichzeitig gespielte Intervalle zeigen zuerst den unteren Ton; abwärts gespielte den oberen."
+    },
+    "clefs": "Notenschlüssel",
+    "keySignatures": {
+      "title": "Vorzeichen",
+      "hint": "Die Vorzeichen stehen im Notensystem; einzelne Töne können trotzdem jedes Versetzungszeichen tragen."
+    },
+    "intervals": {
+      "title": "Intervalle",
+      "hearingHint": "Nur Intervalle, die unterschiedlich klingen. Eine übermäßige Sekunde ist für das Ohr eine kleine Terz, deshalb bleiben die mehrdeutigen Schreibweisen dem Intervall-Lesen vorbehalten."
+    },
+    "questionsPerRound": "Fragen pro Runde",
+    "start": "Runde starten"
+  },
+  "round": {
+    "question": "Welches Intervall ist das?",
+    "end": "Runde beenden",
+    "progress": "Frage {{current}} von {{total}}",
+    "correct": "Richtig",
+    "next": "Nächste Frage",
+    "keyboardLabel": "Intervallantworten"
+  },
+  "score": {
+    "pending": "Noten werden gezeichnet",
+    "failed": "Die Noten konnten nicht gezeichnet werden.",
+    "oneNote": "{{clef}}, Tonart {{key}}: {{first}}",
+    "twoNotes": "{{clef}}, Tonart {{key}}: {{first}} und {{second}}"
+  },
+  "play": {
+    "again": "Intervall noch einmal abspielen",
+    "loading": "Instrument wird geladen",
+    "unavailable": "Wiedergabe nicht verfügbar"
+  },
+  "summary": {
+    "title": "Runde beendet",
+    "workOn": "Woran du arbeiten kannst",
+    "missCount": "{{times}}×",
+    "youAnswered": "Du hast geantwortet: {{answers}}",
+    "allCorrect": "Alles richtig. Nimm einen weiteren Schlüssel, eine Tonart oder die übermäßigen und verminderten Intervalle dazu.",
+    "thisRound": "Diese Runde",
+    "questionLabel": "{{interval}} · {{clef}}",
+    "playAgain": "Noch einmal üben",
+    "changeSettings": "Einstellungen ändern"
+  }
+}

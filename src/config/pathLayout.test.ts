@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { CATEGORIES } from './curriculum'
+import { stations } from './curriculum'
 import {
   CONNECTORS,
   CONNECTOR_ARRIVE,
@@ -17,13 +17,36 @@ import {
 } from './pathLayout'
 
 describe('path layout', () => {
-  it('places every category exactly once', () => {
-    const ids = PATH_NODES.map((node) => node.categoryId)
+  it('places every station exactly once, and nothing else', () => {
+    const ids = PATH_NODES.map((node) => node.stationId)
     expect(new Set(ids).size).toBe(ids.length)
-    for (const category of CATEGORIES) {
-      expect(ids, `${category.id} is not on the path`).toContain(category.id)
+
+    const expected = stations().map((station) => station.id)
+    for (const id of expected) {
+      expect(ids, `${id} has no hand-placed position`).toContain(id)
     }
-    expect(ids).toHaveLength(CATEGORIES.length)
+    // A stale position for a station that no longer exists would silently
+    // shift the layout it was hand-placed for.
+    for (const id of ids) {
+      expect(expected, `${id} is placed but is not a station`).toContain(id)
+    }
+  })
+
+  it('gives every station a real position, never the fallback', () => {
+    // orderedPathNodes falls back to the end of the path for an unplaced
+    // station so shipping an exercise cannot drop it off the homescreen —
+    // but the fallback should never actually be reached.
+    for (const { position, station } of orderedPathNodes()) {
+      expect(position.stationId, `${station.id} fell back`).toBe(station.id)
+    }
+  })
+
+  it('gives interval reading and hearing separate stations', () => {
+    const ids = stations().map((station) => station.id)
+    expect(ids).toContain('intervals/hearing')
+    expect(ids).toContain('intervals/reading')
+    // The category itself is no longer a station once its exercises are.
+    expect(ids).not.toContain('intervals')
   })
 
   it('runs strictly downhill, so the path never doubles back', () => {
@@ -32,7 +55,7 @@ describe('path layout', () => {
       const current = PATH_NODES[i]!
       expect(
         current.y,
-        `${current.categoryId} sits above the node before it`,
+        `${current.stationId} sits above the node before it`,
       ).toBeGreaterThan(previous.y)
     }
   })
@@ -47,8 +70,8 @@ describe('path layout', () => {
     for (const node of PATH_NODES) {
       // Nodes are 168px wide and centred, so they need room on both sides
       // even on a narrow phone.
-      expect(node.x, node.categoryId).toBeGreaterThanOrEqual(25)
-      expect(node.x, node.categoryId).toBeLessThanOrEqual(75)
+      expect(node.x, node.stationId).toBeGreaterThanOrEqual(25)
+      expect(node.x, node.stationId).toBeLessThanOrEqual(75)
       expect(node.y).toBeLessThan(PATH_HEIGHT)
     }
   })
@@ -118,11 +141,11 @@ describe('path layout', () => {
         const centre = (node.x / 100) * column
         expect(
           centre - half,
-          `${node.categoryId} overflows the left edge at ${viewport}px`,
+          `${node.stationId} overflows the left edge at ${viewport}px`,
         ).toBeGreaterThanOrEqual(0)
         expect(
           centre + half,
-          `${node.categoryId} overflows the right edge at ${viewport}px`,
+          `${node.stationId} overflows the right edge at ${viewport}px`,
         ).toBeLessThanOrEqual(column)
       }
     }
@@ -152,7 +175,7 @@ describe('path layout', () => {
     for (const mark of MUSIC) expect(Math.abs(mark.rotation)).toBeLessThanOrEqual(11)
   })
 
-  it('joins every position to a real category', () => {
-    expect(orderedPathNodes()).toHaveLength(PATH_NODES.length)
+  it('joins every position to a real station', () => {
+    expect(orderedPathNodes()).toHaveLength(stations().length)
   })
 })

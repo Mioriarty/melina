@@ -1,32 +1,33 @@
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 
 import { Icon } from '@/components/ui/Icon'
-import { categoryPath, type CategoryDef } from '@/config/curriculum'
+import type { Station } from '@/config/curriculum'
 import { isCategoryEnabled } from '@/config/features'
 import { MEDALLION_SIZE, type PathNodePosition } from '@/config/pathLayout'
 import { cn } from '@/lib/utils/cn'
 
 /**
  * `open`   — playable now.
- * `next`   — the module being built; shown as the path's leading edge.
+ * `next`   — registered as ready but not switched on yet.
  * `locked` — registered, not started.
  */
 type NodeState = 'open' | 'next' | 'locked'
 
-function nodeState(category: CategoryDef): NodeState {
-  if (isCategoryEnabled(category)) return 'open'
-  return category.status === 'ready' ? 'next' : 'locked'
+function nodeState(station: Station): NodeState {
+  if (station.status !== 'ready') return 'locked'
+  return isCategoryEnabled(station.category) ? 'open' : 'next'
 }
 
 export interface PathNodeProps {
-  category: CategoryDef
+  station: Station
   position: PathNodePosition
   index: number
   reducedMotion: boolean
 }
 
 /**
- * One station on the path: a medallion with its title beneath.
+ * One station on the path.
  *
  * `position.y` is the centre of the **medallion**, not of the whole node —
  * the label hangs below it and is not part of the anchor. Centring the whole
@@ -41,8 +42,9 @@ export interface PathNodeProps {
  * rather than a `div`, so the whole path stays reachable by keyboard and a
  * screen reader announces why a station cannot be entered yet.
  */
-export function PathNode({ category, position, index, reducedMotion }: PathNodeProps) {
-  const state = nodeState(category)
+export function PathNode({ station, position, index, reducedMotion }: PathNodeProps) {
+  const { t } = useTranslation('path')
+  const state = nodeState(station)
 
   const medallion = cn(
     'grid shrink-0 place-items-center rounded-full',
@@ -61,7 +63,7 @@ export function PathNode({ category, position, index, reducedMotion }: PathNodeP
         className={medallion}
         style={{ width: MEDALLION_SIZE, height: MEDALLION_SIZE }}
       >
-        <Icon name={state === 'locked' ? 'lock' : category.icon} size={30} />
+        <Icon name={state === 'locked' ? 'lock' : station.icon} size={30} />
       </span>
 
       <span className="mt-2.5 grid justify-items-center gap-0.5">
@@ -71,10 +73,10 @@ export function PathNode({ category, position, index, reducedMotion }: PathNodeP
             state === 'locked' ? 'text-ink-muted' : 'text-ink',
           )}
         >
-          {category.title}
+          {t(station.titleKey)}
         </span>
         <span className="text-[0.75rem] font-medium tracking-wide text-ink-faint uppercase">
-          {state === 'open' ? 'Open' : state === 'next' ? 'Up next' : 'Locked'}
+          {t(`state.${state}`)}
         </span>
       </span>
     </>
@@ -94,7 +96,7 @@ export function PathNode({ category, position, index, reducedMotion }: PathNodeP
     >
       {state === 'open' ? (
         <Link
-          to={categoryPath(category)}
+          to={station.path}
           className={shell}
           // Lift by half a medallion so the circle, not the box, sits on the
           // anchor point the connectors are drawn to.

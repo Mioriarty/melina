@@ -220,7 +220,15 @@ export function intervalsEqual(a: Interval, b: Interval): boolean {
   return a.number === b.number && a.quality === b.quality
 }
 
-/* ---------------------------------------------------------------- naming */
+/* ------------------------------------------------------------------ keys */
+
+/**
+ * Only the machine form lives here. Anything a player reads — "Perfect
+ * fifth", "reine Quinte" — comes from the `music` translation namespace
+ * through `useMusicNames`, because the quality adjective and the ordinal
+ * inflect differently in different languages and cannot be concatenated
+ * from English parts.
+ */
 
 const QUALITY_ABBREVIATIONS: Record<IntervalQuality, string> = {
   'doubly-diminished': 'dd',
@@ -230,48 +238,6 @@ const QUALITY_ABBREVIATIONS: Record<IntervalQuality, string> = {
   major: 'M',
   augmented: 'A',
   'doubly-augmented': 'AA',
-}
-
-const QUALITY_NAMES: Record<IntervalQuality, string> = {
-  'doubly-diminished': 'Doubly diminished',
-  diminished: 'Diminished',
-  minor: 'Minor',
-  perfect: 'Perfect',
-  major: 'Major',
-  augmented: 'Augmented',
-  'doubly-augmented': 'Doubly augmented',
-}
-
-/** Short label used inside a keyboard row, where the number is already shown. */
-export function qualityLabel(quality: IntervalQuality): string {
-  return QUALITY_NAMES[quality]
-}
-
-const ORDINALS = [
-  'Unison',
-  'Second',
-  'Third',
-  'Fourth',
-  'Fifth',
-  'Sixth',
-  'Seventh',
-  'Octave',
-  'Ninth',
-  'Tenth',
-  'Eleventh',
-  'Twelfth',
-  'Thirteenth',
-  'Fourteenth',
-  'Fifteenth',
-] as const
-
-export function numberName(number: number): string {
-  return ORDINALS[number - 1] ?? `${number}th`
-}
-
-/** `Perfect Fifth`, `Diminished Third`. */
-export function intervalName(interval: Interval): string {
-  return `${QUALITY_NAMES[interval.quality]} ${numberName(interval.number).toLowerCase()}`
 }
 
 /**

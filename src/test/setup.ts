@@ -4,6 +4,7 @@ import { cleanup } from '@testing-library/react'
 import { afterEach, beforeEach, vi } from 'vitest'
 
 import { db } from '@/lib/db/schema'
+import { i18n } from '@/lib/i18n'
 
 /**
  * jsdom is missing several browser APIs the app relies on. Stubbing them here
@@ -56,6 +57,10 @@ beforeEach(async () => {
   // fake-indexeddb persists for the whole file, so without this a test that
   // writes a setting would leak it into the next one.
   await db.settings.clear()
+
+  // Assertions are written against the English strings, and the machine
+  // running the tests may well be German.
+  await i18n.changeLanguage('en')
 
   vi.spyOn(console, 'error').mockImplementation((...args) => {
     // Surface React warnings as failures rather than letting them scroll by.

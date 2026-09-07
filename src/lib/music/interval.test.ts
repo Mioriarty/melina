@@ -5,7 +5,6 @@ import {
   directionBetween,
   intervalBetween,
   intervalKey,
-  intervalName,
   intervalSemitones,
   isPerfectFamily,
   isValidInterval,
@@ -271,14 +270,8 @@ describe('transpose', () => {
   })
 })
 
-describe('naming', () => {
-  it('produces readable names', () => {
-    expect(intervalName({ number: 5, quality: 'perfect' })).toBe('Perfect fifth')
-    expect(intervalName({ number: 3, quality: 'diminished' })).toBe('Diminished third')
-    expect(intervalName({ number: 1, quality: 'perfect' })).toBe('Perfect unison')
-    expect(intervalName({ number: 8, quality: 'perfect' })).toBe('Perfect octave')
-  })
-
+describe('keys', () => {
+  // Readable names are translated — see `useMusicNames` and its test.
   it('round-trips keys', () => {
     for (const key of [
       'P1',

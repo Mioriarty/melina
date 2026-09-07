@@ -23,7 +23,7 @@ describe('instruments', () => {
 
   it('defaults to one that exists', () => {
     expect(isInstrumentId(DEFAULT_INSTRUMENT)).toBe(true)
-    expect(getInstrument(DEFAULT_INSTRUMENT).label).toBe('Piano')
+    expect(getInstrument(DEFAULT_INSTRUMENT).id).toBe('piano')
   })
 
   it('validates ids', () => {

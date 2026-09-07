@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import { CATEGORIES, categoryPath, readyExercises } from './curriculum'
+import { i18n } from '@/lib/i18n'
+
+import { CATEGORIES, categoryPath, exerciseShortKey, readyExercises } from './curriculum'
 import { FEATURES } from './features'
 
 describe('feature flags', () => {
@@ -60,7 +62,11 @@ describe('curriculum', () => {
       for (const exercise of readyExercises(category)) {
         // The switcher shows siblings side by side, where the full title
         // repeats the category name in every pill.
-        expect(exercise.short, `${exercise.title} needs a short label`).toBeTruthy()
+        const id = `${category.id}/${exercise.id}`
+        expect(
+          i18n.exists(exerciseShortKey(category.id, exercise.id)),
+          `${id} needs a short label`,
+        ).toBe(true)
       }
     }
   })

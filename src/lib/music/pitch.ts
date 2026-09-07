@@ -97,36 +97,17 @@ const ALTERATION_SYMBOLS: Record<Alteration, string> = {
   2: '##',
 }
 
-/** Screen-readable form, using real musical symbols. */
-const ALTERATION_GLYPHS: Record<Alteration, string> = {
-  [-2]: '♭♭',
-  [-1]: '♭',
-  0: '',
-  1: '♯',
-  2: '♯♯',
-}
-
 /** Machine form: `F#4`, `Ebb3`, `C4`. Round-trips through `parsePitch`. */
 export function pitchKey(value: Pitch): string {
   return `${value.letter}${ALTERATION_SYMBOLS[value.alteration]}${value.octave}`
 }
 
-/** Display form: `F♯4`. */
-export function pitchName(value: Pitch): string {
-  return `${value.letter}${ALTERATION_GLYPHS[value.alteration]}${value.octave}`
-}
-
-/** Spoken form for screen readers: `F sharp 4`. */
-export function pitchSpokenName(value: Pitch): string {
-  const spoken: Record<Alteration, string> = {
-    [-2]: ' double flat',
-    [-1]: ' flat',
-    0: '',
-    1: ' sharp',
-    2: ' double sharp',
-  }
-  return `${value.letter}${spoken[value.alteration]} ${value.octave}`
-}
+/**
+ * There is deliberately no display or spoken form here. German calls B "H"
+ * and a sharp "Kreuz", so a pitch reads differently in every language and
+ * its name belongs in the `music` translation namespace — see
+ * `useMusicNames`.
+ */
 
 const PITCH_PATTERN = /^([A-G])(bb|b|#|##|)(-?\d+)$/
 

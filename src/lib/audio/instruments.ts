@@ -6,14 +6,15 @@
  * real recordings — a Steinway with four velocity layers, and an orchestral
  * harp from the MusyngKite soundfont, which is the better sounding of the two
  * General MIDI kits smplr offers.
+ *
+ * Names and descriptions live in the `music` translation namespace; only the
+ * playback numbers belong here.
  */
 
 export type InstrumentId = 'piano' | 'harp'
 
 export interface InstrumentDef {
   id: InstrumentId
-  label: string
-  hint: string
   /** Trimmed so no instrument is conspicuously louder than another. */
   gain: number
   /** Seconds a single note sounds for. */
@@ -23,15 +24,11 @@ export interface InstrumentDef {
 export const INSTRUMENTS: readonly InstrumentDef[] = [
   {
     id: 'piano',
-    label: 'Piano',
-    hint: 'Steinway grand, four velocity layers.',
     gain: 1,
     duration: 1.9,
   },
   {
     id: 'harp',
-    label: 'Harp',
-    hint: 'Orchestral harp. Clearer attack, longer decay.',
     gain: 1.15,
     duration: 2.4,
   },

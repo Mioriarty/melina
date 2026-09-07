@@ -1,0 +1,131 @@
+{
+  "categories": {
+    "intervals": {
+      "title": "Intervalltraining",
+      "blurb": "Den Abstand zwischen zwei Tönen hören und lesen.",
+      "exercises": {
+        "hearing": {
+          "title": "Intervalle hören",
+          "short": "Hören",
+          "blurb": "Ein Intervall benennen, das du hörst, aber nicht siehst."
+        },
+        "reading": {
+          "title": "Intervalle lesen",
+          "short": "Lesen",
+          "blurb": "Das Intervall benennen, das im Notensystem steht."
+        },
+        "singing": {
+          "title": "Intervalle singen",
+          "short": "Singen",
+          "blurb": "Das gesuchte Intervall von einem vorgegebenen Grundton singen."
+        }
+      }
+    },
+    "scales": {
+      "title": "Tonleitertraining",
+      "blurb": "Tonstufen, Modi und ihre Farben.",
+      "exercises": {
+        "degrees": {
+          "title": "Tonstufen",
+          "blurb": "Einen Ton nach seiner Funktion zur Tonika einordnen."
+        },
+        "modes": {
+          "title": "Modi erkennen",
+          "blurb": "Die sieben diatonischen Modi nach Gehör unterscheiden."
+        }
+      }
+    },
+    "dictation": {
+      "title": "Melodiediktat",
+      "blurb": "Aufschreiben, was du hörst — Phrase für Phrase.",
+      "exercises": {
+        "short-melodies": {
+          "title": "Kurze Melodien",
+          "blurb": "Eine zwei- bis viertaktige Melodie nach wenigen Durchgängen notieren."
+        },
+        "rhythm": {
+          "title": "Rhythmusdiktat",
+          "blurb": "Nur den Rhythmus erfassen, ohne Tonhöhen."
+        },
+        "two-voice": {
+          "title": "Zweistimmiges Diktat",
+          "blurb": "Zwei unabhängige Stimmen gleichzeitig verfolgen."
+        }
+      }
+    },
+    "harmonic-prediction": {
+      "title": "Harmonische Vorhersage",
+      "blurb": "Erraten, wohin die Verbindung strebt.",
+      "exercises": {
+        "next-chord": {
+          "title": "Nächster Akkord",
+          "blurb": "Den Akkord vorhersagen, der auf das Gehörte folgt."
+        },
+        "cadences": {
+          "title": "Kadenzen erkennen",
+          "blurb": "Die Kadenz benennen, die eine Phrase abschließt."
+        }
+      }
+    },
+    "harmonic-completion": {
+      "title": "Harmonische Ergänzung",
+      "blurb": "Die Lücke in einer funktionierenden Verbindung füllen.",
+      "exercises": {
+        "figured-bass": {
+          "title": "Generalbass",
+          "blurb": "Eine Bassstimme aus ihrer Bezifferung aussetzen."
+        },
+        "chorale": {
+          "title": "Choralsatz",
+          "blurb": "Einen vorgegebenen Sopran vierstimmig harmonisieren."
+        }
+      }
+    },
+    "counterpoint": {
+      "title": "Kontrapunkt",
+      "blurb": "Gattungssatz über einem Cantus firmus.",
+      "exercises": {
+        "first-species": {
+          "title": "Erste Gattung",
+          "blurb": "Note gegen Note, nur Konsonanzen."
+        },
+        "second-species": {
+          "title": "Zweite Gattung",
+          "blurb": "Zwei Noten gegen eine, mit Durchgangsdissonanz."
+        },
+        "free": {
+          "title": "Freier Kontrapunkt",
+          "blurb": "Gemischte Werte mit voller rhythmischer Freiheit."
+        }
+      }
+    },
+    "daily": {
+      "title": "Tägliches Komponieren",
+      "blurb": "Eine Vorgabe pro Tag. Schreib etwas Kleines.",
+      "exercises": {
+        "constraint": {
+          "title": "Vorgabe des Tages",
+          "blurb": "Eine neue Beschränkung, gegen die du komponierst."
+        },
+        "motif": {
+          "title": "Motivarbeit",
+          "blurb": "Ein Motiv nehmen und durch alle Verwandlungen führen."
+        }
+      }
+    },
+    "progress": {
+      "title": "Fortschritt",
+      "blurb": "Wo du stark bist und worauf du als Nächstes zielst.",
+      "exercises": {
+        "overview": {
+          "title": "Überblick",
+          "blurb": "Übungsverlauf und Serien auf einen Blick."
+        },
+        "weak-spots": {
+          "title": "Schwachstellen",
+          "blurb": "Die Intervalle und Akkorde, die dich immer wieder erwischen."
+        }
+      }
+    }
+  }
+}

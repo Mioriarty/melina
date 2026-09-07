@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { renderMei } from '@/lib/notation/verovio'
 import { cn } from '@/lib/utils/cn'
@@ -26,6 +27,7 @@ type Result =
  * pitch data — no user or network content ever reaches it.
  */
 export function Score({ mei, label, className }: ScoreProps) {
+  const { t } = useTranslation('exercise')
   const [result, setResult] = useState<Result>()
 
   useEffect(() => {
@@ -61,7 +63,7 @@ export function Score({ mei, label, className }: ScoreProps) {
         )}
         role="status"
       >
-        The notation could not be drawn.
+        {t('score.failed')}
       </div>
     )
   }
@@ -71,7 +73,7 @@ export function Score({ mei, label, className }: ScoreProps) {
       <div
         className={cn('grid place-items-center', className)}
         role="status"
-        aria-label="Drawing the notation"
+        aria-label={t('score.pending')}
       >
         <span className="h-24 w-48 animate-pulse rounded-lg bg-ink/5" />
       </div>

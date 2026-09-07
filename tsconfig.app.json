@@ -6,6 +6,8 @@
     "module": "esnext",
     "types": ["vite/client"],
     "allowArbitraryExtensions": true,
+    // Translations are plain JSON, imported and bundled — see src/locales.
+    "resolveJsonModule": true,
     "skipLibCheck": true,
 
     /* Bundler mode */

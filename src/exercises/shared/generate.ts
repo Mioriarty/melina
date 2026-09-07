@@ -39,6 +39,12 @@ export interface RoundSpec {
   /** Interval keys, e.g. `P5`. */
   intervals: readonly string[]
   directions: readonly PlayDirection[]
+  /**
+   * Keep both notes on the staff, with no ledger lines. Narrows the range a
+   * question can use, which is the difference between reading an interval and
+   * counting lines above the staff.
+   */
+  staffOnly?: boolean
   questionsPerRound: number
 }
 
@@ -121,10 +127,13 @@ export function buildQuestion(
   clefId: ClefId,
   keySignature: KeySignatureId,
   direction: PlayDirection = 'harmonic',
+  staffOnly = false,
 ): IntervalQuestion | undefined {
   const clef = getClef(clefId)
-  const lowestStep = diatonicValue(clef.lowest)
-  const highestStep = diatonicValue(clef.highest)
+  const lowest = staffOnly ? clef.staffLowest : clef.lowest
+  const highest = staffOnly ? clef.staffHighest : clef.highest
+  const lowestStep = diatonicValue(lowest)
+  const highestStep = diatonicValue(highest)
 
   for (let attempt = 0; attempt < 80; attempt += 1) {
     // Double accidentals are held back at first and allowed once the easy
@@ -141,11 +150,11 @@ export function buildQuestion(
       alteration: chooseRootAlteration(random, letter, keySignature),
       octave,
     }
-    if (!withinRange(lower, clef.lowest, clef.highest)) continue
+    if (!withinRange(lower, lowest, highest)) continue
 
     const upper = transpose(lower, interval, 'up')
     if (upper === undefined) continue
-    if (!withinRange(upper, clef.lowest, clef.highest)) continue
+    if (!withinRange(upper, lowest, highest)) continue
 
     if (
       !allowDoubleAccidentals &&
@@ -180,7 +189,7 @@ export function generateRound(random: Random, spec: RoundSpec): IntervalQuestion
     // A given interval may not fit every clef, so try a few pairings before
     // giving up on it rather than dropping the question.
     let question: IntervalQuestion | undefined
-    for (let attempt = 0; attempt < 8 && question === undefined; attempt += 1) {
+    for (let attempt = 0; attempt < 12 && question === undefined; attempt += 1) {
       const clef = randomPick(random, spec.clefs as [ClefId, ...ClefId[]])
       const keySignature = randomPick(
         random,
@@ -190,8 +199,33 @@ export function generateRound(random: Random, spec: RoundSpec): IntervalQuestion
         random,
         spec.directions as [PlayDirection, ...PlayDirection[]],
       )
-      question = buildQuestion(random, interval, clef, keySignature, direction)
+      question = buildQuestion(
+        random,
+        interval,
+        clef,
+        keySignature,
+        direction,
+        spec.staffOnly ?? false,
+      )
     }
+    // A staff-only range is barely more than an octave, so a wide interval
+    // may not fit any of the chosen clefs. Widening to ledger lines is far
+    // better than silently serving a short round.
+    if (question === undefined && spec.staffOnly === true) {
+      for (let attempt = 0; attempt < 8 && question === undefined; attempt += 1) {
+        const clef = randomPick(random, spec.clefs as [ClefId, ...ClefId[]])
+        const keySignature = randomPick(
+          random,
+          spec.keySignatures as [KeySignatureId, ...KeySignatureId[]],
+        )
+        const direction = randomPick(
+          random,
+          spec.directions as [PlayDirection, ...PlayDirection[]],
+        )
+        question = buildQuestion(random, interval, clef, keySignature, direction, false)
+      }
+    }
+
     if (question !== undefined) questions.push(question)
   }
 

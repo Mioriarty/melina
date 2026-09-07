@@ -1,0 +1,9 @@
+{
+  "title": "Your path",
+  "subtitle": "From hearing an interval to writing your own counterpoint.",
+  "state": {
+    "open": "Open",
+    "next": "Up next",
+    "locked": "Locked"
+  }
+}

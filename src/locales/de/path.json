@@ -1,0 +1,9 @@
+{
+  "title": "Dein Weg",
+  "subtitle": "Vom Hören eines Intervalls bis zum eigenen Kontrapunkt.",
+  "state": {
+    "open": "Offen",
+    "next": "Als Nächstes",
+    "locked": "Gesperrt"
+  }
+}

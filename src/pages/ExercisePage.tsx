@@ -1,10 +1,17 @@
 import { Suspense } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router'
 
 import { Icon } from '@/components/ui/Icon'
 import { Tag } from '@/components/ui/Tag'
 import { buttonClasses } from '@/components/ui/buttonClasses'
-import { getCategory, getExercise } from '@/config/curriculum'
+import {
+  categoryTitleKey,
+  exerciseBlurbKey,
+  exerciseTitleKey,
+  getCategory,
+  getExercise,
+} from '@/config/curriculum'
 import { exerciseComponent } from '@/config/exerciseComponents'
 import { isExerciseEnabled } from '@/config/features'
 
@@ -16,16 +23,19 @@ import { isExerciseEnabled } from '@/config/features'
  * branch here provides its own way back and its own scrolling.
  */
 export default function ExercisePage() {
+  const { t } = useTranslation(['exercise', 'common'])
   const { categoryId, exerciseId } = useParams()
   const category = getCategory(categoryId)
   const exercise = getExercise(categoryId, exerciseId)
 
-  if (category === undefined || exercise === undefined) {
+  if (
+    category === undefined ||
+    exercise === undefined ||
+    categoryId === undefined ||
+    exerciseId === undefined
+  ) {
     return (
-      <Empty
-        title="Not found"
-        body="That exercise does not exist. It may have been renamed."
-      />
+      <Empty title={t('exercise:notFound.title')} body={t('exercise:notFound.body')} />
     )
   }
 
@@ -53,19 +63,19 @@ export default function ExercisePage() {
       </span>
 
       <p className="mt-6 text-sm tracking-wide text-ink-faint uppercase">
-        {category.title}
+        {t(categoryTitleKey(categoryId))}
       </p>
-      <h1 className="mt-1.5 text-title">{exercise.title}</h1>
+      <h1 className="mt-1.5 text-title">{t(exerciseTitleKey(categoryId, exerciseId))}</h1>
       <p className="mx-auto mt-3 max-w-md leading-relaxed text-balance text-ink-muted">
-        {exercise.blurb}
+        {t(exerciseBlurbKey(categoryId, exerciseId))}
       </p>
 
       <div className="mt-6 flex justify-center">
-        <Tag tone="accent">In development</Tag>
+        <Tag tone="accent">{t('exercise:inDevelopment')}</Tag>
       </div>
 
       <Link to="/" className={buttonClasses('secondary', 'md', 'mt-8')}>
-        Back to the path
+        {t('common:backToPath')}
       </Link>
     </Sheet>
   )
@@ -75,7 +85,7 @@ export default function ExercisePage() {
 function Sheet({ children }: { children: React.ReactNode }) {
   return (
     <div className="h-full overflow-y-auto overscroll-contain">
-      <div className="pb-safe mx-auto w-full max-w-xl px-5 py-14 text-center sm:py-20">
+      <div className="pb-page mx-auto w-full max-w-xl px-5 pt-14 text-center sm:pt-20">
         {children}
       </div>
     </div>
@@ -87,20 +97,22 @@ function Sheet({ children }: { children: React.ReactNode }) {
  * Verovio engraver, which is a real wait on a slow connection.
  */
 function Preparing() {
+  const { t } = useTranslation('exercise')
   return (
     <div className="grid h-full place-items-center px-5 text-center">
-      <p className="text-sm text-ink-faint">Preparing the exercise…</p>
+      <p className="text-sm text-ink-faint">{t('preparing')}</p>
     </div>
   )
 }
 
 function Empty({ title, body }: { title: string; body: string }) {
+  const { t } = useTranslation()
   return (
     <Sheet>
       <h1 className="text-title">{title}</h1>
       <p className="mt-3 leading-relaxed text-ink-muted">{body}</p>
       <Link to="/" className={buttonClasses('secondary', 'md', 'mt-8')}>
-        Back to the path
+        {t('backToPath')}
       </Link>
     </Sheet>
   )

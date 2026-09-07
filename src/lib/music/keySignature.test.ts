@@ -63,10 +63,12 @@ describe('key signatures', () => {
     }
   })
 
-  it('names the relative major and minor', () => {
-    expect(getKeySignature('2s').major).toBe('D')
-    expect(getKeySignature('2s').minor).toBe('Bm')
-    expect(getKeySignature('0').major).toBe('C')
+  it('counts the accidentals and knows their kind', () => {
+    // Key *names* are translated and live in `locales/<lang>/music.json`;
+    // only the shape of the signature belongs here.
+    expect(getKeySignature('2s').count).toBe(2)
+    expect(getKeySignature('2s').kind).toBe('sharp')
+    expect(getKeySignature('0').kind).toBe('natural')
   })
 
   it('validates ids', () => {

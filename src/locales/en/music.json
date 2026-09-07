@@ -1,0 +1,175 @@
+{
+  "clefs": {
+    "treble": { "label": "Treble", "spoken": "treble clef" },
+    "bass": { "label": "Bass", "spoken": "bass clef" },
+    "alto": { "label": "Alto", "spoken": "alto clef" },
+    "tenor": { "label": "Tenor", "spoken": "tenor clef" }
+  },
+  "keySignatures": {
+    "7f": {
+      "major": "C♭",
+      "minor": "A♭m",
+      "majorName": "C♭ major",
+      "minorName": "A♭ minor"
+    },
+    "6f": {
+      "major": "G♭",
+      "minor": "E♭m",
+      "majorName": "G♭ major",
+      "minorName": "E♭ minor"
+    },
+    "5f": {
+      "major": "D♭",
+      "minor": "B♭m",
+      "majorName": "D♭ major",
+      "minorName": "B♭ minor"
+    },
+    "4f": {
+      "major": "A♭",
+      "minor": "Fm",
+      "majorName": "A♭ major",
+      "minorName": "F minor"
+    },
+    "3f": {
+      "major": "E♭",
+      "minor": "Cm",
+      "majorName": "E♭ major",
+      "minorName": "C minor"
+    },
+    "2f": {
+      "major": "B♭",
+      "minor": "Gm",
+      "majorName": "B♭ major",
+      "minorName": "G minor"
+    },
+    "1f": { "major": "F", "minor": "Dm", "majorName": "F major", "minorName": "D minor" },
+    "0": { "major": "C", "minor": "Am", "majorName": "C major", "minorName": "A minor" },
+    "1s": { "major": "G", "minor": "Em", "majorName": "G major", "minorName": "E minor" },
+    "2s": { "major": "D", "minor": "Bm", "majorName": "D major", "minorName": "B minor" },
+    "3s": {
+      "major": "A",
+      "minor": "F♯m",
+      "majorName": "A major",
+      "minorName": "F♯ minor"
+    },
+    "4s": {
+      "major": "E",
+      "minor": "C♯m",
+      "majorName": "E major",
+      "minorName": "C♯ minor"
+    },
+    "5s": {
+      "major": "B",
+      "minor": "G♯m",
+      "majorName": "B major",
+      "minorName": "G♯ minor"
+    },
+    "6s": {
+      "major": "F♯",
+      "minor": "D♯m",
+      "majorName": "F♯ major",
+      "minorName": "D♯ minor"
+    },
+    "7s": {
+      "major": "C♯",
+      "minor": "A♯m",
+      "majorName": "C♯ major",
+      "minorName": "A♯ minor"
+    }
+  },
+  "keySignatureName": "{{major}}, {{minor}}",
+  "directions": {
+    "harmonic": { "label": "Together", "hint": "Both notes at once." },
+    "ascending": { "label": "Ascending", "hint": "Lower note first." },
+    "descending": {
+      "label": "Descending",
+      "hint": "Upper note first — the hardest of the three."
+    }
+  },
+  "instruments": {
+    "piano": { "label": "Piano", "hint": "Steinway grand, four velocity layers." },
+    "harp": { "label": "Harp", "hint": "Orchestral harp. Clearer attack, longer decay." }
+  },
+  "qualities": {
+    "doubly-diminished": "Doubly diminished",
+    "diminished": "Diminished",
+    "minor": "Minor",
+    "perfect": "Perfect",
+    "major": "Major",
+    "augmented": "Augmented",
+    "doubly-augmented": "Doubly augmented"
+  },
+  "qualitiesShort": {
+    "doubly-diminished": "dd",
+    "diminished": "Dim",
+    "minor": "Min",
+    "perfect": "Perf",
+    "major": "Maj",
+    "augmented": "Aug",
+    "doubly-augmented": "AA"
+  },
+  "qualitiesInName": {
+    "doubly-diminished": "Doubly diminished",
+    "diminished": "Diminished",
+    "minor": "Minor",
+    "perfect": "Perfect",
+    "major": "Major",
+    "augmented": "Augmented",
+    "doubly-augmented": "Doubly augmented"
+  },
+  "ordinals": {
+    "1": "Unison",
+    "2": "Second",
+    "3": "Third",
+    "4": "Fourth",
+    "5": "Fifth",
+    "6": "Sixth",
+    "7": "Seventh",
+    "8": "Octave",
+    "9": "Ninth",
+    "10": "Tenth",
+    "11": "Eleventh",
+    "12": "Twelfth",
+    "13": "Thirteenth",
+    "14": "Fourteenth",
+    "15": "Fifteenth"
+  },
+  "ordinalsInName": {
+    "1": "unison",
+    "2": "second",
+    "3": "third",
+    "4": "fourth",
+    "5": "fifth",
+    "6": "sixth",
+    "7": "seventh",
+    "8": "octave",
+    "9": "ninth",
+    "10": "tenth",
+    "11": "eleventh",
+    "12": "twelfth",
+    "13": "thirteenth",
+    "14": "fourteenth",
+    "15": "fifteenth"
+  },
+  "ordinalFallback": "{{number}}th",
+  "intervalName": "{{quality}} {{number}}",
+  "pitch": {
+    "letters": {
+      "C": "C",
+      "D": "D",
+      "E": "E",
+      "F": "F",
+      "G": "G",
+      "A": "A",
+      "B": "B"
+    },
+    "alterations": {
+      "-2": " double flat",
+      "-1": " flat",
+      "0": "",
+      "1": " sharp",
+      "2": " double sharp"
+    },
+    "spoken": "{{letter}}{{alteration}} {{octave}}"
+  }
+}

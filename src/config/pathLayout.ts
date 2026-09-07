@@ -1,4 +1,4 @@
-import { CATEGORIES } from '@/config/curriculum'
+import { stations, type Station } from '@/config/curriculum'
 import { MUSIC_MARKS, type MusicMarkName } from '@/config/musicMarks'
 import { splatPath } from '@/lib/utils/splat'
 import { createRandom, randomBetween } from '@/lib/utils/seededRandom'
@@ -31,7 +31,8 @@ export const PATH_BOTTOM = 200
 export const MEDALLION_SIZE = 72
 
 export interface PathNodePosition {
-  categoryId: string
+  /** Station id — `intervals/reading` or `scales`. */
+  stationId: string
   /** 0-100, a percentage of the column width. */
   x: number
   /** Pixels from the top of the path. */
@@ -44,14 +45,15 @@ export interface PathNodePosition {
  * that it reads as a journey.
  */
 export const PATH_NODES: readonly PathNodePosition[] = [
-  { categoryId: 'intervals', x: 50, y: 130 },
-  { categoryId: 'scales', x: 27, y: 395 },
-  { categoryId: 'dictation', x: 71, y: 630 },
-  { categoryId: 'harmonic-prediction', x: 38, y: 920 },
-  { categoryId: 'harmonic-completion', x: 70, y: 1160 },
-  { categoryId: 'counterpoint', x: 29, y: 1450 },
-  { categoryId: 'daily', x: 62, y: 1690 },
-  { categoryId: 'progress', x: 44, y: 1975 },
+  { stationId: 'intervals/hearing', x: 50, y: 130 },
+  { stationId: 'intervals/reading', x: 26, y: 400 },
+  { stationId: 'scales', x: 71, y: 640 },
+  { stationId: 'dictation', x: 38, y: 930 },
+  { stationId: 'harmonic-prediction', x: 70, y: 1170 },
+  { stationId: 'harmonic-completion', x: 29, y: 1460 },
+  { stationId: 'counterpoint', x: 62, y: 1700 },
+  { stationId: 'daily', x: 35, y: 1985 },
+  { stationId: 'progress', x: 55, y: 2230 },
 ]
 
 const lastNode = PATH_NODES[PATH_NODES.length - 1]
@@ -94,7 +96,7 @@ export const CONNECTORS: readonly { id: string; d: string }[] = PATH_NODES.slice
 ).map((node, index) => {
   // `index + 1` is in range because we sliced off the final node.
   const next = PATH_NODES[index + 1] as PathNodePosition
-  return { id: `${node.categoryId}-${next.categoryId}`, d: connectorPath(node, next) }
+  return { id: `${node.stationId}-${next.stationId}`, d: connectorPath(node, next) }
 })
 
 export interface Decoration {
@@ -288,10 +290,27 @@ export const MUSIC: readonly MusicDecoration[] = scatterMusic(
   SPLATS,
 )
 
-/** Nodes in path order, joined to their curriculum entry. */
-export function orderedPathNodes() {
-  return PATH_NODES.map((position) => {
-    const category = CATEGORIES.find((entry) => entry.id === position.categoryId)
-    return category === undefined ? undefined : { position, category }
-  }).filter((entry) => entry !== undefined)
+/**
+ * Stations in path order, joined to their placement.
+ *
+ * Positions are hand-placed by station id so the route stays art-directed;
+ * a station without one falls back to the end of the path rather than
+ * vanishing, which is what keeps shipping a new exercise from silently
+ * dropping it off the homescreen. `pathLayout.test.ts` asserts every station
+ * has a real position, so the fallback should never actually be used.
+ */
+export function orderedPathNodes(): readonly {
+  position: PathNodePosition
+  station: Station
+}[] {
+  const placed = new Map(PATH_NODES.map((node) => [node.stationId, node]))
+
+  return stations().map((station, index) => ({
+    position: placed.get(station.id) ?? {
+      stationId: station.id,
+      x: index % 2 === 0 ? 42 : 60,
+      y: PATH_HEIGHT + index * 250,
+    },
+    station,
+  }))
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { Icon } from '@/components/ui/Icon'
 import { cn } from '@/lib/utils/cn'
@@ -18,13 +19,14 @@ export interface PlayButtonProps {
  * leaving the note.
  */
 export function PlayButton({ onPlay, loading, failed }: PlayButtonProps) {
+  const { t } = useTranslation('exercise')
   const [busy, setBusy] = useState(false)
 
   const label = failed
-    ? 'Playback unavailable'
+    ? t('play.unavailable')
     : loading
-      ? 'Loading the instrument'
-      : 'Play the interval again'
+      ? t('play.loading')
+      : t('play.again')
 
   return (
     <button

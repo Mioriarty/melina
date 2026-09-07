@@ -6,28 +6,25 @@ import type { IconName } from '@/components/ui/Icon'
  * This is the single source of truth for what melina teaches. The top
  * navigation, the homescreen map and the routes are all derived from it —
  * no component may hardcode a category or exercise list. Adding a module
- * means adding an entry here and nothing else.
+ * means adding an entry here and its names in `locales/<lang>/curriculum.json`.
+ *
+ * The registry holds ids, icons and status — the structure. Titles and
+ * blurbs are translated, so they live in the `curriculum` namespace keyed by
+ * exactly these ids, and the helpers at the bottom of this file are the only
+ * place that mapping is spelled out.
  */
 
 export type Status = 'ready' | 'planned'
 
 export interface ExerciseDef {
   id: string
-  title: string
-  /**
-   * Label for tight spaces, where the category name is already on screen.
-   * Falls back to `title`.
-   */
-  short?: string
-  blurb: string
+  /** Shown on the exercise's own station. Falls back to the category icon. */
+  icon?: IconName
   status: Status
 }
 
 export interface CategoryDef {
   id: string
-  title: string
-  /** Shown on the map node and in the nav. Keep to a single short line. */
-  blurb: string
   icon: IconName
   status: Status
   exercises: readonly ExerciseDef[]
@@ -36,189 +33,134 @@ export interface CategoryDef {
 export const CATEGORIES: readonly CategoryDef[] = [
   {
     id: 'intervals',
-    title: 'Interval Training',
-    blurb: 'Hear and read the distance between two notes.',
     icon: 'swapVertical',
     status: 'ready',
     exercises: [
       {
         id: 'hearing',
-        short: 'Hearing',
-        title: 'Interval Hearing',
-        blurb: 'Identify an interval played melodically or harmonically.',
+        icon: 'ear',
         status: 'ready',
       },
       {
         id: 'reading',
-        short: 'Reading',
-        title: 'Interval Reading',
-        blurb: 'Name the interval you see on the staff.',
+        icon: 'swapVertical',
         status: 'ready',
       },
       {
         id: 'singing',
-        short: 'Singing',
-        title: 'Interval Singing',
-        blurb: 'Sing the target interval from a given root.',
         status: 'planned',
       },
     ],
   },
   {
     id: 'scales',
-    title: 'Scale Training',
-    blurb: 'Scale degrees, modes and their colours.',
     icon: 'trendingUp',
     status: 'planned',
     exercises: [
       {
         id: 'degrees',
-        title: 'Scale Degrees',
-        blurb: 'Place a pitch against its tonic by function.',
         status: 'planned',
       },
       {
         id: 'modes',
-        title: 'Mode Recognition',
-        blurb: 'Tell the seven diatonic modes apart by ear.',
         status: 'planned',
       },
     ],
   },
   {
     id: 'dictation',
-    title: 'Melodic Dictation',
-    blurb: 'Write down what you hear, one phrase at a time.',
     icon: 'create',
     status: 'planned',
     exercises: [
       {
         id: 'short-melodies',
-        title: 'Short Melodies',
-        blurb: 'Notate a two to four bar melody after limited hearings.',
         status: 'planned',
       },
       {
         id: 'rhythm',
-        title: 'Rhythmic Dictation',
-        blurb: 'Capture rhythm alone, without pitch.',
         status: 'planned',
       },
       {
         id: 'two-voice',
-        title: 'Two-Voice Dictation',
-        blurb: 'Track two independent lines at once.',
         status: 'planned',
       },
     ],
   },
   {
     id: 'harmonic-prediction',
-    title: 'Harmonic Prediction',
-    blurb: 'Guess where the progression wants to go.',
     icon: 'sparkles',
     status: 'planned',
     exercises: [
       {
         id: 'next-chord',
-        title: 'Next Chord',
-        blurb: 'Predict the chord that follows what you just heard.',
         status: 'planned',
       },
       {
         id: 'cadences',
-        title: 'Cadence Recognition',
-        blurb: 'Name the cadence closing a phrase.',
         status: 'planned',
       },
     ],
   },
   {
     id: 'harmonic-completion',
-    title: 'Harmonic Completion',
-    blurb: 'Fill the gap in a progression that already works.',
     icon: 'puzzle',
     status: 'planned',
     exercises: [
       {
         id: 'figured-bass',
-        title: 'Figured Bass',
-        blurb: 'Realise a bass line from its figures.',
         status: 'planned',
       },
       {
         id: 'chorale',
-        title: 'Chorale Harmonisation',
-        blurb: 'Harmonise a given soprano in four parts.',
         status: 'planned',
       },
     ],
   },
   {
     id: 'counterpoint',
-    title: 'Counterpoint',
-    blurb: 'Species writing against a cantus firmus.',
     icon: 'network',
     status: 'planned',
     exercises: [
       {
         id: 'first-species',
-        title: 'First Species',
-        blurb: 'Note against note, consonance only.',
         status: 'planned',
       },
       {
         id: 'second-species',
-        title: 'Second Species',
-        blurb: 'Two notes against one, with passing dissonance.',
         status: 'planned',
       },
       {
         id: 'free',
-        title: 'Free Counterpoint',
-        blurb: 'Mixed values with full rhythmic freedom.',
         status: 'planned',
       },
     ],
   },
   {
     id: 'daily',
-    title: 'Daily Composition',
-    blurb: 'One constraint a day. Write something small.',
     icon: 'calendar',
     status: 'planned',
     exercises: [
       {
         id: 'constraint',
-        title: "Today's Constraint",
-        blurb: 'A fresh limitation to compose against.',
         status: 'planned',
       },
       {
         id: 'motif',
-        title: 'Motif Development',
-        blurb: 'Take one motif and put it through its paces.',
         status: 'planned',
       },
     ],
   },
   {
     id: 'progress',
-    title: 'Progress',
-    blurb: 'Where you are strong, and where to aim next.',
     icon: 'analytics',
     status: 'planned',
     exercises: [
       {
         id: 'overview',
-        title: 'Overview',
-        blurb: 'Practice history and streaks at a glance.',
         status: 'planned',
       },
       {
         id: 'weak-spots',
-        title: 'Weak Spots',
-        blurb: 'The intervals and chords that keep catching you out.',
         status: 'planned',
       },
     ],
@@ -238,7 +180,6 @@ export function getExercise(
   return getCategory(categoryId)?.exercises.find((exercise) => exercise.id === exerciseId)
 }
 
-/** Route to a category's first exercise, which is what nav links point at. */
 /**
  * Where a category's station on the path leads.
  *
@@ -265,4 +206,95 @@ export function readyExercises(category: CategoryDef): readonly ExerciseDef[] {
 
 export function exercisePath(categoryId: string, exerciseId: string): string {
   return `/train/${categoryId}/${exerciseId}`
+}
+
+/* ---------------------------------------------------------- translation */
+
+/**
+ * Translation keys, derived from the registry ids.
+ *
+ * Built here rather than at each call site so a rename in the registry moves
+ * the key with it, and so `locales/<lang>/curriculum.json` has exactly one shape
+ * to match. Keys are fully qualified with their namespace, which lets a
+ * component pass one straight to `t` without also naming `curriculum`.
+ */
+export function categoryTitleKey(categoryId: string): string {
+  return `curriculum:categories.${categoryId}.title`
+}
+
+export function categoryBlurbKey(categoryId: string): string {
+  return `curriculum:categories.${categoryId}.blurb`
+}
+
+export function exerciseTitleKey(categoryId: string, exerciseId: string): string {
+  return `curriculum:categories.${categoryId}.exercises.${exerciseId}.title`
+}
+
+export function exerciseBlurbKey(categoryId: string, exerciseId: string): string {
+  return `curriculum:categories.${categoryId}.exercises.${exerciseId}.blurb`
+}
+
+/**
+ * Label for tight spaces, where the category name is already on screen.
+ * Translations may leave it out; callers fall back to the full title.
+ */
+export function exerciseShortKey(categoryId: string, exerciseId: string): string {
+  return `curriculum:categories.${categoryId}.exercises.${exerciseId}.short`
+}
+
+/* ------------------------------------------------------------- stations */
+
+/**
+ * A stop on the homescreen path.
+ *
+ * A category with built exercises contributes **one station per exercise** —
+ * Interval Reading and Interval Hearing are different games and deserve
+ * separate stops, not a shared one that has to guess which you meant. A
+ * category with nothing built yet contributes a single locked station, so
+ * the whole journey stays visible without a station per unwritten exercise.
+ */
+export interface Station {
+  /** `intervals/reading` for an exercise, `scales` for a whole category. */
+  id: string
+  /** Fully qualified translation keys — pass them straight to `t`. */
+  titleKey: string
+  blurbKey: string
+  icon: IconName
+  /** Where tapping it leads. */
+  path: string
+  category: CategoryDef
+  /** The exercise this station is, when it is one. */
+  exercise?: ExerciseDef
+  status: Status
+}
+
+export function stations(): readonly Station[] {
+  return CATEGORIES.flatMap((category) => {
+    const built = readyExercises(category)
+
+    if (built.length === 0) {
+      return [
+        {
+          id: category.id,
+          titleKey: categoryTitleKey(category.id),
+          blurbKey: categoryBlurbKey(category.id),
+          icon: category.icon,
+          path: categoryPath(category),
+          category,
+          status: category.status,
+        },
+      ]
+    }
+
+    return built.map((exercise) => ({
+      id: `${category.id}/${exercise.id}`,
+      titleKey: exerciseTitleKey(category.id, exercise.id),
+      blurbKey: exerciseBlurbKey(category.id, exercise.id),
+      icon: exercise.icon ?? category.icon,
+      path: exercisePath(category.id, exercise.id),
+      category,
+      exercise,
+      status: exercise.status,
+    }))
+  })
 }

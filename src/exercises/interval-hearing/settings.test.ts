@@ -15,6 +15,7 @@ describe('interval hearing settings', () => {
       intervals: ['m3', 'P5'],
       directions: ['descending'],
       instrument: 'harp',
+      staffOnly: true,
       questionsPerRound: 10,
     }
     expect(parse(stored)).toEqual(stored)
@@ -40,6 +41,7 @@ describe('interval hearing settings', () => {
       intervals: [],
       directions: [],
       instrument: 'kazoo',
+      staffOnly: 'yes',
       questionsPerRound: 7,
     })
 
@@ -50,6 +52,7 @@ describe('interval hearing settings', () => {
     // An unknown instrument cannot be loaded, so it falls back too.
     expect(parsed?.instrument).toBe(DEFAULT_SETTINGS.instrument)
     expect(parsed?.questionsPerRound).toBe(DEFAULT_SETTINGS.questionsPerRound)
+    expect(parsed?.staffOnly).toBe(DEFAULT_SETTINGS.staffOnly)
   })
 
   it('strips intervals that cannot be told apart by ear', () => {

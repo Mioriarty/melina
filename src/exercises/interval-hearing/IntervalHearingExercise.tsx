@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
+import { exerciseTitleKey } from '@/config/curriculum'
 import { IntervalRoundScreen } from '@/exercises/shared/IntervalRoundScreen'
+import { LevelsScreen } from '@/exercises/shared/LevelsScreen'
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
 import {
   allowedIntervals,
@@ -11,14 +14,12 @@ import {
   type RoundSpec,
 } from '@/exercises/shared/generate'
 import { useIntervalRound } from '@/exercises/shared/useIntervalRound'
+import { useMusicNames } from '@/hooks/useMusicNames'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { loadInstrument, playInterval, unlockAudio } from '@/lib/audio/engine'
 import type { InstrumentId } from '@/lib/audio/instruments'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
-import { getClef } from '@/lib/music/clef'
 import { isMelodic } from '@/lib/music/direction'
-import { getKeySignature } from '@/lib/music/keySignature'
-import { pitchSpokenName } from '@/lib/music/pitch'
 import {
   harmonicIntervalMei,
   melodicIntervalMei,
@@ -26,6 +27,7 @@ import {
 } from '@/lib/notation/mei'
 import { preloadEngraver } from '@/lib/notation/verovio'
 
+import { HEARING_DIFFICULTIES } from './difficulties'
 import { PlayButton } from './PlayButton'
 import { SetupScreen } from './SetupScreen'
 import { INTERVAL_HEARING_SETTINGS, type IntervalHearingSettings } from './settings'
@@ -41,6 +43,8 @@ const EXERCISE_ID = 'intervals/hearing'
  * direction — a descending interval starts from its upper note.
  */
 export default function IntervalHearingExercise() {
+  const { t } = useTranslation(['exercise', 'common'])
+  const names = useMusicNames()
   const stored = useSetting(INTERVAL_HEARING_SETTINGS)
   const writeSettings = useSettingWriter(INTERVAL_HEARING_SETTINGS)
   const reducedMotion = useReducedMotion()
@@ -131,8 +135,28 @@ export default function IntervalHearingExercise() {
   if (settings === undefined) {
     return (
       <div className="grid h-full place-items-center">
-        <p className="text-sm text-ink-faint">Loading…</p>
+        <p className="text-sm text-ink-faint">{t('common:loading')}</p>
       </div>
+    )
+  }
+
+  if (round.phase.name === 'levels') {
+    return (
+      <LevelsScreen
+        titleKey={exerciseTitleKey('intervals', 'hearing')}
+        blurbKey="exercise:intervals.hearing.levelsBlurb"
+        group="hearing"
+        levels={HEARING_DIFFICULTIES}
+        onPick={(level) => {
+          // Unlock audio inside the tap itself — a level starts a round
+          // straight away, and the first question plays by itself.
+          void unlockAudio()
+          setDraft(level.settings)
+          writeSettings(level.settings)
+          round.start(level.settings)
+        }}
+        onCustom={round.toSetup}
+      />
     )
   }
 
@@ -149,6 +173,7 @@ export default function IntervalHearingExercise() {
           void unlockAudio()
           round.start()
         }}
+        onBack={round.toLevels}
       />
     )
   }
@@ -157,8 +182,8 @@ export default function IntervalHearingExercise() {
     return (
       <RoundSummary
         answers={round.answers}
-        onPlayAgain={round.start}
-        onChangeSettings={round.toSetup}
+        onPlayAgain={() => round.start()}
+        onChangeSettings={round.toLevels}
       />
     )
   }
@@ -167,8 +192,6 @@ export default function IntervalHearingExercise() {
   if (question === undefined) return null
 
   const revealed = round.phase.name === 'revealed'
-  const clef = getClef(question.clef)
-  const signature = getKeySignature(question.keySignature)
 
   // Before the answer, only the note the interval starts from. After it,
   // the pair — as a chord when they sounded together, and left to right in
@@ -188,9 +211,14 @@ export default function IntervalHearingExercise() {
         })
       : harmonicIntervalMei(question)
 
+  const staff = {
+    clef: names.clefSpoken(question.clef),
+    key: names.keyMajorName(question.keySignature),
+    first: names.pitchSpoken(firstNote(question)),
+  }
   const scoreLabel = revealed
-    ? `${clef.label} clef, key signature of ${signature.major} major: ${pitchSpokenName(firstNote(question))} and ${pitchSpokenName(secondNote(question))}`
-    : `${clef.label} clef, key signature of ${signature.major} major: ${pitchSpokenName(firstNote(question))}`
+    ? t('score.twoNotes', { ...staff, second: names.pitchSpoken(secondNote(question)) })
+    : t('score.oneNote', staff)
 
   return (
     <IntervalRoundScreen
@@ -210,7 +238,7 @@ export default function IntervalHearingExercise() {
       reducedMotion={reducedMotion}
       onAnswer={round.answer}
       onNext={round.next}
-      onQuit={round.toSetup}
+      onQuit={round.toLevels}
     />
   )
 }

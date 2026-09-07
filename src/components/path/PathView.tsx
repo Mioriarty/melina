@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { PATH_HEIGHT, orderedPathNodes } from '@/config/pathLayout'
 
@@ -19,6 +20,7 @@ export interface PathViewProps {
  * the offset as a custom property for the parallax layer.
  */
 export function PathView({ reducedMotion }: PathViewProps) {
+  const { t } = useTranslation('path')
   const scrollRef = useRef<HTMLDivElement>(null)
   const surfaceRef = useRef<HTMLDivElement>(null)
 
@@ -50,9 +52,9 @@ export function PathView({ reducedMotion }: PathViewProps) {
     <div ref={scrollRef} className="h-full overflow-x-hidden overflow-y-auto">
       <div ref={surfaceRef} className="mx-auto w-full max-w-[34rem] px-4">
         <header className="pt-8 pb-2 text-center">
-          <h1 className="text-title">Your path</h1>
+          <h1 className="text-title">{t('title')}</h1>
           <p className="mx-auto mt-2 max-w-xs text-[0.9375rem] leading-relaxed text-balance text-ink-muted">
-            Eight stations, from hearing an interval to writing your own counterpoint.
+            {t('subtitle')}
           </p>
         </header>
 
@@ -60,10 +62,10 @@ export function PathView({ reducedMotion }: PathViewProps) {
           <PathDecorations reducedMotion={reducedMotion} />
           <PathConnectors reducedMotion={reducedMotion} />
 
-          {orderedPathNodes().map(({ position, category }, index) => (
+          {orderedPathNodes().map(({ position, station }, index) => (
             <PathNode
-              key={category.id}
-              category={category}
+              key={station.id}
+              station={station}
               position={position}
               index={index}
               reducedMotion={reducedMotion}

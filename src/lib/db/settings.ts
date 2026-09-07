@@ -1,6 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useCallback } from 'react'
 
+import { isLanguageId, type LanguageId } from '@/lib/i18n/languages'
+
 import { db } from './schema'
 
 /**
@@ -20,6 +22,18 @@ export const LAST_CATEGORY: SettingSpec<string | null> = {
   key: 'lastCategoryId',
   fallback: null,
   parse: (value) => (typeof value === 'string' ? value : undefined),
+}
+
+/**
+ * The interface language the player has chosen. `null` means they never
+ * chose one, which is different from choosing English: it lets the browser's
+ * own preference keep deciding.
+ */
+export const UI_LANGUAGE: SettingSpec<LanguageId | null> = {
+  key: 'uiLanguage',
+  fallback: null,
+  parse: (value) =>
+    typeof value === 'string' && isLanguageId(value) ? value : undefined,
 }
 
 export const LAST_OPENED_AT: SettingSpec<number | null> = {

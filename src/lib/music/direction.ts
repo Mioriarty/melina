@@ -9,40 +9,20 @@
  */
 export type PlayDirection = 'harmonic' | 'ascending' | 'descending'
 
-export interface PlayDirectionDef {
-  id: PlayDirection
-  label: string
-  hint: string
-}
-
-export const PLAY_DIRECTIONS: readonly PlayDirectionDef[] = [
-  {
-    id: 'harmonic',
-    label: 'Together',
-    hint: 'Both notes at once.',
-  },
-  {
-    id: 'ascending',
-    label: 'Ascending',
-    hint: 'Lower note first.',
-  },
-  {
-    id: 'descending',
-    label: 'Descending',
-    hint: 'Upper note first — the hardest of the three.',
-  },
+/**
+ * In the order the setup screen offers them. Their names and one-line hints
+ * live in the `music` translation namespace — see `useMusicNames`.
+ */
+export const PLAY_DIRECTIONS: readonly PlayDirection[] = [
+  'harmonic',
+  'ascending',
+  'descending',
 ]
 
 export const DEFAULT_PLAY_DIRECTIONS: readonly PlayDirection[] = ['ascending']
 
 export function isPlayDirection(value: string): value is PlayDirection {
-  return PLAY_DIRECTIONS.some((direction) => direction.id === value)
-}
-
-export function getPlayDirection(id: PlayDirection): PlayDirectionDef {
-  const direction = PLAY_DIRECTIONS.find((entry) => entry.id === id)
-  if (direction === undefined) throw new Error(`unknown direction: ${id}`)
-  return direction
+  return PLAY_DIRECTIONS.includes(value as PlayDirection)
 }
 
 /**

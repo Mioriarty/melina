@@ -19,6 +19,8 @@ export interface IntervalReadingSettings {
   keySignatures: readonly KeySignatureId[]
   /** Interval keys, e.g. `P5`. */
   intervals: readonly string[]
+  /** Keep both notes on the staff, with no ledger lines. */
+  staffOnly: boolean
   questionsPerRound: number
 }
 
@@ -35,6 +37,7 @@ export const DEFAULT_SETTINGS: IntervalReadingSettings = {
   clefs: DEFAULT_CLEF_IDS,
   keySignatures: DEFAULT_KEY_SIGNATURE_IDS,
   intervals: DEFAULT_INTERVAL_KEYS,
+  staffOnly: false,
   questionsPerRound: 20,
 }
 
@@ -58,12 +61,14 @@ function parseSettings(value: unknown): IntervalReadingSettings | undefined {
   const intervals =
     stringArray(raw.intervals)?.filter((key) => CATALOG_KEYS.includes(key)) ?? []
   const questions = raw.questionsPerRound
+  const staffOnly = raw.staffOnly
 
   return {
     clefs: clefs.length > 0 ? clefs : DEFAULT_SETTINGS.clefs,
     keySignatures:
       keySignatures.length > 0 ? keySignatures : DEFAULT_SETTINGS.keySignatures,
     intervals: intervals.length > 0 ? intervals : DEFAULT_SETTINGS.intervals,
+    staffOnly: typeof staffOnly === 'boolean' ? staffOnly : DEFAULT_SETTINGS.staffOnly,
     questionsPerRound:
       typeof questions === 'number' && ROUND_LENGTHS.includes(questions as 10 | 20 | 30)
         ? questions

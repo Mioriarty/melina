@@ -1,0 +1,70 @@
+{
+  "reading": {
+    "first-steps": {
+      "title": "First Steps",
+      "blurb": "Treble clef, C major, on the staff. Five intervals, nothing hidden."
+    },
+    "treble-and-bass": {
+      "title": "Treble & Bass",
+      "blurb": "Both common clefs, C major, the everyday intervals."
+    },
+    "ledger-lines": {
+      "title": "Ledger Lines",
+      "blurb": "Treble and bass with the full range, so notes leave the staff."
+    },
+    "sharp-keys": {
+      "title": "Sharp Keys",
+      "blurb": "Up to four sharps. The signature starts doing the work."
+    },
+    "flat-keys": {
+      "title": "Flat Keys",
+      "blurb": "Up to four flats, where the naturals are the surprise."
+    },
+    "c-clefs": {
+      "title": "C Clefs",
+      "blurb": "Alto and tenor only. Everything you know, moved."
+    },
+    "tritone": {
+      "title": "The Tritone",
+      "blurb": "Fourths and fifths only. Is that augmented or diminished?"
+    },
+    "everything": {
+      "title": "Everything",
+      "blurb": "All four clefs, all fifteen keys, every spelling in the catalog."
+    }
+  },
+  "hearing": {
+    "open-intervals": {
+      "title": "Open Intervals",
+      "blurb": "Unison, fourth, fifth, octave. Ascending, on the staff, in C."
+    },
+    "thirds-and-sixths": {
+      "title": "Thirds & Sixths",
+      "blurb": "Major against minor, in the two places it matters most."
+    },
+    "steps-and-sevenths": {
+      "title": "Steps & Sevenths",
+      "blurb": "Seconds and sevenths — the narrow ones and their inversions."
+    },
+    "ascending": {
+      "title": "All Ascending",
+      "blurb": "Every interval, always upwards. The usual starting point."
+    },
+    "descending": {
+      "title": "All Descending",
+      "blurb": "Every interval, always downwards. Harder than it sounds."
+    },
+    "harmonic": {
+      "title": "Played Together",
+      "blurb": "Both notes at once, with no melodic shape to lean on."
+    },
+    "harp": {
+      "title": "On the Harp",
+      "blurb": "The same intervals on a different instrument. Timbre off, ears on."
+    },
+    "everything": {
+      "title": "Everything",
+      "blurb": "All intervals, all three directions, all four clefs."
+    }
+  }
+}

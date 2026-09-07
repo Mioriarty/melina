@@ -33,31 +33,34 @@ export interface KeySignatureDef {
   /** How many accidentals, and which kind. */
   count: number
   kind: 'sharp' | 'flat' | 'natural'
-  /** Major and relative minor key names, for the settings UI. */
-  major: string
-  minor: string
 }
+
+/**
+ * Key names are translated, not stored: German writes B♭ major as "B-Dur"
+ * and B major as "H-Dur", so a hardcoded letter here would be wrong for half
+ * the audience. See `useMusicNames`.
+ */
 
 /** Sharps are always added in this order, flats in the reverse. */
 const SHARP_ORDER: readonly Letter[] = ['F', 'C', 'G', 'D', 'A', 'E', 'B']
 const FLAT_ORDER: readonly Letter[] = ['B', 'E', 'A', 'D', 'G', 'C', 'F']
 
 export const KEY_SIGNATURES: readonly KeySignatureDef[] = [
-  { id: '7f', count: 7, kind: 'flat', major: 'C♭', minor: 'A♭m' },
-  { id: '6f', count: 6, kind: 'flat', major: 'G♭', minor: 'E♭m' },
-  { id: '5f', count: 5, kind: 'flat', major: 'D♭', minor: 'B♭m' },
-  { id: '4f', count: 4, kind: 'flat', major: 'A♭', minor: 'Fm' },
-  { id: '3f', count: 3, kind: 'flat', major: 'E♭', minor: 'Cm' },
-  { id: '2f', count: 2, kind: 'flat', major: 'B♭', minor: 'Gm' },
-  { id: '1f', count: 1, kind: 'flat', major: 'F', minor: 'Dm' },
-  { id: '0', count: 0, kind: 'natural', major: 'C', minor: 'Am' },
-  { id: '1s', count: 1, kind: 'sharp', major: 'G', minor: 'Em' },
-  { id: '2s', count: 2, kind: 'sharp', major: 'D', minor: 'Bm' },
-  { id: '3s', count: 3, kind: 'sharp', major: 'A', minor: 'F♯m' },
-  { id: '4s', count: 4, kind: 'sharp', major: 'E', minor: 'C♯m' },
-  { id: '5s', count: 5, kind: 'sharp', major: 'B', minor: 'G♯m' },
-  { id: '6s', count: 6, kind: 'sharp', major: 'F♯', minor: 'D♯m' },
-  { id: '7s', count: 7, kind: 'sharp', major: 'C♯', minor: 'A♯m' },
+  { id: '7f', count: 7, kind: 'flat' },
+  { id: '6f', count: 6, kind: 'flat' },
+  { id: '5f', count: 5, kind: 'flat' },
+  { id: '4f', count: 4, kind: 'flat' },
+  { id: '3f', count: 3, kind: 'flat' },
+  { id: '2f', count: 2, kind: 'flat' },
+  { id: '1f', count: 1, kind: 'flat' },
+  { id: '0', count: 0, kind: 'natural' },
+  { id: '1s', count: 1, kind: 'sharp' },
+  { id: '2s', count: 2, kind: 'sharp' },
+  { id: '3s', count: 3, kind: 'sharp' },
+  { id: '4s', count: 4, kind: 'sharp' },
+  { id: '5s', count: 5, kind: 'sharp' },
+  { id: '6s', count: 6, kind: 'sharp' },
+  { id: '7s', count: 7, kind: 'sharp' },
 ]
 
 export const DEFAULT_KEY_SIGNATURE_IDS: readonly KeySignatureId[] = ['0']

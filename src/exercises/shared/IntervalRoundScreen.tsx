@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { IntervalKeyboard } from '@/components/input/IntervalKeyboard'
 import { KeyboardShell } from '@/components/input/KeyboardShell'
@@ -45,6 +46,8 @@ export function IntervalRoundScreen({
   onNext,
   onQuit,
 }: IntervalRoundScreenProps) {
+  const { t } = useTranslation('exercise')
+
   // Set on mount rather than during render: `useRef(Date.now())` evaluates
   // the clock on every render even though only the first value is kept, and
   // starting the timer after paint measures thinking time more honestly.
@@ -86,7 +89,7 @@ export function IntervalRoundScreen({
           keyboard below.
         */}
         <div className="flex min-h-0 flex-1 flex-col items-center gap-4 overflow-hidden pt-8 pb-2">
-          <h1 className="shrink-0 text-center text-heading">What interval is this?</h1>
+          <h1 className="shrink-0 text-center text-heading">{t('round.question')}</h1>
 
           <div className="flex min-h-0 w-full max-w-full flex-1 items-center justify-center gap-3">
             <Score
@@ -127,6 +130,8 @@ function Progress({
   total: number
   onQuit: () => void
 }) {
+  const { t } = useTranslation('exercise')
+
   return (
     <div className="flex items-center gap-3">
       <button
@@ -134,7 +139,7 @@ function Progress({
         onClick={onQuit}
         className="-ml-2 grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-muted transition-colors hover:bg-accent-tint hover:text-accent"
       >
-        <Icon name="arrowBack" size={20} label="End this round" />
+        <Icon name="arrowBack" size={20} label={t('round.end')} />
       </button>
 
       <div
@@ -143,7 +148,7 @@ function Progress({
         aria-valuenow={index + 1}
         aria-valuemin={1}
         aria-valuemax={total}
-        aria-label={`Question ${index + 1} of ${total}`}
+        aria-label={t('round.progress', { current: index + 1, total })}
       >
         <div
           className="h-full rounded-full bg-accent transition-[width] duration-300 ease-[--ease-out-soft]"
@@ -159,11 +164,13 @@ function Progress({
 }
 
 function Feedback({ answer, onNext }: { answer: Answered; onNext: () => void }) {
+  const { t } = useTranslation('exercise')
+
   if (answer.correct) {
     return (
       <p className="flex items-center gap-1.5 font-medium text-correct">
         <Icon name="correct" size={20} />
-        Correct
+        {t('round.correct')}
       </p>
     )
   }
@@ -179,7 +186,7 @@ function Feedback({ answer, onNext }: { answer: Answered; onNext: () => void }) 
       )}
     >
       <Icon name="arrowForward" size={18} />
-      Next question
+      {t('round.next')}
     </button>
   )
 }

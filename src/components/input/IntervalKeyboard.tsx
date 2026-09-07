@@ -1,13 +1,12 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { Icon } from '@/components/ui/Icon'
+import { useMusicNames, type MusicNames } from '@/hooks/useMusicNames'
 import { QUALITY_ORDER } from '@/lib/music/catalog'
 import {
   intervalKey,
-  intervalName,
   intervalsEqual,
-  numberName,
-  qualityLabel,
   type Interval,
   type IntervalQuality,
 } from '@/lib/music/interval'
@@ -40,17 +39,6 @@ export interface IntervalKeyboardProps {
   correct?: Interval | undefined
 }
 
-/** Compact forms for narrow screens, where the full words will not fit. */
-const SHORT_LABELS: Record<IntervalQuality, string> = {
-  'doubly-diminished': 'dd',
-  diminished: 'Dim',
-  minor: 'Min',
-  perfect: 'Perf',
-  major: 'Maj',
-  augmented: 'Aug',
-  'doubly-augmented': 'AA',
-}
-
 const PERFECT_INDEX = QUALITY_ORDER.indexOf('perfect')
 
 function qualityIndex(quality: IntervalQuality): number {
@@ -70,6 +58,8 @@ export function IntervalKeyboard({
   chosen,
   correct,
 }: IntervalKeyboardProps) {
+  const { t } = useTranslation('exercise')
+  const names = useMusicNames()
   const rows = useMemo<Row[]>(() => {
     const numbers = [...new Set(options.map((option) => option.number))].sort(
       (a, b) => a - b,
@@ -149,7 +139,7 @@ export function IntervalKeyboard({
     <div
       ref={containerRef}
       role="group"
-      aria-label="Interval answers"
+      aria-label={t('round.keyboardLabel')}
       onKeyDown={handleKeyDown}
       className="grid gap-1.5"
     >
@@ -177,13 +167,14 @@ export function IntervalKeyboard({
               setFocus({ row: rowIndex, index: row.entries.indexOf(interval) })
             }
             onSelect={() => onAnswer(interval)}
+            names={names}
           />
         )
 
         return (
           <div key={row.number} className="flex items-center gap-1.5">
             <span className="w-[4.25rem] shrink-0 font-serif text-[0.9375rem] font-semibold text-ink-muted">
-              {numberName(row.number)}
+              {names.number(row.number)}
             </span>
 
             {/* The two halves share the remaining width equally, which puts
@@ -226,6 +217,8 @@ interface KeyProps {
   isCorrect: boolean
   onFocus: () => void
   onSelect: () => void
+  /** Passed down rather than re-derived: one hook call per keyboard, not per key. */
+  names: MusicNames
 }
 
 function Key({
@@ -237,6 +230,7 @@ function Key({
   isCorrect,
   onFocus,
   onSelect,
+  names,
 }: KeyProps) {
   const showCorrect = revealed && isCorrect
   const showWrong = revealed && isChosen && !isCorrect
@@ -248,7 +242,7 @@ function Key({
       data-interval={intervalKey(interval)}
       tabIndex={focused ? 0 : -1}
       disabled={revealed}
-      aria-label={intervalName(interval)}
+      aria-label={names.interval(interval)}
       onFocus={onFocus}
       onClick={onSelect}
       className={cn(
@@ -266,8 +260,8 @@ function Key({
           ],
       )}
     >
-      <span className="sm:hidden">{SHORT_LABELS[interval.quality]}</span>
-      <span className="hidden sm:inline">{qualityLabel(interval.quality)}</span>
+      <span className="sm:hidden">{names.qualityShort(interval.quality)}</span>
+      <span className="hidden sm:inline">{names.quality(interval.quality)}</span>
 
       {/* Never colour alone: the result also carries a glyph. */}
       {(showCorrect || showWrong) && (

@@ -123,6 +123,15 @@
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
   }
+
+  /* The tail of a scrolling page body.
+     `pb-safe` alone sets padding-bottom outright, so it cancels the bottom
+     half of any `py-*` beside it and the last card ends flush against the
+     window edge. This keeps a real gap and adds the home indicator on top of
+     it, rather than instead of it. */
+  .pb-page {
+    padding-bottom: calc(3rem + env(safe-area-inset-bottom));
+  }
 }
 
 @layer components {

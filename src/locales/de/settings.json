@@ -1,0 +1,9 @@
+{
+  "title": "Einstellungen",
+  "blurb": "Alles hier bleibt auf diesem Gerät.",
+  "language": {
+    "title": "Sprache",
+    "hint": "Ändert jede Beschriftung in der App, auch die Ton- und Tonartnamen.",
+    "label": "Sprache der Oberfläche"
+  }
+}

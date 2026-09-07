@@ -34,6 +34,8 @@ export interface IntervalHearingSettings {
   keySignatures: readonly KeySignatureId[]
   /** Interval keys, e.g. `P5`. */
   intervals: readonly string[]
+  /** Keep both notes on the staff, with no ledger lines. */
+  staffOnly: boolean
   directions: readonly PlayDirection[]
   instrument: InstrumentId
   questionsPerRound: number
@@ -45,6 +47,7 @@ export const DEFAULT_SETTINGS: IntervalHearingSettings = {
   clefs: DEFAULT_CLEF_IDS,
   keySignatures: DEFAULT_KEY_SIGNATURE_IDS,
   intervals: HEARABLE_INTERVAL_KEYS,
+  staffOnly: false,
   directions: DEFAULT_PLAY_DIRECTIONS,
   instrument: DEFAULT_INSTRUMENT,
   questionsPerRound: 20,
@@ -76,6 +79,7 @@ function parseSettings(value: unknown): IntervalHearingSettings | undefined {
   const directions = stringArray(raw.directions)?.filter(isPlayDirection) ?? []
   const instrument = raw.instrument
   const questions = raw.questionsPerRound
+  const staffOnly = raw.staffOnly
 
   return {
     clefs: clefs.length > 0 ? clefs : DEFAULT_SETTINGS.clefs,
@@ -87,6 +91,7 @@ function parseSettings(value: unknown): IntervalHearingSettings | undefined {
       typeof instrument === 'string' && isInstrumentId(instrument)
         ? instrument
         : DEFAULT_SETTINGS.instrument,
+    staffOnly: typeof staffOnly === 'boolean' ? staffOnly : DEFAULT_SETTINGS.staffOnly,
     questionsPerRound:
       typeof questions === 'number' && ROUND_LENGTHS.includes(questions as 10 | 20 | 30)
         ? questions

@@ -11,7 +11,9 @@ export interface Answered {
 }
 
 export type Phase =
-  /** Choosing what to practise. */
+  /** Choosing a level — the landing screen. */
+  | { name: 'levels' }
+  /** The full settings screen, reached from Custom. */
   | { name: 'setup' }
   /** Mid-round, waiting for an answer. */
   | { name: 'asking'; index: number }
