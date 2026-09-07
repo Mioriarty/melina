@@ -1,0 +1,179 @@
+@import 'tailwindcss';
+
+/* Fonts are self-hosted so the PWA renders correctly with no network.
+   Declared by hand rather than importing Fontsource's index.css, which pulls
+   in Cyrillic, Greek and Vietnamese subsets and quadruples the precache. The
+   Latin subset (U+0000-00FF) already covers English and German, umlauts and
+   eszett included. Add a latin-ext face here if a language ever needs it. */
+@font-face {
+  font-family: 'EB Garamond Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 800;
+  src: url('@fontsource-variable/eb-garamond/files/eb-garamond-latin-wght-normal.woff2')
+    format('woff2-variations');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308,
+    U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('@fontsource-variable/inter/files/inter-latin-wght-normal.woff2')
+    format('woff2-variations');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308,
+    U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ------------------------------------------------------------------
+   Design tokens — the single source of colour, type and motion.
+   Never write a raw hex value in a component; add a token here.
+   ------------------------------------------------------------------ */
+@theme {
+  /* Paper & ink -- the only neutrals in the system. Text sits deliberately
+     hard against the paper: contrast ratios in comments are vs --color-paper. */
+  --color-paper: #fcfcfa;
+  --color-paper-raised: #ffffff;
+  --color-ink: #101012; /* 18.5:1 */
+  --color-ink-muted: #35353b; /* 11.9:1 */
+  --color-ink-faint: #5f5f67; /* 6.2:1 -- passes AA as body text, not just as a hint */
+  --color-rule: #d0d0c9;
+
+  /* The one accent. 7.2:1 on paper, 7.4:1 for white-on-accent. */
+  --color-accent: #0b6060;
+  --color-accent-hover: #084c4c;
+  --color-accent-press: #063b3b;
+  --color-accent-tint: #dfeceb;
+
+  /* Semantic feedback. Green is warm-shifted so it never reads as
+     "a lighter accent" when it sits beside teal chrome. */
+  --color-correct: #35691f;
+  --color-wrong: #a01c15;
+
+  --font-serif:
+    'EB Garamond Variable', 'EB Garamond', ui-serif, Georgia, 'Times New Roman', serif;
+  --font-sans:
+    'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
+    sans-serif;
+
+  /* EB Garamond runs small and light on screen, so display sizes are
+     bumped and tracked tighter than a stock scale would give. */
+  --text-display: 3.25rem;
+  --text-display--line-height: 1.04;
+  --text-display--letter-spacing: -0.022em;
+  --text-title: 2rem;
+  --text-title--line-height: 1.12;
+  --text-title--letter-spacing: -0.016em;
+  --text-heading: 1.375rem;
+  --text-heading--line-height: 1.2;
+  --text-heading--letter-spacing: -0.011em;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  html,
+  body {
+    /* The document itself never scrolls. The shell is exactly viewport
+       height and every screen owns its own scroll container, so letting the
+       page scroll as well gives two nested scrollers fighting each other,
+       and on iOS lets the whole app rubber-band away from the viewport. */
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  body {
+    @apply bg-paper font-sans text-ink antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-serif font-medium;
+  }
+
+  /* Only ever show focus rings for keyboard users, but always show them
+     there -- the map is unusable without visible focus. */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent;
+  }
+
+  /* Numbers in stats and scores must not shift width as they change. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer utilities {
+  /* iOS notch / home indicator. */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@layer components {
+  /* The route draws itself in on first load, each segment a beat after the
+     one above it, so the path assembles downward like a journey. */
+  .path-connector {
+    animation: path-draw 900ms var(--ease-out-soft) both;
+  }
+
+  @keyframes path-draw {
+    from {
+      opacity: 0;
+      stroke-dashoffset: 180;
+    }
+    to {
+      opacity: 1;
+      stroke-dashoffset: 0;
+    }
+  }
+
+  .path-node {
+    animation: path-node-in 560ms var(--ease-out-soft) both;
+  }
+
+  @keyframes path-node-in {
+    from {
+      opacity: 0;
+      translate: 0 14px;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  /* Decorations drift against the scroll by their own depth factor. The
+     scroll offset is published once per frame as --scroll by PathView. */
+  .path-parallax {
+    will-change: transform;
+    transform: translate3d(-50%, calc(-50% + var(--scroll, 0px) * var(--depth)), 0)
+      rotate(var(--rotate, 0deg));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
