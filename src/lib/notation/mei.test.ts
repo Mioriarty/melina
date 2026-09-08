@@ -6,7 +6,12 @@ import { parsePitch, type Pitch } from '@/lib/music/pitch'
 
 import { scalePitches } from '@/lib/music/scale'
 
-import { accidentalAttributes, harmonicIntervalMei, scaleMei, singleNoteMei } from './mei'
+import {
+  accidentalAttributes,
+  harmonicIntervalMei,
+  melodicIntervalMei,
+  scaleMei,
+} from './mei'
 
 function p(text: string): Pitch {
   const value = parsePitch(text)
@@ -186,16 +191,72 @@ describe('scaleMei', () => {
   })
 })
 
-describe('singleNoteMei', () => {
-  it('defaults to a whole note, as an interval question shows it', () => {
-    expect(
-      singleNoteMei({ pitch: p('C4'), clef: 'treble', keySignature: '0' }),
-    ).toContain('dur="1"')
+describe('notes that have not been revealed yet', () => {
+  const hidden = (mei: string) => (mei.match(/visible="false"/g) ?? []).length
+  const notes = (mei: string) => (mei.match(/<note /g) ?? []).length
+
+  it('engraves the whole scale and draws only what has been revealed', () => {
+    // Leaving the rest out would re-engrave a different piece of music: the
+    // staff narrows and the note already on screen slides somewhere else.
+    const pitches = scalePitches(p('D4'), 'dorian') as Pitch[]
+    const asked = scaleMei({ pitches, clef: 'treble', hideFrom: 1 })
+
+    expect(notes(asked)).toBe(8)
+    expect(hidden(asked)).toBe(7)
+    // The note that is shown is the first one, and it is not hidden.
+    expect(asked.indexOf('visible="false"')).toBeGreaterThan(asked.indexOf('pname="d"'))
   })
 
-  it('takes a duration, so a scale opens on a quarter like the rest of it', () => {
-    expect(
-      singleNoteMei({ pitch: p('C4'), clef: 'treble', keySignature: '0', dur: 4 }),
-    ).toContain('dur="4"')
+  it('draws the whole scale once it is revealed', () => {
+    const pitches = scalePitches(p('D4'), 'dorian') as Pitch[]
+    const revealed = scaleMei({ pitches, clef: 'treble' })
+
+    expect(notes(revealed)).toBe(8)
+    expect(hidden(revealed)).toBe(0)
+  })
+
+  it('hides one note of a chord without dropping it', () => {
+    const asked = harmonicIntervalMei({
+      lower: p('C4'),
+      upper: p('A4'),
+      clef: 'treble',
+      keySignature: '2s',
+      hide: 'upper',
+    })
+
+    expect(notes(asked)).toBe(2)
+    expect(hidden(asked)).toBe(1)
+    // The lower note is the one on screen, so it keeps its accidental drawn.
+    expect(asked).toContain('pname="c" oct="4" accid="n"/>')
+  })
+
+  it('hides the second note of a melodic interval', () => {
+    const asked = melodicIntervalMei({
+      first: p('A4'),
+      second: p('C4'),
+      clef: 'treble',
+      keySignature: '0',
+      hide: 'second',
+    })
+
+    expect(notes(asked)).toBe(2)
+    expect(hidden(asked)).toBe(1)
+    expect(asked).toContain('pname="c" oct="4" dur="2" accid.ges="n" visible="false"')
+  })
+
+  it('carries the hidden note through the unison special case', () => {
+    // A harmonic unison is written as two successive notes rather than a
+    // chord, so "hide the upper one" has to become "hide the second one".
+    const asked = harmonicIntervalMei({
+      lower: p('C4'),
+      upper: p('C#4'),
+      clef: 'treble',
+      keySignature: '0',
+      hide: 'upper',
+    })
+
+    expect(asked).not.toContain('<chord')
+    expect(hidden(asked)).toBe(1)
+    expect(asked).toContain('accid="s" visible="false"')
   })
 })

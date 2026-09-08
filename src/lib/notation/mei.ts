@@ -19,6 +19,8 @@ export interface HarmonicIntervalOptions {
   upper: Pitch
   clef: ClefId
   keySignature: KeySignatureId
+  /** Engraved in place but not drawn, until the answer reveals it. */
+  hide?: 'lower' | 'upper'
 }
 
 /** No sharps, no flats: every alteration a scale needs is printed. */
@@ -76,10 +78,31 @@ export function accidentalAttributes(value: Pitch, keySignature: KeySignatureId)
     : ` accid="${WRITTEN_ACCIDENTALS[value.alteration]}"`
 }
 
-function noteElement(value: Pitch, keySignature: KeySignatureId, duration = ''): string {
+/**
+ * A note that has not been revealed yet.
+ *
+ * `@visible="false"` engraves the note in full — its place in the bar, its
+ * accidental, the width it takes — and then does not draw it. That is what
+ * keeps a hearing question from jumping about when the answer arrives: the
+ * staff is laid out once, for the whole interval or the whole scale, and
+ * revealing it only makes the rest of it visible.
+ *
+ * Leaving the note out instead re-engraves a different piece of music, and
+ * everything moves: the staff narrows, and the note that was on screen slides
+ * across to a new position.
+ */
+const HIDDEN = ' visible="false"'
+
+function noteElement(
+  value: Pitch,
+  keySignature: KeySignatureId,
+  duration = '',
+  hidden = false,
+): string {
   const pname = value.letter.toLowerCase()
   const dur = duration === '' ? '' : ` ${duration}`
-  return `<note pname="${pname}" oct="${value.octave}"${dur}${accidentalAttributes(value, keySignature)}/>`
+  const accidental = accidentalAttributes(value, keySignature)
+  return `<note pname="${pname}" oct="${value.octave}"${dur}${accidental}${hidden ? HIDDEN : ''}/>`
 }
 
 /**
@@ -142,44 +165,26 @@ export function harmonicIntervalMei({
   upper,
   clef,
   keySignature,
+  hide,
 }: HarmonicIntervalOptions): string {
   if (diatonicValue(lower) === diatonicValue(upper)) {
-    return melodicIntervalMei({ first: lower, second: upper, clef, keySignature })
+    return melodicIntervalMei({
+      first: lower,
+      second: upper,
+      clef,
+      keySignature,
+      ...(hide === undefined ? {} : { hide: hide === 'lower' ? 'first' : 'second' }),
+    })
   }
 
   return document(
     clef,
     keySignature,
     `<chord dur="1">
-                    ${noteElement(lower, keySignature)}
-                    ${noteElement(upper, keySignature)}
+                    ${noteElement(lower, keySignature, '', hide === 'lower')}
+                    ${noteElement(upper, keySignature, '', hide === 'upper')}
                   </chord>`,
   )
-}
-
-export interface SingleNoteOptions {
-  pitch: Pitch
-  clef: ClefId
-  keySignature: KeySignatureId
-  /** MEI duration: 1 is a whole note, 4 a quarter. */
-  dur?: number
-}
-
-/**
- * One note alone.
- *
- * Used by the hearing exercises, which show the note the answer is measured
- * from and reveal the rest once it is in. The duration is settable so that
- * note matches what it will become: a whole note before an interval, a
- * quarter before a scale.
- */
-export function singleNoteMei({
-  pitch,
-  clef,
-  keySignature,
-  dur = 1,
-}: SingleNoteOptions): string {
-  return document(clef, keySignature, noteElement(pitch, keySignature, `dur="${dur}"`))
 }
 
 export interface MelodicIntervalOptions {
@@ -188,6 +193,8 @@ export interface MelodicIntervalOptions {
   second: Pitch
   clef: ClefId
   keySignature: KeySignatureId
+  /** Engraved in place but not drawn, until the answer reveals it. */
+  hide?: 'first' | 'second'
 }
 
 /**
@@ -201,12 +208,13 @@ export function melodicIntervalMei({
   second,
   clef,
   keySignature,
+  hide,
 }: MelodicIntervalOptions): string {
   return document(
     clef,
     keySignature,
-    `${noteElement(first, keySignature, 'dur="2"')}
-                  ${noteElement(second, keySignature, 'dur="2"')}`,
+    `${noteElement(first, keySignature, 'dur="2"', hide === 'first')}
+                  ${noteElement(second, keySignature, 'dur="2"', hide === 'second')}`,
   )
 }
 
@@ -214,6 +222,12 @@ export interface ScaleOptions {
   /** In the order they are drawn, which is the order they are played. */
   pitches: readonly Pitch[]
   clef: ClefId
+  /**
+   * Notes from this index onwards are engraved in place but not drawn. The
+   * hearing exercise shows the note the scale starts from and hides the rest
+   * until the answer is in.
+   */
+  hideFrom?: number
 }
 
 /**
@@ -225,9 +239,11 @@ export interface ScaleOptions {
  * ionian does. Writing the signature into this function rather than taking
  * it as a parameter is what keeps that decision in one place.
  */
-export function scaleMei({ pitches, clef }: ScaleOptions): string {
+export function scaleMei({ pitches, clef, hideFrom }: ScaleOptions): string {
   const notes = pitches
-    .map((pitch) => noteElement(pitch, KEYLESS, 'dur="4"'))
+    .map((pitch, index) =>
+      noteElement(pitch, KEYLESS, 'dur="4"', hideFrom !== undefined && index >= hideFrom),
+    )
     .join('\n                  ')
 
   return document(clef, KEYLESS, notes)

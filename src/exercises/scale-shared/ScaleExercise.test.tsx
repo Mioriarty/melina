@@ -120,6 +120,43 @@ describe('note spacing', () => {
   })
 })
 
+describe('Scale Hearing, before the answer', () => {
+  it('engraves the whole scale and draws only the first note', async () => {
+    // Not one note on its own: the staff has to be laid out for all eight, or
+    // it re-flows the moment the answer arrives and the note already on
+    // screen jumps sideways.
+    const { renderMei } = await import('@/lib/notation/verovio')
+    const engrave = vi.mocked(renderMei)
+    engrave.mockClear()
+
+    open(<ScaleHearingExercise />)
+    fireEvent.click(await screen.findByText(level('scale-hearing', 'major-and-minor')))
+    await screen.findByText('What scale is this?')
+
+    const [mei] = engrave.mock.calls.at(-1) as [string]
+    expect(mei.match(/<note /g)).toHaveLength(8)
+    expect(mei.match(/visible="false"/g)).toHaveLength(7)
+  })
+
+  it('draws the rest of it once the answer is in', async () => {
+    const { renderMei } = await import('@/lib/notation/verovio')
+    const engrave = vi.mocked(renderMei)
+
+    open(<ScaleHearingExercise />)
+    fireEvent.click(await screen.findByText(level('scale-hearing', 'major-and-minor')))
+    await screen.findByText('What scale is this?')
+
+    engrave.mockClear()
+    fireEvent.click(document.querySelector('[data-mode="ionian"]') as HTMLElement)
+
+    await waitFor(() => {
+      const [mei] = engrave.mock.calls.at(-1) as [string]
+      expect(mei.match(/<note /g)).toHaveLength(8)
+      expect(mei).not.toContain('visible="false"')
+    })
+  })
+})
+
 describe('wording', () => {
   // Four exercises share the levels screen, the round screen, the summary and
   // the play button. Every string those read has to be neutral, and two were

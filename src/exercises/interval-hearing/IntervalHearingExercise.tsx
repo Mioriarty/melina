@@ -21,11 +21,7 @@ import { loadInstrument, playInterval, unlockAudio } from '@/lib/audio/engine'
 import type { InstrumentId } from '@/lib/audio/instruments'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
 import { isMelodic } from '@/lib/music/direction'
-import {
-  harmonicIntervalMei,
-  melodicIntervalMei,
-  singleNoteMei,
-} from '@/lib/notation/mei'
+import { harmonicIntervalMei, melodicIntervalMei } from '@/lib/notation/mei'
 import { preloadEngraver } from '@/lib/notation/verovio'
 
 import { HEARING_DIFFICULTIES } from './difficulties'
@@ -193,23 +189,23 @@ export default function IntervalHearingExercise() {
 
   const revealed = round.phase.name === 'revealed'
 
-  // Before the answer, only the note the interval starts from. After it,
-  // the pair — as a chord when they sounded together, and left to right in
-  // the order they were played when they did not.
-  const mei = !revealed
-    ? singleNoteMei({
-        pitch: firstNote(question),
+  // Both notes are engraved either way — as a chord when they sounded
+  // together, and left to right in the order they were played when they did
+  // not. Before the answer the second one is simply not drawn, so the staff
+  // does not shift when it appears.
+  const mei = isMelodic(question.direction)
+    ? melodicIntervalMei({
+        first: firstNote(question),
+        second: secondNote(question),
         clef: question.clef,
         keySignature: question.keySignature,
+        ...(revealed ? {} : { hide: 'second' }),
       })
-    : isMelodic(question.direction)
-      ? melodicIntervalMei({
-          first: firstNote(question),
-          second: secondNote(question),
-          clef: question.clef,
-          keySignature: question.keySignature,
-        })
-      : harmonicIntervalMei(question)
+    : harmonicIntervalMei({
+        ...question,
+        // A simultaneous interval leads with its lower note.
+        ...(revealed ? {} : { hide: 'upper' }),
+      })
 
   const staff = {
     clef: names.clefSpoken(question.clef),

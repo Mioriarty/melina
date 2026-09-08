@@ -18,7 +18,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { loadInstrument, playScale, unlockAudio } from '@/lib/audio/engine'
 import type { InstrumentId } from '@/lib/audio/instruments'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
-import { scaleMei, singleNoteMei } from '@/lib/notation/mei'
+import { scaleMei } from '@/lib/notation/mei'
 import { preloadEngraver } from '@/lib/notation/verovio'
 
 import { SCALE_HEARING_DIFFICULTIES } from './difficulties'
@@ -181,20 +181,19 @@ export default function ScaleHearingExercise() {
 
   const revealed = round.phase.name === 'revealed'
   const opening = firstNote(question)
+  const order = playOrder(question)
 
-  // Before the answer, only the note the scale starts from. After it, the
-  // whole scale — written in the order it was played, so a descending one
-  // reads downwards across the staff exactly as it was heard.
-  const mei = revealed
-    ? scaleMei({ pitches: playOrder(question), clef: question.clef })
-    : singleNoteMei({
-        pitch: opening,
-        clef: question.clef,
-        keySignature: '0',
-        dur: 4,
-      })
+  // The whole scale is engraved either way — written in the order it was
+  // played, so a descending one reads downwards across the staff exactly as
+  // it was heard. Before the answer the rest of it is simply not drawn, which
+  // is what stops the staff from jumping when it appears.
+  const mei = scaleMei({
+    pitches: order,
+    clef: question.clef,
+    ...(revealed ? {} : { hideFrom: 1 }),
+  })
 
-  const shown = revealed ? playOrder(question) : [opening]
+  const shown = revealed ? order : [opening]
 
   return (
     <ScaleRoundScreen

@@ -299,6 +299,14 @@ than in an exercise, because it is engraving, not gameplay. Anything spanning tw
 staff positions still stacks — including the diminished second, which has to go on
 looking like a second.
 
+**A note that has not been revealed is engraved, in its place, and not
+drawn** — `@visible="false"`, which Verovio emits as `visibility="hidden"` on
+the whole note group, so the accidental and the stem go with it. The hearing
+exercises rely on this: leaving the unheard notes out instead re-engraves a
+different piece of music, so the staff narrows and the note already on screen
+slides across the moment the answer arrives. `verovio.test.ts` renders each
+question asked and revealed and insists the two are the same size.
+
 **A scale is always keyless** (`scaleMei` writes the signature itself rather than
 taking one). A mode is read from the accidentals in front of its notes, and under a
 signature F♯ mixolydian looks exactly like G major.

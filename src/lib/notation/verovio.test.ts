@@ -6,7 +6,7 @@ import { parsePitch, type Pitch } from '@/lib/music/pitch'
 
 import { scalePitches } from '@/lib/music/scale'
 
-import { harmonicIntervalMei, scaleMei } from './mei'
+import { harmonicIntervalMei, melodicIntervalMei, scaleMei } from './mei'
 import { DEFAULT_NOTE_SPACING, SCALE_NOTE_SPACING, renderMei } from './verovio'
 
 /**
@@ -158,5 +158,91 @@ describe('note spacing', () => {
     // into the next one.
     await renderMei(scale(), SCALE_NOTE_SPACING)
     expect(size(await renderMei(harmonicIntervalMei(base)))).toEqual(explicit)
+  }, 30_000)
+})
+
+describe('revealing an answer', () => {
+  const size = (svg: string) => ({
+    width: Number(/width="(\d+)px"/.exec(svg)?.[1]),
+    height: Number(/height="(\d+)px"/.exec(svg)?.[1]),
+  })
+
+  const invisible = (svg: string) => (svg.match(/visibility="hidden"/g) ?? []).length
+
+  const cases = [
+    {
+      name: 'a scale',
+      asked: () =>
+        scaleMei({
+          pitches: scalePitches(p('Eb4'), 'mixolydian') as Pitch[],
+          clef: 'treble',
+          hideFrom: 1,
+        }),
+      revealed: () =>
+        scaleMei({
+          pitches: scalePitches(p('Eb4'), 'mixolydian') as Pitch[],
+          clef: 'treble',
+        }),
+      stillHidden: 7,
+    },
+    {
+      name: 'a harmonic interval',
+      asked: () => harmonicIntervalMei({ ...base, hide: 'upper' as const }),
+      revealed: () => harmonicIntervalMei(base),
+      stillHidden: 1,
+    },
+    {
+      name: 'a melodic interval',
+      asked: () =>
+        melodicIntervalMei({
+          first: p('A4'),
+          second: p('C4'),
+          clef: 'treble',
+          keySignature: '0',
+          hide: 'second',
+        }),
+      revealed: () =>
+        melodicIntervalMei({
+          first: p('A4'),
+          second: p('C4'),
+          clef: 'treble',
+          keySignature: '0',
+        }),
+      stillHidden: 1,
+    },
+  ]
+
+  it.each(cases)(
+    'engraves $name identically before and after',
+    async (testCase) => {
+      // The whole point: the staff is laid out once, for the whole question, so
+      // nothing on screen moves when the rest of it appears. A note left out
+      // instead of hidden re-engraves different music and everything shifts.
+      const asked = await renderMei(testCase.asked(), SCALE_NOTE_SPACING)
+      const revealed = await renderMei(testCase.revealed(), SCALE_NOTE_SPACING)
+
+      expect(size(asked)).toEqual(size(revealed))
+      expect(invisible(asked)).toBe(testCase.stillHidden)
+      expect(invisible(revealed)).toBe(0)
+    },
+    30_000,
+  )
+
+  it('hides the whole note, not just its notehead', async () => {
+    // The attribute lands on the note group, which is what makes an
+    // accidental and a stem disappear with the note they belong to. Hiding
+    // the notehead alone would leave a flat floating in mid-air.
+    const asked = await renderMei(
+      scaleMei({
+        pitches: scalePitches(p('Eb4'), 'mixolydian') as Pitch[],
+        clef: 'treble',
+        hideFrom: 1,
+      }),
+    )
+
+    const hiddenNotes = asked.match(/class="note"[^>]*visibility="hidden"/g) ?? []
+    expect(hiddenNotes).toHaveLength(7)
+    // And nothing else on the staff was hidden by accident.
+    expect(invisible(asked)).toBe(hiddenNotes.length)
   }, 30_000)
 })
