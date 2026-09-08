@@ -5,6 +5,7 @@
   },
   "inDevelopment": "In development",
   "preparing": "Preparing the exercise…",
+  "loading": "Loading…",
   "intervals": {
     "hearing": {
       "levelsBlurb": "Name the interval you hear. Pick a level, or set it up yourself.",
@@ -18,7 +19,7 @@
   "levels": {
     "custom": {
       "title": "Custom",
-      "blurb": "Choose the clefs, keys and intervals yourself."
+      "blurb": "Set up exactly what you want to be asked."
     }
   },
   "setup": {
@@ -39,24 +40,40 @@
       "hearingHint": "Only intervals that sound different from one another. An augmented second is a minor third to the ear, so the ambiguous spellings are left to Interval Reading."
     },
     "questionsPerRound": "Questions per round",
-    "start": "Start round"
+    "start": "Start round",
+    "modes": "Modes",
+    "tonics": {
+      "title": "Tonics",
+      "hint": "The note a scale starts from. Which ones are offered depends on the mode — a tonic that would need a double sharp is skipped."
+    },
+    "scaleDirection": {
+      "title": "How it is played",
+      "hint": "The note you hear first is the note you see: the tonic going up, the octave above it coming down."
+    }
   },
   "round": {
-    "question": "What interval is this?",
     "end": "End this round",
     "progress": "Question {{current}} of {{total}}",
     "correct": "Correct",
     "next": "Next question",
-    "keyboardLabel": "Interval answers"
+    "keyboardLabel": {
+      "interval": "Interval answers",
+      "scale": "Scale answers"
+    },
+    "prompt": {
+      "interval": "What interval is this?",
+      "scale": "What scale is this?"
+    }
   },
   "score": {
     "pending": "Drawing the notation",
     "failed": "The notation could not be drawn.",
     "oneNote": "{{clef}}, key signature of {{key}}: {{first}}",
-    "twoNotes": "{{clef}}, key signature of {{key}}: {{first}} and {{second}}"
+    "twoNotes": "{{clef}}, key signature of {{key}}: {{first}} and {{second}}",
+    "notes": "{{clef}}: {{pitches}}"
   },
   "play": {
-    "again": "Play the interval again",
+    "again": "Play it again",
     "loading": "Loading the instrument",
     "unavailable": "Playback unavailable"
   },
@@ -65,10 +82,23 @@
     "workOn": "What to work on",
     "missCount": "{{times}}×",
     "youAnswered": "You answered {{answers}}",
-    "allCorrect": "Every one correct. Try adding a clef, a key signature, or the augmented and diminished intervals.",
+    "allCorrect": {
+      "intervals": "Every one correct. Try adding a clef, a key signature, or the augmented and diminished intervals.",
+      "scales": "Every one correct. Try adding a mode, a tonic further round the circle, or the C clefs."
+    },
     "thisRound": "This round",
-    "questionLabel": "{{interval}} · {{clef}}",
+    "questionLabel": "{{subject}} · {{clef}}",
     "playAgain": "Practise again",
     "changeSettings": "Change settings"
+  },
+  "scales": {
+    "reading": {
+      "levelsBlurb": "Name the mode written on the staff. Pick a level, or set it up yourself.",
+      "setupBlurb": "Name the mode written on the staff. The staff is always keyless, so every accidental is printed."
+    },
+    "hearing": {
+      "levelsBlurb": "Name the mode you hear. Pick a level, or set it up yourself.",
+      "setupBlurb": "Name the mode you hear. The first note is shown; the rest appear with the answer."
+    }
   }
 }

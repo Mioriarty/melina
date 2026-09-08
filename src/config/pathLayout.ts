@@ -47,13 +47,14 @@ export interface PathNodePosition {
 export const PATH_NODES: readonly PathNodePosition[] = [
   { stationId: 'intervals/hearing', x: 50, y: 130 },
   { stationId: 'intervals/reading', x: 26, y: 400 },
-  { stationId: 'scales', x: 71, y: 640 },
-  { stationId: 'dictation', x: 38, y: 930 },
-  { stationId: 'harmonic-prediction', x: 70, y: 1170 },
-  { stationId: 'harmonic-completion', x: 29, y: 1460 },
-  { stationId: 'counterpoint', x: 62, y: 1700 },
-  { stationId: 'daily', x: 35, y: 1985 },
-  { stationId: 'progress', x: 55, y: 2230 },
+  { stationId: 'scales/hearing', x: 71, y: 640 },
+  { stationId: 'scales/reading', x: 33, y: 900 },
+  { stationId: 'dictation', x: 64, y: 1180 },
+  { stationId: 'harmonic-prediction', x: 30, y: 1440 },
+  { stationId: 'harmonic-completion', x: 66, y: 1690 },
+  { stationId: 'counterpoint', x: 35, y: 1975 },
+  { stationId: 'daily', x: 62, y: 2215 },
+  { stationId: 'progress', x: 45, y: 2470 },
 ]
 
 const lastNode = PATH_NODES[PATH_NODES.length - 1]

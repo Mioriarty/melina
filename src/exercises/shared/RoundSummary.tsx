@@ -2,14 +2,25 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 
 import { Icon } from '@/components/ui/Icon'
-import { useMusicNames } from '@/hooks/useMusicNames'
-import { intervalKey, type Interval } from '@/lib/music/interval'
 import { cn } from '@/lib/utils/cn'
 
 import type { Answered } from './round'
 
-export interface RoundSummaryProps {
-  answers: readonly Answered[]
+export interface RoundSummaryProps<TQuestion, TAnswer> {
+  answers: readonly Answered<TQuestion, TAnswer>[]
+  /**
+   * Short, stable label for what was asked — `M3`, `dor`. Groups the misses
+   * and labels the chips, so it has to fit in a very small square.
+   */
+  subjectKey: (question: TQuestion) => string
+  /** The same thing spelled out: `Major third`. */
+  subjectName: (question: TQuestion) => string
+  /** What the player said instead. */
+  answerName: (chosen: TAnswer) => string
+  /** Tooltip on a chip: what was asked, and in what context. */
+  chipTitle: (question: TQuestion) => string
+  /** Where to go next when nothing was missed. Exercise-specific advice. */
+  allCorrect: string
   onPlayAgain: () => void
   onChangeSettings: () => void
 }
@@ -18,43 +29,52 @@ export interface RoundSummaryProps {
  * What just happened, and what to do about it.
  *
  * The score is the least useful thing here, so it is stated once and the
- * space goes to the misses instead — grouped by interval, because "you missed
+ * space goes to the misses instead — grouped by subject, because "you missed
  * the diminished fifth three times" is a practice instruction and "85%" is
  * not.
+ *
+ * Generic over what the exercise asks about: it never looks inside a
+ * question, it only asks the exercise to name one.
  */
-export function RoundSummary({
+export function RoundSummary<TQuestion, TAnswer>({
   answers,
+  subjectKey,
+  subjectName,
+  answerName,
+  chipTitle,
+  allCorrect,
   onPlayAgain,
   onChangeSettings,
-}: RoundSummaryProps) {
+}: RoundSummaryProps<TQuestion, TAnswer>) {
   const { t } = useTranslation(['exercise', 'common'])
-  const names = useMusicNames()
 
   const correct = answers.filter((answer) => answer.correct).length
   const total = answers.length
   const accuracy = total === 0 ? 0 : Math.round((correct / total) * 100)
 
-  // Keyed by interval key, but the interval itself is kept so the name can
+  // Keyed by the short label, but the question is kept so its full name can
   // be rendered without parsing the key back apart.
   const misses = new Map<
     string,
-    { interval: Interval; count: number; answered: Set<string> }
+    { question: TQuestion; count: number; answered: Set<string> }
   >()
 
   for (const answer of answers) {
     if (answer.correct) continue
-    const key = intervalKey(answer.question.interval)
+    const key = subjectKey(answer.question)
     const entry = misses.get(key) ?? {
-      interval: answer.question.interval,
+      question: answer.question,
       count: 0,
       answered: new Set<string>(),
     }
     entry.count += 1
-    entry.answered.add(names.interval(answer.chosen))
+    entry.answered.add(answerName(answer.chosen))
     misses.set(key, entry)
   }
 
-  const ranked = [...misses.values()].sort((a, b) => b.count - a.count)
+  const ranked = [...misses.entries()]
+    .map(([key, entry]) => ({ key, ...entry }))
+    .sort((a, b) => b.count - a.count)
 
   return (
     // Owns its scrolling: the app shell deliberately does not scroll.
@@ -82,11 +102,15 @@ export function RoundSummary({
 
         {ranked.length > 0 && (
           <section className="mt-8 border-t border-rule pt-6">
-            <h2 className="text-heading">{t('exercise:summary.workOn')}</h2>
-            <ul className="mt-3 grid gap-2">
+            <h2 id="summary-work-on" className="text-heading">
+              {t('exercise:summary.workOn')}
+            </h2>
+            {/* Two lists on one screen: without a name, a screen reader
+                announces "list, 3 items" twice and neither one says which. */}
+            <ul aria-labelledby="summary-work-on" className="mt-3 grid gap-2">
               {ranked.map((entry) => (
                 <li
-                  key={intervalKey(entry.interval)}
+                  key={entry.key}
                   className="flex items-start gap-3 rounded-2xl border border-rule bg-paper-raised p-3"
                 >
                   <span className="tabular grid h-9 w-9 shrink-0 place-items-center rounded-full bg-wrong/10 text-[0.8125rem] font-semibold text-wrong">
@@ -94,7 +118,7 @@ export function RoundSummary({
                   </span>
                   <span className="min-w-0">
                     <span className="font-serif text-[1.0625rem] font-semibold">
-                      {names.interval(entry.interval)}
+                      {subjectName(entry.question)}
                     </span>
                     <span className="mt-0.5 block text-sm leading-snug text-ink-muted">
                       {t('exercise:summary.youAnswered', {
@@ -109,21 +133,18 @@ export function RoundSummary({
         )}
 
         {ranked.length === 0 && total > 0 && (
-          <p className="mt-8 text-center leading-relaxed text-ink-muted">
-            {t('exercise:summary.allCorrect')}
-          </p>
+          <p className="mt-8 text-center leading-relaxed text-ink-muted">{allCorrect}</p>
         )}
 
         <section className="mt-8 border-t border-rule pt-6">
-          <h2 className="mb-3 text-heading">{t('exercise:summary.thisRound')}</h2>
-          <ol className="flex flex-wrap gap-1.5">
+          <h2 id="summary-this-round" className="mb-3 text-heading">
+            {t('exercise:summary.thisRound')}
+          </h2>
+          <ol aria-labelledby="summary-this-round" className="flex flex-wrap gap-1.5">
             {answers.map((answer, index) => (
               <li
                 key={index}
-                title={t('exercise:summary.questionLabel', {
-                  interval: names.interval(answer.question.interval),
-                  clef: names.clef(answer.question.clef),
-                })}
+                title={chipTitle(answer.question)}
                 className={cn(
                   'grid h-8 w-8 place-items-center rounded-lg text-[0.6875rem] font-semibold',
                   answer.correct
@@ -131,7 +152,7 @@ export function RoundSummary({
                     : 'bg-wrong/12 text-wrong',
                 )}
               >
-                {intervalKey(answer.question.interval)}
+                {subjectKey(answer.question)}
               </li>
             ))}
           </ol>

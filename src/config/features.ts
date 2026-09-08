@@ -9,7 +9,7 @@ import { CATEGORIES, type CategoryDef, type ExerciseDef } from './curriculum'
  */
 export const FEATURES = {
   intervals: true,
-  scales: false,
+  scales: true,
   dictation: false,
   'harmonic-prediction': false,
   'harmonic-completion': false,

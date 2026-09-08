@@ -7,6 +7,7 @@ import type { PlayDirection } from '@/lib/music/direction'
 import type { Interval, IntervalQuality } from '@/lib/music/interval'
 import type { KeySignatureId } from '@/lib/music/keySignature'
 import type { Pitch } from '@/lib/music/pitch'
+import type { ModeId } from '@/lib/music/scale'
 
 /**
  * The names of the things `lib/music` models.
@@ -48,6 +49,25 @@ export interface MusicNames {
   interval: (interval: Interval) => string
   /** Spoken pitch for a screen reader: `F sharp 4`. */
   pitchSpoken: (pitch: Pitch) => string
+  /** The mode alone: `Dorian`, `Dorisch`. */
+  mode: (id: ModeId) => string
+  /** Compact form for a summary chip: `Dor`. */
+  modeShort: (id: ModeId) => string
+  /**
+   * The mode with the name it is better known by, where it has one:
+   * `Ionian (Major)`. Empty for the five that do not.
+   */
+  modeAlias: (id: ModeId) => string
+  /** Both together for a screen reader, falling back to the mode alone. */
+  modeFull: (id: ModeId) => string
+  /**
+   * A tonic. Not a letter and a symbol glued together: German calls the
+   * seventh letter H and B flat simply B, so this is a lookup, not a rule.
+   */
+  tonic: (key: string) => string
+  /** How a scale is played. Worded for a scale, not for an interval. */
+  scaleDirection: (id: 'ascending' | 'descending') => string
+  scaleDirectionHint: (id: 'ascending' | 'descending') => string
 }
 
 export function useMusicNames(): MusicNames {
@@ -88,6 +108,18 @@ export function useMusicNames(): MusicNames {
           alteration: t(`pitch.alterations.${pitch.alteration}`),
           octave: pitch.octave,
         }),
+      mode: (id) => t(`modes.${id}.label`),
+      modeShort: (id) => t(`modes.${id}.short`),
+      modeAlias: (id) => t(`modes.${id}.alias`, { defaultValue: '' }),
+      modeFull: (id) => {
+        const alias = t(`modes.${id}.alias`, { defaultValue: '' })
+        return alias === ''
+          ? t(`modes.${id}.label`)
+          : t('modeWithAlias', { mode: t(`modes.${id}.label`), alias })
+      },
+      tonic: (key) => t(`tonics.${key}`, { defaultValue: key }),
+      scaleDirection: (id) => t(`scaleDirections.${id}.label`),
+      scaleDirectionHint: (id) => t(`scaleDirections.${id}.hint`),
     }
   }, [t])
 }

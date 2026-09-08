@@ -55,14 +55,20 @@ export const CATEGORIES: readonly CategoryDef[] = [
   {
     id: 'scales',
     icon: 'trendingUp',
-    status: 'planned',
+    status: 'ready',
     exercises: [
       {
-        id: 'degrees',
-        status: 'planned',
+        id: 'hearing',
+        icon: 'ear',
+        status: 'ready',
       },
       {
-        id: 'modes',
+        id: 'reading',
+        icon: 'trendingUp',
+        status: 'ready',
+      },
+      {
+        id: 'degrees',
         status: 'planned',
       },
     ],

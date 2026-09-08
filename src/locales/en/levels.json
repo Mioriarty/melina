@@ -1,5 +1,5 @@
 {
-  "reading": {
+  "interval-reading": {
     "first-steps": {
       "title": "First Steps",
       "blurb": "Treble clef, C major, on the staff. Five intervals, nothing hidden."
@@ -33,7 +33,7 @@
       "blurb": "All four clefs, all fifteen keys, every spelling in the catalog."
     }
   },
-  "hearing": {
+  "interval-hearing": {
     "open-intervals": {
       "title": "Open Intervals",
       "blurb": "Unison, fourth, fifth, octave. Ascending, on the staff, in C."
@@ -65,6 +65,74 @@
     "everything": {
       "title": "Everything",
       "blurb": "All intervals, all three directions, all four clefs."
+    }
+  },
+  "scale-reading": {
+    "major-and-minor": {
+      "title": "Major & Minor",
+      "blurb": "Ionian and Aeolian on white-key tonics. The two you already read."
+    },
+    "bright-modes": {
+      "title": "The Bright Three",
+      "blurb": "Lydian, Ionian, Mixolydian — sharp fourth down to flat seventh."
+    },
+    "dark-modes": {
+      "title": "The Dark Four",
+      "blurb": "Dorian, Aeolian, Phrygian, Locrian. Flat thirds and what follows."
+    },
+    "one-tonic": {
+      "title": "One Tonic",
+      "blurb": "All seven modes, every one of them on D. Only the pattern can tell them apart."
+    },
+    "flat-tonics": {
+      "title": "Flat Tonics",
+      "blurb": "F through D♭. Keyless, so every flat is printed on the page."
+    },
+    "sharp-tonics": {
+      "title": "Sharp Tonics",
+      "blurb": "G through C♯, where the accidentals pile up going the other way."
+    },
+    "c-clefs": {
+      "title": "C Clefs",
+      "blurb": "Alto and tenor only. Everything you know, moved."
+    },
+    "everything": {
+      "title": "Everything",
+      "blurb": "All seven modes, all thirteen tonics, all four clefs."
+    }
+  },
+  "scale-hearing": {
+    "major-and-minor": {
+      "title": "Major & Minor",
+      "blurb": "Ionian against Aeolian. The one distinction everyone starts with."
+    },
+    "major-family": {
+      "title": "Three Shades of Major",
+      "blurb": "Ionian, Lydian, Mixolydian. One note apart from each other."
+    },
+    "minor-family": {
+      "title": "Three Shades of Minor",
+      "blurb": "Aeolian, Dorian, Phrygian. Listen to the sixth and the second."
+    },
+    "flat-fifth": {
+      "title": "The Flat Fifth",
+      "blurb": "Phrygian, Aeolian and Locrian — where the fifth stops holding still."
+    },
+    "ascending": {
+      "title": "All Ascending",
+      "blurb": "Every mode, always upwards. The usual starting point."
+    },
+    "descending": {
+      "title": "All Descending",
+      "blurb": "Every mode, falling from the octave. Harder than it sounds."
+    },
+    "harp": {
+      "title": "On the Harp",
+      "blurb": "The same modes on a different instrument. Timbre off, ears on."
+    },
+    "everything": {
+      "title": "Everything",
+      "blurb": "All seven modes, both directions, all four clefs."
     }
   }
 }

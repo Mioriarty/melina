@@ -9,6 +9,7 @@ import { CLEFS } from '@/lib/music/clef'
 import { PLAY_DIRECTIONS } from '@/lib/music/direction'
 import { KEY_SIGNATURES } from '@/lib/music/keySignature'
 import { LETTERS } from '@/lib/music/pitch'
+import { MODE_IDS, TONIC_KEYS } from '@/lib/music/scale'
 
 import { NAMESPACES, RESOURCES, type Namespace } from '.'
 
@@ -118,5 +119,16 @@ describe('keys built from registry ids', () => {
       named(`ordinalsInName.${interval.number}`)
     }
     for (const letter of LETTERS) named(`pitch.letters.${letter}`)
+    for (const mode of MODE_IDS) {
+      named(`modes.${mode}.label`)
+      named(`modes.${mode}.short`)
+    }
+    // A tonic is a word, not a letter and a symbol: German calls the seventh
+    // letter H and B flat simply B, so every one of these is looked up.
+    for (const key of TONIC_KEYS) named(`tonics.${key}`)
+    for (const direction of ['ascending', 'descending']) {
+      named(`scaleDirections.${direction}.label`)
+      named(`scaleDirections.${direction}.hint`)
+    }
   })
 })

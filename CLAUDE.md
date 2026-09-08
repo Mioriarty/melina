@@ -253,6 +253,19 @@ retry with a different root.
 The catalog (`catalog.ts`) orders qualities smallest-first — d, m, P, M, A — and
 the keyboard gives each one a fixed column so a quality never moves between rows.
 
+**A mode is stored as the interval from its tonic to each degree** (`scale.ts`),
+never as a list of semitones — that is what makes B♭ dorian come out as B♭ C D♭ E♭
+F G A♭ rather than B♭ C C♯ D♯. `scalePitches` walks the letters and lets
+`transpose` work out each accidental, so it returns `undefined` for a scale that
+would need a triple accidental instead of inventing one.
+
+Which tonics a mode may stand on is **computed, not tabulated**: `isCleanScale`
+spells the scale and rejects anything past a double accidental, so A♭ locrian
+(B double flat) and G♯ lydian (F triple sharp) drop out on their own and a new
+mode needs no one to work the exceptions out again. `modeOf` reads a run of
+pitches back to the mode that spelled it, which is how the generator is checked
+rather than trusted.
+
 ## Notation — `src/lib/notation/` and `src/components/notation/`
 
 **Print an accidental only when it differs from the key signature.** `@accid` is
@@ -272,6 +285,44 @@ The question generator anchors a note's accidental to the key signature ~78% of 
 time. Picking uniformly at random is what produced F♭ in D major and A♯♯ in C major
 — valid spellings that no one would ever write.
 
+**A double sharp is `x`, not `ss`.** MEI has both and they draw differently: `ss`
+is two separate sharp signs, which is what Verovio drew for months. A double flat
+_is_ two flats, so `ff` is right. Written and gestural accidentals are separate MEI
+data types with separate lists — the gestural list has no `x` — so they are two
+maps in `mei.ts` and must not be merged.
+
+**A harmonic unison is written as two successive noteheads, not as a chord.** Both
+noteheads want the same spot on the staff, so stacked, C→C♯ and C♯→C♯ engrave as
+_the same picture_: one sharp against two touching noteheads. Side by side each
+note carries its own accidental. The rule lives in `harmonicIntervalMei` rather
+than in an exercise, because it is engraving, not gameplay. Anything spanning two
+staff positions still stacks — including the diminished second, which has to go on
+looking like a second.
+
+**A scale is always keyless** (`scaleMei` writes the signature itself rather than
+taking one). A mode is read from the accidentals in front of its notes, and under a
+signature F♯ mixolydian looks exactly like G major.
+
+**How airy the notation looks is note spacing, not staff size** —
+`SCALE_NOTE_SPACING` in `lib/notation/verovio.ts` is the dial. The reason is
+that the page only ever scales an engraved SVG _down_ to fit its column: a
+staff wider than the column is fitted to exactly that width whatever size it
+was drawn at, so for anything that overflows, staff size changes nothing you
+can see. Eight notes always span the column, and spacing decides how large the
+notes are within it. Widening it therefore spreads the notes _and_ shrinks the
+staff, in the same space on screen — which is the effect, not a side effect.
+
+Scales use 0.45 against Verovio's default of 0.25, which takes the staff from
+104px to 62px in a 375px phone's column. The scale is steeper than it looks:
+0.6 is already four times as wide as 0.25, and the engraver refuses anything
+above 1.0. Staff size still matters for an interval, which is two notes wide
+and never overflows.
+
+Spacing is applied per render rather than once at startup, since one toolkit is
+shared by the whole app. `renderMei` sets the options immediately before the
+render they belong to, and everything from there to `renderToSVG` is
+synchronous, so no other render can interleave and pick up the wrong spacing.
+
 ## Audio — `src/lib/audio/`
 
 Sampled, not synthesised: ear training is about timbre as much as pitch, and a
@@ -284,7 +335,12 @@ Two rules the browser imposes, both easy to get wrong:
   gesture is the "Start round" tap, which calls `unlockAudio()`. Do this in the
   handler itself, not in an effect afterwards.
 - A context can be **suspended again** whenever a tab is backgrounded, so
-  `playInterval` resumes defensively before every note.
+  `playSequence` resumes defensively before every note.
+
+`playInterval` and `playScale` are both thin wrappers over `playSequence`, which
+schedules a run of notes; a gap of zero is what makes an interval harmonic. A
+scale is played faster and shorter than an interval — eight notes at interval pace
+is a series of separate notes rather than a scale.
 
 Sample requests are cached at runtime (`melina-samples`), never precached — the
 piano alone is tens of megabytes, and which instrument you practise with is your
@@ -313,11 +369,30 @@ the path for an unplaced station so nothing can silently vanish, and
 
 ## Exercises — `src/exercises/`
 
-`shared/` holds everything both interval exercises use: the generator, the
-levels → setup → round → summary state machine (`useIntervalRound`), the levels
-screen, the in-round screen, and the summary. Reading and hearing differ only in
-what notation they show and whether there is a play button beside it, so
-anything else belongs in `shared/`.
+Four exercises in two pairs, and the folders say which is which:
+
+- `shared/` is **exercise-agnostic**. The levels → setup → round → summary state
+  machine (`useRound`), the levels screen, the round screen, the summary, the
+  setup chips and the play button all live here, generic over what is being
+  asked and what answers it. It must never learn what an interval or a mode is.
+- `interval-shared/` and `scale-shared/` bind that machinery to one subject: a
+  generator, a `RoundRules` object (how to build a round, what counts as right,
+  what to write into the attempt log), and thin round-screen and summary
+  wrappers that supply the right keyboard and the right names.
+- `interval-reading/`, `interval-hearing/`, `scale-reading/`, `scale-hearing/`
+  hold only what differs: settings, levels, a setup screen, and the component
+  that decides what notation to show.
+
+Within a pair, reading and hearing differ only in what notation they show and
+whether there is a play button beside it, so anything else belongs one level up.
+When a third pair arrives, generalise `shared/` rather than copying a sibling.
+
+**A string read by a shared screen may not name what only one pair asks
+about.** The Custom row said "choose the clefs, keys and intervals" and the
+play button was labelled "Play the interval again" — on screens that ask about
+modes. `ScaleExercise.test.tsx` walks the levels, settings and round screens
+and fails on the word "interval", in visible text _and_ in accessible names,
+because an icon-only button says nothing in its text.
 
 **Levels are the landing screen**, not the settings form. Each exercise defines
 a `difficulties.ts` of named presets, and picking one starts a round in the same
@@ -327,14 +402,16 @@ are levels, not a difficulty ladder: "Descending" is not harder than "Flat Keys"
 it is a different weakness.
 
 A preset is an id and a settings object; its name and one-line description live in
-`levels.json` under `<group>.<id>`.
+`levels.json` under `<group>.<id>`, where the group names the _exercise_
+(`scale-reading`), not the kind — interval reading and scale reading are both
+"reading" and share nothing else.
 
 Levels are data, so `shared/difficulties.test.ts` checks what types cannot — that
-every preset names real clefs, keys and intervals, is named and described in every
-language, round-trips through the defensive settings parser unchanged, and
-actually generates a **full** round. A
-level too narrow to place its intervals would otherwise serve a short round in
-silence.
+every preset names real clefs, keys, intervals, modes and tonics, is named and
+described in every language, round-trips through the defensive settings parser
+unchanged, and actually generates a **full** round. A level too narrow to place
+its intervals, or whose modes will not spell on any of its tonics, would
+otherwise serve a short round in silence.
 
 `staffOnly` narrows a clef to its five lines, removing ledger lines entirely —
 the difference between reading an interval and counting lines above the staff.
@@ -355,12 +432,25 @@ Reading is unaffected — there the spelling is on the page to be read.
 once: how the interval is played, how it is engraved, and **which note is on
 screen before the answer**. The note heard first is the note shown first, so a
 descending interval reveals its upper note and everything else its lower one —
-that rule lives in `leadingNote()` and nowhere else.
+that rule lives in `leadingNote()` and nowhere else. Scales follow the same rule
+through `firstNote()`: ascending starts on the tonic, descending on the octave
+above it. There is no harmonic option for a scale — eight notes at once is a
+cluster.
+
+**Every mode sounds different from every other**, so scale hearing needs no
+equivalent of `HEARABLE_INTERVAL_KEYS`; `scale.test.ts` asserts that property
+rather than assuming it. What scale hearing has instead is which modes are set
+_against_ each other: lydian alone is unmistakable, lydian beside ionian is one
+raised note.
+
+On a keyless staff **the tonic decides how much ink is on the page** — B♭ locrian
+prints seven accidentals in eight notes — which is why tonics are a setting and a
+level axis of their own.
 
 ## Not yet built
 
-Melodic dictation is next. Everything after Interval Training is still a
-placeholder page.
+Melodic dictation is next. Everything after Scale Training is still a placeholder
+page.
 
 Settings holds one setting — the interface language. It is reached only from the
 button at the far left of the top bar; there is no station for it on the path,

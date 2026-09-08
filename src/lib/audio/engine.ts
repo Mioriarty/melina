@@ -31,6 +31,16 @@ const players = new Map<InstrumentId, Promise<SampledInstrument>>()
 
 /** Gap between the two notes of a melodic interval, in seconds. */
 const MELODIC_GAP = 0.62
+/**
+ * Gap between the notes of a scale, and how long each one rings.
+ *
+ * Faster than a melodic interval on purpose: eight notes at interval pace is
+ * a series of separate notes rather than a scale, and hearing a mode depends
+ * on hearing the shape whole. The notes ring slightly past the next one, the
+ * way a played scale does.
+ */
+const SCALE_GAP = 0.4
+const SCALE_NOTE_DURATION = 0.6
 /** Lead-in, so the first note is never clipped by scheduling jitter. */
 const LEAD_IN = 0.06
 
@@ -110,15 +120,48 @@ export async function playInterval(
   direction: PlayDirection,
   instrumentId: InstrumentId,
 ): Promise<void> {
+  const { duration } = getInstrument(instrumentId)
+  await playSequence(pitches, instrumentId, {
+    gap: isMelodic(direction) ? MELODIC_GAP : 0,
+    duration,
+  })
+}
+
+/**
+ * Sound a scale, one note after another.
+ *
+ * `pitches` arrive in the order they should be heard, so a descending scale
+ * is simply passed in reversed.
+ */
+export async function playScale(
+  pitches: readonly Pitch[],
+  instrumentId: InstrumentId,
+): Promise<void> {
+  await playSequence(pitches, instrumentId, {
+    gap: SCALE_GAP,
+    duration: SCALE_NOTE_DURATION,
+  })
+}
+
+/**
+ * Schedule a run of notes.
+ *
+ * A `gap` of zero sounds them all at once, which is what a harmonic interval
+ * is. Resolves once the notes have been *scheduled*, not once they finish, so
+ * the caller can re-enable its play button immediately.
+ */
+async function playSequence(
+  pitches: readonly Pitch[],
+  instrumentId: InstrumentId,
+  { gap, duration }: { gap: number; duration: number },
+): Promise<void> {
   const instrument = await loadInstrument(instrumentId)
   const context = getAudioContext()
 
   // A context can be suspended by the browser at any point after creation.
   if (context.state === 'suspended') await context.resume()
 
-  const { duration } = getInstrument(instrumentId)
   const start = context.currentTime + LEAD_IN
-  const gap = isMelodic(direction) ? MELODIC_GAP : 0
 
   // Cut off anything still ringing, so a quick replay does not stack up.
   instrument.stop()

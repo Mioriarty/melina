@@ -4,8 +4,10 @@ import { describe, expect, it } from 'vitest'
 import { CLEFS } from '@/lib/music/clef'
 import { parsePitch, type Pitch } from '@/lib/music/pitch'
 
-import { harmonicIntervalMei } from './mei'
-import { renderMei } from './verovio'
+import { scalePitches } from '@/lib/music/scale'
+
+import { harmonicIntervalMei, scaleMei } from './mei'
+import { DEFAULT_NOTE_SPACING, SCALE_NOTE_SPACING, renderMei } from './verovio'
 
 /**
  * Integration test for the engraver itself.
@@ -85,5 +87,54 @@ describe('verovio', () => {
 
   it('rejects malformed input rather than rendering nonsense', async () => {
     await expect(renderMei('<mei>not really</mei>')).rejects.toThrow()
+  }, 30_000)
+})
+
+describe('note spacing', () => {
+  const size = (svg: string) => ({
+    width: Number(/width="(\d+)px"/.exec(svg)?.[1]),
+    height: Number(/height="(\d+)px"/.exec(svg)?.[1]),
+  })
+
+  const scale = () =>
+    scaleMei({
+      pitches: scalePitches(p('Eb4'), 'mixolydian') as Pitch[],
+      clef: 'treble',
+    })
+
+  it('spreads the notes out without changing the staff', async () => {
+    // The page fits an over-wide render to its column, so this is what makes
+    // a scale look airy: the same eight notes over more width means smaller
+    // notes with more room between them, in the same space on screen.
+    const tight = size(await renderMei(scale(), DEFAULT_NOTE_SPACING))
+    const airy = size(await renderMei(scale(), SCALE_NOTE_SPACING))
+
+    expect(airy.width).toBeGreaterThan(tight.width)
+    // Drawn at the same staff size — only the gaps grew.
+    expect(airy.height).toBe(tight.height)
+  }, 30_000)
+
+  it('leaves a scale wide enough to keep filling the column', async () => {
+    // Narrower than the column and it would sit small with air around it
+    // instead of spanning the space, which is the opposite of the point.
+    expect(size(await renderMei(scale(), SCALE_NOTE_SPACING)).width).toBeGreaterThan(343)
+  }, 30_000)
+
+  it('gives a scale a staff around 60px in a phone column', async () => {
+    // A number to notice if the spacing is ever nudged: the default put the
+    // staff at 104px in the same column, which was the cramped look.
+    const { width, height } = size(await renderMei(scale(), SCALE_NOTE_SPACING))
+    expect(Math.round(height * (343 / width))).toBeLessThan(75)
+    expect(Math.round(height * (343 / width))).toBeGreaterThan(50)
+  }, 30_000)
+
+  it('goes back to the default when none is given', async () => {
+    const explicit = size(
+      await renderMei(harmonicIntervalMei(base), DEFAULT_NOTE_SPACING),
+    )
+    // The toolkit is shared, so spacing from a previous render must not leak
+    // into the next one.
+    await renderMei(scale(), SCALE_NOTE_SPACING)
+    expect(size(await renderMei(harmonicIntervalMei(base)))).toEqual(explicit)
   }, 30_000)
 })

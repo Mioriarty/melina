@@ -10,7 +10,8 @@ import {
   type Interval,
   type IntervalQuality,
 } from '@/lib/music/interval'
-import { cn } from '@/lib/utils/cn'
+
+import { answerKeyClasses, type KeyboardState } from './keyClasses'
 
 /**
  * The interval keyboard.
@@ -25,8 +26,6 @@ import { cn } from '@/lib/utils/cn'
  * Only the offered intervals render, so enabling "diminished third" in the
  * settings adds exactly one button.
  */
-
-export type KeyboardState = 'answering' | 'revealed'
 
 export interface IntervalKeyboardProps {
   /** Exactly the intervals that may be answered. */
@@ -139,7 +138,7 @@ export function IntervalKeyboard({
     <div
       ref={containerRef}
       role="group"
-      aria-label={t('round.keyboardLabel')}
+      aria-label={t('round.keyboardLabel.interval')}
       onKeyDown={handleKeyDown}
       className="grid gap-1.5"
     >
@@ -245,20 +244,7 @@ function Key({
       aria-label={names.interval(interval)}
       onFocus={onFocus}
       onClick={onSelect}
-      className={cn(
-        'relative flex min-h-11 min-w-0 items-center justify-center rounded-full px-3',
-        'border text-[0.8125rem] font-medium whitespace-nowrap',
-        'transition-[background-color,border-color,color] duration-150',
-        'disabled:cursor-default',
-        showCorrect && 'border-correct bg-correct text-white',
-        showWrong && 'border-wrong bg-wrong text-white',
-        !showCorrect &&
-          !showWrong && [
-            'border-rule bg-paper-raised text-ink',
-            !revealed && 'hover:border-accent hover:text-accent',
-            revealed && 'opacity-45',
-          ],
-      )}
+      className={answerKeyClasses({ showCorrect, showWrong, revealed })}
     >
       <span className="sm:hidden">{names.qualityShort(interval.quality)}</span>
       <span className="hidden sm:inline">{names.quality(interval.quality)}</span>

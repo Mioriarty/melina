@@ -9,7 +9,7 @@ import { i18n } from '@/lib/i18n'
 import { LevelsScreen } from './LevelsScreen'
 import { difficultyTitleKey } from './difficulty'
 
-const title = (id: string) => i18n.t(difficultyTitleKey('reading', id))
+const title = (id: string) => i18n.t(difficultyTitleKey('interval-reading', id))
 
 function renderScreen(onPick = vi.fn(), onCustom = vi.fn()) {
   render(
@@ -17,7 +17,7 @@ function renderScreen(onPick = vi.fn(), onCustom = vi.fn()) {
       <LevelsScreen
         titleKey={exerciseTitleKey('intervals', 'reading')}
         blurbKey="exercise:intervals.reading.levelsBlurb"
-        group="reading"
+        group="interval-reading"
         levels={READING_DIFFICULTIES}
         onPick={onPick}
         onCustom={onCustom}

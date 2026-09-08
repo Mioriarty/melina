@@ -1,53 +1,73 @@
 import { useCallback, useEffect, useRef, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { IntervalKeyboard } from '@/components/input/IntervalKeyboard'
 import { KeyboardShell } from '@/components/input/KeyboardShell'
+import type { KeyboardState } from '@/components/input/keyClasses'
 import { Score } from '@/components/notation/Score'
+import { DEFAULT_NOTE_SPACING } from '@/lib/notation/verovio'
 import { Icon } from '@/components/ui/Icon'
-import type { Interval } from '@/lib/music/interval'
 import { cn } from '@/lib/utils/cn'
 
-import type { IntervalQuestion } from './generate'
-import { CORRECT_DELAY_MS, type Answered, type Phase } from './round'
+import { CORRECT_DELAY_MS, type ActivePhase, type Answered } from './round'
 
 /**
  * A question, mid-round.
  *
- * Shared by reading and hearing, which differ only in what notation they show
- * and whether there is a play button beside it — everything else, from the
- * progress bar to the reveal behaviour, is the same exercise.
+ * Every exercise so far asks the same way: some notation, a prompt, and a
+ * keyboard of the answers that are allowed. What differs is the notation, the
+ * keyboard and — for hearing — a play button beside the staff, so those are
+ * the props. The progress bar, the reveal behaviour and the timing are the
+ * same game in all of them.
  */
-export interface IntervalRoundScreenProps {
-  phase: Extract<Phase, { name: 'asking' | 'revealed' }>
-  questions: readonly IntervalQuestion[]
-  options: readonly Interval[]
+
+/** What a keyboard needs in order to be the answer surface for a round. */
+export interface KeyboardBinding<TAnswer> {
+  state: KeyboardState
+  /** What the player picked, once they have picked. */
+  chosen: TAnswer | undefined
+  /** The right answer, present only once the question has been revealed. */
+  correct: TAnswer | undefined
+  onAnswer: (chosen: TAnswer) => void
+}
+
+export interface RoundScreenProps<TQuestion, TAnswer> {
+  phase: ActivePhase<TQuestion, TAnswer>
+  /** Questions in the round, for the progress bar. */
+  total: number
+  /** The question above the staff: "What interval is this?" */
+  prompt: string
   /** The engraved notation for this question, in its current state. */
   mei: string
   /** What that notation shows, for screen readers. Never the answer. */
   scoreLabel: string
-  /** Optional control beside the staff — the hearing exercise's replay button. */
+  /** How much room each note gets — see `SCALE_NOTE_SPACING`. */
+  noteSpacing?: number
+  /** This question's answer, revealed on the keyboard once it is given. */
+  correct: TAnswer
+  /** Optional control beside the staff — the hearing exercises' replay button. */
   aside?: ReactNode
+  keyboard: (binding: KeyboardBinding<TAnswer>) => ReactNode
   reducedMotion: boolean
-  onAnswer: (chosen: Interval, ms: number) => void
+  onAnswer: (chosen: TAnswer, ms: number) => void
   onNext: () => void
   onQuit: () => void
 }
 
-export function IntervalRoundScreen({
+export function RoundScreen<TQuestion, TAnswer>({
   phase,
-  questions,
-  options,
+  total,
+  prompt,
   mei,
   scoreLabel,
+  noteSpacing = DEFAULT_NOTE_SPACING,
+  correct,
   aside,
+  keyboard,
   reducedMotion,
   onAnswer,
   onNext,
   onQuit,
-}: IntervalRoundScreenProps) {
-  const { t } = useTranslation('exercise')
-
+}: RoundScreenProps<TQuestion, TAnswer>) {
   // Set on mount rather than during render: `useRef(Date.now())` evaluates
   // the clock on every render even though only the first value is kept, and
   // starting the timer after paint measures thinking time more honestly.
@@ -59,7 +79,6 @@ export function IntervalRoundScreen({
 
   const revealed = phase.name === 'revealed'
   const answer = phase.name === 'revealed' ? phase.answer : undefined
-  const question = questions[phase.index]
 
   // A correct answer advances on its own; a wrong one waits to be dismissed,
   // because the whole value of getting it wrong is in looking at the answer.
@@ -70,16 +89,14 @@ export function IntervalRoundScreen({
   }, [answer, onNext, reducedMotion])
 
   const handleAnswer = useCallback(
-    (chosen: Interval) => onAnswer(chosen, Date.now() - askedAt.current),
+    (chosen: TAnswer) => onAnswer(chosen, Date.now() - askedAt.current),
     [onAnswer],
   )
-
-  if (question === undefined) return null
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col px-4 pt-3 sm:px-6">
-        <Progress index={phase.index} total={questions.length} onQuit={onQuit} />
+        <Progress index={phase.index} total={total} onQuit={onQuit} />
 
         {/*
           The staff takes whatever space is left rather than a fixed height.
@@ -89,13 +106,14 @@ export function IntervalRoundScreen({
           keyboard below.
         */}
         <div className="flex min-h-0 flex-1 flex-col items-center gap-4 overflow-hidden pt-8 pb-2">
-          <h1 className="shrink-0 text-center text-heading">{t('round.question')}</h1>
+          <h1 className="shrink-0 text-center text-heading">{prompt}</h1>
 
           <div className="flex min-h-0 w-full max-w-full flex-1 items-center justify-center gap-3">
             <Score
               className="max-h-[34dvh] min-h-0 flex-1"
               mei={mei}
               label={scoreLabel}
+              noteSpacing={noteSpacing}
             />
             {aside !== undefined && <div className="shrink-0">{aside}</div>}
           </div>
@@ -109,13 +127,20 @@ export function IntervalRoundScreen({
       </div>
 
       <KeyboardShell>
-        <IntervalKeyboard
-          options={options}
-          onAnswer={handleAnswer}
-          state={revealed ? 'revealed' : 'answering'}
-          chosen={answer?.chosen}
-          correct={revealed ? question.interval : undefined}
-        />
+        {/*
+          The keyboard is built here rather than passed in ready-made,
+          because what it has to show — the chosen key, the right one, whether
+          anything is still pressable — is this screen's state, not the
+          exercise's. `handleAnswer` reads the ref inside the click handler,
+          never while rendering; the rule cannot see through the call.
+        */}
+        {/* oxlint-disable-next-line react/refs */}
+        {keyboard({
+          state: revealed ? 'revealed' : 'answering',
+          chosen: answer?.chosen,
+          correct: revealed ? correct : undefined,
+          onAnswer: handleAnswer,
+        })}
       </KeyboardShell>
     </div>
   )
@@ -163,7 +188,13 @@ function Progress({
   )
 }
 
-function Feedback({ answer, onNext }: { answer: Answered; onNext: () => void }) {
+function Feedback<TQuestion, TAnswer>({
+  answer,
+  onNext,
+}: {
+  answer: Answered<TQuestion, TAnswer>
+  onNext: () => void
+}) {
   const { t } = useTranslation('exercise')
 
   if (answer.correct) {

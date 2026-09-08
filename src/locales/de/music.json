@@ -1,9 +1,21 @@
 {
   "clefs": {
-    "treble": { "label": "Violin", "spoken": "Violinschlüssel" },
-    "bass": { "label": "Bass", "spoken": "Bassschlüssel" },
-    "alto": { "label": "Alt", "spoken": "Altschlüssel" },
-    "tenor": { "label": "Tenor", "spoken": "Tenorschlüssel" }
+    "treble": {
+      "label": "Violin",
+      "spoken": "Violinschlüssel"
+    },
+    "bass": {
+      "label": "Bass",
+      "spoken": "Bassschlüssel"
+    },
+    "alto": {
+      "label": "Alt",
+      "spoken": "Altschlüssel"
+    },
+    "tenor": {
+      "label": "Tenor",
+      "spoken": "Tenorschlüssel"
+    }
   },
   "keySignatures": {
     "7f": {
@@ -18,17 +30,72 @@
       "majorName": "Ges-Dur",
       "minorName": "es-Moll"
     },
-    "5f": { "major": "Des", "minor": "b", "majorName": "Des-Dur", "minorName": "b-Moll" },
-    "4f": { "major": "As", "minor": "f", "majorName": "As-Dur", "minorName": "f-Moll" },
-    "3f": { "major": "Es", "minor": "c", "majorName": "Es-Dur", "minorName": "c-Moll" },
-    "2f": { "major": "B", "minor": "g", "majorName": "B-Dur", "minorName": "g-Moll" },
-    "1f": { "major": "F", "minor": "d", "majorName": "F-Dur", "minorName": "d-Moll" },
-    "0": { "major": "C", "minor": "a", "majorName": "C-Dur", "minorName": "a-Moll" },
-    "1s": { "major": "G", "minor": "e", "majorName": "G-Dur", "minorName": "e-Moll" },
-    "2s": { "major": "D", "minor": "h", "majorName": "D-Dur", "minorName": "h-Moll" },
-    "3s": { "major": "A", "minor": "fis", "majorName": "A-Dur", "minorName": "fis-Moll" },
-    "4s": { "major": "E", "minor": "cis", "majorName": "E-Dur", "minorName": "cis-Moll" },
-    "5s": { "major": "H", "minor": "gis", "majorName": "H-Dur", "minorName": "gis-Moll" },
+    "5f": {
+      "major": "Des",
+      "minor": "b",
+      "majorName": "Des-Dur",
+      "minorName": "b-Moll"
+    },
+    "4f": {
+      "major": "As",
+      "minor": "f",
+      "majorName": "As-Dur",
+      "minorName": "f-Moll"
+    },
+    "3f": {
+      "major": "Es",
+      "minor": "c",
+      "majorName": "Es-Dur",
+      "minorName": "c-Moll"
+    },
+    "2f": {
+      "major": "B",
+      "minor": "g",
+      "majorName": "B-Dur",
+      "minorName": "g-Moll"
+    },
+    "1f": {
+      "major": "F",
+      "minor": "d",
+      "majorName": "F-Dur",
+      "minorName": "d-Moll"
+    },
+    "0": {
+      "major": "C",
+      "minor": "a",
+      "majorName": "C-Dur",
+      "minorName": "a-Moll"
+    },
+    "1s": {
+      "major": "G",
+      "minor": "e",
+      "majorName": "G-Dur",
+      "minorName": "e-Moll"
+    },
+    "2s": {
+      "major": "D",
+      "minor": "h",
+      "majorName": "D-Dur",
+      "minorName": "h-Moll"
+    },
+    "3s": {
+      "major": "A",
+      "minor": "fis",
+      "majorName": "A-Dur",
+      "minorName": "fis-Moll"
+    },
+    "4s": {
+      "major": "E",
+      "minor": "cis",
+      "majorName": "E-Dur",
+      "minorName": "cis-Moll"
+    },
+    "5s": {
+      "major": "H",
+      "minor": "gis",
+      "majorName": "H-Dur",
+      "minorName": "gis-Moll"
+    },
     "6s": {
       "major": "Fis",
       "minor": "dis",
@@ -44,15 +111,24 @@
   },
   "keySignatureName": "{{major}}, {{minor}}",
   "directions": {
-    "harmonic": { "label": "Zusammen", "hint": "Beide Töne gleichzeitig." },
-    "ascending": { "label": "Aufwärts", "hint": "Unterer Ton zuerst." },
+    "harmonic": {
+      "label": "Zusammen",
+      "hint": "Beide Töne gleichzeitig."
+    },
+    "ascending": {
+      "label": "Aufwärts",
+      "hint": "Unterer Ton zuerst."
+    },
     "descending": {
       "label": "Abwärts",
       "hint": "Oberer Ton zuerst — das schwerste der drei."
     }
   },
   "instruments": {
-    "piano": { "label": "Klavier", "hint": "Steinway-Flügel, vier Anschlagstärken." },
+    "piano": {
+      "label": "Klavier",
+      "hint": "Steinway-Flügel, vier Anschlagstärken."
+    },
     "harp": {
       "label": "Harfe",
       "hint": "Orchesterharfe. Klarerer Anschlag, längerer Nachklang."
@@ -139,5 +215,63 @@
       "2": " Doppelkreuz"
     },
     "spoken": "{{letter}}{{alteration}} {{octave}}"
+  },
+  "modes": {
+    "ionian": {
+      "label": "Ionisch",
+      "short": "Ion",
+      "alias": "Dur"
+    },
+    "dorian": {
+      "label": "Dorisch",
+      "short": "Dor"
+    },
+    "phrygian": {
+      "label": "Phrygisch",
+      "short": "Phr"
+    },
+    "lydian": {
+      "label": "Lydisch",
+      "short": "Lyd"
+    },
+    "mixolydian": {
+      "label": "Mixolydisch",
+      "short": "Mix"
+    },
+    "aeolian": {
+      "label": "Äolisch",
+      "short": "Äol",
+      "alias": "Moll"
+    },
+    "locrian": {
+      "label": "Lokrisch",
+      "short": "Lok"
+    }
+  },
+  "modeWithAlias": "{{mode}} ({{alias}})",
+  "tonics": {
+    "C": "C",
+    "G": "G",
+    "D": "D",
+    "A": "A",
+    "E": "E",
+    "B": "H",
+    "F": "F",
+    "Bb": "B",
+    "Eb": "Es",
+    "Ab": "As",
+    "Db": "Des",
+    "F#": "Fis",
+    "C#": "Cis"
+  },
+  "scaleDirections": {
+    "ascending": {
+      "label": "Aufwärts",
+      "hint": "Vom Grundton aufwärts."
+    },
+    "descending": {
+      "label": "Abwärts",
+      "hint": "Von der oberen Oktave abwärts."
+    }
   }
 }

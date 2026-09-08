@@ -1,5 +1,5 @@
 {
-  "reading": {
+  "interval-reading": {
     "first-steps": {
       "title": "Erste Schritte",
       "blurb": "Violinschlüssel, C-Dur, im Notensystem. Fünf Intervalle, nichts versteckt."
@@ -33,7 +33,7 @@
       "blurb": "Alle vier Schlüssel, alle fünfzehn Tonarten, jede Schreibweise im Katalog."
     }
   },
-  "hearing": {
+  "interval-hearing": {
     "open-intervals": {
       "title": "Offene Intervalle",
       "blurb": "Prime, Quarte, Quinte, Oktave. Aufwärts, im System, in C."
@@ -65,6 +65,74 @@
     "everything": {
       "title": "Alles",
       "blurb": "Alle Intervalle, alle drei Richtungen, alle vier Schlüssel."
+    }
+  },
+  "scale-reading": {
+    "major-and-minor": {
+      "title": "Dur & Moll",
+      "blurb": "Ionisch und Äolisch auf Stammtönen. Die zwei, die du schon liest."
+    },
+    "bright-modes": {
+      "title": "Die hellen drei",
+      "blurb": "Lydisch, Ionisch, Mixolydisch — von der hohen Quarte zur tiefen Septime."
+    },
+    "dark-modes": {
+      "title": "Die dunklen vier",
+      "blurb": "Dorisch, Äolisch, Phrygisch, Lokrisch. Kleine Terzen und was folgt."
+    },
+    "one-tonic": {
+      "title": "Ein Grundton",
+      "blurb": "Alle sieben Modi, jeder auf D. Nur das Muster unterscheidet sie."
+    },
+    "flat-tonics": {
+      "title": "B-Grundtöne",
+      "blurb": "F bis Des. Vorzeichenlos, also steht jedes B in den Noten."
+    },
+    "sharp-tonics": {
+      "title": "Kreuz-Grundtöne",
+      "blurb": "G bis Cis, wo sich die Vorzeichen andersherum häufen."
+    },
+    "c-clefs": {
+      "title": "C-Schlüssel",
+      "blurb": "Nur Alt und Tenor. Alles Bekannte, nur verschoben."
+    },
+    "everything": {
+      "title": "Alles",
+      "blurb": "Alle sieben Modi, alle dreizehn Grundtöne, alle vier Schlüssel."
+    }
+  },
+  "scale-hearing": {
+    "major-and-minor": {
+      "title": "Dur & Moll",
+      "blurb": "Ionisch gegen Äolisch. Der Unterschied, mit dem alle anfangen."
+    },
+    "major-family": {
+      "title": "Drei Dur-Farben",
+      "blurb": "Ionisch, Lydisch, Mixolydisch. Jeweils einen Ton auseinander."
+    },
+    "minor-family": {
+      "title": "Drei Moll-Farben",
+      "blurb": "Äolisch, Dorisch, Phrygisch. Achte auf Sexte und Sekunde."
+    },
+    "flat-fifth": {
+      "title": "Die tiefe Quinte",
+      "blurb": "Phrygisch, Äolisch und Lokrisch — wo die Quinte nicht mehr stillhält."
+    },
+    "ascending": {
+      "title": "Alles aufwärts",
+      "blurb": "Jeder Modus, immer aufwärts. Der übliche Anfang."
+    },
+    "descending": {
+      "title": "Alles abwärts",
+      "blurb": "Jeder Modus, von der Oktave fallend. Schwerer als es klingt."
+    },
+    "harp": {
+      "title": "Auf der Harfe",
+      "blurb": "Dieselben Modi auf einem anderen Instrument. Klangfarbe weg, Ohren auf."
+    },
+    "everything": {
+      "title": "Alles",
+      "blurb": "Alle sieben Modi, beide Richtungen, alle vier Schlüssel."
     }
   }
 }

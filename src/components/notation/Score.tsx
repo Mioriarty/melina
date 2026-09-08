@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { renderMei } from '@/lib/notation/verovio'
+import { DEFAULT_NOTE_SPACING, renderMei } from '@/lib/notation/verovio'
 import { cn } from '@/lib/utils/cn'
 
 export interface ScoreProps {
   /** MEI document to engrave. */
   mei: string
+  /**
+   * How much room each note gets — see `SCALE_NOTE_SPACING`. A scale needs
+   * more of it than an interval, being eight notes wide.
+   */
+  noteSpacing?: number
   /**
    * What the notation shows, for screen readers — the clef, key and written
    * pitches. Describe what is drawn, never the answer to the question.
@@ -16,8 +21,9 @@ export interface ScoreProps {
 }
 
 /** The last completed render, tagged with the input it came from. */
-type Result =
-  { mei: string; status: 'ready'; svg: string } | { mei: string; status: 'failed' }
+type Result = { mei: string; noteSpacing: number } & (
+  { status: 'ready'; svg: string } | { status: 'failed' }
+)
 
 /**
  * Engraved notation.
@@ -26,19 +32,24 @@ type Result =
  * safe here because the input is MEI this app generated itself from typed
  * pitch data — no user or network content ever reaches it.
  */
-export function Score({ mei, label, className }: ScoreProps) {
+export function Score({
+  mei,
+  label,
+  noteSpacing = DEFAULT_NOTE_SPACING,
+  className,
+}: ScoreProps) {
   const { t } = useTranslation('exercise')
   const [result, setResult] = useState<Result>()
 
   useEffect(() => {
     let active = true
 
-    renderMei(mei)
+    renderMei(mei, noteSpacing)
       .then((svg) => {
-        if (active) setResult({ mei, status: 'ready', svg })
+        if (active) setResult({ mei, noteSpacing, status: 'ready', svg })
       })
       .catch(() => {
-        if (active) setResult({ mei, status: 'failed' })
+        if (active) setResult({ mei, noteSpacing, status: 'failed' })
       })
 
     // The engraver is shared and asynchronous, so a question that changes
@@ -46,13 +57,15 @@ export function Score({ mei, label, className }: ScoreProps) {
     return () => {
       active = false
     }
-  }, [mei])
+  }, [mei, noteSpacing])
 
   // Derived rather than stored: a result for a previous question is simply
   // not this question's result, so it reads as pending without an extra
   // render to reset it.
   const state: Result | { status: 'pending' } =
-    result?.mei === mei ? result : { status: 'pending' }
+    result?.mei === mei && result.noteSpacing === noteSpacing
+      ? result
+      : { status: 'pending' }
 
   if (state.status === 'failed') {
     return (

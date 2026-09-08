@@ -30,3 +30,29 @@ export function randomPick<T>(random: Random, items: readonly [T, ...T[]]): T {
   // Index is bounded by the array length and the array is non-empty by type.
   return items[Math.min(index, items.length - 1)] as T
 }
+
+/**
+ * Deal `count` items from a shuffled deck of everything allowed, so each one
+ * comes up about equally often.
+ *
+ * Sampling uniformly at random over twenty questions reliably leaves some
+ * subjects unasked and asks others four times, which makes a round feel
+ * arbitrary rather than thorough. The deck is refilled until it is long
+ * enough, then shuffled once.
+ */
+export function dealEvenly<T>(random: Random, allowed: readonly T[], count: number): T[] {
+  if (allowed.length === 0) return []
+
+  const deck: T[] = []
+  while (deck.length < count) deck.push(...allowed)
+
+  for (let i = deck.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1))
+    const a = deck[i] as T
+    const b = deck[j] as T
+    deck[i] = b
+    deck[j] = a
+  }
+
+  return deck.slice(0, count)
+}

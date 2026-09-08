@@ -4,7 +4,7 @@ import {
   meiKeySignature,
   type KeySignatureId,
 } from '@/lib/music/keySignature'
-import type { Alteration, Pitch } from '@/lib/music/pitch'
+import { diatonicValue, type Alteration, type Pitch } from '@/lib/music/pitch'
 
 /**
  * Minimal MEI for a single engraved example.
@@ -21,7 +21,34 @@ export interface HarmonicIntervalOptions {
   keySignature: KeySignatureId
 }
 
-const ACCIDENTAL_NAMES: Record<Alteration, string> = {
+/** No sharps, no flats: every alteration a scale needs is printed. */
+const KEYLESS: KeySignatureId = '0'
+
+/**
+ * MEI's *written* accidentals — the glyph that gets drawn.
+ *
+ * A double sharp is `x`, the 𝄪 glyph. It is not `ss`: MEI has both, and `ss`
+ * means two separate sharp signs side by side, which is what Verovio then
+ * draws. A double flat, by contrast, really is two flats — `ff` — because
+ * that is how the notation itself is written.
+ */
+const WRITTEN_ACCIDENTALS: Record<Alteration, string> = {
+  [-2]: 'ff',
+  [-1]: 'f',
+  0: 'n',
+  1: 's',
+  2: 'x',
+}
+
+/**
+ * MEI's *gestural* accidentals — the sounding pitch, with nothing drawn.
+ *
+ * A separate list because it is a separate MEI data type, and it has no `x`
+ * in it: a silent double sharp is `ss`. Nothing reaches this today, since a
+ * key signature only ever implies a single sharp or flat, but the two lists
+ * are not interchangeable and must not be written as one.
+ */
+const GESTURAL_ACCIDENTALS: Record<Alteration, string> = {
   [-2]: 'ff',
   [-1]: 'f',
   0: 'n',
@@ -43,9 +70,10 @@ const ACCIDENTAL_NAMES: Record<Alteration, string> = {
  */
 export function accidentalAttributes(value: Pitch, keySignature: KeySignatureId): string {
   const implied = alterationInKey(value.letter, keySignature)
-  const name = ACCIDENTAL_NAMES[value.alteration]
 
-  return value.alteration === implied ? ` accid.ges="${name}"` : ` accid="${name}"`
+  return value.alteration === implied
+    ? ` accid.ges="${GESTURAL_ACCIDENTALS[value.alteration]}"`
+    : ` accid="${WRITTEN_ACCIDENTALS[value.alteration]}"`
 }
 
 function noteElement(value: Pitch, keySignature: KeySignatureId, duration = ''): string {
@@ -96,13 +124,29 @@ function document(clef: ClefId, keySignature: KeySignatureId, layer: string): st
 </mei>`
 }
 
-/** Two notes stacked as a chord — a harmonic interval. */
+/**
+ * Two notes sounding together.
+ *
+ * A chord — except at the unison, where both noteheads want the same spot on
+ * the staff and there is nowhere to put the second one. Stacked, C to C sharp
+ * and C sharp to C sharp engrave as *the same picture*: one sharp and two
+ * touching noteheads, with nothing to say which note the sharp belongs to.
+ * Written one after the other, each note carries its own accidental and the
+ * two intervals read as what they are.
+ *
+ * This is the one case where what is heard together cannot be drawn together,
+ * so the rule lives here rather than in either exercise.
+ */
 export function harmonicIntervalMei({
   lower,
   upper,
   clef,
   keySignature,
 }: HarmonicIntervalOptions): string {
+  if (diatonicValue(lower) === diatonicValue(upper)) {
+    return melodicIntervalMei({ first: lower, second: upper, clef, keySignature })
+  }
+
   return document(
     clef,
     keySignature,
@@ -117,16 +161,25 @@ export interface SingleNoteOptions {
   pitch: Pitch
   clef: ClefId
   keySignature: KeySignatureId
+  /** MEI duration: 1 is a whole note, 4 a quarter. */
+  dur?: number
 }
 
 /**
  * One note alone.
  *
- * Used by the hearing exercise, which shows the note it starts from and only
- * reveals its partner once the answer is in.
+ * Used by the hearing exercises, which show the note the answer is measured
+ * from and reveal the rest once it is in. The duration is settable so that
+ * note matches what it will become: a whole note before an interval, a
+ * quarter before a scale.
  */
-export function singleNoteMei({ pitch, clef, keySignature }: SingleNoteOptions): string {
-  return document(clef, keySignature, noteElement(pitch, keySignature, 'dur="1"'))
+export function singleNoteMei({
+  pitch,
+  clef,
+  keySignature,
+  dur = 1,
+}: SingleNoteOptions): string {
+  return document(clef, keySignature, noteElement(pitch, keySignature, `dur="${dur}"`))
 }
 
 export interface MelodicIntervalOptions {
@@ -155,4 +208,27 @@ export function melodicIntervalMei({
     `${noteElement(first, keySignature, 'dur="2"')}
                   ${noteElement(second, keySignature, 'dur="2"')}`,
   )
+}
+
+export interface ScaleOptions {
+  /** In the order they are drawn, which is the order they are played. */
+  pitches: readonly Pitch[]
+  clef: ClefId
+}
+
+/**
+ * A scale, as a run of quarter notes.
+ *
+ * **Always keyless.** A mode is read from the accidentals it prints against
+ * the letters it uses, so a key signature would answer half the question
+ * before it is asked: F♯ mixolydian under one sharp looks exactly like G
+ * ionian does. Writing the signature into this function rather than taking
+ * it as a parameter is what keeps that decision in one place.
+ */
+export function scaleMei({ pitches, clef }: ScaleOptions): string {
+  const notes = pitches
+    .map((pitch) => noteElement(pitch, KEYLESS, 'dur="4"'))
+    .join('\n                  ')
+
+  return document(clef, KEYLESS, notes)
 }

@@ -54,6 +54,17 @@ describe('App', () => {
     expect(path.queryByText('Interval Training')).toBeNull()
   })
 
+  it('gives scale reading and hearing a station each', async () => {
+    render(<App />)
+    await screen.findByRole('heading', { name: 'Your path' })
+
+    const path = within(screen.getByRole('main'))
+    expect(path.getByText('Scale Hearing')).toBeTruthy()
+    expect(path.getByText('Scale Reading')).toBeTruthy()
+    // The category itself is not a stop once its exercises are built.
+    expect(path.queryByText('Scale Training')).toBeNull()
+  })
+
   it('labels each station by whether it can be played', async () => {
     render(<App />)
     await screen.findByRole('heading', { name: 'Your path' })

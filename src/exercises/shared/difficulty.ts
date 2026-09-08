@@ -17,8 +17,13 @@ export interface Difficulty<TSettings> {
   settings: TSettings
 }
 
-/** Which block of `levels.json` an exercise's presets are named in. */
-export type DifficultyGroup = 'reading' | 'hearing'
+/**
+ * Which block of `levels.json` an exercise's presets are named in. One per
+ * exercise, not per kind: interval reading and scale reading are both
+ * "reading" and share nothing else.
+ */
+export type DifficultyGroup =
+  'interval-reading' | 'interval-hearing' | 'scale-reading' | 'scale-hearing'
 
 export function difficultyTitleKey(group: DifficultyGroup, id: string): string {
   return `levels:${group}.${id}.title`

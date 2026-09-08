@@ -23,15 +23,22 @@
     },
     "scales": {
       "title": "Scale Training",
-      "blurb": "Scale degrees, modes and their colours.",
+      "blurb": "Modes, their colours, and reading them cold.",
       "exercises": {
+        "hearing": {
+          "title": "Scale Hearing",
+          "short": "Hearing",
+          "blurb": "Name the mode you hear played."
+        },
+        "reading": {
+          "title": "Scale Reading",
+          "short": "Reading",
+          "blurb": "Name the mode written on a keyless staff."
+        },
         "degrees": {
           "title": "Scale Degrees",
+          "short": "Degrees",
           "blurb": "Place a pitch against its tonic by function."
-        },
-        "modes": {
-          "title": "Mode Recognition",
-          "blurb": "Tell the seven diatonic modes apart by ear."
         }
       }
     },

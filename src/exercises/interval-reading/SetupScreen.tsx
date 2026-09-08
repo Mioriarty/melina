@@ -1,13 +1,12 @@
-import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Icon } from '@/components/ui/Icon'
+import { SetupChip, SetupSection } from '@/exercises/shared/SetupControls'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { CATALOG, QUALITY_ORDER } from '@/lib/music/catalog'
 import { CLEFS } from '@/lib/music/clef'
 import { intervalKey } from '@/lib/music/interval'
 import { KEY_SIGNATURES } from '@/lib/music/keySignature'
-import { cn } from '@/lib/utils/cn'
 
 import { ROUND_LENGTHS, type IntervalReadingSettings } from './settings'
 
@@ -73,27 +72,27 @@ export function SetupScreen({ settings, onChange, onStart, onBack }: SetupScreen
           </p>
         </header>
 
-        <Section title={t('exercise:setup.clefs')}>
+        <SetupSection title={t('exercise:setup.clefs')}>
           <div className="flex flex-wrap gap-2">
             {CLEFS.map((clef) => (
-              <Chip
+              <SetupChip
                 key={clef.id}
                 selected={settings.clefs.includes(clef.id)}
                 onClick={() => toggle('clefs', clef.id)}
               >
                 {names.clef(clef.id)}
-              </Chip>
+              </SetupChip>
             ))}
           </div>
-        </Section>
+        </SetupSection>
 
-        <Section
+        <SetupSection
           title={t('exercise:setup.keySignatures.title')}
           hint={t('exercise:setup.keySignatures.hint')}
         >
           <div className="flex flex-wrap gap-2">
             {KEY_SIGNATURES.map((signature) => (
-              <Chip
+              <SetupChip
                 key={signature.id}
                 selected={settings.keySignatures.includes(signature.id)}
                 onClick={() => toggle('keySignatures', signature.id)}
@@ -103,12 +102,12 @@ export function SetupScreen({ settings, onChange, onStart, onBack }: SetupScreen
                 <span className="ml-1 text-ink-faint">
                   /{names.keyMinor(signature.id)}
                 </span>
-              </Chip>
+              </SetupChip>
             ))}
           </div>
-        </Section>
+        </SetupSection>
 
-        <Section title={t('exercise:setup.intervals.title')}>
+        <SetupSection title={t('exercise:setup.intervals.title')}>
           <div className="grid gap-1.5">
             {intervalNumbers.map((number) => (
               <div key={number} className="flex flex-wrap items-center gap-2">
@@ -120,34 +119,34 @@ export function SetupScreen({ settings, onChange, onStart, onBack }: SetupScreen
                 ).map((quality) => {
                   const key = intervalKey({ number, quality })
                   return (
-                    <Chip
+                    <SetupChip
                       key={key}
                       selected={settings.intervals.includes(key)}
                       onClick={() => toggle('intervals', key)}
                       label={names.interval({ number, quality })}
                     >
                       {names.quality(quality)}
-                    </Chip>
+                    </SetupChip>
                   )
                 })}
               </div>
             ))}
           </div>
-        </Section>
+        </SetupSection>
 
-        <Section title={t('exercise:setup.questionsPerRound')}>
+        <SetupSection title={t('exercise:setup.questionsPerRound')}>
           <div className="flex flex-wrap gap-2">
             {ROUND_LENGTHS.map((length) => (
-              <Chip
+              <SetupChip
                 key={length}
                 selected={settings.questionsPerRound === length}
                 onClick={() => onChange({ ...settings, questionsPerRound: length })}
               >
                 {length}
-              </Chip>
+              </SetupChip>
             ))}
           </div>
-        </Section>
+        </SetupSection>
 
         <button
           type="button"
@@ -158,55 +157,5 @@ export function SetupScreen({ settings, onChange, onStart, onBack }: SetupScreen
         </button>
       </div>
     </div>
-  )
-}
-
-function Section({
-  title,
-  hint,
-  children,
-}: {
-  title: string
-  hint?: string
-  children: ReactNode
-}) {
-  return (
-    <section className="border-t border-rule py-5 first-of-type:border-t-0 first-of-type:pt-0">
-      <h2 className="mb-1 text-heading">{title}</h2>
-      {hint !== undefined && (
-        <p className="mb-3 text-sm leading-relaxed text-ink-faint">{hint}</p>
-      )}
-      <div className={hint === undefined ? 'mt-3' : undefined}>{children}</div>
-    </section>
-  )
-}
-
-function Chip({
-  selected,
-  onClick,
-  label,
-  children,
-}: {
-  selected: boolean
-  onClick: () => void
-  label?: string
-  children: ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      aria-label={label}
-      onClick={onClick}
-      className={cn(
-        'inline-flex min-h-11 items-center rounded-full border px-3.5 text-[0.8125rem] font-medium',
-        'transition-[background-color,border-color,color] duration-150',
-        selected
-          ? 'border-accent bg-accent-tint text-accent'
-          : 'border-rule bg-paper-raised text-ink-muted hover:border-accent hover:text-accent',
-      )}
-    >
-      {children}
-    </button>
   )
 }

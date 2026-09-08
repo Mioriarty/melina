@@ -22,16 +22,23 @@
       }
     },
     "scales": {
-      "title": "Tonleitertraining",
-      "blurb": "Tonstufen, Modi und ihre Farben.",
+      "title": "Tonleitern",
+      "blurb": "Modi, ihre Farben und wie man sie vom Blatt liest.",
       "exercises": {
-        "degrees": {
-          "title": "Tonstufen",
-          "blurb": "Einen Ton nach seiner Funktion zur Tonika einordnen."
+        "hearing": {
+          "title": "Tonleitern hören",
+          "short": "Hören",
+          "blurb": "Benenne den gespielten Modus."
         },
-        "modes": {
-          "title": "Modi erkennen",
-          "blurb": "Die sieben diatonischen Modi nach Gehör unterscheiden."
+        "reading": {
+          "title": "Tonleitern lesen",
+          "short": "Lesen",
+          "blurb": "Benenne den Modus im vorzeichenlosen System."
+        },
+        "degrees": {
+          "title": "Tonleiterstufen",
+          "short": "Stufen",
+          "blurb": "Ordne einen Ton seiner Stufe im Grundton zu."
         }
       }
     },

@@ -2,9 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { exerciseTitleKey } from '@/config/curriculum'
-import { IntervalRoundScreen } from '@/exercises/shared/IntervalRoundScreen'
-import { LevelsScreen } from '@/exercises/shared/LevelsScreen'
-import { RoundSummary } from '@/exercises/shared/RoundSummary'
+import { IntervalRoundScreen } from '@/exercises/interval-shared/IntervalRoundScreen'
+import { IntervalSummary } from '@/exercises/interval-shared/IntervalSummary'
 import {
   allowedIntervals,
   firstNote,
@@ -12,8 +11,10 @@ import {
   secondNote,
   type IntervalQuestion,
   type RoundSpec,
-} from '@/exercises/shared/generate'
-import { useIntervalRound } from '@/exercises/shared/useIntervalRound'
+} from '@/exercises/interval-shared/generate'
+import { useIntervalRound } from '@/exercises/interval-shared/useIntervalRound'
+import { LevelsScreen } from '@/exercises/shared/LevelsScreen'
+import { PlayButton } from '@/exercises/shared/PlayButton'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { loadInstrument, playInterval, unlockAudio } from '@/lib/audio/engine'
@@ -28,7 +29,6 @@ import {
 import { preloadEngraver } from '@/lib/notation/verovio'
 
 import { HEARING_DIFFICULTIES } from './difficulties'
-import { PlayButton } from './PlayButton'
 import { SetupScreen } from './SetupScreen'
 import { INTERVAL_HEARING_SETTINGS, type IntervalHearingSettings } from './settings'
 
@@ -145,7 +145,7 @@ export default function IntervalHearingExercise() {
       <LevelsScreen
         titleKey={exerciseTitleKey('intervals', 'hearing')}
         blurbKey="exercise:intervals.hearing.levelsBlurb"
-        group="hearing"
+        group="interval-hearing"
         levels={HEARING_DIFFICULTIES}
         onPick={(level) => {
           // Unlock audio inside the tap itself — a level starts a round
@@ -180,7 +180,7 @@ export default function IntervalHearingExercise() {
 
   if (round.phase.name === 'summary') {
     return (
-      <RoundSummary
+      <IntervalSummary
         answers={round.answers}
         onPlayAgain={() => round.start()}
         onChangeSettings={round.toLevels}
@@ -224,8 +224,9 @@ export default function IntervalHearingExercise() {
     <IntervalRoundScreen
       key={round.phase.index}
       phase={round.phase}
-      questions={round.questions}
+      total={round.questions.length}
       options={options}
+      correct={question.interval}
       mei={mei}
       scoreLabel={scoreLabel}
       aside={

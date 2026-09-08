@@ -12,11 +12,12 @@ export interface PlayButtonProps {
 }
 
 /**
- * Replay the interval.
+ * Replay what is being asked.
  *
  * Sits beside the staff rather than under it: the notation and the sound are
  * two halves of the same question, and the button is reached without the eye
- * leaving the note.
+ * leaving the note. Shared by both hearing exercises — an interval and a
+ * scale are played by the same button.
  */
 export function PlayButton({ onPlay, loading, failed }: PlayButtonProps) {
   const { t } = useTranslation('exercise')

@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { exerciseTitleKey } from '@/config/curriculum'
-import { IntervalRoundScreen } from '@/exercises/shared/IntervalRoundScreen'
+import { IntervalRoundScreen } from '@/exercises/interval-shared/IntervalRoundScreen'
+import { IntervalSummary } from '@/exercises/interval-shared/IntervalSummary'
+import { allowedIntervals, type RoundSpec } from '@/exercises/interval-shared/generate'
+import { useIntervalRound } from '@/exercises/interval-shared/useIntervalRound'
 import { LevelsScreen } from '@/exercises/shared/LevelsScreen'
-import { RoundSummary } from '@/exercises/shared/RoundSummary'
-import { allowedIntervals, type RoundSpec } from '@/exercises/shared/generate'
-import { useIntervalRound } from '@/exercises/shared/useIntervalRound'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
@@ -70,7 +70,7 @@ export default function IntervalReadingExercise() {
       <LevelsScreen
         titleKey={exerciseTitleKey('intervals', 'reading')}
         blurbKey="exercise:intervals.reading.levelsBlurb"
-        group="reading"
+        group="interval-reading"
         levels={READING_DIFFICULTIES}
         onPick={(level) => {
           // Persist the level so Custom opens where you just were, and start
@@ -100,7 +100,7 @@ export default function IntervalReadingExercise() {
 
   if (round.phase.name === 'summary') {
     return (
-      <RoundSummary
+      <IntervalSummary
         answers={round.answers}
         onPlayAgain={() => round.start()}
         onChangeSettings={round.toLevels}
@@ -115,8 +115,9 @@ export default function IntervalReadingExercise() {
     <IntervalRoundScreen
       key={round.phase.index}
       phase={round.phase}
-      questions={round.questions}
+      total={round.questions.length}
       options={options}
+      correct={question.interval}
       mei={harmonicIntervalMei(question)}
       scoreLabel={t('score.twoNotes', {
         clef: names.clefSpoken(question.clef),

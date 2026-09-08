@@ -11,7 +11,7 @@ import {
   type Letter,
   type Pitch,
 } from '@/lib/music/pitch'
-import { randomPick, type Random } from '@/lib/utils/seededRandom'
+import { dealEvenly, randomPick, type Random } from '@/lib/utils/seededRandom'
 
 /**
  * Question generation, shared by every interval exercise.
@@ -75,28 +75,14 @@ function chooseRootAlteration(
 
 /**
  * Deal the round's intervals so each allowed one appears about equally often.
- *
- * Sampling uniformly at random over twenty questions reliably leaves some
- * intervals unasked and asks others four times, which makes a round feel
- * arbitrary. Same approach as the decoration scatter on the homescreen.
+ * Same shuffled deck the scale round and the decoration scatter use.
  */
 export function dealIntervals(
   random: Random,
   allowed: readonly Interval[],
   count: number,
 ): Interval[] {
-  const deck: Interval[] = []
-  while (deck.length < count) deck.push(...allowed)
-
-  for (let i = deck.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(random() * (i + 1))
-    const a = deck[i] as Interval
-    const b = deck[j] as Interval
-    deck[i] = b
-    deck[j] = a
-  }
-
-  return deck.slice(0, count)
+  return dealEvenly(random, allowed, count)
 }
 
 /** The intervals a spec actually permits, as parsed objects. */

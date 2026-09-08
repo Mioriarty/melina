@@ -1,9 +1,21 @@
 {
   "clefs": {
-    "treble": { "label": "Treble", "spoken": "treble clef" },
-    "bass": { "label": "Bass", "spoken": "bass clef" },
-    "alto": { "label": "Alto", "spoken": "alto clef" },
-    "tenor": { "label": "Tenor", "spoken": "tenor clef" }
+    "treble": {
+      "label": "Treble",
+      "spoken": "treble clef"
+    },
+    "bass": {
+      "label": "Bass",
+      "spoken": "bass clef"
+    },
+    "alto": {
+      "label": "Alto",
+      "spoken": "alto clef"
+    },
+    "tenor": {
+      "label": "Tenor",
+      "spoken": "tenor clef"
+    }
   },
   "keySignatures": {
     "7f": {
@@ -42,10 +54,30 @@
       "majorName": "B♭ major",
       "minorName": "G minor"
     },
-    "1f": { "major": "F", "minor": "Dm", "majorName": "F major", "minorName": "D minor" },
-    "0": { "major": "C", "minor": "Am", "majorName": "C major", "minorName": "A minor" },
-    "1s": { "major": "G", "minor": "Em", "majorName": "G major", "minorName": "E minor" },
-    "2s": { "major": "D", "minor": "Bm", "majorName": "D major", "minorName": "B minor" },
+    "1f": {
+      "major": "F",
+      "minor": "Dm",
+      "majorName": "F major",
+      "minorName": "D minor"
+    },
+    "0": {
+      "major": "C",
+      "minor": "Am",
+      "majorName": "C major",
+      "minorName": "A minor"
+    },
+    "1s": {
+      "major": "G",
+      "minor": "Em",
+      "majorName": "G major",
+      "minorName": "E minor"
+    },
+    "2s": {
+      "major": "D",
+      "minor": "Bm",
+      "majorName": "D major",
+      "minorName": "B minor"
+    },
     "3s": {
       "major": "A",
       "minor": "F♯m",
@@ -79,16 +111,28 @@
   },
   "keySignatureName": "{{major}}, {{minor}}",
   "directions": {
-    "harmonic": { "label": "Together", "hint": "Both notes at once." },
-    "ascending": { "label": "Ascending", "hint": "Lower note first." },
+    "harmonic": {
+      "label": "Together",
+      "hint": "Both notes at once."
+    },
+    "ascending": {
+      "label": "Ascending",
+      "hint": "Lower note first."
+    },
     "descending": {
       "label": "Descending",
       "hint": "Upper note first — the hardest of the three."
     }
   },
   "instruments": {
-    "piano": { "label": "Piano", "hint": "Steinway grand, four velocity layers." },
-    "harp": { "label": "Harp", "hint": "Orchestral harp. Clearer attack, longer decay." }
+    "piano": {
+      "label": "Piano",
+      "hint": "Steinway grand, four velocity layers."
+    },
+    "harp": {
+      "label": "Harp",
+      "hint": "Orchestral harp. Clearer attack, longer decay."
+    }
   },
   "qualities": {
     "doubly-diminished": "Doubly diminished",
@@ -171,5 +215,63 @@
       "2": " double sharp"
     },
     "spoken": "{{letter}}{{alteration}} {{octave}}"
+  },
+  "modes": {
+    "ionian": {
+      "label": "Ionian",
+      "short": "Ion",
+      "alias": "Major"
+    },
+    "dorian": {
+      "label": "Dorian",
+      "short": "Dor"
+    },
+    "phrygian": {
+      "label": "Phrygian",
+      "short": "Phr"
+    },
+    "lydian": {
+      "label": "Lydian",
+      "short": "Lyd"
+    },
+    "mixolydian": {
+      "label": "Mixolydian",
+      "short": "Mix"
+    },
+    "aeolian": {
+      "label": "Aeolian",
+      "short": "Aeo",
+      "alias": "Minor"
+    },
+    "locrian": {
+      "label": "Locrian",
+      "short": "Loc"
+    }
+  },
+  "modeWithAlias": "{{mode}} ({{alias}})",
+  "tonics": {
+    "C": "C",
+    "G": "G",
+    "D": "D",
+    "A": "A",
+    "E": "E",
+    "B": "B",
+    "F": "F",
+    "Bb": "B♭",
+    "Eb": "E♭",
+    "Ab": "A♭",
+    "Db": "D♭",
+    "F#": "F♯",
+    "C#": "C♯"
+  },
+  "scaleDirections": {
+    "ascending": {
+      "label": "Ascending",
+      "hint": "Upwards from the tonic."
+    },
+    "descending": {
+      "label": "Descending",
+      "hint": "Downwards from the octave above."
+    }
   }
 }

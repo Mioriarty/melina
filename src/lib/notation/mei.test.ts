@@ -4,7 +4,9 @@ import { CLEFS } from '@/lib/music/clef'
 import { KEY_SIGNATURES } from '@/lib/music/keySignature'
 import { parsePitch, type Pitch } from '@/lib/music/pitch'
 
-import { accidentalAttributes, harmonicIntervalMei } from './mei'
+import { scalePitches } from '@/lib/music/scale'
+
+import { accidentalAttributes, harmonicIntervalMei, scaleMei, singleNoteMei } from './mei'
 
 function p(text: string): Pitch {
   const value = parsePitch(text)
@@ -31,9 +33,13 @@ describe('accidentalAttributes', () => {
     expect(accidentalAttributes(p('F4'), '0')).toBe(' accid.ges="n"')
   })
 
-  it('handles double accidentals', () => {
+  it('writes a double sharp as the double-sharp glyph, not as two sharps', () => {
+    // MEI has both, and they draw differently: `x` is 𝄪, while `ss` is two
+    // separate sharp signs — which is what Verovio dutifully drew until this
+    // was fixed. A double flat really is two flats, so `ff` is correct.
+    expect(accidentalAttributes(p('F##4'), '2s')).toBe(' accid="x"')
+    expect(accidentalAttributes(p('C##4'), '0')).toBe(' accid="x"')
     expect(accidentalAttributes(p('Dbb4'), '0')).toBe(' accid="ff"')
-    expect(accidentalAttributes(p('F##4'), '2s')).toBe(' accid="ss"')
   })
 
   it('is consistent for every letter in every signature', () => {
@@ -48,6 +54,39 @@ describe('accidentalAttributes', () => {
         }
       }
     }
+  })
+})
+
+describe('harmonic unisons', () => {
+  const base = { clef: 'treble', keySignature: '0' } as const
+
+  it('writes the two notes one after the other, not as a chord', () => {
+    // There is only one spot on the staff for both noteheads, so there is
+    // nowhere to put the second one.
+    const mei = harmonicIntervalMei({ ...base, lower: p('C4'), upper: p('C#4') })
+    expect(mei).not.toContain('<chord')
+    expect(mei.match(/<note /g)).toHaveLength(2)
+  })
+
+  it('tells an augmented unison apart from a perfect one', () => {
+    // The regression: stacked, C to C sharp and C sharp to C sharp engraved
+    // as the same picture — one sharp against two touching noteheads — which
+    // makes the question unanswerable however well you read.
+    const augmented = harmonicIntervalMei({ ...base, lower: p('C4'), upper: p('C#4') })
+    const perfect = harmonicIntervalMei({ ...base, lower: p('C#4'), upper: p('C#4') })
+
+    expect(augmented).not.toBe(perfect)
+    // The augmented one sharpens only its upper note; the perfect one prints
+    // a sharp on both, because both notes have one.
+    expect(augmented.match(/ accid="s"/g)).toHaveLength(1)
+    expect(perfect.match(/ accid="s"/g)).toHaveLength(2)
+  })
+
+  it('still stacks anything that occupies two staff positions', () => {
+    // Including the diminished second, which spans no semitones at all and
+    // must go on looking like a second.
+    const second = harmonicIntervalMei({ ...base, lower: p('C4'), upper: p('Dbb4') })
+    expect(second).toContain('<chord')
   })
 })
 
@@ -103,5 +142,60 @@ describe('harmonicIntervalMei', () => {
     const selfClosing = mei.match(/\/>/g) ?? []
     // Every opened tag is either closed or self-closing.
     expect(opened.length).toBe(closed.length + selfClosing.length)
+  })
+})
+
+describe('scaleMei', () => {
+  const dMixolydian = scalePitches(p('D4'), 'mixolydian') as Pitch[]
+
+  it('writes the scale as eight quarter notes', () => {
+    const mei = scaleMei({ pitches: dMixolydian, clef: 'treble' })
+    expect(mei.match(/<note /g)).toHaveLength(8)
+    expect(mei.match(/dur="4"/g)).toHaveLength(8)
+    expect(mei).not.toContain('<chord')
+  })
+
+  it('is always keyless, whatever the scale is', () => {
+    // The mode has to be read from the accidentals in front of the notes. A
+    // signature would answer half the question before it is asked: F sharp
+    // mixolydian under one sharp looks exactly like G major.
+    const fSharp = scalePitches(p('F#4'), 'mixolydian') as Pitch[]
+    expect(scaleMei({ pitches: fSharp, clef: 'treble' })).toContain('keysig="0"')
+    expect(scaleMei({ pitches: dMixolydian, clef: 'treble' })).toContain('keysig="0"')
+  })
+
+  it('prints every accidental the scale needs, and no others', () => {
+    // D mixolydian is D E F# G A B C: one written sharp, and the C natural
+    // that distinguishes it from D major stays silent because nothing in a
+    // keyless staff says otherwise.
+    const mei = scaleMei({ pitches: dMixolydian, clef: 'treble' })
+    expect(mei.match(/ accid="/g)).toHaveLength(1)
+    expect(mei).toContain('pname="f" oct="4" dur="4" accid="s"')
+    expect(mei).toContain('pname="c" oct="5" dur="4" accid.ges="n"')
+  })
+
+  it('draws the notes in the order they are given', () => {
+    // A descending scale is passed in reversed, and must read downwards
+    // across the staff exactly as it was heard.
+    const falling = [...dMixolydian].reverse()
+    const mei = scaleMei({ pitches: falling, clef: 'bass' })
+    const names = [...mei.matchAll(/pname="([a-g])" oct="(\d)"/g)].map(
+      (match) => `${match[1]}${match[2]}`,
+    )
+    expect(names).toEqual(['d5', 'c5', 'b4', 'a4', 'g4', 'f4', 'e4', 'd4'])
+  })
+})
+
+describe('singleNoteMei', () => {
+  it('defaults to a whole note, as an interval question shows it', () => {
+    expect(
+      singleNoteMei({ pitch: p('C4'), clef: 'treble', keySignature: '0' }),
+    ).toContain('dur="1"')
+  })
+
+  it('takes a duration, so a scale opens on a quarter like the rest of it', () => {
+    expect(
+      singleNoteMei({ pitch: p('C4'), clef: 'treble', keySignature: '0', dur: 4 }),
+    ).toContain('dur="4"')
   })
 })
