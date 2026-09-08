@@ -73,7 +73,8 @@
     "notes": "{{clef}}: {{pitches}}"
   },
   "play": {
-    "again": "Play it again",
+    "hint": "Tap the notes to hear them",
+    "scoreLabel": "{{notes}}. Press to hear it.",
     "loading": "Loading the instrument",
     "unavailable": "Playback unavailable"
   },

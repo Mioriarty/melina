@@ -27,9 +27,9 @@ vi.mock('@/lib/notation/verovio', async (importOriginal) => ({
 }))
 
 vi.mock('@/lib/audio/engine', () => ({
-  loadInstrument: () => Promise.resolve({}),
-  playScale: () => Promise.resolve(),
-  unlockAudio: () => Promise.resolve(),
+  loadInstrument: vi.fn(() => Promise.resolve({})),
+  playScale: vi.fn(() => Promise.resolve()),
+  unlockAudio: vi.fn(() => Promise.resolve()),
 }))
 
 function open(element: React.ReactElement) {
@@ -188,16 +188,24 @@ describe('wording', () => {
 })
 
 describe('Scale Hearing', () => {
-  it('offers a way to hear the scale again', async () => {
+  it('makes the notation itself the way to hear it again', async () => {
+    // No separate control beside the staff: the notation is the thing being
+    // played, so it is what you press.
+    const { playScale } = await import('@/lib/audio/engine')
+    const sound = vi.mocked(playScale)
+    sound.mockClear()
+
     open(<ScaleHearingExercise />)
     fireEvent.click(await screen.findByText(level('scale-hearing', 'major-and-minor')))
     await screen.findByText('What scale is this?')
 
-    // Loading, because the stubbed instrument has not resolved on first paint;
-    // either way the control is there and named.
-    expect(
-      screen.getByRole('button', { name: /play it again|loading the instrument/i }),
-    ).toBeTruthy()
+    const notation = screen.getByRole('button', { name: /press to hear it/i })
+    sound.mockClear()
+    fireEvent.click(notation)
+
+    await waitFor(() => expect(sound).toHaveBeenCalledTimes(1))
+    // And it says so, rather than leaving the affordance to be guessed at.
+    expect(screen.getByText('Tap the notes to hear them')).toBeTruthy()
   })
 
   it('chooses the instrument and the direction, which reading does not', async () => {

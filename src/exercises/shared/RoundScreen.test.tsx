@@ -30,6 +30,8 @@ function screenAt(
     onAnswer?: (chosen: Answer, ms: number) => void
     onNext?: () => void
     onQuit?: () => void
+    onPlay?: () => void
+    playStatus?: 'idle' | 'loading' | 'ready' | 'failed'
   } = {},
 ) {
   const onAnswer = handlers.onAnswer ?? vi.fn()
@@ -45,6 +47,8 @@ function screenAt(
       scoreLabel="two notes"
       correct="right"
       reducedMotion={false}
+      {...(handlers.onPlay === undefined ? {} : { onPlay: handlers.onPlay })}
+      {...(handlers.playStatus === undefined ? {} : { playStatus: handlers.playStatus })}
       keyboard={(binding) => (
         <div>
           <button type="button" onClick={() => binding.onAnswer('right')}>
@@ -134,6 +138,42 @@ describe('RoundScreen', () => {
 
     const feedback = screen.getByText('Correct')
     expect(feedback.querySelector('svg')).toBeTruthy()
+  })
+
+  it('makes the notation the play control, when there is anything to play', () => {
+    const onPlay = vi.fn()
+    screenAt({ name: 'revealed', index: 0, answer: answered(true) }, { onPlay })
+
+    const notation = screen.getByRole('button', { name: /press to hear it/i })
+    fireEvent.click(notation)
+    expect(onPlay).toHaveBeenCalledTimes(1)
+    // And says so, rather than leaving the affordance to be discovered.
+    expect(screen.getByText('Tap the notes to hear them')).toBeTruthy()
+  })
+
+  it('leaves the notation alone when it must not be heard', () => {
+    // A reading question before its answer: sounding it would answer it.
+    screenAt({ name: 'asking', index: 0 })
+
+    expect(screen.queryByRole('button', { name: /press to hear it/i })).toBeNull()
+    expect(screen.getByRole('img', { name: 'two notes' })).toBeTruthy()
+  })
+
+  it('says why nothing is playing, in the place the hint would be', () => {
+    const onPlay = vi.fn()
+    screenAt({ name: 'asking', index: 0 }, { onPlay, playStatus: 'loading' })
+    expect(screen.getByText('Loading the instrument')).toBeTruthy()
+
+    screen.getByRole('button', { name: /press to hear it/i })
+  })
+
+  it('cannot be pressed when playback has failed', () => {
+    const onPlay = vi.fn()
+    screenAt({ name: 'asking', index: 0 }, { onPlay, playStatus: 'failed' })
+
+    fireEvent.click(screen.getByRole('button', { name: /press to hear it/i }))
+    expect(onPlay).not.toHaveBeenCalled()
+    expect(screen.getByText('Playback unavailable')).toBeTruthy()
   })
 
   it('leaves the round by the button in the progress bar', () => {

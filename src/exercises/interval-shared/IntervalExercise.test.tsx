@@ -21,9 +21,9 @@ vi.mock('@/lib/notation/verovio', async (importOriginal) => ({
 }))
 
 vi.mock('@/lib/audio/engine', () => ({
-  loadInstrument: () => Promise.resolve({}),
-  playInterval: () => Promise.resolve(),
-  unlockAudio: () => Promise.resolve(),
+  loadInstrument: vi.fn(() => Promise.resolve({})),
+  playInterval: vi.fn(() => Promise.resolve()),
+  unlockAudio: vi.fn(() => Promise.resolve()),
 }))
 
 function open(element: React.ReactElement) {
@@ -71,5 +71,39 @@ describe.each([
       const revealed = keys.filter((key) => key.className.includes('bg-correct'))
       expect(revealed).toHaveLength(1)
     })
+  })
+})
+
+describe('playing the notation', () => {
+  const notation = () => screen.queryByRole('button', { name: /press to hear it/i })
+
+  it('lets Interval Hearing replay at any time', async () => {
+    const { playInterval } = await import('@/lib/audio/engine')
+    const sound = vi.mocked(playInterval)
+
+    open(<IntervalHearingExercise />)
+    fireEvent.click(await screen.findByText(level('interval-hearing', 'open-intervals')))
+    await screen.findByText('What interval is this?')
+
+    const score = notation()
+    expect(score).toBeTruthy()
+    sound.mockClear()
+    fireEvent.click(score as HTMLElement)
+    await waitFor(() => expect(sound).toHaveBeenCalledTimes(1))
+  })
+
+  it('keeps Interval Reading silent until the answer is out', async () => {
+    // Hearing the interval before answering would give the answer away.
+    open(<IntervalReadingExercise />)
+    fireEvent.click(await screen.findByText(level('interval-reading', 'first-steps')))
+    await screen.findByText('What interval is this?')
+
+    expect(notation()).toBeNull()
+
+    const keys = [...document.querySelectorAll<HTMLElement>('[data-interval]')]
+    fireEvent.click(keys[0] as HTMLElement)
+
+    // Once revealed, the same notation becomes the play control.
+    await waitFor(() => expect(notation()).toBeTruthy())
   })
 })

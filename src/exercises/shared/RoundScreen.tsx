@@ -3,12 +3,13 @@ import { useTranslation } from 'react-i18next'
 
 import { KeyboardShell } from '@/components/input/KeyboardShell'
 import type { KeyboardState } from '@/components/input/keyClasses'
-import { Score } from '@/components/notation/Score'
 import { DEFAULT_NOTE_SPACING } from '@/lib/notation/verovio'
 import { Icon } from '@/components/ui/Icon'
 import { cn } from '@/lib/utils/cn'
 
+import { PlayableScore } from './PlayableScore'
 import { CORRECT_DELAY_MS, type ActivePhase, type Answered } from './round'
+import type { PlaybackStatus } from './usePlayback'
 
 /**
  * A question, mid-round.
@@ -44,8 +45,12 @@ export interface RoundScreenProps<TQuestion, TAnswer> {
   noteSpacing?: number
   /** This question's answer, revealed on the keyboard once it is given. */
   correct: TAnswer
-  /** Optional control beside the staff — the hearing exercises' replay button. */
-  aside?: ReactNode
+  /**
+   * Sound the question. Given only when every note is on screen: hearing may
+   * replay at any time, reading only once the answer is out.
+   */
+  onPlay?: (() => void) | undefined
+  playStatus?: PlaybackStatus
   keyboard: (binding: KeyboardBinding<TAnswer>) => ReactNode
   reducedMotion: boolean
   onAnswer: (chosen: TAnswer, ms: number) => void
@@ -61,7 +66,8 @@ export function RoundScreen<TQuestion, TAnswer>({
   scoreLabel,
   noteSpacing = DEFAULT_NOTE_SPACING,
   correct,
-  aside,
+  onPlay,
+  playStatus,
   keyboard,
   reducedMotion,
   onAnswer,
@@ -108,15 +114,13 @@ export function RoundScreen<TQuestion, TAnswer>({
         <div className="flex min-h-0 flex-1 flex-col items-center gap-4 overflow-hidden pt-8 pb-2">
           <h1 className="shrink-0 text-center text-heading">{prompt}</h1>
 
-          <div className="flex min-h-0 w-full max-w-full flex-1 items-center justify-center gap-3">
-            <Score
-              className="max-h-[34dvh] min-h-0 flex-1"
-              mei={mei}
-              label={scoreLabel}
-              noteSpacing={noteSpacing}
-            />
-            {aside !== undefined && <div className="shrink-0">{aside}</div>}
-          </div>
+          <PlayableScore
+            mei={mei}
+            label={scoreLabel}
+            noteSpacing={noteSpacing}
+            onPlay={onPlay}
+            {...(playStatus === undefined ? {} : { status: playStatus })}
+          />
 
           <div className="flex min-h-11 shrink-0 items-center">
             {revealed && answer !== undefined && (

@@ -436,6 +436,21 @@ fourth and the diminished fifth is dropped. `catalog.test.ts` enforces the
 uniqueness property rather than the list, so a well-meant addition fails loudly.
 Reading is unaffected — there the spelling is on the page to be read.
 
+**The notation is the play button.** Pressing the staff sounds it, rather
+than a control beside it — the notation _is_ what is being played. It is
+pressable only when every note is on screen: a hearing question at any time,
+a reading question once its answer is out, since before that the sound would
+answer it. A muted caption under the staff carries the affordance and doubles
+as the place that says the samples are downloading or that playback failed;
+its height is reserved either way, so revealing an answer does not move the
+staff. `usePlayback` holds the whole of it — the gesture the AudioContext
+needs, the status, and the failure that has to leave a round playable in
+silence.
+
+Reading exercises fetch their samples on that first press rather than up
+front. The piano is tens of megabytes and most reading rounds never ask for
+it; a hearing exercise preloads, because it plays by itself.
+
 `PlayDirection` (`harmonic | ascending | descending`) decides three things at
 once: how the interval is played, how it is engraved, and **which note is on
 screen before the answer**. The note heard first is the note shown first, so a

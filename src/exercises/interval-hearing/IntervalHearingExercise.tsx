@@ -9,15 +9,14 @@ import {
   firstNote,
   playOrder,
   secondNote,
-  type IntervalQuestion,
   type RoundSpec,
 } from '@/exercises/interval-shared/generate'
 import { useIntervalRound } from '@/exercises/interval-shared/useIntervalRound'
 import { LevelsScreen } from '@/exercises/shared/LevelsScreen'
-import { PlayButton } from '@/exercises/shared/PlayButton'
+import { usePlayback } from '@/exercises/shared/usePlayback'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
-import { loadInstrument, playInterval, unlockAudio } from '@/lib/audio/engine'
+import { playInterval, unlockAudio } from '@/lib/audio/engine'
 import type { InstrumentId } from '@/lib/audio/instruments'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
 import { isMelodic } from '@/lib/music/direction'
@@ -61,71 +60,36 @@ export default function IntervalHearingExercise() {
 
   const instrument = settings?.instrument
 
-  // Tagged with the instrument it describes, so switching instrument reads as
-  // "not loaded yet" during render rather than needing an effect to reset it.
-  const [audio, setAudio] = useState<{
-    instrument: InstrumentId
-    status: 'ready' | 'failed'
-  }>()
-
-  const settled = audio !== undefined && audio.instrument === instrument
-  const instrumentReady = settled && audio.status === 'ready'
-  const audioFailed = settled && audio.status === 'failed'
-
-  useEffect(preloadEngraver, [])
-
-  // Fetch the samples while the setup screen is being read, so the first
-  // question is not waiting on a download. The AudioContext itself is only
-  // unlocked by the "Start round" tap — browsers refuse to start one without
-  // a user gesture.
-  useEffect(() => {
-    if (instrument === undefined) return
-
-    let active = true
-    loadInstrument(instrument)
-      .then(() => {
-        if (active) setAudio({ instrument, status: 'ready' })
-      })
-      .catch(() => {
-        if (active) setAudio({ instrument, status: 'failed' })
-      })
-
-    return () => {
-      active = false
-    }
-  }, [instrument])
-
-  const play = useCallback(
-    async (question: IntervalQuestion) => {
-      if (instrument === undefined) return
-      try {
-        await playInterval(playOrder(question), question.direction, instrument)
-        setAudio({ instrument, status: 'ready' })
-      } catch {
-        // A failed load or a blocked context must not strand the round: the
-        // button goes quiet and the player can still answer from the staff.
-        setAudio({ instrument, status: 'failed' })
-      }
-    },
-    [instrument],
-  )
-
   const current =
     round.phase.name === 'asking' || round.phase.name === 'revealed'
       ? round.questions[round.phase.index]
       : undefined
 
+  // Bound to the question on screen, so the hook itself knows nothing about
+  // intervals.
+  const sound = useCallback(
+    (id: InstrumentId) =>
+      current === undefined
+        ? Promise.resolve()
+        : playInterval(playOrder(current), current.direction, id),
+    [current],
+  )
+
+  const audio = usePlayback(instrument, sound)
+  const { play, preload } = audio
+
+  useEffect(preloadEngraver, [])
+
+  // Fetch the samples while the levels screen is being read: this exercise
+  // plays by itself, so the first question must not wait on a download.
+  useEffect(preload, [preload])
+
   // Sound each question once as it appears. `current` is the question object
   // itself, which does not change when the phase moves from asking to
   // revealed, so answering does not replay it.
-  //
   useEffect(() => {
     if (current === undefined) return
-    // Playing audio is exactly what an effect is for — synchronising with an
-    // external system. `play` is async and records its outcome only after the
-    // await, so nothing is set synchronously during this render.
-    // oxlint-disable-next-line react/set-state-in-effect
-    void play(current)
+    play()
   }, [current, play])
 
   if (settings === undefined) {
@@ -225,13 +189,8 @@ export default function IntervalHearingExercise() {
       correct={question.interval}
       mei={mei}
       scoreLabel={scoreLabel}
-      aside={
-        <PlayButton
-          onPlay={() => play(question)}
-          loading={!instrumentReady}
-          failed={audioFailed}
-        />
-      }
+      onPlay={play}
+      playStatus={audio.status}
       reducedMotion={reducedMotion}
       onAnswer={round.answer}
       onNext={round.next}

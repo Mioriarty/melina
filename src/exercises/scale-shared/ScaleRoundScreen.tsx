@@ -1,9 +1,9 @@
-import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ScaleKeyboard } from '@/components/input/ScaleKeyboard'
 import { RoundScreen } from '@/exercises/shared/RoundScreen'
 import type { ActivePhase } from '@/exercises/shared/round'
+import type { PlaybackStatus } from '@/exercises/shared/usePlayback'
 import type { ModeId } from '@/lib/music/scale'
 import { SCALE_NOTE_SPACING } from '@/lib/notation/verovio'
 
@@ -18,7 +18,9 @@ export interface ScaleRoundScreenProps {
   correct: ModeId
   mei: string
   scoreLabel: string
-  aside?: ReactNode
+  /** Sound the question — only once every note is on screen. */
+  onPlay?: (() => void) | undefined
+  playStatus?: PlaybackStatus
   reducedMotion: boolean
   onAnswer: (chosen: ModeId, ms: number) => void
   onNext: () => void
