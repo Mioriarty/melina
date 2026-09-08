@@ -77,14 +77,19 @@ export const DEFAULT_NOTE_SPACING = 0.25
  *
  * On a 375px phone, where the notation gets a 343px column:
  *
- * | value | staff height | look                                  |
- * | ----- | ------------ | ------------------------------------- |
- * | 0.25  | 104px        | the default, and too tight for a scale |
- * | 0.35  | 78px         | a little air                           |
- * | 0.45  | 62px         | what ships                            |
- * | 0.50  | 57px         | very airy, notes getting small         |
+ * | value | staff height | look                                   |
+ * | ----- | ------------ | -------------------------------------- |
+ * | 0.25  | 104px        | the default, and too tight for a scale  |
+ * | 0.30  | 89px         | what ships                             |
+ * | 0.35  | 78px         | more air                               |
+ * | 0.45  | 62px         | airy                                   |
+ * | 0.50  | 57px         | very airy, notes getting small          |
+ *
+ * Nothing asserts the exact value — it is meant to be turned. The tests only
+ * check that a scale still gets more room than the default and still fills
+ * its column.
  */
-export const SCALE_NOTE_SPACING = 0.30
+export const SCALE_NOTE_SPACING = 0.3
 
 let toolkit: Promise<VerovioToolkit> | undefined
 

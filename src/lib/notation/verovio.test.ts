@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 
 import { CLEFS } from '@/lib/music/clef'
 import { parsePitch, type Pitch } from '@/lib/music/pitch'
@@ -102,31 +102,53 @@ describe('note spacing', () => {
       clef: 'treble',
     })
 
-  it('spreads the notes out without changing the staff', async () => {
-    // The page fits an over-wide render to its column, so this is what makes
-    // a scale look airy: the same eight notes over more width means smaller
-    // notes with more room between them, in the same space on screen.
-    const tight = size(await renderMei(scale(), DEFAULT_NOTE_SPACING))
-    const airy = size(await renderMei(scale(), SCALE_NOTE_SPACING))
+  // Engraved once: Verovio is a 7 MB module and each render is real work.
+  let defaultRender = ''
+  let scaleRender = ''
+
+  beforeAll(async () => {
+    defaultRender = await renderMei(scale(), DEFAULT_NOTE_SPACING)
+    scaleRender = await renderMei(scale(), SCALE_NOTE_SPACING)
+  }, 30_000)
+
+  it('spreads the notes out without changing the staff', () => {
+    const tight = size(defaultRender)
+    const airy = size(scaleRender)
 
     expect(airy.width).toBeGreaterThan(tight.width)
     // Drawn at the same staff size — only the gaps grew.
     expect(airy.height).toBe(tight.height)
-  }, 30_000)
+  })
 
-  it('leaves a scale wide enough to keep filling the column', async () => {
+  it('leaves a scale wide enough to keep filling the column', () => {
     // Narrower than the column and it would sit small with air around it
     // instead of spanning the space, which is the opposite of the point.
-    expect(size(await renderMei(scale(), SCALE_NOTE_SPACING)).width).toBeGreaterThan(343)
-  }, 30_000)
+    expect(size(scaleRender).width).toBeGreaterThan(343)
+  })
 
-  it('gives a scale a staff around 60px in a phone column', async () => {
-    // A number to notice if the spacing is ever nudged: the default put the
-    // staff at 104px in the same column, which was the cramped look.
-    const { width, height } = size(await renderMei(scale(), SCALE_NOTE_SPACING))
-    expect(Math.round(height * (343 / width))).toBeLessThan(75)
-    expect(Math.round(height * (343 / width))).toBeGreaterThan(50)
-  }, 30_000)
+  it('leaves a scale roomier than the default, whatever it is tuned to', () => {
+    // `SCALE_NOTE_SPACING` exists to be turned, so nothing here pins a
+    // number: what has to stay true is that a scale gets more room than the
+    // default would give it.
+    expect(SCALE_NOTE_SPACING).toBeGreaterThan(DEFAULT_NOTE_SPACING)
+    // Verovio refuses anything above 1.0, and rejects the whole option set
+    // with it rather than clamping.
+    expect(SCALE_NOTE_SPACING).toBeLessThanOrEqual(1)
+  })
+
+  it('shrinks the staff a scale ends up with in a phone column', () => {
+    // The visible consequence, since the column fits the width either way:
+    // more spacing means a smaller staff in the same space. A tuning that
+    // did not actually change what is on screen would pass every other
+    // assertion here.
+    const inColumn = ({ width, height }: { width: number; height: number }) =>
+      Math.round(height * (343 / width))
+
+    const before = inColumn(size(defaultRender))
+    const after = inColumn(size(scaleRender))
+
+    expect(after).toBeLessThan(before)
+  })
 
   it('goes back to the default when none is given', async () => {
     const explicit = size(

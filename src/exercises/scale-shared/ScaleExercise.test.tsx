@@ -17,11 +17,13 @@ import { i18n } from '@/lib/i18n'
  * of WebAssembly and the other wants an AudioContext jsdom does not have. Both
  * are covered on their own elsewhere.
  */
-vi.mock('@/lib/notation/verovio', () => ({
+// Only the engraving is stubbed. The real constants come through, so the
+// spacing assertion below reads what the app actually ships rather than a
+// number this file made up.
+vi.mock('@/lib/notation/verovio', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/notation/verovio')>()),
   preloadEngraver: () => undefined,
   renderMei: vi.fn(() => Promise.resolve('<svg xmlns="http://www.w3.org/2000/svg"/>')),
-  DEFAULT_NOTE_SPACING: 0.25,
-  SCALE_NOTE_SPACING: 0.45,
 }))
 
 vi.mock('@/lib/audio/engine', () => ({
@@ -111,7 +113,10 @@ describe('note spacing', () => {
     await screen.findByText('What scale is this?')
 
     expect(engrave).toHaveBeenCalled()
-    for (const [, noteSpacing] of engrave.mock.calls) expect(noteSpacing).toBe(0.45)
+    const { SCALE_NOTE_SPACING } = await import('@/lib/notation/verovio')
+    for (const [, noteSpacing] of engrave.mock.calls) {
+      expect(noteSpacing).toBe(SCALE_NOTE_SPACING)
+    }
   })
 })
 

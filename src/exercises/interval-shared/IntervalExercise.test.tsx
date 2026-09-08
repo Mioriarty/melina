@@ -14,11 +14,10 @@ import { i18n } from '@/lib/i18n'
  * can still leave a screen that never mounts. The engraver and the sampler are
  * stubbed; both are covered on their own elsewhere.
  */
-vi.mock('@/lib/notation/verovio', () => ({
+vi.mock('@/lib/notation/verovio', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/notation/verovio')>()),
   preloadEngraver: () => undefined,
   renderMei: () => Promise.resolve('<svg xmlns="http://www.w3.org/2000/svg"/>'),
-  DEFAULT_NOTE_SPACING: 0.25,
-  SCALE_NOTE_SPACING: 0.45,
 }))
 
 vi.mock('@/lib/audio/engine', () => ({
