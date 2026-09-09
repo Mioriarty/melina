@@ -92,36 +92,51 @@ describe('Rhythmic Dictation', () => {
     expect(screen.getByRole('button', { name: value('1.plain.note') })).toBeTruthy()
   })
 
-  it('turns the value keys into rests, and back', async () => {
+  it('offers rests as their own row rather than as a switch', async () => {
+    // A rest is not a variation on the note before it, it is the other half of
+    // writing a bar down — so it is a key, not two presses and a switch left on.
     await startRound()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Write rests instead of notes' }))
-    expect(screen.getByRole('button', { name: value('4.plain.rest') })).toBeTruthy()
-
-    fireEvent.click(screen.getByRole('button', { name: 'Write rests instead of notes' }))
     expect(screen.getByRole('button', { name: value('4.plain.note') })).toBeTruthy()
+    expect(screen.getByRole('button', { name: value('4.plain.rest') })).toBeTruthy()
+    expect(screen.getByRole('button', { name: value('16.plain.rest') })).toBeTruthy()
+    expect(
+      screen.queryByRole('button', { name: 'Write rests instead of notes' }),
+    ).toBeNull()
   })
 
-  it('dots the values when asked', async () => {
+  it('enters a rest in one press', async () => {
+    await startRound()
+
+    press(value('4.plain.rest'))
+    expect(screen.getByRole('button', { name: 'Delete the last one' })).toHaveProperty(
+      'disabled',
+      false,
+    )
+  })
+
+  it('dots the values when asked, in both rows', async () => {
+    // The dot really is a variation: it applies to whichever value comes next,
+    // note or rest, so it multiplies the rows rather than adding to them.
     await startRound()
 
     fireEvent.click(screen.getByRole('button', { name: 'Dot the next value' }))
     expect(screen.getByRole('button', { name: value('4.dotted.note') })).toBeTruthy()
+    expect(screen.getByRole('button', { name: value('4.dotted.rest') })).toBeTruthy()
   })
 
-  it('lets go of both switches once a value has been entered', async () => {
-    // They mean "make *this* one dotted", not a mode to remember and turn back
-    // off. Half a bar entered as rests because the switch was still down is the
-    // slip this prevents.
+  it('lets go of the dot once a value has been entered', async () => {
+    // It means "make *this* one dotted", not a mode to remember and turn back
+    // off — and it lets go whichever row was used.
     await startRound()
 
     fireEvent.click(screen.getByRole('button', { name: 'Dot the next value' }))
     press(value('4.dotted.note'))
     expect(screen.getByRole('button', { name: value('4.plain.note') })).toBeTruthy()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Write rests instead of notes' }))
-    press(value('8.plain.rest'))
-    expect(screen.getByRole('button', { name: value('8.plain.note') })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Dot the next value' }))
+    press(value('8.dotted.rest'))
+    expect(screen.getByRole('button', { name: value('8.plain.rest') })).toBeTruthy()
   })
 
   it('answers itself the moment the bar is full', async () => {

@@ -116,35 +116,41 @@ export function RhythmKeyboard({
         </button>
       </div>
 
-      <div className="flex flex-wrap justify-center gap-1.5">
-        {NOTE_VALUES.map((value) => {
-          const allowed = !revealed && canAppend(draft, { dur: value, dots })
+      {(['note', 'rest'] as const).map((kind) => (
+        <div
+          key={kind}
+          role="group"
+          aria-label={t(`rhythm.keyboard.${kind === 'note' ? 'notes' : 'rests'}`)}
+          className="flex flex-wrap justify-center gap-1.5"
+        >
+          {NOTE_VALUES.map((value) => {
+            const allowed = !revealed && canAppend(draft, { dur: value, dots })
 
-          return (
-            <button
-              key={value}
-              type="button"
-              disabled={!allowed}
-              aria-label={names.noteValue(value, kind, dotted)}
-              onClick={() => {
-                onAppend({ kind, dur: value, dots })
-                // Both switches are for the key just pressed, and nothing more.
-                setRest(false)
-                setDotted(false)
-              }}
-              className={answerKeyClasses(
-                { showCorrect: false, showWrong: false, revealed },
-                cn(
-                  'h-14 flex-1 basis-14 disabled:opacity-30',
-                  !revealed && 'opacity-100',
-                ),
-              )}
-            >
-              <NoteGlyph value={value} kind={kind} dotted={dotted} size={24} />
-            </button>
-          )
-        })}
-      </div>
+            return (
+              <button
+                key={value}
+                type="button"
+                disabled={!allowed}
+                aria-label={names.noteValue(value, kind, dotted)}
+                onClick={() => {
+                  onAppend({ kind, dur: value, dots })
+                  // The dot was for the key just pressed, and nothing more.
+                  setDotted(false)
+                }}
+                className={answerKeyClasses(
+                  { showCorrect: false, showWrong: false, revealed },
+                  cn(
+                    'h-14 flex-1 basis-14 disabled:opacity-30',
+                    !revealed && 'opacity-100',
+                  ),
+                )}
+              >
+                <NoteGlyph value={value} kind={kind} dotted={dotted} size={24} />
+              </button>
+            )
+          })}
+        </div>
+      ))}
     </div>
   )
 }

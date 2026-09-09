@@ -165,7 +165,8 @@
       "correct": "Correct"
     },
     "keyboard": {
-      "rest": "Write rests instead of notes",
+      "notes": "Notes",
+      "rests": "Rests",
       "dotted": "Dot the next value",
       "delete": "Delete the last one"
     },

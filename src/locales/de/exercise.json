@@ -165,7 +165,8 @@
       "correct": "Richtig"
     },
     "keyboard": {
-      "rest": "Pausen statt Noten schreiben",
+      "notes": "Noten",
+      "rests": "Pausen",
       "dotted": "Den nächsten Wert punktieren",
       "delete": "Das Letzte löschen"
     },

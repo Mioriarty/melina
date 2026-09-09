@@ -245,6 +245,13 @@ describe('a key on the degree keyboard', () => {
     expect(sizes.size).toBe(1)
   })
 
+  it('draws the stem, like any other note', async () => {
+    const svg = await renderMei(keyMei(p('G#4')), undefined, DEGREE_KEY_PROFILE)
+
+    expect(countOf(svg, 'notehead')).toBe(1)
+    expect(countOf(svg, 'stem')).toBe(1)
+  })
+
   it('never lets a note run off its key, in any clef', async () => {
     // The lowest degree of each clef is the one that would fall through the
     // bottom of the page if it were sized too tightly.

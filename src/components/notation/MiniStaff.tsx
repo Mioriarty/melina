@@ -4,6 +4,7 @@ import type { ClefId } from '@/lib/music/clef'
 import type { KeySignatureId } from '@/lib/music/keySignature'
 import { pitchKey, type Pitch } from '@/lib/music/pitch'
 import { degreeKeyMei } from '@/lib/notation/mei'
+import { cropToStaff } from '@/lib/notation/cropToStaff'
 import { DEGREE_KEY_PROFILE, renderMei } from '@/lib/notation/verovio'
 import { cn } from '@/lib/utils/cn'
 
@@ -51,7 +52,8 @@ export function MiniStaff({
     let active = true
 
     renderMei(degreeKeyMei({ pitch, clef, keySignature }), undefined, DEGREE_KEY_PROFILE)
-      .then((result) => {
+      .then((raw) => {
+        const result = cropToStaff(raw)
         RENDERS.set(cacheKey, result)
         // The engraver is shared and asynchronous, so a key that changed while
         // a render was in flight must not be overwritten by the older one.

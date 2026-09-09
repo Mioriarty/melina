@@ -163,6 +163,123 @@ describe('Scale Degrees', () => {
   })
 })
 
+describe('typing it instead', () => {
+  const type = (key: string) => fireEvent.keyDown(window, { key })
+
+  it('enters a degree from the number keys', async () => {
+    // The number is already printed on the key, so the shortcut is the label.
+    await startRound('first-five')
+
+    type('1')
+    expect(screen.getByRole('button', { name: 'Delete the last one' })).toHaveProperty(
+      'disabled',
+      false,
+    )
+  })
+
+  it('answers itself once enough have been typed', async () => {
+    await startRound('first-five')
+
+    // Three notes to this level's melodies, so the third keystroke answers.
+    type('1')
+    type('2')
+    type('3')
+
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Correct') ?? screen.queryByRole('button', { name: /Next/ }),
+      ).toBeTruthy(),
+    )
+  })
+
+  it('ignores a number the level does not offer', async () => {
+    await startRound('first-five')
+
+    type('7')
+    expect(screen.getByRole('button', { name: 'Delete the last one' })).toHaveProperty(
+      'disabled',
+      true,
+    )
+  })
+
+  it('takes one back on backspace', async () => {
+    await startRound('first-five')
+
+    type('1')
+    const back = () => screen.getByRole('button', { name: 'Delete the last one' })
+    expect(back()).toHaveProperty('disabled', false)
+
+    type('Backspace')
+    expect(back()).toHaveProperty('disabled', true)
+  })
+
+  it('raises and lowers with plus and minus', async () => {
+    await startRound('outside-the-key')
+
+    const sharp = () => screen.getByRole('button', { name: 'Raise the next note' })
+    const flat = () => screen.getByRole('button', { name: 'Lower the next note' })
+
+    type('+')
+    expect(sharp().getAttribute('aria-pressed')).toBe('true')
+
+    // The two are one choice, so asking for a flat lets go of the sharp.
+    type('-')
+    expect(sharp().getAttribute('aria-pressed')).toBe('false')
+    expect(flat().getAttribute('aria-pressed')).toBe('true')
+
+    // And pressing the same one again is how it is cancelled.
+    type('-')
+    expect(flat().getAttribute('aria-pressed')).toBe('false')
+  })
+
+  it('takes = for a sharp, which needs no shift', async () => {
+    await startRound('outside-the-key')
+
+    type('=')
+    expect(
+      screen
+        .getByRole('button', { name: 'Raise the next note' })
+        .getAttribute('aria-pressed'),
+    ).toBe('true')
+  })
+
+  it('lets go of the accidental once a number is typed', async () => {
+    await startRound('outside-the-key')
+
+    type('+')
+    type('1')
+    expect(
+      screen
+        .getByRole('button', { name: 'Raise the next note' })
+        .getAttribute('aria-pressed'),
+    ).toBe('false')
+  })
+
+  it('does nothing on a level that stays in the key', async () => {
+    await startRound('first-five')
+
+    type('+')
+    // No switch exists to press, and nothing else may change either.
+    expect(screen.queryByRole('button', { name: 'Raise the next note' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Delete the last one' })).toHaveProperty(
+      'disabled',
+      true,
+    )
+  })
+
+  it("leaves the browser's own shortcuts alone", async () => {
+    await startRound('first-five')
+
+    fireEvent.keyDown(window, { key: '1', metaKey: true })
+    fireEvent.keyDown(window, { key: '1', ctrlKey: true })
+
+    expect(screen.getByRole('button', { name: 'Delete the last one' })).toHaveProperty(
+      'disabled',
+      true,
+    )
+  })
+})
+
 describe('what the screens may say', () => {
   /**
    * The sibling of the rule the rhythm and scale suites enforce: a shared

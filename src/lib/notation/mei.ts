@@ -461,6 +461,19 @@ export function melodyMei({
 }
 
 /**
+ * How a note is written on a key.
+ *
+ * With its stem, like any other note. An earlier draft left the stem off to
+ * win back height, on the reasoning that a stem is three staff spaces the
+ * notehead then has to share. Measured, that was wrong: the page has to be
+ * sized for the *worst* case, and the worst case is a degree two ledger lines
+ * below the staff — A flat 3 in the treble — whose ledger lines reach further
+ * than any stem does. Dropping the stem therefore bought no room at all, and
+ * cost the key a notehead that looked like no note in any notation.
+ */
+const KEY_NOTE = 'dur="4"'
+
+/**
  * One note on a bare staff — a key on the degree keyboard.
  *
  * **No clef and no printed key signature.** The staff above already carries
@@ -488,7 +501,7 @@ export function degreeKeyMei({
           </scoreDef>`,
     `<measure n="1" right="invis">
               <staff n="1">
-                <layer n="1">${noteElement(pitch, keySignature, 'dur="4"')}</layer>
+                <layer n="1">${noteElement(pitch, keySignature, KEY_NOTE)}</layer>
               </staff>
             </measure>`,
   )

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { MiniStaff } from '@/components/notation/MiniStaff'
@@ -27,6 +27,11 @@ import { answerKeyClasses, type KeyboardState } from './keyClasses'
  * The two accidental switches are **one-shot**, like the rest and dot switches
  * on the rhythm keyboard: they mean the next key, not a mode to remember and
  * turn back off. They are absent entirely on a level that stays in the key.
+ *
+ * On a desktop the whole thing can be typed: **1 to 7** enter a degree, **+**
+ * and **-** raise and lower the next one, and backspace takes one back. The
+ * number is already printed on the key, so the shortcut is the label — there is
+ * nothing extra to learn or to put on screen.
  */
 
 export interface DegreeKeyboardProps {
@@ -64,9 +69,74 @@ export function DegreeKeyboard({
 
   const revealed = state === 'revealed'
   const full = !canAppend(draft)
+  /** Whether an accidental can be asked for at all, here and now. */
+  const canAlter = alterations && !revealed && !full
 
-  const toggle = (next: DegreeAlteration) =>
-    setAlteration((current) => (current === next ? 0 : next))
+  const toggle = useCallback(
+    (next: DegreeAlteration) => setAlteration((current) => (current === next ? 0 : next)),
+    [],
+  )
+
+  /** One path for a mouse and for the keyboard, so the two cannot drift. */
+  const press = useCallback(
+    (number: number) => {
+      if (revealed || full) return
+      const degree: Degree = { number, alteration }
+      // A degree whose altered form would need a triple accidental cannot be
+      // written, so it is not enterable either way.
+      if (degreePitch(tonic, mode, degree) === undefined) return
+
+      onAppend(degree)
+      // The switch was for this key and nothing more.
+      setAlteration(0)
+    },
+    [alteration, full, mode, onAppend, revealed, tonic],
+  )
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      // Leave shortcuts, and anything being typed into a field, alone.
+      if (event.metaKey || event.ctrlKey || event.altKey) return
+      const target = event.target as HTMLElement | null
+      if (
+        target?.isContentEditable === true ||
+        ['INPUT', 'TEXTAREA', 'SELECT'].includes(target?.tagName ?? '')
+      ) {
+        return
+      }
+
+      if (event.key === 'Backspace') {
+        if (revealed || draft.degrees.length === 0) return
+        event.preventDefault()
+        onRemove()
+        return
+      }
+
+      // `=` because a plain keyboard needs a shift for `+`, and asking for one
+      // to raise a note would make the shortcut slower than the button.
+      if (event.key === '+' || event.key === '=') {
+        if (!canAlter) return
+        event.preventDefault()
+        toggle(1)
+        return
+      }
+      if (event.key === '-' || event.key === '_') {
+        if (!canAlter) return
+        event.preventDefault()
+        toggle(-1)
+        return
+      }
+
+      const number = Number(event.key)
+      if (Number.isInteger(number) && numbers.includes(number)) {
+        event.preventDefault()
+        press(number)
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [canAlter, draft.degrees.length, numbers, onRemove, press, revealed, toggle])
 
   return (
     <div
@@ -79,16 +149,18 @@ export function DegreeKeyboard({
           <>
             <Switch
               pressed={alteration === 1}
-              disabled={revealed || full}
+              disabled={!canAlter}
               label={t('degrees.keyboard.sharp')}
+              hint="+"
               onClick={() => toggle(1)}
             >
               ♯
             </Switch>
             <Switch
               pressed={alteration === -1}
-              disabled={revealed || full}
+              disabled={!canAlter}
               label={t('degrees.keyboard.flat')}
+              hint="−"
               onClick={() => toggle(-1)}
             >
               ♭
@@ -125,14 +197,10 @@ export function DegreeKeyboard({
               type="button"
               disabled={!allowed}
               aria-label={names.degree(degree)}
-              onClick={() => {
-                onAppend(degree)
-                // The switch was for this key and nothing more.
-                setAlteration(0)
-              }}
+              onClick={() => press(number)}
               className={answerKeyClasses(
                 { showCorrect: false, showWrong: false, revealed },
-                'h-auto min-w-14 flex-col gap-1 px-2.5 py-2 disabled:opacity-35',
+                'h-auto min-w-16 flex-col gap-1.5 px-3 py-2.5 disabled:opacity-35',
               )}
             >
               {pitch !== undefined && (
@@ -140,7 +208,7 @@ export function DegreeKeyboard({
                   pitch={pitch}
                   clef={clef}
                   keySignature={keySignature}
-                  className="h-12"
+                  className="h-14 sm:h-16"
                 />
               )}
               <span className="text-[0.8125rem] font-semibold">
@@ -158,16 +226,19 @@ interface SwitchProps {
   pressed: boolean
   disabled: boolean
   label: string
+  /** The key that does the same thing, for a mouse pointer to discover. */
+  hint: string
   onClick: () => void
   children: React.ReactNode
 }
 
-function Switch({ pressed, disabled, label, onClick, children }: SwitchProps) {
+function Switch({ pressed, disabled, label, hint, onClick, children }: SwitchProps) {
   return (
     <button
       type="button"
       aria-pressed={pressed}
       aria-label={label}
+      title={`${label} (${hint})`}
       disabled={disabled}
       onClick={onClick}
       className={cn(

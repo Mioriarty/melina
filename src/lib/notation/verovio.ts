@@ -182,8 +182,16 @@ const MELODY_PAGE_LEAD = 250
 const MELODY_PAGE_PER_SLOT = 62
 /** A second staff underneath needs room for itself and for both labels. */
 const MELODY_TWO_STAFF_LEAD = 390
-const MELODY_PAGE_HEIGHT = 190
-const MELODY_TWO_STAFF_HEIGHT = 350
+/**
+ * Tall enough for the deepest thing a melody can reach: a degree two ledger
+ * lines below the staff — A3 in the treble, which A minor and A major both
+ * reach. Sized by rasterising the extremes and demanding clear space around
+ * them, because measuring a glyph's *anchor* says nothing about how far its
+ * ink spreads from there, and reading anchors is exactly how an earlier
+ * version came to cut the noteheads in half.
+ */
+const MELODY_PAGE_HEIGHT = 235
+const MELODY_TWO_STAFF_HEIGHT = 410
 
 /**
  * Cached for the same reason `rhythmProfile` is: `Score` compares the profile
@@ -221,8 +229,18 @@ export const DEGREE_KEY_PROFILE: VerovioOptions = {
   breaks: 'auto',
   adjustPageWidth: false,
   adjustPageHeight: false,
-  pageWidth: 140,
-  pageHeight: 195,
+  // Measured across every clef, key and degree the exercise can offer, by
+  // rasterising the extremes and demanding clear space on every side. A
+  // degree can sit two ledger lines below the staff — A3 in the treble — and
+  // those reach further down than any stem does, so they are what sets the
+  // height. The margins are still tight: the page defaults leave a third of a
+  // key empty, and on something this small that is a third of the note.
+  pageWidth: 130,
+  pageHeight: 205,
+  pageMarginTop: 6,
+  pageMarginBottom: 6,
+  pageMarginLeft: 6,
+  pageMarginRight: 6,
 }
 
 let toolkit: Promise<VerovioToolkit> | undefined
