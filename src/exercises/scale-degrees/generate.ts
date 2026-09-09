@@ -1,11 +1,14 @@
 import { getClef, type ClefId } from '@/lib/music/clef'
 import {
   DEGREE_NUMBERS,
+  degreeNotes,
   degreePitch,
+  isScaleNote,
   keySignatureFor,
-  spellableDegrees,
+  nameMelody,
   type Degree,
   type DegreeAlteration,
+  type DegreeNote,
 } from '@/lib/music/degree'
 import type { KeySignatureId } from '@/lib/music/keySignature'
 import type { Pitch } from '@/lib/music/pitch'
@@ -109,7 +112,13 @@ function placements(
 }
 
 /**
- * One melody.
+ * One melody, as a run of notes.
+ *
+ * **Notes, not names.** What is drawn here is sounding pitches — see
+ * `degreeNotes` — so the melody cannot contain a note the level does not
+ * reach, nor one whose only name is a spelling of a note it already has. The
+ * names are chosen afterwards, once the whole line is known and its direction
+ * can decide them.
  *
  * Notes are drawn one at a time rather than dealt evenly: a melody is a
  * sequence, not a survey, and forcing it to cover the offered degrees would
@@ -121,21 +130,16 @@ function buildMelody(
   tonic: Pitch,
   mode: ModeId,
   spec: DegreeRoundSpec,
-): readonly Degree[] | undefined {
-  const offered = spellableDegrees(
-    tonic,
-    mode,
-    allowedDegrees(spec),
-    allowedAlterations(spec),
-  )
-  const plain = offered.filter((degree) => degree.alteration === 0)
+): readonly DegreeNote[] | undefined {
+  const offered = degreeNotes(tonic, mode, allowedDegrees(spec), allowedAlterations(spec))
+  const plain = offered.filter(isScaleNote)
   if (plain.length === 0) return undefined
 
-  const melody: Degree[] = []
+  const melody: DegreeNote[] = []
 
   for (let index = 0; index < spec.melodyLength; index += 1) {
     if (index === 0 && spec.startOnTonic) {
-      const home = plain.find((degree) => degree.number === 1)
+      const home = plain.find((note) => note.semitones === 0)
       if (home !== undefined) {
         melody.push(home)
         continue
@@ -144,15 +148,12 @@ function buildMelody(
 
     // Altered notes are the exception, so they are drawn against a chance
     // rather than sitting in the pool as equals with the scale's own notes.
-    const chromatic = offered.filter((degree) => degree.alteration !== 0)
+    const chromatic = offered.filter((note) => !isScaleNote(note))
     const pool = chromatic.length > 0 && random() < ALTERATION_CHANCE ? chromatic : plain
 
     const previous = melody[melody.length - 1]
     const choices = pool.filter(
-      (degree) =>
-        previous === undefined ||
-        degree.number !== previous.number ||
-        degree.alteration !== previous.alteration,
+      (note) => previous === undefined || note.semitones !== previous.semitones,
     )
 
     const [first, ...rest] = choices.length > 0 ? choices : pool
@@ -181,11 +182,12 @@ export function buildQuestion(
 
     const tonic = randomPick(random, [first, ...rest])
     const keySignature = keySignatureFor(tonic, mode)
-    const degrees = buildMelody(random, tonic, mode, spec)
-    if (keySignature === undefined || degrees === undefined) continue
+    const notes = buildMelody(random, tonic, mode, spec)
+    if (keySignature === undefined || notes === undefined) continue
 
+    const degrees = nameMelody(notes)
     const pitches = degrees.map((degree) => degreePitch(tonic, mode, degree))
-    // `spellableDegrees` already refused anything unspellable, so this cannot
+    // `degreeNotes` only ever collects degrees that spell, so this cannot
     // fail — it is here so the type says so rather than an assertion.
     if (!pitches.every((pitch): pitch is Pitch => pitch !== undefined)) continue
 

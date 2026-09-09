@@ -1,5 +1,5 @@
 import { alterationInKey, KEY_SIGNATURES, type KeySignatureId } from './keySignature'
-import { isAlteration, type Pitch } from './pitch'
+import { chromaticValue, isAlteration, type Pitch } from './pitch'
 import { scalePitches, type ModeId } from './scale'
 
 /**
@@ -79,16 +79,6 @@ export function parseDegreesKey(key: string): Degree[] | undefined {
     : undefined
 }
 
-export function degreesEqual(a: readonly Degree[], b: readonly Degree[]): boolean {
-  return (
-    a.length === b.length &&
-    a.every(
-      (degree, index) =>
-        degree.number === b[index]?.number && degree.alteration === b[index]?.alteration,
-    )
-  )
-}
-
 /* ---------------------------------------------------------------- pitches */
 
 /**
@@ -113,18 +103,151 @@ export function degreePitch(
   return isAlteration(alteration) ? { ...step, alteration } : undefined
 }
 
-/** The degrees a mode on this tonic can actually spell, alterations included. */
-export function spellableDegrees(
+/** Semitones from the tonic up to a note. Negative below it. */
+export function semitonesAbove(tonic: Pitch, value: Pitch): number {
+  return chromaticValue(value) - chromaticValue(tonic)
+}
+
+/**
+ * A note a melody may use, together with every degree that names it.
+ *
+ * **The vocabulary is notes, not names.** A degree and an alteration is a
+ * spelling, and spellings are not what a player hears: in a major key ♯1 and
+ * ♭2 are one sound under two names, so a question that wanted one and refused
+ * the other would be unanswerable however well you listened. Worse, ♯3 in that
+ * key *is* the fourth — a name for a note that already has a plainer one, and
+ * nothing anybody would call it.
+ *
+ * Collecting by sounding pitch settles both at once. Each note appears once,
+ * carrying the names it can go by, so a question is a run of notes and a
+ * reading of it is right when it names those notes — by any of their names.
+ */
+export interface DegreeNote {
+  /** Semitones above the tonic. */
+  semitones: number
+  /** Every degree naming it: the scale's own first, then raised, then lowered. */
+  names: readonly [Degree, ...Degree[]]
+}
+
+/** The scale's own name for a note, if it has one, is always the plainest. */
+function plainestFirst(a: Degree, b: Degree): number {
+  return Math.abs(a.alteration) - Math.abs(b.alteration) || b.alteration - a.alteration
+}
+
+/**
+ * Every distinct note the allowed degrees can name, once each and in order.
+ *
+ * **Bounded by the degrees themselves.** A level offering the first five
+ * degrees is asking about the notes from the tonic up to the fifth, so a
+ * flattened tonic sits below everything it teaches and a raised fifth above —
+ * neither is in the level, however the keyboard spells it. Reading the range
+ * off the outermost degrees rather than tabulating it means a level that adds
+ * a degree widens on its own. It is also what keeps a raised seventh out of a
+ * major key, where it is not a seventh at all but the octave.
+ */
+export function degreeNotes(
   tonic: Pitch,
   mode: ModeId,
   numbers: readonly number[],
   alterations: readonly DegreeAlteration[],
-): Degree[] {
-  return numbers.flatMap((number) =>
-    alterations
-      .map((alteration) => ({ number, alteration }))
-      .filter((degree) => degreePitch(tonic, mode, degree) !== undefined),
-  )
+): readonly DegreeNote[] {
+  const usable = numbers.filter(isDegreeNumber)
+  if (usable.length === 0) return []
+
+  const edge = (number: number): number | undefined => {
+    const pitch = degreePitch(tonic, mode, { number, alteration: 0 })
+    return pitch === undefined ? undefined : semitonesAbove(tonic, pitch)
+  }
+
+  const lowest = edge(Math.min(...usable))
+  const highest = edge(Math.max(...usable))
+  if (lowest === undefined || highest === undefined) return []
+
+  const byNote = new Map<number, Degree[]>()
+
+  for (const number of usable) {
+    for (const alteration of alterations) {
+      const degree: Degree = { number, alteration }
+      const pitch = degreePitch(tonic, mode, degree)
+      if (pitch === undefined) continue
+
+      const semitones = semitonesAbove(tonic, pitch)
+      if (semitones < lowest || semitones > highest) continue
+
+      byNote.set(semitones, [...(byNote.get(semitones) ?? []), degree])
+    }
+  }
+
+  return [...byNote.entries()]
+    .sort(([a], [b]) => a - b)
+    .flatMap(([semitones, found]) => {
+      const [first, ...rest] = [...found].sort(plainestFirst)
+      return first === undefined ? [] : [{ semitones, names: [first, ...rest] as const }]
+    })
+}
+
+/** Whether a note is one the mode itself has, rather than one from outside it. */
+export function isScaleNote(note: DegreeNote): boolean {
+  return note.names.some((name) => name.alteration === 0)
+}
+
+/**
+ * Name each note of a melody, following the line.
+ *
+ * A note the scale has takes the scale's own name. One from outside it has two
+ * equally true names — the degree below raised, or the one above lowered — and
+ * the one to print is the one that says where the line is going: raised when it
+ * carries on up, lowered when it turns back down. That is how a chromatic note
+ * is written, and it is why a run through ♯4 to 5 does not come out as ♭5 to 5.
+ */
+export function nameMelody(notes: readonly DegreeNote[]): Degree[] {
+  return notes.map((note, index) => {
+    const [plainest] = note.names
+    if (plainest.alteration === 0) return plainest
+
+    const raised = note.names.find((name) => name.alteration === 1)
+    const lowered = note.names.find((name) => name.alteration === -1)
+    if (raised === undefined) return lowered ?? plainest
+    if (lowered === undefined) return raised
+
+    // Where it is heading, or — on the last note — where it came from.
+    const next = notes[index + 1]
+    const previous = notes[index - 1]
+    const rising =
+      next !== undefined
+        ? next.semitones > note.semitones
+        : previous === undefined || previous.semitones < note.semitones
+
+    return rising ? raised : lowered
+  })
+}
+
+/**
+ * Whether two readings of a melody name the same notes.
+ *
+ * By sound, never by spelling: ♯1 and ♭2 are the same note, and no amount of
+ * listening tells them apart, so a reading that picks either has heard it.
+ */
+export function degreesSoundEqual(
+  tonic: Pitch,
+  mode: ModeId,
+  a: readonly Degree[],
+  b: readonly Degree[],
+): boolean {
+  if (a.length !== b.length) return false
+
+  return a.every((degree, index) => {
+    const other = b[index]
+    if (other === undefined) return false
+
+    const one = degreePitch(tonic, mode, degree)
+    const two = degreePitch(tonic, mode, other)
+    return (
+      one !== undefined &&
+      two !== undefined &&
+      chromaticValue(one) === chromaticValue(two)
+    )
+  })
 }
 
 /** The tonic triad — degrees 1, 3 and 5, plus the octave for some body. */

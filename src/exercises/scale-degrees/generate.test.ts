@@ -6,7 +6,7 @@ import {
   degreePitch,
   keySignatureFor,
 } from '@/lib/music/degree'
-import { comparePitch, pitchKey } from '@/lib/music/pitch'
+import { chromaticValue, comparePitch, pitchKey } from '@/lib/music/pitch'
 import { MODE_IDS, TONIC_KEYS, scalePitches, tonicKey } from '@/lib/music/scale'
 import { createRandom } from '@/lib/utils/seededRandom'
 
@@ -101,16 +101,63 @@ describe('every question it builds', () => {
       expect(octave).toBeDefined()
 
       for (const pitch of question.pitches) {
-        // An altered degree may sit a semitone outside, which is still one
-        // notehead's worth and not another octave.
         expect(
           comparePitch(pitch, question.tonic),
           pitchKey(pitch),
-        ).toBeGreaterThanOrEqual(-1)
+        ).toBeGreaterThanOrEqual(0)
         expect(comparePitch(pitch, octave as never), pitchKey(pitch)).toBeLessThanOrEqual(
-          1,
+          0,
         )
       }
+    }
+  })
+
+  it('reaches no further than the degrees the level offers', () => {
+    // The level's own outermost degrees are the range. A flattened tonic sits
+    // below everything a level teaches and a raised top degree above it — and
+    // in a major key that raised seventh is not a seventh at all, it is the
+    // octave, which is why it used to draw as a double sharp.
+    for (const degrees of [[1, 2, 3, 4, 5], [...DEGREE_NUMBERS]]) {
+      for (const question of everyQuestion(spec({ degrees, alterations: true }))) {
+        const edge = (number: number) =>
+          degreePitch(question.tonic, question.mode, { number, alteration: 0 })
+        const lowest = edge(Math.min(...degrees))
+        const highest = edge(Math.max(...degrees))
+        expect(lowest).toBeDefined()
+        expect(highest).toBeDefined()
+
+        for (const pitch of question.pitches) {
+          const where = `${pitchKey(pitch)} in ${pitchKey(question.tonic)} ${question.mode}`
+          expect(chromaticValue(pitch), where).toBeGreaterThanOrEqual(
+            chromaticValue(lowest as never),
+          )
+          expect(chromaticValue(pitch), where).toBeLessThanOrEqual(
+            chromaticValue(highest as never),
+          )
+        }
+      }
+    }
+  })
+
+  it('never calls a note by an altered name when it has a plain one', () => {
+    // A raised third in a major key *is* the fourth. Offering it as `#3` asks
+    // the player to tell apart two names for one sound, which no listening can
+    // do — so an altered name may only ever land on a note the scale has not
+    // already got.
+    for (const question of everyQuestion(spec({ alterations: true }))) {
+      const scale = scalePitches(question.tonic, question.mode)
+      expect(scale).toBeDefined()
+      const inScale = new Set((scale ?? []).map(chromaticValue))
+
+      question.degrees.forEach((degree, index) => {
+        if (degree.alteration === 0) return
+        const pitch = question.pitches[index]
+        expect(pitch).toBeDefined()
+        expect(
+          inScale.has(chromaticValue(pitch as never)),
+          `${degreeKey(degree)} sounds like a note of the scale`,
+        ).toBe(false)
+      })
     }
   })
 

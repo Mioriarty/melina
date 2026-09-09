@@ -120,9 +120,15 @@ export function RoundScreen<TQuestion, TAnswer>({
           short screen the content overflowed both ends, and the bottom of it
           — the feedback and the Next button — was painted over by the
           keyboard below.
+
+          Everything above the staff is tighter on a small screen, where the
+          notation and the keyboard are competing for the same few hundred
+          pixels and the prompt is the one thing that can give some back. It
+          is read once per question and then ignored, so it loses its air and
+          a size before the notation loses any height at all.
         */}
-        <div className="flex min-h-0 flex-1 flex-col items-center gap-4 overflow-hidden pt-8 pb-2">
-          <h1 className="shrink-0 text-center text-heading">{prompt}</h1>
+        <div className="flex min-h-0 flex-1 flex-col items-center gap-2 overflow-hidden pt-1 pb-2 sm:gap-4 sm:pt-8">
+          <h1 className="shrink-0 text-center text-base sm:text-heading">{prompt}</h1>
 
           {score ?? (
             <PlayableScore

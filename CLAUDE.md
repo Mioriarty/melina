@@ -237,6 +237,10 @@ blank page.
   path can be explored and a screen reader says why a station cannot be entered.
 - Icon-only buttons need an `aria-label`; `ui/Icon` takes a `label` prop for it.
 - Touch targets are at least 44px.
+- **Anything pressable moves under a press**, not only under a hover: a touch
+  screen has no hover, so a control whose only feedback is `hover:` gives a
+  thumb nothing back. The notation is the largest button in the app and needs
+  this most.
 - **All animation is gated on `useReducedMotion`.** Parallax and draw-in must
   fully switch off when the OS asks.
 
@@ -311,6 +315,37 @@ spells the scale and rejects anything past a double accidental, so A♭ locrian
 mode needs no one to work the exceptions out again. `modeOf` reads a run of
 pitches back to the mode that spelled it, which is how the generator is checked
 rather than trusted.
+
+### Scale degrees — `degree.ts`
+
+**A degree names the step of the mode it is in**, so an accidental on one means
+only "this is not the note the scale has there": C♯ in A aeolian is `#3`. That
+is the classical reading rather than the jazz one, and it falls straight out of
+`scale.ts` — the seven names keep their meaning in every mode.
+
+**The vocabulary a question draws on is notes, not names.** A degree plus an
+alteration is a _spelling_, and spellings are not what anyone hears: ♯1 and ♭2
+are one sound under two names, so a question wanting one and refusing the other
+is unanswerable however well you listen. Worse, ♯3 in a major key _is_ the
+fourth — a second name for a note that already has a plainer one. `degreeNotes`
+therefore collects by sounding pitch, each note once, carrying the names it can
+go by; `nameMelody` chooses which to print and `degreesSoundEqual` marks by
+sound. Grading on the printed spelling fails a listener for something there was
+nothing to hear.
+
+**A level's outermost degrees are its range.** A level offering the first five
+is asking about the notes from the tonic up to the fifth, so a flattened tonic
+sits below everything it teaches and a raised fifth above — neither belongs to
+it, however the keyboard spells them. Reading the range off the degrees rather
+than tabulating it means adding a degree widens the level on its own, and it is
+what keeps a raised seventh out of a major key, where it is not a seventh at all
+but the octave.
+
+Which name gets printed follows the line: a note the scale has takes the
+scale's own name, and one from outside it is raised where the melody carries on
+up and lowered where it turns back down. The keyboard is unaffected — every
+degree stays pressable, including the ones that never generate, because a
+player reaching for ♭1 should find it rather than a dead key.
 
 ### Rhythm — `meter.ts`, `rhythm.ts`, `rhythmCells.ts`
 
@@ -492,6 +527,50 @@ to match and the staff ends up smaller for no gain.
 A rhythm staff is **one line with a percussion clef** — there are no pitches to
 place — and stems point down so a bar filling with beams cannot push the line
 around.
+
+### A staff sized for the worst case has to be filled
+
+Both answer staves reserve a **fixed page** so the box and the staff size
+cannot move while an answer is typed — and the reserve is the widest thing that
+could ever be written into it: sixteen sixteenths, or a melody under seven
+accidentals with one on every note. A typical question uses about half of that,
+so the music sat hard against the left edge with an empty staff beside it.
+
+The page cannot simply shrink — the reserve is what a player may still type —
+so the system is stretched to fill it instead (`FILL_THE_PAGE`). Verovio leaves
+the _last_ system unjustified when it falls short of `minLastJustification` of
+the page, which is right for the final line of a piece and wrong for every
+example here, where the only system there is _is_ the last one.
+
+**What that costs is different for the two exercises.** A melody has one event
+per slot from the first keypress — `<space>` for the rest — so justification
+lands every note on exactly the same x at every stage, and nothing is given up.
+A rhythm has no fixed event count, since four sixteenths can replace one
+quarter, so its notes do shift as the bar fills. That is deliberate: how wide a
+finished bar will be is not knowable while it is being written, and a bar
+huddled in one corner of a staff reads worse than one that moves. The box and
+the staff size still never change, which was the jarring half.
+
+### An accidental holds until the barline
+
+`melodyMei` decides what to print against **what is currently in force on that
+staff position**, not against the key signature. The signature only says what
+stands before anything else has happened; after that, a printed accidental
+governs every later note on its own line or space, and its own octave alone.
+
+Getting this wrong is invisible to a type checker and nearly invisible on the
+page — a note silently inherits the accidental before it and reads as a
+different pitch. A B major melody touching A𝄪 and then A♯ drew the second one
+bare, so it read as another A𝄪, a whole tone out. Taking back a double
+accidental needs the cancelling glyph rather than a plain one: ♮♯, which MEI
+writes `ns` and SMuFL draws as a single character.
+
+This lives in `melodyMei` alone. An interval is two notes that may share a
+staff position deliberately — a harmonic unison is written as two noteheads
+each carrying its own accidental — and a scale is keyless, with every
+alteration printed by design. Both would be _wrong_ under barline rules, which
+is why the rule is not in `accidentalAttributes` where every caller would get
+it.
 
 ### Engraved text takes the app's serif
 
@@ -685,6 +764,29 @@ count. Six semitones has no plain spelling, so the tritone is the augmented
 fourth and the diminished fifth is dropped. `catalog.test.ts` enforces the
 uniqueness property rather than the list, so a well-meant addition fails loudly.
 Reading is unaffected — there the spelling is on the page to be read.
+
+**The affordance is a mark on the staff, not a caption under it.** A line
+reading "tap the notes to hear them" spent a whole row of the screen on
+something learnt once, and on a short screen that row came out of the
+notation's height — the scarcest thing on the round screen. A faint speaker in
+the corner of the staff says it where the thing it describes already is, sits
+over the notation rather than beside it, and still carries the two states the
+caption did: the samples arriving, and playback having failed. Everything above
+the staff is tighter on a small screen for the same reason — the prompt is read
+once per question and gives up its air before the notation gives up any height.
+
+**The staff is bounded by the room left for it, never by a slice of the
+viewport alone** — `SCORE_BOX` in `exercises/shared/scoreBox.ts`. A
+`max-h-[Ndvh]` cap cannot know what the prompt above and the feedback below
+have taken, and on a screen where the remainder came out under that fraction
+the notation grew past its box: because the column centres its children, it
+spilled from _both_ ends at once, swallowing the prompt at the top and being
+painted over by the Next button at the bottom. The height has to come down the
+flex chain instead — `h-full` on the box so its height is definite, `min-h-0`
+on every ancestor so they may shrink, `items-stretch` on the row so the box is
+given the height rather than centred at its content's. Only then does the
+SVG's own `max-h-full` mean anything; without a definite parent it resolves to
+nothing and the drawing sizes the box that was supposed to size it.
 
 **The notation is the play button.** Pressing the staff sounds it, rather
 than a control beside it — the notation _is_ what is being played. It is

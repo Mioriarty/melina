@@ -147,8 +147,10 @@ describe('RoundScreen', () => {
     const notation = screen.getByRole('button', { name: /press to hear it/i })
     fireEvent.click(notation)
     expect(onPlay).toHaveBeenCalledTimes(1)
-    // And says so, rather than leaving the affordance to be discovered.
-    expect(screen.getByText('Tap the notes to hear them')).toBeTruthy()
+    // And says so, rather than leaving the affordance to be discovered — as a
+    // mark on the staff rather than a caption under it, which spent a line of
+    // a short screen on something you learn once.
+    expect(screen.getByTitle('Tap the notes to hear them')).toBeTruthy()
   })
 
   it('leaves the notation alone when it must not be heard', () => {
@@ -162,7 +164,9 @@ describe('RoundScreen', () => {
   it('says why nothing is playing, in the place the hint would be', () => {
     const onPlay = vi.fn()
     screenAt({ name: 'asking', index: 0 }, { onPlay, playStatus: 'loading' })
-    expect(screen.getByText('Loading the instrument')).toBeTruthy()
+    expect(screen.getByTitle('Loading the instrument')).toBeTruthy()
+    // The hint it replaces is gone while it says so, rather than both at once.
+    expect(screen.queryByTitle('Tap the notes to hear them')).toBeNull()
 
     screen.getByRole('button', { name: /press to hear it/i })
   })
@@ -173,7 +177,7 @@ describe('RoundScreen', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /press to hear it/i }))
     expect(onPlay).not.toHaveBeenCalled()
-    expect(screen.getByText('Playback unavailable')).toBeTruthy()
+    expect(screen.getByTitle('Playback unavailable')).toBeTruthy()
   })
 
   it('leaves the round by the button in the progress bar', () => {

@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
 import type { Answered } from '@/exercises/shared/round'
 import { useMusicNames } from '@/hooks/useMusicNames'
-import { degreesKey, type Degree } from '@/lib/music/degree'
+import { degreePitch, degreesKey, type Degree } from '@/lib/music/degree'
+import { chromaticValue } from '@/lib/music/pitch'
 import { tonicKey } from '@/lib/music/scale'
 
 import type { DegreeQuestion } from './generate'
@@ -27,10 +28,17 @@ function firstMiss({
   question,
   chosen,
 }: Answered<DegreeQuestion, readonly Degree[]>): Degree {
+  // By sound, like the grading: a note named ♭2 where the question printed ♯1
+  // was heard correctly, and calling it the place the answer went wrong would
+  // send the player off to practise a degree they already have.
+  const sounding = (degree: Degree | undefined): number | undefined => {
+    if (degree === undefined) return undefined
+    const pitch = degreePitch(question.tonic, question.mode, degree)
+    return pitch === undefined ? undefined : chromaticValue(pitch)
+  }
+
   const parted = question.degrees.findIndex(
-    (degree, index) =>
-      degree.number !== chosen[index]?.number ||
-      degree.alteration !== chosen[index]?.alteration,
+    (degree, index) => sounding(degree) !== sounding(chosen[index]),
   )
   return (parted === -1 ? question.degrees[0] : question.degrees[parted]) as Degree
 }

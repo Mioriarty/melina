@@ -86,6 +86,64 @@ export function accidentalAttributes(value: Pitch, keySignature: KeySignatureId)
 }
 
 /**
+ * The glyphs that *cancel* one accidental and put another in its place.
+ *
+ * Reducing a double sharp to a single one is not a plain sharp: the sharp
+ * already in force is what has to be taken back first, so it is written ♮♯,
+ * which SMuFL and MEI both carry as one glyph. Only these two combinations
+ * arise — anything cancelled to a natural is a plain natural, and anything
+ * raised further already reads correctly on its own.
+ */
+const CANCELLING_ACCIDENTALS: Partial<Record<Alteration, string>> = {
+  [-1]: 'nf',
+  1: 'ns',
+}
+
+/**
+ * How a note is written once the bar so far is taken into account.
+ *
+ * **An accidental holds until the barline.** A staff position that has been
+ * altered stays altered for every later note on it, so what has to be printed
+ * is not "does this note disagree with the key signature" but "does it
+ * disagree with what is currently in force there" — the key signature only
+ * says what is in force before anything else has happened.
+ *
+ * Getting this wrong is invisible to a type checker and nearly invisible on
+ * the page: a note simply inherits the accidental of the one before it and
+ * reads as a different pitch. A B major melody touching A𝄪 and then A♯ drew
+ * the second one bare, which reads as another A𝄪.
+ *
+ * State is per staff position — letter *and* octave — because that is what an
+ * accidental applies to.
+ */
+function measureAccidentals(
+  pitches: readonly Pitch[],
+  keySignature: KeySignatureId,
+): string[] {
+  const inForce = new Map<string, Alteration>()
+
+  return pitches.map((value) => {
+    const place = `${value.letter}${value.octave}`
+    const standing = inForce.get(place) ?? alterationInKey(value.letter, keySignature)
+
+    if (value.alteration === standing) {
+      return ` accid.ges="${GESTURAL_ACCIDENTALS[value.alteration]}"`
+    }
+
+    inForce.set(place, value.alteration)
+
+    // Taking back a double accidental needs the cancelling form; everything
+    // else is simply the accidental itself.
+    const cancelling =
+      Math.abs(standing) === 2 && Math.sign(standing) === Math.sign(value.alteration)
+        ? CANCELLING_ACCIDENTALS[value.alteration]
+        : undefined
+
+    return ` accid="${cancelling ?? WRITTEN_ACCIDENTALS[value.alteration]}"`
+  })
+}
+
+/**
  * A note that has not been revealed yet.
  *
  * `@visible="false"` engraves the note in full — its place in the bar, its
@@ -437,8 +495,14 @@ export function melodyMei({
 
   const layers = staves
     .map((staff, index) => {
+      // One measure, so an accidental printed on a staff position stays in
+      // force for every later note on it — see `measureAccidentals`.
+      const accidentals = measureAccidentals(staff.pitches, keySignature)
       const notes = staff.pitches
-        .map((pitch) => noteElement(pitch, keySignature, 'dur="4"'))
+        .map(
+          (pitch, at) =>
+            `<note pname="${pitch.letter.toLowerCase()}" oct="${pitch.octave}" dur="4"${accidentals[at] ?? ''}/>`,
+        )
         .join('')
       const padding = '<space dur="4"/>'.repeat(Math.max(0, slots - staff.pitches.length))
 

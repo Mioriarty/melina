@@ -176,29 +176,36 @@ describe('the bar being typed into', () => {
     expect(heights.size).toBe(1)
   })
 
-  it('leaves the notes already on the staff exactly where they were', async () => {
-    // The other half of standing still: `<space>` padding keeps the measure's
-    // duration constant, so Verovio spaces the notes already placed the same
-    // way and they do not crawl sideways as more arrive.
+  it('spreads the bar across the staff rather than leaving it in one corner', async () => {
+    // **A rhythm gives up standing still, and this is what it buys.** The page
+    // has to hold sixteen sixteenths, so a bar of four quarters at its natural
+    // width used the left 44% of the staff and left the rest empty. Stretching
+    // the system to the page fills it — at the cost of the notes shifting as
+    // the bar fills, which a rhythm cannot avoid: four sixteenths can replace
+    // one quarter, so how wide the finished bar will be is not knowable while
+    // it is being written. A melody *is* knowable, one slot per note, and
+    // keeps its positions exactly — see `degreeVerovio.test.ts`.
+    //
+    // What is still guaranteed is the part that was jarring: the box and the
+    // staff size never move, which the two tests above hold to.
     const rhythm = bar([0, 60, 120, 180])
     const positions = (svg: string) =>
-      [...svg.matchAll(/class="notehead"[^>]*>\s*<use[^>]*translate\((\d+),/g)].map(
-        (m) => m[1],
+      [...svg.matchAll(/class="notehead"[^>]*>\s*<use[^>]*translate\((\d+),/g)].map((m) =>
+        Number(m[1]),
       )
 
-    let previous: string[] = []
-    for (const upTo of [1, 61, 121, 181]) {
-      const current = positions(
-        await renderMei(
-          draft(rhythm, upTo),
-          undefined,
-          rhythmProfile(rhythm.meter.beats, 1),
-        ),
-      ) as string[]
-      expect(current.slice(0, previous.length)).toEqual(previous)
-      previous = current
-    }
-    expect(previous).toHaveLength(4)
+    const full = await renderMei(
+      draft(rhythm, 241),
+      undefined,
+      rhythmProfile(rhythm.meter.beats, 1),
+    )
+    const page = Number(full.match(/viewBox="0 0 (\d+)/)?.[1] ?? 0)
+    const placed = positions(full)
+
+    expect(placed).toHaveLength(4)
+    // The last note reaches well into the far half of the staff, where before
+    // it stopped short of the middle.
+    expect((placed.at(-1) as number) / page).toBeGreaterThan(0.7)
   })
 })
 

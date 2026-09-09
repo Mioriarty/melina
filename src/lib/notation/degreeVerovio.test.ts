@@ -41,6 +41,18 @@ const printedAccidentals = (svg: string) =>
 /** Accidentals drawn as part of the key signature itself. */
 const signatureAccidentals = (svg: string) => countOf(svg, 'keyAccid')
 
+/** Which accidental glyphs were drawn in front of notes, in order. */
+const accidentalGlyphs = (svg: string) =>
+  [
+    ...svg.matchAll(/<g[^>]*class="accid"[^>]*>\s*<use[^>]*href="#(E[0-9A-F]{3})[^"]*"/g),
+  ].map(([, glyph]) => glyph)
+
+/** SMuFL, so a failure names the glyph rather than a codepoint. */
+const NATURAL = 'E261'
+const SHARP = 'E262'
+const DOUBLE_SHARP = 'E263'
+const NATURAL_SHARP = 'E268'
+
 function size(svg: string): string {
   return svg.match(/<svg[^>]*?width="(\d+)px"[^>]*?height="(\d+)px"/)?.[0] ?? ''
 }
@@ -127,6 +139,28 @@ describe('a melody on the page', () => {
     expect(previous).toHaveLength(slots)
   })
 
+  it('spreads the melody across the staff rather than leaving it in one corner', async () => {
+    // The page is reserved for the worst case — the longest melody under seven
+    // accidentals, every note carrying one — so a plain key used barely half of
+    // it and the notes sat hard left with empty staff beside them. Stretching
+    // the system to the page fills it, and here that costs nothing: the measure
+    // holds one event per slot from the first keypress, so the notes keep the
+    // same x throughout, which the test above holds to.
+    const slots = 4
+    const svg = await renderMei(
+      melody(E_MAJOR.slice(0, slots), slots),
+      undefined,
+      melodyProfile(slots, 1),
+    )
+    const page = Number(svg.match(/viewBox="0 0 (\d+)/)?.[1] ?? 0)
+    const heads = [
+      ...svg.matchAll(/class="notehead"[^>]*>\s*<use[^>]*translate\((\d+),/g),
+    ].map((match) => Number(match[1]))
+
+    expect(heads).toHaveLength(slots)
+    expect((heads.at(-1) as number) / page).toBeGreaterThan(0.7)
+  })
+
   it('holds the widest answer a level could ask for, in every metre of key', async () => {
     // Sized for the worst case there is: the longest melody, the widest key
     // signature, and every note carrying an accidental of its own.
@@ -181,6 +215,70 @@ describe('a melody on the page', () => {
     expect(countOf(svg, 'measure')).toBe(1)
     expect(svg).toContain('You')
     expect(svg).toContain('Correct')
+  })
+})
+
+describe('an accidental already standing in the bar', () => {
+  /**
+   * B major: A is sharp in the signature, which is what makes it the key the
+   * screenshot came from — every A in the bar is a sharp until something says
+   * otherwise.
+   */
+  const inBMajor = (pitches: readonly Pitch[]) =>
+    melodyMei({
+      clef: 'treble',
+      keySignature: '5s',
+      slots: pitches.length,
+      staves: [{ pitches }],
+    })
+
+  const drawn = async (pitches: readonly Pitch[]) =>
+    accidentalGlyphs(
+      await renderMei(inBMajor(pitches), undefined, melodyProfile(pitches.length, 1)),
+    )
+
+  it('is not printed a second time on the same note', async () => {
+    // The signature has already said it, and saying it again on every note is
+    // not how a bar is written.
+    expect(await drawn([p('A#4'), p('A#4')])).toEqual([])
+  })
+
+  it('is taken back before a different one on the same staff position', async () => {
+    // The bug this exists for: an accidental holds until the barline, so the
+    // double sharp was still in force and the A sharp after it printed nothing
+    // — which reads as a second A double sharp, a whole tone off.
+    expect(await drawn([p('A##4'), p('A#4')])).toEqual([DOUBLE_SHARP, NATURAL_SHARP])
+  })
+
+  it('gives a natural back to a note the signature had sharpened', async () => {
+    expect(await drawn([p('A4')])).toEqual([NATURAL])
+    // And once naturalled, the sharp has to be asked for again.
+    expect(await drawn([p('A4'), p('A#4')])).toEqual([NATURAL, SHARP])
+  })
+
+  it('does not reach a note of the same letter in another octave', async () => {
+    // An accidental applies to the staff position it sits on, not to the
+    // letter everywhere.
+    expect(await drawn([p('A##4'), p('A#5')])).toEqual([DOUBLE_SHARP])
+  })
+
+  it('starts again on the other staff of a comparison', async () => {
+    // Each staff is its own line of music; what was written on one says
+    // nothing about the other.
+    const svg = await renderMei(
+      melodyMei({
+        clef: 'treble',
+        keySignature: '5s',
+        slots: 2,
+        staves: [
+          { pitches: [p('A##4'), p('A#4')], label: 'You' },
+          { pitches: [p('A#4'), p('A#4')], label: 'Correct' },
+        ],
+      }),
+      undefined,
+      melodyProfile(2, 2),
+    )
+    expect(accidentalGlyphs(svg)).toEqual([DOUBLE_SHARP, NATURAL_SHARP])
   })
 })
 

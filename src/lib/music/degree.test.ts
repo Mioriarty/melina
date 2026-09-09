@@ -4,13 +4,14 @@ import {
   DEGREE_ALTERATIONS,
   DEGREE_NUMBERS,
   degreeKey,
+  degreeNotes,
   degreePitch,
-  degreesEqual,
   degreesKey,
+  degreesSoundEqual,
   keySignatureFor,
+  nameMelody,
   parseDegreeKey,
   parseDegreesKey,
-  spellableDegrees,
   tonicTriad,
   type Degree,
 } from './degree'
@@ -65,10 +66,12 @@ describe('degree keys', () => {
   })
 
   it('compares melodies by what they say', () => {
-    expect(degreesEqual([d(1), d(3)], [d(1), d(3)])).toBe(true)
-    expect(degreesEqual([d(1), d(3)], [d(1), d(3, 1)])).toBe(false)
-    expect(degreesEqual([d(1)], [d(1), d(3)])).toBe(false)
-    expect(degreesEqual([], [])).toBe(true)
+    expect(degreesSoundEqual(p('C4'), 'ionian', [d(1), d(3)], [d(1), d(3)])).toBe(true)
+    expect(degreesSoundEqual(p('C4'), 'ionian', [d(1), d(3)], [d(1), d(3, 1)])).toBe(
+      false,
+    )
+    expect(degreesSoundEqual(p('C4'), 'ionian', [d(1)], [d(1), d(3)])).toBe(false)
+    expect(degreesSoundEqual(p('C4'), 'ionian', [], [])).toBe(true)
   })
 })
 
@@ -109,15 +112,90 @@ describe('the note a degree names', () => {
   })
 })
 
-describe('spellableDegrees', () => {
-  it('drops only the alterations that cannot be written', () => {
-    const offered = spellableDegrees(p('C#4'), 'lydian', [4], [-1, 0, 1])
-    expect(offered.map(degreeKey)).toEqual(['b4', '4'])
+describe('degreeNotes', () => {
+  const notes = (
+    tonic: string,
+    mode: Parameters<typeof degreePitch>[1],
+    numbers: number[],
+  ) => degreeNotes(p(tonic), mode, numbers, [-1, 0, 1])
+
+  it('collects one entry per sounding note, not per spelling', () => {
+    const all = notes('C4', 'ionian', [...DEGREE_NUMBERS])
+    // The octave above the tonic, every semitone of it, once each.
+    expect(all.map((note) => note.semitones)).toEqual([
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+    ])
   })
 
-  it('keeps everything on a plain key', () => {
-    const offered = spellableDegrees(p('C4'), 'ionian', DEGREE_NUMBERS, [-1, 0, 1])
-    expect(offered.length).toBe(DEGREE_NUMBERS.length * 3)
+  it("gathers the names one note goes by, the scale's own first", () => {
+    const all = notes('C4', 'ionian', [...DEGREE_NUMBERS])
+    const namesAt = (semitones: number) =>
+      all.find((note) => note.semitones === semitones)?.names.map(degreeKey)
+
+    // A raised third is not a name for a note of its own: it is the fourth.
+    expect(namesAt(5)).toEqual(['4', '#3'])
+    // Between two degrees, both names stand, and neither is the plainer.
+    expect(namesAt(1)).toEqual(['#1', 'b2'])
+  })
+
+  it('reaches no further than the degrees themselves', () => {
+    // A flattened tonic is below everything the level teaches, and a raised
+    // top degree above it. Neither belongs to a level bounded by 1 and 5.
+    const five = notes('C4', 'ionian', [1, 2, 3, 4, 5])
+    expect(five.map((note) => note.semitones)).toEqual([0, 1, 2, 3, 4, 5, 6, 7])
+    expect(five.flatMap((note) => note.names.map(degreeKey))).not.toContain('b1')
+    expect(five.flatMap((note) => note.names.map(degreeKey))).not.toContain('#5')
+  })
+
+  it('keeps a raised seventh out of a major key, where it is the octave', () => {
+    const all = notes('C4', 'ionian', [...DEGREE_NUMBERS])
+    expect(all.flatMap((note) => note.names.map(degreeKey))).not.toContain('#7')
+  })
+
+  it('drops the alterations that cannot be written', () => {
+    // F double sharp is where a raised fourth of C sharp lydian would land.
+    const fourth = notes('C#4', 'lydian', [4])
+    expect(fourth.flatMap((note) => note.names.map(degreeKey))).toEqual(['4'])
+  })
+})
+
+describe('nameMelody', () => {
+  const line = (tonic: string, semitones: number[]) => {
+    const all = degreeNotes(p(tonic), 'ionian', [...DEGREE_NUMBERS], [-1, 0, 1])
+    const picked = semitones.map((value) => {
+      const note = all.find((candidate) => candidate.semitones === value)
+      if (note === undefined) throw new Error(`no note at ${value}`)
+      return note
+    })
+    return nameMelody(picked).map(degreeKey)
+  }
+
+  it("takes the scale's own name wherever there is one", () => {
+    expect(line('C4', [0, 4, 7])).toEqual(['1', '3', '5'])
+  })
+
+  it('raises a chromatic note that carries on up', () => {
+    expect(line('C4', [5, 6, 7])).toEqual(['4', '#4', '5'])
+  })
+
+  it('lowers one that turns back down', () => {
+    expect(line('C4', [7, 6, 5])).toEqual(['5', 'b5', '4'])
+  })
+
+  it('reads the last note from where it came', () => {
+    expect(line('C4', [5, 6])).toEqual(['4', '#4'])
+    expect(line('C4', [7, 6])).toEqual(['5', 'b5'])
+  })
+})
+
+describe('degreesSoundEqual', () => {
+  it('accepts either name for one note', () => {
+    // Nothing in the sound separates them, so nothing in the marking may.
+    expect(degreesSoundEqual(p('C4'), 'ionian', [d(1, 1)], [d(2, -1)])).toBe(true)
+  })
+
+  it('still refuses a different note', () => {
+    expect(degreesSoundEqual(p('C4'), 'ionian', [d(1, 1)], [d(2)])).toBe(false)
   })
 })
 

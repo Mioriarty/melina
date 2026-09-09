@@ -63,15 +63,19 @@ const OPTIONS: VerovioOptions = {
  * what makes it safe to turn without touching how a scale reads. A rhythm is
  * fitted the same way in every metre but 2/4.
  *
- * It came down from 126 because the interval was the one example drawn larger
- * than the column would ever have forced: at 126 a two-note staff stood 258px
- * tall on a desktop while a scale beside it stood 166px and a bar of rhythm
- * 113px, so the notation looked overbearing in the exercise that shows the
- * least of it. 110 keeps the interval comfortably the largest thing on screen —
- * it is still the centre of the app — without it being half again the size of
- * everything else.
+ * It came down from 126, and then from 110, because the interval was the one
+ * example drawn larger than the column would ever have forced: at 126 a
+ * two-note staff stood 258px tall on a desktop while a scale beside it stood
+ * 166px and a bar of rhythm 113px, so the notation looked overbearing in the
+ * exercise that shows the least of it. At 95 it is around 195px — still
+ * comfortably the largest thing on the screen, and still the centre of the
+ * app, without crowding the prompt above it and the answer below.
+ *
+ * Height is capped a second time by the room actually left on the screen —
+ * see `SCORE_BOX`. That is what stops the notation running into the Next
+ * button; this number is what decides how big it is when there *is* room.
  */
-export const DEFAULT_STAFF_SIZE = 110
+export const DEFAULT_STAFF_SIZE = 95
 
 /**
  * How much horizontal room each note is given. Verovio's own default.
@@ -135,6 +139,10 @@ export const SCALE_NOTE_SPACING = 0.3
  * Note spacing is left at Verovio's default: widening it stretches the densest
  * bar just as much as the sparsest, so the page has to grow to match and the
  * staff ends up smaller for no gain. Measured, 0.25 is the best of them.
+ *
+ * **The bar is stretched to fill the page** — see `FILL_THE_PAGE`. A page has
+ * to hold sixteen sixteenths, so a bar of four quarters left to its natural
+ * width sat in the left 44% of the staff with the rest of it empty.
  */
 const RHYTHM_PAGE_LEAD = 160
 const RHYTHM_PAGE_PER_BEAT = 140
@@ -147,6 +155,30 @@ const RHYTHM_TWO_STAFF_HEIGHT = 240
  * finished render still belongs to the render it asked for — a fresh object
  * every time would re-render on every paint.
  */
+/**
+ * **Stretch a lone system to the width of its page.**
+ *
+ * Verovio justifies a system to the page, but leaves the *last* one alone when
+ * it comes out shorter than `minLastJustification` of the page — sensible for
+ * the final line of a piece, and wrong for every example here, where the only
+ * system there is *is* the last one. Left at the default it fell short of the
+ * 80% mark and was drawn at its natural width, hard against the left edge,
+ * with the rest of the staff empty.
+ *
+ * The page cannot simply be made narrower: it is sized for the widest answer
+ * that could be typed into it — sixteen sixteenths, or a melody under seven
+ * accidentals — and that reserve is the whole reason a note already placed
+ * does not move. So the page stays, and the music is spread across it.
+ *
+ * For a melody this costs nothing at all: the measure holds one event per
+ * slot whatever has been written, `<space>` for the rest, so the notes land on
+ * exactly the same x at every stage of typing. A rhythm has no such fixed
+ * count — four sixteenths can replace one quarter — so there the notes do
+ * shift as the bar fills, which is the price of not having them huddled in
+ * one corner of a staff sized for the worst case.
+ */
+const FILL_THE_PAGE = { minLastJustification: 0 } as const
+
 const RHYTHM_PROFILES = new Map<string, VerovioOptions>()
 
 export function rhythmProfile(beats: number, staves: 1 | 2): VerovioOptions {
@@ -155,6 +187,7 @@ export function rhythmProfile(beats: number, staves: 1 | 2): VerovioOptions {
   if (cached !== undefined) return cached
 
   const profile: VerovioOptions = {
+    ...FILL_THE_PAGE,
     breaks: 'auto',
     adjustPageWidth: false,
     adjustPageHeight: false,
@@ -177,6 +210,11 @@ export function rhythmProfile(beats: number, staves: 1 | 2): VerovioOptions {
  * will be as wide as. Measured against the worst case there is — the longest
  * melody, under seven accidentals, with every note carrying one of its own —
  * so a page is never overrun by a key signature nobody thought about.
+ *
+ * That reserve is much wider than a plain key needs, which is why the system is
+ * stretched to fill it — see `FILL_THE_PAGE`. Here it is free: the measure
+ * holds one event per slot from the first keypress, so every note keeps the
+ * same x throughout.
  */
 const MELODY_PAGE_LEAD = 250
 const MELODY_PAGE_PER_SLOT = 62
@@ -206,6 +244,7 @@ export function melodyProfile(slots: number, staves: 1 | 2): VerovioOptions {
 
   const lead = staves === 2 ? MELODY_TWO_STAFF_LEAD : MELODY_PAGE_LEAD
   const profile: VerovioOptions = {
+    ...FILL_THE_PAGE,
     breaks: 'auto',
     adjustPageWidth: false,
     adjustPageHeight: false,

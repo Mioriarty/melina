@@ -205,8 +205,9 @@ describe('Scale Hearing', () => {
     fireEvent.click(notation)
 
     await waitFor(() => expect(sound).toHaveBeenCalledTimes(1))
-    // And it says so, rather than leaving the affordance to be guessed at.
-    expect(screen.getByText('Tap the notes to hear them')).toBeTruthy()
+    // And it says so, rather than leaving the affordance to be guessed at —
+    // from a mark on the staff, which costs the notation no height.
+    expect(screen.getByTitle('Tap the notes to hear them')).toBeTruthy()
   })
 
   it('chooses the direction, which reading does not', async () => {
