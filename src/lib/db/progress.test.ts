@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import type { AttemptQuestion, IntervalAttempt, ScaleAttempt } from './attemptQuestion'
+import type {
+  AttemptQuestion,
+  IntervalAttempt,
+  RhythmAttempt,
+  ScaleAttempt,
+} from './attemptQuestion'
 import { accuracy, matchesFilter, matchingAttempts } from './progress'
 import { db, type AttemptRow } from './schema'
 
@@ -168,5 +173,71 @@ describe('matchingAttempts', () => {
       { interval: 'M7' },
       { interval: 'P5' },
     ])
+  })
+})
+
+describe('filtering rhythms', () => {
+  const bar = (onsets: string, meter = '4/4'): RhythmAttempt => ({
+    kind: 'rhythm',
+    meter,
+    onsets,
+    tempo: 80,
+  })
+
+  const beats = bar('0,60,120,180')
+  const eighths = bar('0,30,60,90')
+  const triplet = bar('0,20,40,60')
+  const waltz = bar('0,60,120', '3/4')
+
+  async function logRhythms(): Promise<void> {
+    await log(
+      row('dictation/rhythm', beats, true),
+      row('dictation/rhythm', eighths, false),
+      row('dictation/rhythm', triplet, false),
+      row('dictation/rhythm', waltz, true),
+    )
+  }
+
+  it('counts every rhythm when nothing else is named', async () => {
+    await logRhythms()
+    expect((await accuracy({ kind: 'rhythm' })).total).toBe(4)
+  })
+
+  it('narrows to a metre', async () => {
+    await logRhythms()
+    expect((await accuracy({ meter: '3/4' })).total).toBe(1)
+    expect((await accuracy({ meter: '4/4' })).total).toBe(3)
+  })
+
+  it('narrows to a subdivision, which is worked out from the impacts', async () => {
+    // Nothing stored says "this bar had triplets in it" — it is derived on the
+    // way out, so an old row answers a question nobody had thought to ask.
+    await logRhythms()
+    expect((await accuracy({ division: 'quarter' })).total).toBe(2)
+    expect((await accuracy({ division: 'eighth' })).total).toBe(1)
+    expect((await accuracy({ division: 'triplet' })).total).toBe(1)
+  })
+
+  it('separates the bars that stray from the beat', async () => {
+    await logRhythms()
+    expect((await accuracy({ offBeat: true })).total).toBe(2)
+    expect((await accuracy({ offBeat: false })).total).toBe(2)
+  })
+
+  it('leaves rhythms out of every question about pitch', async () => {
+    // A rhythm is built on no note, so it has no root to match — which is what
+    // keeps one query spanning the whole app without the kinds bleeding into
+    // each other.
+    await logRhythms()
+    expect((await accuracy({ root: 'C' })).total).toBe(0)
+    expect((await accuracy({ clef: 'treble' })).total).toBe(0)
+  })
+
+  it('does not pick up rhythms when asking about scales', async () => {
+    await log(row('scales/hearing', SCALE, true))
+    await logRhythms()
+
+    expect((await accuracy({ kind: 'scale' })).total).toBe(1)
+    expect((await accuracy({ mode: 'dorian' })).total).toBe(1)
   })
 })

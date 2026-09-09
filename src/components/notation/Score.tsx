@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { DEFAULT_NOTE_SPACING, renderMei } from '@/lib/notation/verovio'
+import type { VerovioOptions } from 'verovio/esm'
 import { cn } from '@/lib/utils/cn'
 
 export interface ScoreProps {
@@ -17,13 +18,24 @@ export interface ScoreProps {
    * pitches. Describe what is drawn, never the answer to the question.
    */
   label: string
+  /**
+   * Page options for this render — `rhythmProfile(...)`, or nothing for the usual
+   * shrink-to-content behaviour. Must be a stable reference: it is compared by
+   * identity to decide whether a finished render still belongs to this call.
+   */
+  profile?: VerovioOptions
   className?: string
 }
 
 /** The last completed render, tagged with the input it came from. */
-type Result = { mei: string; noteSpacing: number } & (
-  { status: 'ready'; svg: string } | { status: 'failed' }
-)
+type Result = {
+  mei: string
+  noteSpacing: number
+  profile: VerovioOptions | undefined
+} & ({ status: 'ready'; svg: string } | { status: 'failed' })
+
+/** Shared so an omitted profile is one stable reference, not a new object. */
+const NO_PROFILE: VerovioOptions = {}
 
 /**
  * Engraved notation.
@@ -36,6 +48,7 @@ export function Score({
   mei,
   label,
   noteSpacing = DEFAULT_NOTE_SPACING,
+  profile = NO_PROFILE,
   className,
 }: ScoreProps) {
   const { t } = useTranslation('exercise')
@@ -44,12 +57,12 @@ export function Score({
   useEffect(() => {
     let active = true
 
-    renderMei(mei, noteSpacing)
+    renderMei(mei, noteSpacing, profile)
       .then((svg) => {
-        if (active) setResult({ mei, noteSpacing, status: 'ready', svg })
+        if (active) setResult({ mei, noteSpacing, profile, status: 'ready', svg })
       })
       .catch(() => {
-        if (active) setResult({ mei, noteSpacing, status: 'failed' })
+        if (active) setResult({ mei, noteSpacing, profile, status: 'failed' })
       })
 
     // The engraver is shared and asynchronous, so a question that changes
@@ -57,13 +70,15 @@ export function Score({
     return () => {
       active = false
     }
-  }, [mei, noteSpacing])
+  }, [mei, noteSpacing, profile])
 
   // Derived rather than stored: a result for a previous question is simply
   // not this question's result, so it reads as pending without an extra
   // render to reset it.
   const state: Result | { status: 'pending' } =
-    result?.mei === mei && result.noteSpacing === noteSpacing
+    result?.mei === mei &&
+    result.noteSpacing === noteSpacing &&
+    result.profile === profile
       ? result
       : { status: 'pending' }
 

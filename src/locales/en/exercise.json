@@ -50,6 +50,34 @@
     "scaleDirection": {
       "title": "How it is played",
       "hint": "The note you hear first is the note you see: the tonic going up, the octave above it coming down."
+    },
+    "meters": "Time signatures",
+    "tempo": "Tempo",
+    "tempoLabel": "{{tempo}} beats per minute",
+    "subdivisions": {
+      "title": "Subdivisions",
+      "hint": "What a beat may be split into. A level weights these; here they are simply on or off."
+    },
+    "cellGroups": {
+      "quarter": "Beats",
+      "hold": "Held notes",
+      "eighth": "Eighths",
+      "offbeat": "Off the beat",
+      "sixteenth": "Sixteenths",
+      "dotted": "Dotted",
+      "triplet": "Triplets",
+      "quintuplet": "Quintuplets"
+    },
+    "metronome": {
+      "title": "The click",
+      "hint": "Counted in and then left alone, you have to hold the pulse yourself — which is most of what dictation is.",
+      "count-in": "Count-in only",
+      "throughout": "All the way through"
+    },
+    "openingRest": {
+      "title": "Opening rest",
+      "hint": "Let a bar begin before its first impact, rather than always on the downbeat.",
+      "allow": "Allow a bar to start in silence"
     }
   },
   "round": {
@@ -59,11 +87,13 @@
     "next": "Next question",
     "keyboardLabel": {
       "interval": "Interval answers",
-      "scale": "Scale answers"
+      "scale": "Scale answers",
+      "rhythm": "Rhythm keys"
     },
     "prompt": {
       "interval": "What interval is this?",
-      "scale": "What scale is this?"
+      "scale": "What scale is this?",
+      "rhythm": "Write the rhythm you hear"
     }
   },
   "score": {
@@ -86,7 +116,8 @@
     "youAnswered": "You answered {{answers}}",
     "allCorrect": {
       "intervals": "Every one correct. Try adding a clef, a key signature, or the augmented and diminished intervals.",
-      "scales": "Every one correct. Try adding a mode, a tonic further round the circle, or the C clefs."
+      "scales": "Every one correct. Try adding a mode, a tonic further round the circle, or the C clefs.",
+      "rhythm": "Every one correct. Try a finer subdivision, another metre, or letting the click stop after the count-in."
     },
     "thisRound": "This round",
     "questionLabel": "{{subject}} · {{clef}}",
@@ -101,6 +132,28 @@
     "hearing": {
       "levelsBlurb": "Name the mode you hear. Pick a level, or set it up yourself.",
       "setupBlurb": "Name the mode you hear. The first note is shown; the rest appear with the answer."
+    }
+  },
+  "rhythm": {
+    "levelsBlurb": "Hear a bar and write it down. Pick a level, or set it up yourself.",
+    "setupBlurb": "One bar of count-in, then the rhythm on a snare drum. Write what you heard; only where the impacts fall is counted, never how you spelled them.",
+    "replay": "Hear it again",
+    "staff": {
+      "yours": "You",
+      "correct": "Correct"
+    },
+    "keyboard": {
+      "rest": "Write rests instead of notes",
+      "dotted": "Dot the next value",
+      "delete": "Delete the last one"
+    },
+    "scoreLabel": {
+      "draft": "The bar you are writing, in {{meter}}",
+      "comparison": "What you wrote in {{meter}}, above the correct rhythm"
+    },
+    "summary": {
+      "subject": "{{meter}} · {{division}}",
+      "impacts": "{{count}} impacts"
     }
   }
 }

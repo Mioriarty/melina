@@ -7,7 +7,11 @@ import { CATALOG } from '@/lib/music/catalog'
 import { CLEFS } from '@/lib/music/clef'
 import { PLAY_DIRECTIONS } from '@/lib/music/direction'
 import { KEY_SIGNATURES } from '@/lib/music/keySignature'
+import { METER_KEYS } from '@/lib/music/meter'
 import { LETTERS } from '@/lib/music/pitch'
+import { DIVISION_IDS } from '@/lib/music/rhythm'
+import { CELL_GROUP_IDS } from '@/lib/music/rhythmCells'
+import { NOTE_VALUES } from '@/lib/notation/rhythmNotation'
 import { MODE_IDS, TONIC_KEYS } from '@/lib/music/scale'
 
 import { NAMESPACES, RESOURCES, type Namespace } from '.'
@@ -124,6 +128,30 @@ describe('keys built from registry ids', () => {
     for (const direction of ['ascending', 'descending']) {
       named(`scaleDirections.${direction}.label`)
       named(`scaleDirections.${direction}.hint`)
+    }
+
+    // Rhythm. German builds a note value as one inflected word —
+    // "punktierte Viertelnote" — so none of these survive being assembled
+    // from an adjective and a noun.
+    for (const value of NOTE_VALUES) {
+      for (const dotted of ['plain', 'dotted']) {
+        for (const kind of ['note', 'rest']) {
+          named(`noteValues.${value}.${dotted}.${kind}`)
+        }
+      }
+    }
+    for (const meter of METER_KEYS) named(`meters.${meter}`)
+    for (const division of DIVISION_IDS) named(`divisions.${division}`)
+    for (const tuplet of [3, 5]) named(`tuplets.${tuplet}`)
+  })
+
+  it.each(LANGUAGES)('names every rhythm setting in $label', ({ id }) => {
+    // The setup screen builds these from the cell registry, so a new group
+    // would otherwise ship as a raw key on a chip.
+    const t = i18n.getFixedT(id, 'exercise')
+    for (const group of CELL_GROUP_IDS) {
+      const key = `setup.cellGroups.${group}`
+      expect(t(key), `${id}: ${key}`).not.toBe(key)
     }
   })
 })

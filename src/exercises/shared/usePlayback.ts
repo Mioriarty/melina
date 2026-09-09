@@ -33,6 +33,18 @@ export interface PlaybackController {
 export function usePlayback(
   /** Plays the question currently on screen. `undefined` when there is none. */
   sound: (() => Promise<void>) | undefined,
+  /**
+   * What `preload` fetches.
+   *
+   * Defaults to the piano, which is what the pitched exercises play. Rhythmic
+   * dictation passes the drum kit instead — without this it would quietly pull
+   * down tens of megabytes of piano to play a snare, which is the whole reason
+   * reading exercises do not preload at all.
+   *
+   * Must be a stable reference: `preload` is a dependency of the effect that
+   * calls it, so an inline function would refetch on every render.
+   */
+  load: () => Promise<unknown> = loadInstrument,
 ): PlaybackController {
   const [status, setStatus] = useState<PlaybackStatus>('idle')
 
@@ -60,10 +72,10 @@ export function usePlayback(
   }, [sound])
 
   const preload = useCallback(() => {
-    loadInstrument()
+    load()
       .then(() => setStatus('ready'))
       .catch(() => setStatus('failed'))
-  }, [])
+  }, [load])
 
   return { status, play, preload }
 }

@@ -6,7 +6,10 @@ import type { PlayDirection } from '@/lib/music/direction'
 import type { Interval, IntervalQuality } from '@/lib/music/interval'
 import type { KeySignatureId } from '@/lib/music/keySignature'
 import type { Pitch } from '@/lib/music/pitch'
+import type { TimeSignature } from '@/lib/music/meter'
+import type { DivisionId } from '@/lib/music/rhythm'
 import type { ModeId } from '@/lib/music/scale'
+import type { NoteValue } from '@/lib/notation/rhythmNotation'
 
 /**
  * The names of the things `lib/music` models.
@@ -65,6 +68,20 @@ export interface MusicNames {
   /** How a scale is played. Worded for a scale, not for an interval. */
   scaleDirection: (id: 'ascending' | 'descending') => string
   scaleDirectionHint: (id: 'ascending' | 'descending') => string
+  /**
+   * A note or rest value: `dotted quarter note`, `punktierte Viertelnote`.
+   *
+   * One lookup rather than three glued together. German builds these as single
+   * words and inflects the adjective, so "dotted" + "quarter" + "note" is not
+   * a sentence anyone can assemble from parts.
+   */
+  noteValue: (value: NoteValue, kind: 'note' | 'rest', dotted: boolean) => string
+  /** A time signature, spoken: `four four`, `Vier Viertel`. */
+  meter: (meter: TimeSignature) => string
+  /** How finely a bar is divided, for a breakdown: `Triplets`. */
+  division: (id: DivisionId) => string
+  /** A tuplet by its division: `Triplet`, `Quintuplet`. */
+  tuplet: (division: number) => string
 }
 
 export function useMusicNames(): MusicNames {
@@ -115,6 +132,12 @@ export function useMusicNames(): MusicNames {
       tonic: (key) => t(`tonics.${key}`, { defaultValue: key }),
       scaleDirection: (id) => t(`scaleDirections.${id}.label`),
       scaleDirectionHint: (id) => t(`scaleDirections.${id}.hint`),
+      noteValue: (value, kind, dotted) =>
+        t(`noteValues.${value}.${dotted ? 'dotted' : 'plain'}.${kind}`),
+      meter: (meter) => t(`meters.${meter.beats}/${meter.unit}`),
+      division: (id) => t(`divisions.${id}`),
+      tuplet: (division) =>
+        t(`tuplets.${division}`, { defaultValue: t('tupletFallback', { division }) }),
     }
   }, [t])
 }

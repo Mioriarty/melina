@@ -126,5 +126,39 @@
       "title": "Alles",
       "blurb": "Alle sieben Modi, beide Richtungen, alle vier Schlüssel."
     }
+  },
+  "rhythm-dictation": {
+    "quarters": {
+      "title": "Schläge",
+      "blurb": "Nichts kleiner als der Schlag, das Klicken läuft durchgehend mit."
+    },
+    "eighths": {
+      "title": "Achtel",
+      "blurb": "Der Schlag halbiert, weiterhin durchgehend gezählt."
+    },
+    "off-the-beat": {
+      "title": "Zwischen den Schlägen",
+      "blurb": "Schläge, die zwischen die Zählzeiten fallen statt auf sie."
+    },
+    "sixteenths": {
+      "title": "Sechzehntel",
+      "blurb": "Vier auf den Schlag, samt der punktierten Figuren dazu."
+    },
+    "triplets": {
+      "title": "Triolen",
+      "blurb": "Drei auf den Schlag, gegen die Zweier und Vierer ringsum."
+    },
+    "three-four": {
+      "title": "Drei Viertel",
+      "blurb": "Ein kürzerer Takt, in dem die Eins früher wiederkommt."
+    },
+    "odd-meters": {
+      "title": "Andere Taktarten",
+      "blurb": "Zwei, drei und fünf Schläge pro Takt, bunt gemischt."
+    },
+    "everything": {
+      "title": "Alles",
+      "blurb": "Jede Unterteilung und jede Taktart, und ein Takt darf mit Stille beginnen."
+    }
   }
 }

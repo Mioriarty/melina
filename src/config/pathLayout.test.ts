@@ -125,8 +125,8 @@ describe('path layout', () => {
 
     expect(joins('intervals/reading', 'intervals/hearing')).toBe(true)
     expect(joins('scales/reading', 'scales/hearing')).toBe(true)
-    expect(joins('intervals/hearing', 'dictation')).toBe(true)
-    expect(joins('scales/hearing', 'dictation')).toBe(true)
+    expect(joins('intervals/hearing', 'dictation/rhythm')).toBe(true)
+    expect(joins('scales/hearing', 'dictation/rhythm')).toBe(true)
 
     // Nothing crosses between the columns before the merge.
     expect(joins('intervals/reading', 'scales/reading')).toBe(false)

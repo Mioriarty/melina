@@ -79,6 +79,20 @@ describe('usePlayback', () => {
     expect(loadInstrument).toHaveBeenCalled()
   })
 
+  it('fetches whatever instrument it was given, not always the piano', async () => {
+    // Rhythmic dictation plays a snare. Without this it would quietly pull down
+    // tens of megabytes of piano to do it — which is the exact cost the reading
+    // exercises avoid by not preloading at all.
+    const drums = vi.fn(() => Promise.resolve({}))
+    const { result } = renderHook(() => usePlayback(silent, drums))
+
+    act(() => result.current.preload())
+
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+    expect(drums).toHaveBeenCalled()
+    expect(loadInstrument).not.toHaveBeenCalled()
+  })
+
   it('does nothing at all when there is no question to play', () => {
     const { result } = playback(undefined)
 

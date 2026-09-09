@@ -86,7 +86,13 @@ export const PATH_NODES: readonly PathNodePosition[] = [
   },
   // The merge. Centred, so the two tracks arrive symmetrically rather than
   // one of them swinging across the column to reach it.
-  { stationId: 'dictation', x: 50, y: 700 },
+  //
+  // Rhythmic Dictation stands here alone for now. It is the first half of a
+  // second braid — rhythm on one side, scale degrees on the other, the *when*
+  // and the *what* that melodic dictation needs both of — but one station
+  // cannot braid, and setting it off-centre to reserve the shape would read as
+  // a mistake until the other arrives.
+  { stationId: 'dictation/rhythm', x: 50, y: 700 },
   { stationId: 'harmonic-prediction', x: 30, y: 960 },
   { stationId: 'harmonic-completion', x: 66, y: 1210 },
   { stationId: 'counterpoint', x: 35, y: 1495 },
@@ -110,9 +116,9 @@ export interface PathEdge {
 export const PATH_EDGES: readonly PathEdge[] = [
   { from: 'intervals/reading', to: 'intervals/hearing' },
   { from: 'scales/reading', to: 'scales/hearing' },
-  { from: 'intervals/hearing', to: 'dictation' },
-  { from: 'scales/hearing', to: 'dictation' },
-  { from: 'dictation', to: 'harmonic-prediction' },
+  { from: 'intervals/hearing', to: 'dictation/rhythm' },
+  { from: 'scales/hearing', to: 'dictation/rhythm' },
+  { from: 'dictation/rhythm', to: 'harmonic-prediction' },
   { from: 'harmonic-prediction', to: 'harmonic-completion' },
   { from: 'harmonic-completion', to: 'counterpoint' },
   { from: 'counterpoint', to: 'daily' },

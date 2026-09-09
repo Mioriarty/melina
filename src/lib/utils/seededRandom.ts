@@ -32,6 +32,34 @@ export function randomPick<T>(random: Random, items: readonly [T, ...T[]]): T {
 }
 
 /**
+ * Pick from a non-empty array, letting some items come up more often.
+ *
+ * Weights are relative and need not add to anything; an item weighted zero or
+ * less is never picked. `undefined` when nothing has any weight at all, which
+ * a caller reads as "this setting allows nothing".
+ */
+export function weightedPick<T>(
+  random: Random,
+  items: readonly T[],
+  weightOf: (item: T) => number,
+): T | undefined {
+  const weights = items.map((item) => Math.max(0, weightOf(item)))
+  const total = weights.reduce((sum, weight) => sum + weight, 0)
+  if (total <= 0) return undefined
+
+  let remaining = random() * total
+  for (const [index, weight] of weights.entries()) {
+    remaining -= weight
+    // Strictly less, so a zero-weight item can never be landed on by an
+    // exhausted remainder.
+    if (remaining < 0 && weight > 0) return items[index]
+  }
+
+  // Floating point can leave a sliver over; the last item with weight takes it.
+  return items[weights.findLastIndex((weight) => weight > 0)]
+}
+
+/**
  * Deal `count` items from a shuffled deck of everything allowed, so each one
  * comes up about equally often.
  *

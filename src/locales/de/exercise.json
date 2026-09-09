@@ -50,6 +50,34 @@
     "scaleDirection": {
       "title": "Wie gespielt wird",
       "hint": "Der zuerst gehörte Ton ist der gezeigte: aufwärts der Grundton, abwärts die Oktave darüber."
+    },
+    "meters": "Taktarten",
+    "tempo": "Tempo",
+    "tempoLabel": "{{tempo}} Schläge pro Minute",
+    "subdivisions": {
+      "title": "Unterteilungen",
+      "hint": "Worin ein Schlag zerfallen darf. Ein Level gewichtet sie; hier sind sie schlicht an oder aus."
+    },
+    "cellGroups": {
+      "quarter": "Schläge",
+      "hold": "Gehaltene Noten",
+      "eighth": "Achtel",
+      "offbeat": "Auftaktig",
+      "sixteenth": "Sechzehntel",
+      "dotted": "Punktiert",
+      "triplet": "Triolen",
+      "quintuplet": "Quintolen"
+    },
+    "metronome": {
+      "title": "Das Klicken",
+      "hint": "Nur vorgezählt musst du den Puls selbst halten — und genau das ist das Diktat.",
+      "count-in": "Nur Vorzähler",
+      "throughout": "Durchgehend"
+    },
+    "openingRest": {
+      "title": "Pause am Anfang",
+      "hint": "Ein Takt darf vor dem ersten Schlag beginnen, statt immer auf der Eins.",
+      "allow": "Takt darf mit Stille beginnen"
     }
   },
   "round": {
@@ -59,11 +87,13 @@
     "next": "Nächste Frage",
     "keyboardLabel": {
       "interval": "Intervall-Antworten",
-      "scale": "Tonleiter-Antworten"
+      "scale": "Tonleiter-Antworten",
+      "rhythm": "Rhythmustasten"
     },
     "prompt": {
       "interval": "Welches Intervall ist das?",
-      "scale": "Welche Tonleiter ist das?"
+      "scale": "Welche Tonleiter ist das?",
+      "rhythm": "Schreibe den Rhythmus auf, den du hörst"
     }
   },
   "score": {
@@ -86,7 +116,8 @@
     "youAnswered": "Du hast geantwortet: {{answers}}",
     "allCorrect": {
       "intervals": "Alles richtig. Nimm einen Schlüssel, eine Vorzeichnung oder die übermäßigen und verminderten Intervalle dazu.",
-      "scales": "Alles richtig. Nimm einen Modus, einen entfernteren Grundton oder die C-Schlüssel dazu."
+      "scales": "Alles richtig. Nimm einen Modus, einen entfernteren Grundton oder die C-Schlüssel dazu.",
+      "rhythm": "Alles richtig. Versuch eine feinere Unterteilung, eine andere Taktart, oder lass das Klicken nach dem Vorzähler aufhören."
     },
     "thisRound": "Diese Runde",
     "questionLabel": "{{subject}} · {{clef}}",
@@ -101,6 +132,28 @@
     "hearing": {
       "levelsBlurb": "Benenne den Modus, den du hörst. Wähle ein Level oder stelle es selbst ein.",
       "setupBlurb": "Benenne den Modus, den du hörst. Der erste Ton steht da; der Rest erscheint mit der Antwort."
+    }
+  },
+  "rhythm": {
+    "levelsBlurb": "Höre einen Takt und schreib ihn auf. Wähle ein Level oder stell es dir selbst ein.",
+    "setupBlurb": "Ein Takt Vorzähler, dann der Rhythmus auf einer Snare. Schreib auf, was du gehört hast; gezählt wird nur, wo die Schläge liegen, nie wie du sie notiert hast.",
+    "replay": "Noch einmal hören",
+    "staff": {
+      "yours": "Du",
+      "correct": "Richtig"
+    },
+    "keyboard": {
+      "rest": "Pausen statt Noten schreiben",
+      "dotted": "Den nächsten Wert punktieren",
+      "delete": "Das Letzte löschen"
+    },
+    "scoreLabel": {
+      "draft": "Der Takt, den du schreibst, in {{meter}}",
+      "comparison": "Was du in {{meter}} geschrieben hast, über dem richtigen Rhythmus"
+    },
+    "summary": {
+      "subject": "{{meter}} · {{division}}",
+      "impacts": "{{count}} Schläge"
     }
   }
 }

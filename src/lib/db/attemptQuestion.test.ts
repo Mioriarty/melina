@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { attemptFacets, correctAnswer } from './attemptQuestion'
+import { attemptFacets, correctAnswer, type RhythmAttempt } from './attemptQuestion'
 
 /**
  * The derived half of an attempt.
@@ -131,5 +131,56 @@ describe('correctAnswer', () => {
         direction: 'ascending',
       }),
     ).toBe('locrian')
+  })
+})
+
+describe('a rhythm question', () => {
+  const bar: RhythmAttempt = {
+    kind: 'rhythm',
+    meter: '4/4',
+    onsets: '0,60,90,120',
+    tempo: 80,
+  }
+
+  it('answers with the impacts, which is the whole of what was asked', () => {
+    expect(correctAnswer(bar)).toBe('0,60,90,120')
+  })
+
+  it('works out how hard it was rather than storing it', () => {
+    const facets = attemptFacets(bar)
+
+    expect(facets.kind).toBe('rhythm')
+    expect(facets.meter).toBe('4/4')
+    expect(facets.division).toBe('eighth')
+    expect(facets.offBeat).toBe(true)
+    expect(facets.impacts).toBe('4')
+  })
+
+  it('calls a bar of plain beats what it is', () => {
+    const facets = attemptFacets({ ...bar, onsets: '0,60,120,180' })
+    expect(facets.division).toBe('quarter')
+    expect(facets.offBeat).toBe(false)
+  })
+
+  it('names a triplet bar for its triplet', () => {
+    expect(attemptFacets({ ...bar, onsets: '0,20,40,60' }).division).toBe('triplet')
+  })
+
+  it('is built on no note, so it drops out of every question about pitch', () => {
+    // The documented behaviour of a filter naming a dimension an attempt does
+    // not have — and exactly right here, since a rhythm has no root.
+    const facets = attemptFacets(bar)
+    expect(facets.root).toBeUndefined()
+    expect(facets.clef).toBeUndefined()
+  })
+
+  it('keeps its bearings when the row cannot be read', () => {
+    // Hand-edited, or written by a version that stored something else. It
+    // loses its derived facets rather than throwing inside a statistics query.
+    const broken = attemptFacets({ ...bar, onsets: '60,0' })
+    expect(broken.kind).toBe('rhythm')
+    expect(broken.division).toBeUndefined()
+
+    expect(attemptFacets({ ...bar, meter: '9/16' }).division).toBeUndefined()
   })
 })

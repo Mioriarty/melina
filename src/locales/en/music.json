@@ -263,5 +263,76 @@
       "label": "Descending",
       "hint": "Downwards from the octave above."
     }
-  }
+  },
+  "noteValues": {
+    "16": {
+      "plain": {
+        "note": "Sixteenth note",
+        "rest": "Sixteenth rest"
+      },
+      "dotted": {
+        "note": "Dotted sixteenth note",
+        "rest": "Dotted sixteenth rest"
+      }
+    },
+    "8": {
+      "plain": {
+        "note": "Eighth note",
+        "rest": "Eighth rest"
+      },
+      "dotted": {
+        "note": "Dotted eighth note",
+        "rest": "Dotted eighth rest"
+      }
+    },
+    "4": {
+      "plain": {
+        "note": "Quarter note",
+        "rest": "Quarter rest"
+      },
+      "dotted": {
+        "note": "Dotted quarter note",
+        "rest": "Dotted quarter rest"
+      }
+    },
+    "2": {
+      "plain": {
+        "note": "Half note",
+        "rest": "Half rest"
+      },
+      "dotted": {
+        "note": "Dotted half note",
+        "rest": "Dotted half rest"
+      }
+    },
+    "1": {
+      "plain": {
+        "note": "Whole note",
+        "rest": "Whole rest"
+      },
+      "dotted": {
+        "note": "Dotted whole note",
+        "rest": "Dotted whole rest"
+      }
+    }
+  },
+  "meters": {
+    "2/4": "two four",
+    "3/4": "three four",
+    "4/4": "four four",
+    "5/4": "five four",
+    "6/4": "six four"
+  },
+  "divisions": {
+    "quarter": "Beats",
+    "eighth": "Eighths",
+    "sixteenth": "Sixteenths",
+    "triplet": "Triplets",
+    "quintuplet": "Quintuplets"
+  },
+  "tuplets": {
+    "3": "Triplet",
+    "5": "Quintuplet"
+  },
+  "tupletFallback": "{{division}} in the time of the beat"
 }

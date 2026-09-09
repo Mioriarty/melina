@@ -3,6 +3,7 @@ import Dexie from 'dexie'
 import type { ClefId } from '@/lib/music/clef'
 import type { PlayDirection } from '@/lib/music/direction'
 import type { KeySignatureId } from '@/lib/music/keySignature'
+import type { DivisionId } from '@/lib/music/rhythm'
 import type { ModeId } from '@/lib/music/scale'
 
 import { attemptFacets, type AttemptKind, type FacetValue } from './attemptQuestion'
@@ -68,6 +69,17 @@ export interface AttemptFilter {
   mode?: OneOrMany<ModeId>
   /** The tonic with its octave, e.g. `Bb3`. Use `root` to ignore the octave. */
   tonic?: OneOrMany<string>
+
+  /** Rhythm questions only. */
+  meter?: OneOrMany<string>
+  /** How finely the bar was divided: `sixteenth`, `triplet`. Derived. */
+  division?: OneOrMany<DivisionId>
+  /** True to count only bars with something struck away from a beat. Derived. */
+  offBeat?: boolean
+  /** Beats per minute, as a string so it groups like every other facet. */
+  tempo?: OneOrMany<string>
+  /** How many impacts the bar held, as a string. Derived. */
+  impacts?: OneOrMany<string>
 }
 
 /** How many recent matching answers an accuracy is measured over. */

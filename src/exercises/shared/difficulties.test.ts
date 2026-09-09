@@ -8,6 +8,12 @@ import {
   READING_DIRECTIONS,
 } from '@/exercises/interval-reading/settings'
 import { generateRound, type RoundSpec } from '@/exercises/interval-shared/generate'
+import { RHYTHM_DIFFICULTIES } from '@/exercises/rhythm-dictation/difficulties'
+import {
+  generateRound as generateRhythmRound,
+  type RhythmRoundSpec,
+} from '@/exercises/rhythm-dictation/generate'
+import { RHYTHM_SETTINGS } from '@/exercises/rhythm-dictation/settings'
 import { SCALE_HEARING_DIFFICULTIES } from '@/exercises/scale-hearing/difficulties'
 import { SCALE_HEARING_SETTINGS } from '@/exercises/scale-hearing/settings'
 import { SCALE_READING_DIFFICULTIES } from '@/exercises/scale-reading/difficulties'
@@ -24,6 +30,10 @@ import { LANGUAGES } from '@/lib/i18n/languages'
 import { CATALOG_KEYS, HEARABLE_INTERVAL_KEYS } from '@/lib/music/catalog'
 import { isClefId } from '@/lib/music/clef'
 import { isKeySignatureId } from '@/lib/music/keySignature'
+import { isMeterKey, meterKey } from '@/lib/music/meter'
+import { isValidRhythm } from '@/lib/music/rhythm'
+import { CELL_GROUP_IDS, isCellGroupId } from '@/lib/music/rhythmCells'
+import { notateRhythm, onsetsOf } from '@/lib/notation/rhythmNotation'
 import {
   MODE_IDS,
   isModeId,
@@ -55,6 +65,7 @@ const ALL_GROUPS: readonly NamedLevels[] = [
   { group: 'interval-hearing', levels: HEARING_DIFFICULTIES },
   { group: 'scale-reading', levels: SCALE_READING_DIFFICULTIES },
   { group: 'scale-hearing', levels: SCALE_HEARING_DIFFICULTIES },
+  { group: 'rhythm-dictation', levels: RHYTHM_DIFFICULTIES },
 ]
 
 describe.each(ALL_GROUPS)('$group levels', ({ group, levels }) => {
@@ -359,5 +370,113 @@ describe('scale reading levels', () => {
     expect(Math.min(...lightest)).toBe(0)
     // Somewhere to end up: a level that can ask one covered in accidentals.
     expect(Math.max(...heaviest)).toBeGreaterThanOrEqual(5)
+  })
+})
+
+/* ---------------------------------------------------------------- rhythms */
+
+describe('rhythm-dictation settings', () => {
+  it('only names meters and cell groups that exist', () => {
+    for (const { id, settings } of RHYTHM_DIFFICULTIES) {
+      expect(settings.meters.length, id).toBeGreaterThan(0)
+      for (const meter of settings.meters) {
+        expect(isMeterKey(meter), `${id}: ${meter}`).toBe(true)
+      }
+      for (const group of Object.keys(settings.cellWeights)) {
+        expect(isCellGroupId(group), `${id}: ${group}`).toBe(true)
+      }
+      // A level with everything switched off would generate an empty round.
+      expect(
+        CELL_GROUP_IDS.some((group) => settings.cellWeights[group] > 0),
+        `${id} allows no cells`,
+      ).toBe(true)
+    }
+  })
+
+  it('survives being stored and read back unchanged', () => {
+    for (const { id, settings } of RHYTHM_DIFFICULTIES) {
+      expect(RHYTHM_SETTINGS.parse(JSON.parse(JSON.stringify(settings))), id).toEqual(
+        settings,
+      )
+    }
+  })
+
+  it('actually generates a full round', () => {
+    for (const { id, settings } of RHYTHM_DIFFICULTIES) {
+      for (const seed of [1, 2, 3]) {
+        const round = generateRhythmRound(createRandom(seed), settings as RhythmRoundSpec)
+        expect(round.length, `${id} (seed ${seed})`).toBe(settings.questionsPerRound)
+      }
+    }
+  })
+
+  it('asks only what the level allows', () => {
+    for (const { id, settings } of RHYTHM_DIFFICULTIES) {
+      for (const question of generateRhythmRound(
+        createRandom(7),
+        settings as RhythmRoundSpec,
+      )) {
+        expect(settings.meters, id).toContain(meterKey(question.rhythm.meter))
+        expect(question.tempo, id).toBe(settings.tempo)
+        expect(question.metronome, id).toBe(settings.metronome)
+      }
+    }
+  })
+
+  it('asks for no more impacts than its own cells can spell', () => {
+    // `minOnsets` is capped by one impact per beat, so a level demanding more
+    // than that would quietly serve thinner bars than it claims.
+    for (const { id, settings } of RHYTHM_DIFFICULTIES) {
+      for (const seed of [1, 2, 3]) {
+        for (const { rhythm } of generateRhythmRound(
+          createRandom(seed),
+          settings as RhythmRoundSpec,
+        )) {
+          expect(
+            rhythm.onsets.length,
+            `${id}: ${meterKey(rhythm.meter)} ${rhythm.onsets}`,
+          ).toBeGreaterThanOrEqual(settings.minOnsets)
+        }
+      }
+    }
+  })
+
+  it('generates bars that can be written down and read back', () => {
+    // The failure a type cannot catch: a level whose cells produce a bar the
+    // engraver cannot spell, which would be unanswerable however well heard.
+    for (const { id, settings } of RHYTHM_DIFFICULTIES) {
+      for (const { rhythm } of generateRhythmRound(
+        createRandom(13),
+        settings as RhythmRoundSpec,
+      )) {
+        expect(isValidRhythm(rhythm), `${id}: ${rhythm.onsets}`).toBe(true)
+        expect(onsetsOf(notateRhythm(rhythm)), `${id}: ${rhythm.onsets}`).toEqual([
+          ...rhythm.onsets,
+        ])
+      }
+    }
+  })
+})
+
+describe('rhythm dictation levels', () => {
+  it('covers every subdivision somewhere', () => {
+    const covered = new Set(
+      RHYTHM_DIFFICULTIES.flatMap((level) =>
+        CELL_GROUP_IDS.filter((group) => level.settings.cellWeights[group] > 0),
+      ),
+    )
+    expect([...covered].sort()).toEqual([...CELL_GROUP_IDS].sort())
+  })
+
+  it('covers both ways of using the click', () => {
+    // Counted in and then left alone is a different exercise from counted all
+    // the way through, so there has to be at least one of each.
+    const covered = new Set(RHYTHM_DIFFICULTIES.map((level) => level.settings.metronome))
+    expect([...covered].sort()).toEqual(['count-in', 'throughout'])
+  })
+
+  it('offers a metre other than four four', () => {
+    const meters = new Set(RHYTHM_DIFFICULTIES.flatMap((level) => level.settings.meters))
+    expect(meters.size).toBeGreaterThan(1)
   })
 })

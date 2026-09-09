@@ -52,6 +52,7 @@
         },
         "rhythm": {
           "title": "Rhythmic Dictation",
+          "short": "Rhythm",
           "blurb": "Capture rhythm alone, without pitch."
         },
         "two-voice": {

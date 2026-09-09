@@ -23,7 +23,11 @@ export interface Difficulty<TSettings> {
  * "reading" and share nothing else.
  */
 export type DifficultyGroup =
-  'interval-reading' | 'interval-hearing' | 'scale-reading' | 'scale-hearing'
+  | 'interval-reading'
+  | 'interval-hearing'
+  | 'scale-reading'
+  | 'scale-hearing'
+  | 'rhythm-dictation'
 
 export function difficultyTitleKey(group: DifficultyGroup, id: string): string {
   return `levels:${group}.${id}.title`

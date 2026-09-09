@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createRandom, randomBetween, randomPick } from './seededRandom'
+import { createRandom, randomBetween, randomPick, weightedPick } from './seededRandom'
 
 describe('createRandom', () => {
   it('produces the same sequence for the same seed', () => {
@@ -45,5 +45,42 @@ describe('randomPick', () => {
     for (let i = 0; i < 100; i += 1) {
       expect(items).toContain(randomPick(random, items))
     }
+  })
+})
+
+describe('weightedPick', () => {
+  const random = createRandom(4242)
+
+  it('never picks something weighted zero', () => {
+    const items = ['a', 'b', 'c']
+    const weights: Record<string, number> = { a: 0, b: 3, c: 0 }
+
+    for (let i = 0; i < 500; i += 1) {
+      expect(weightedPick(random, items, (item) => weights[item] ?? 0)).toBe('b')
+    }
+  })
+
+  it('is undefined when nothing has any weight', () => {
+    expect(weightedPick(random, ['a', 'b'], () => 0)).toBeUndefined()
+    expect(weightedPick(random, [], () => 1)).toBeUndefined()
+  })
+
+  it('follows the weights it is given', () => {
+    const counts = { heavy: 0, light: 0 }
+    const weight = (item: keyof typeof counts) => (item === 'heavy' ? 9 : 1)
+
+    for (let i = 0; i < 4000; i += 1) {
+      const picked = weightedPick(random, ['heavy', 'light'] as const, weight)
+      if (picked !== undefined) counts[picked] += 1
+    }
+
+    // Nine to one, give or take: loose enough not to be flaky, tight enough
+    // that ignoring the weights entirely would fail it.
+    expect(counts.heavy / (counts.heavy + counts.light)).toBeGreaterThan(0.85)
+    expect(counts.heavy / (counts.heavy + counts.light)).toBeLessThan(0.95)
+  })
+
+  it('treats a negative weight as zero', () => {
+    expect(weightedPick(random, ['a', 'b'], (i) => (i === 'a' ? -5 : 1))).toBe('b')
   })
 })

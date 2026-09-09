@@ -91,6 +91,66 @@ export const DEFAULT_NOTE_SPACING = 0.25
  */
 export const SCALE_NOTE_SPACING = 0.3
 
+/**
+ * **How a rhythm is rendered, and why it is not rendered like everything else.**
+ *
+ * Every other example is engraved to the width of its own content and then
+ * scaled down to fit the column. That is exactly wrong for a bar being typed
+ * into: each keystroke makes the content wider, the column scales it down
+ * harder, and the staff shrinks under the player's hands.
+ *
+ * A fixed page fixes the box instead — the SVG comes out the same size whatever
+ * is in it, so the scale to the column never changes and a note already placed
+ * never moves. Three things make that work:
+ *
+ * - `breaks: 'auto'` is what makes Verovio honour the width at all; under
+ *   `breaks: 'none'` it shrinks the page to the content and ignores it.
+ * - The height is pinned for the same reason as the width: left to itself it
+ *   grew the moment a beam appeared, which changed the scale to the column.
+ * - `rhythmMei` pads the unentered end of the bar with `<space>`, so the
+ *   measure keeps its full duration and the notes already placed keep their
+ *   exact positions.
+ *
+ * **The width is per metre, not one number for everything.** It has to hold the
+ * densest bar the keyboard can produce — every sixteenth of every beat — since
+ * that is what a player might type whatever the question was. Sizing it for the
+ * worst case in 5/4 and then using that in 2/4 would draw every 2/4 bar in the
+ * left third of a box twice as wide as it needs, and on a phone the staff would
+ * come out half the size it should be.
+ *
+ * Note spacing is left at Verovio's default: widening it stretches the densest
+ * bar just as much as the sparsest, so the page has to grow to match and the
+ * staff ends up smaller for no gain. Measured, 0.25 is the best of them.
+ */
+const RHYTHM_PAGE_LEAD = 160
+const RHYTHM_PAGE_PER_BEAT = 140
+/** One staff, and the taller page a second one underneath it needs. */
+const RHYTHM_PAGE_HEIGHT = 130
+const RHYTHM_TWO_STAFF_HEIGHT = 240
+
+/**
+ * Cached, because `Score` compares the profile by identity to decide whether a
+ * finished render still belongs to the render it asked for — a fresh object
+ * every time would re-render on every paint.
+ */
+const RHYTHM_PROFILES = new Map<string, VerovioOptions>()
+
+export function rhythmProfile(beats: number, staves: 1 | 2): VerovioOptions {
+  const key = `${beats}:${staves}`
+  const cached = RHYTHM_PROFILES.get(key)
+  if (cached !== undefined) return cached
+
+  const profile: VerovioOptions = {
+    breaks: 'auto',
+    adjustPageWidth: false,
+    adjustPageHeight: false,
+    pageWidth: RHYTHM_PAGE_LEAD + RHYTHM_PAGE_PER_BEAT * beats,
+    pageHeight: staves === 2 ? RHYTHM_TWO_STAFF_HEIGHT : RHYTHM_PAGE_HEIGHT,
+  }
+  RHYTHM_PROFILES.set(key, profile)
+  return profile
+}
+
 let toolkit: Promise<VerovioToolkit> | undefined
 
 function load(): Promise<VerovioToolkit> {
@@ -130,22 +190,25 @@ export class EngravingError extends Error {
 /**
  * Engrave a MEI document and return it as an SVG string.
  *
- * Spacing is applied per render rather than once at startup, because one
- * toolkit is shared by the whole app and a scale wants more room between its
- * notes than an interval does. Options are toolkit-wide, so they are set
- * immediately before the render they belong to: everything from here to
+ * Spacing and the page profile are applied per render rather than once at
+ * startup, because one toolkit is shared by the whole app: a scale wants more
+ * room between its notes than an interval does, and a rhythm wants a fixed page
+ * rather than one shrunk to its content. Options are toolkit-wide, so they are
+ * set immediately before the render they belong to: everything from here to
  * `renderToSVG` is synchronous, so no other render can interleave and pick up
- * the wrong spacing.
+ * the wrong ones.
  */
 export async function renderMei(
   mei: string,
   noteSpacing: number = DEFAULT_NOTE_SPACING,
+  profile: VerovioOptions = {},
 ): Promise<string> {
   const instance = await getEngraver()
   instance.setOptions({
     ...OPTIONS,
     scale: DEFAULT_STAFF_SIZE,
     spacingLinear: noteSpacing,
+    ...profile,
   })
 
   if (!instance.loadData(mei)) {

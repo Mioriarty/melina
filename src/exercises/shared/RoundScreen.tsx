@@ -37,10 +37,19 @@ export interface RoundScreenProps<TQuestion, TAnswer> {
   total: number
   /** The question above the staff: "What interval is this?" */
   prompt: string
+  /**
+   * The whole notation area, for a question that does not fit the usual shape.
+   *
+   * Rhythmic dictation needs it: there, the staff is where the *answer* is
+   * being written rather than where the question is, so the notation cannot
+   * also be the play button and the exercise supplies its own block. Given
+   * this, `mei` and everything below it are unused.
+   */
+  score?: ReactNode
   /** The engraved notation for this question, in its current state. */
-  mei: string
+  mei?: string
   /** What that notation shows, for screen readers. Never the answer. */
-  scoreLabel: string
+  scoreLabel?: string
   /** How much room each note gets — see `SCALE_NOTE_SPACING`. */
   noteSpacing?: number
   /** This question's answer, revealed on the keyboard once it is given. */
@@ -62,6 +71,7 @@ export function RoundScreen<TQuestion, TAnswer>({
   phase,
   total,
   prompt,
+  score,
   mei,
   scoreLabel,
   noteSpacing = DEFAULT_NOTE_SPACING,
@@ -114,13 +124,15 @@ export function RoundScreen<TQuestion, TAnswer>({
         <div className="flex min-h-0 flex-1 flex-col items-center gap-4 overflow-hidden pt-8 pb-2">
           <h1 className="shrink-0 text-center text-heading">{prompt}</h1>
 
-          <PlayableScore
-            mei={mei}
-            label={scoreLabel}
-            noteSpacing={noteSpacing}
-            onPlay={onPlay}
-            {...(playStatus === undefined ? {} : { status: playStatus })}
-          />
+          {score ?? (
+            <PlayableScore
+              mei={mei ?? ''}
+              label={scoreLabel ?? ''}
+              noteSpacing={noteSpacing}
+              onPlay={onPlay}
+              {...(playStatus === undefined ? {} : { status: playStatus })}
+            />
+          )}
 
           <div className="flex min-h-11 shrink-0 items-center">
             {revealed && answer !== undefined && (

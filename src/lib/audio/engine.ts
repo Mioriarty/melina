@@ -1,7 +1,10 @@
-import type { Soundfont as SmplrInstrument } from 'smplr'
+import type { DrumMachine, Soundfont as SmplrInstrument } from 'smplr'
 
 import { isMelodic, type PlayDirection } from '@/lib/music/direction'
 import { midiNumber, type Pitch } from '@/lib/music/pitch'
+import type { Rhythm } from '@/lib/music/rhythm'
+
+import { rhythmSchedule, type MetronomeMode } from './rhythmSchedule'
 
 /**
  * Playback.
@@ -31,6 +34,7 @@ type SampledInstrument = SmplrInstrument
 
 let audioContext: AudioContext | undefined
 let player: Promise<SampledInstrument> | undefined
+let drums: Promise<DrumMachine> | undefined
 
 /** Trimmed so the piano is neither timid nor startling. */
 const GAIN = 1
@@ -159,7 +163,115 @@ async function playSequence(
   })
 }
 
+/* ------------------------------------------------------------------ rhythm
+
+   Rhythmic dictation needs two sounds the pitched exercises do not: a drum to
+   play the rhythm on, and a click to count it in. They are loaded very
+   differently on purpose — see below. */
+
+/** Where the snare comes from. One kit, chosen the way the piano was. */
+const DRUM_MACHINE = 'TR-808'
+const SNARE = 'snare'
+/** Trimmed against the click so the rhythm is clearly the thing in front. */
+const SNARE_VELOCITY = 100
+
+/**
+ * Load the drum kit.
+ *
+ * A few hundred kilobytes rather than the piano's tens of megabytes, so a
+ * rhythm exercise can afford to fetch it up front — it plays by itself, the
+ * way the hearing exercises do. Cached at runtime by the service worker, never
+ * precached, for the same reason as the piano.
+ */
+export function loadDrums(): Promise<DrumMachine> {
+  drums ??= (async () => {
+    const context = getAudioContext()
+    const { DrumMachine: Kit } = await import('smplr')
+
+    const kit = Kit(context, { instrument: DRUM_MACHINE })
+    await kit.ready
+    return kit
+  })().catch((error: unknown) => {
+    // Failures are not cached, so a dropped connection can be retried.
+    drums = undefined
+    throw error
+  })
+
+  return drums
+}
+
+/**
+ * The metronome click, synthesised rather than sampled.
+ *
+ * "Sampled, not synthesised" is a rule about the material being *heard as
+ * music* — a sine wave teaches you to recognise a sine wave. A metronome is
+ * not a timbre anyone is being trained to recognise, it is a marker; and it
+ * has to be instant, weightless and available before any download finishes,
+ * none of which a sample would be.
+ */
+function click(context: AudioContext, time: number, accented: boolean): void {
+  const oscillator = context.createOscillator()
+  const gain = context.createGain()
+
+  oscillator.type = 'square'
+  oscillator.frequency.value = accented ? 1600 : 1050
+
+  // A very short blip: long enough to place, too short to have a pitch worth
+  // hearing against the drum.
+  const peak = accented ? 0.28 : 0.16
+  gain.gain.setValueAtTime(0.0001, time)
+  gain.gain.linearRampToValueAtTime(peak, time + 0.002)
+  gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.045)
+
+  oscillator.connect(gain)
+  gain.connect(context.destination)
+  oscillator.start(time)
+  oscillator.stop(time + 0.06)
+}
+
+export interface RhythmPlaybackOptions {
+  /** Beats per minute. */
+  tempo: number
+  metronome: MetronomeMode
+}
+
+/**
+ * Count a bar, then play the rhythm on a snare.
+ *
+ * Resolves once everything has been *scheduled*, not once it has finished, so
+ * the replay control comes back immediately — the same contract as
+ * `playSequence`.
+ */
+export async function playRhythm(
+  rhythm: Rhythm,
+  { tempo, metronome }: RhythmPlaybackOptions,
+): Promise<void> {
+  const kit = await loadDrums()
+  const context = getAudioContext()
+
+  // A context can be suspended by the browser at any point after creation.
+  if (context.state === 'suspended') await context.resume()
+
+  // Cut off anything still counting, so a quick replay does not play two bars
+  // over each other. Straight on the resolved kit rather than through
+  // `stopPlayback`, which stops in a promise callback that could land *after*
+  // the notes below have been scheduled and silence them instead.
+  kit.stop()
+
+  const schedule = rhythmSchedule(rhythm, {
+    tempo,
+    metronome,
+    from: context.currentTime + LEAD_IN,
+  })
+
+  for (const beat of schedule.clicks) click(context, beat.time, beat.accented)
+  for (const time of schedule.hits) {
+    kit.start({ note: SNARE, time, velocity: SNARE_VELOCITY })
+  }
+}
+
 /** Silence whatever is currently sounding. */
 export function stopPlayback(): void {
   void player?.then((instrument) => instrument.stop()).catch(() => undefined)
+  void drums?.then((kit) => kit.stop()).catch(() => undefined)
 }

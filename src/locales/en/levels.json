@@ -126,5 +126,39 @@
       "title": "Everything",
       "blurb": "All seven modes, both directions, all four clefs."
     }
+  },
+  "rhythm-dictation": {
+    "quarters": {
+      "title": "Beats",
+      "blurb": "Nothing smaller than the beat, with the click running underneath."
+    },
+    "eighths": {
+      "title": "Eighths",
+      "blurb": "The beat split in two, still counted all the way through."
+    },
+    "off-the-beat": {
+      "title": "Off the Beat",
+      "blurb": "Impacts that land between the beats rather than on them."
+    },
+    "sixteenths": {
+      "title": "Sixteenths",
+      "blurb": "Four to the beat, and the dotted figures that come with them."
+    },
+    "triplets": {
+      "title": "Triplets",
+      "blurb": "Three to the beat, against the twos and fours around them."
+    },
+    "three-four": {
+      "title": "Three Four",
+      "blurb": "A shorter bar, where the downbeat comes round sooner."
+    },
+    "odd-meters": {
+      "title": "Other Metres",
+      "blurb": "Two, three and five beats to the bar, mixed together."
+    },
+    "everything": {
+      "title": "Everything",
+      "blurb": "Every subdivision and every metre, and a bar may open in silence."
+    }
   }
 }

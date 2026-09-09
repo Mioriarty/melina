@@ -52,6 +52,7 @@
         },
         "rhythm": {
           "title": "Rhythmusdiktat",
+          "short": "Rhythmus",
           "blurb": "Nur den Rhythmus erfassen, ohne Tonhöhen."
         },
         "two-voice": {

@@ -17,6 +17,9 @@ const EXERCISE_COMPONENTS: Record<string, ExerciseComponent> = {
   'intervals/reading': lazy(
     () => import('@/exercises/interval-reading/IntervalReadingExercise'),
   ),
+  'dictation/rhythm': lazy(
+    () => import('@/exercises/rhythm-dictation/RhythmDictationExercise'),
+  ),
   'scales/hearing': lazy(() => import('@/exercises/scale-hearing/ScaleHearingExercise')),
   'scales/reading': lazy(() => import('@/exercises/scale-reading/ScaleReadingExercise')),
 }

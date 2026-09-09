@@ -263,5 +263,76 @@
       "label": "Abwärts",
       "hint": "Von der oberen Oktave abwärts."
     }
-  }
+  },
+  "noteValues": {
+    "16": {
+      "plain": {
+        "note": "Sechzehntelnote",
+        "rest": "Sechzehntelpause"
+      },
+      "dotted": {
+        "note": "punktierte Sechzehntelnote",
+        "rest": "punktierte Sechzehntelpause"
+      }
+    },
+    "8": {
+      "plain": {
+        "note": "Achtelnote",
+        "rest": "Achtelpause"
+      },
+      "dotted": {
+        "note": "punktierte Achtelnote",
+        "rest": "punktierte Achtelpause"
+      }
+    },
+    "4": {
+      "plain": {
+        "note": "Viertelnote",
+        "rest": "Viertelpause"
+      },
+      "dotted": {
+        "note": "punktierte Viertelnote",
+        "rest": "punktierte Viertelpause"
+      }
+    },
+    "2": {
+      "plain": {
+        "note": "halbe Note",
+        "rest": "halbe Pause"
+      },
+      "dotted": {
+        "note": "punktierte halbe Note",
+        "rest": "punktierte halbe Pause"
+      }
+    },
+    "1": {
+      "plain": {
+        "note": "ganze Note",
+        "rest": "ganze Pause"
+      },
+      "dotted": {
+        "note": "punktierte ganze Note",
+        "rest": "punktierte ganze Pause"
+      }
+    }
+  },
+  "meters": {
+    "2/4": "Zwei Viertel",
+    "3/4": "Drei Viertel",
+    "4/4": "Vier Viertel",
+    "5/4": "Fünf Viertel",
+    "6/4": "Sechs Viertel"
+  },
+  "divisions": {
+    "quarter": "Viertel",
+    "eighth": "Achtel",
+    "sixteenth": "Sechzehntel",
+    "triplet": "Triolen",
+    "quintuplet": "Quintolen"
+  },
+  "tuplets": {
+    "3": "Triole",
+    "5": "Quintole"
+  },
+  "tupletFallback": "{{division}} auf einen Schlag"
 }

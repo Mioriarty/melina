@@ -3,6 +3,8 @@ import type { PlayDirection } from '@/lib/music/direction'
 import { parseIntervalKey, transpose } from '@/lib/music/interval'
 import type { KeySignatureId } from '@/lib/music/keySignature'
 import { chromaticValue, parsePitch, pitchKey, type Pitch } from '@/lib/music/pitch'
+import { isMeterKey, parseMeter } from '@/lib/music/meter'
+import { isOffBeat, parseOnsets, rhythmDivision } from '@/lib/music/rhythm'
 import { isModeId, scalePitches, tonicKey, type ModeId } from '@/lib/music/scale'
 
 /**
@@ -24,7 +26,7 @@ import { isModeId, scalePitches, tonicKey, type ModeId } from '@/lib/music/scale
  * `interval-shared/attempt.ts` and `scale-shared/attempt.ts`.
  */
 
-export type AttemptKind = 'interval' | 'scale'
+export type AttemptKind = 'interval' | 'scale' | 'rhythm'
 
 export interface IntervalAttempt {
   kind: 'interval'
@@ -51,11 +53,36 @@ export interface ScaleAttempt {
   direction: Exclude<PlayDirection, 'harmonic'>
 }
 
-export type AttemptQuestion = IntervalAttempt | ScaleAttempt
+/**
+ * A rhythm question, which is a bar of impacts and the speed it went by at.
+ *
+ * The impacts and nothing else, because a rhythm *is* its impacts — a snare
+ * hit has no length to remember. How it was spelled on the page is worked out
+ * again by `notateRhythm`, and how hard it was — how finely divided, whether
+ * anything fell off the beat — is worked out again by `attemptFacets`.
+ */
+export interface RhythmAttempt {
+  kind: 'rhythm'
+  /** Meter key, e.g. `4/4`. */
+  meter: string
+  /** Tick offsets from the barline: `0,60,90,120`. Also the answer. */
+  onsets: string
+  /** Beats per minute it was played at. */
+  tempo: number
+}
+
+export type AttemptQuestion = IntervalAttempt | ScaleAttempt | RhythmAttempt
 
 /** The answer the question was asking for. Derived, never stored twice. */
 export function correctAnswer(question: AttemptQuestion): string {
-  return question.kind === 'interval' ? question.interval : question.mode
+  switch (question.kind) {
+    case 'interval':
+      return question.interval
+    case 'scale':
+      return question.mode
+    case 'rhythm':
+      return question.onsets
+  }
 }
 
 export type FacetValue = string | boolean
@@ -130,6 +157,43 @@ function scaleFacets(question: ScaleAttempt): Facets {
   }
 }
 
+/**
+ * A rhythm's dimensions.
+ *
+ * Deliberately no `root`: a rhythm is built on no note at all, so it drops out
+ * of every filter that asks about pitch — which is the documented behaviour of
+ * a filter naming a dimension an attempt does not have, and exactly right here.
+ */
+function rhythmFacets(question: RhythmAttempt): Facets {
+  const base: Facets = {
+    kind: 'rhythm',
+    meter: question.meter,
+    tempo: String(question.tempo),
+  }
+
+  const onsets = parseOnsets(question.onsets)
+  const meter = isMeterKey(question.meter) ? parseMeter(question.meter) : undefined
+  // A row can only fail to read if it was hand-edited or written by a version
+  // that stored something else. It then matches no filter that asks about the
+  // rhythm, rather than throwing inside a statistics query.
+  if (onsets === undefined || meter === undefined) return base
+
+  const rhythm = { meter, onsets }
+  return {
+    ...base,
+    division: rhythmDivision(rhythm),
+    offBeat: isOffBeat(rhythm),
+    impacts: String(onsets.length),
+  }
+}
+
 export function attemptFacets(question: AttemptQuestion): Facets {
-  return question.kind === 'interval' ? intervalFacets(question) : scaleFacets(question)
+  switch (question.kind) {
+    case 'interval':
+      return intervalFacets(question)
+    case 'scale':
+      return scaleFacets(question)
+    case 'rhythm':
+      return rhythmFacets(question)
+  }
 }
