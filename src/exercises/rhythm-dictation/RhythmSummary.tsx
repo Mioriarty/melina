@@ -36,8 +36,8 @@ export function RhythmSummary({
   return (
     <RoundSummary
       answers={answers}
-      subjectKey={(question) => names.meter(question.rhythm.meter)}
-      subjectName={(question) =>
+      subjectKey={({ question }) => names.meter(question.rhythm.meter)}
+      subjectName={({ question }) =>
         t('rhythm.summary.subject', {
           meter: names.meter(question.rhythm.meter),
           division: names.division(rhythmDivision(question.rhythm)),
@@ -48,7 +48,7 @@ export function RhythmSummary({
       answerName={(chosen) =>
         t('rhythm.summary.impacts', { count: chosen.onsets.length })
       }
-      chipTitle={(question) => kindOf(question)}
+      chipTitle={({ question }) => kindOf(question)}
       allCorrect={t('summary.allCorrect.rhythm')}
       onPlayAgain={onPlayAgain}
       onChangeSettings={onChangeSettings}

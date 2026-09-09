@@ -289,6 +289,72 @@ export async function playRhythm(
   ]
 }
 
+/* ------------------------------------------------------------------ degrees
+
+   Scale degree identification puts a key in the ear and then asks what was
+   heard against it, so a question is two things in a row: a chord, and a
+   melody with no rhythm to it. */
+
+/** How long the tonic chord rings, and when the melody follows it. */
+const CHORD_DURATION = 1.8
+const CHORD_TO_MELODY = 2.15
+/** The chord is context; the melody is the question, and sits in front of it. */
+const CHORD_VELOCITY = 78
+const MELODY_VELOCITY = 95
+/**
+ * The melody's pace. There is deliberately no rhythm in it — what is being
+ * asked is *which note*, and a rhythm on top would be a second question — so
+ * the notes are evenly spaced and each rings a little past the next.
+ */
+const DEGREE_GAP = 0.62
+const DEGREE_NOTE_DURATION = 0.85
+
+/**
+ * Sound a key, then a melody in it.
+ *
+ * The chord comes first and finishes before the melody starts: it is there to
+ * put the tonic in the ear, and a chord still ringing under the first note
+ * would make that note harder to hear rather than easier.
+ *
+ * Resolves once everything has been *scheduled*, not once it has finished, so
+ * the replay control comes back immediately.
+ */
+export async function playDegrees(
+  chord: readonly Pitch[],
+  melody: readonly Pitch[],
+): Promise<void> {
+  const instrument = await loadInstrument()
+  const context = getAudioContext()
+
+  // A context can be suspended by the browser at any point after creation.
+  if (context.state === 'suspended') await context.resume()
+
+  const start = context.currentTime + LEAD_IN
+
+  // After the awaits and immediately before scheduling, so a second call
+  // cannot silence the notes this one is about to lay down.
+  stopPlayback()
+
+  sounding = [
+    ...chord.map((pitch) =>
+      instrument.start({
+        note: midiNumber(pitch),
+        time: start,
+        duration: CHORD_DURATION,
+        velocity: CHORD_VELOCITY,
+      }),
+    ),
+    ...melody.map((pitch, index) =>
+      instrument.start({
+        note: midiNumber(pitch),
+        time: start + CHORD_TO_MELODY + index * DEGREE_GAP,
+        duration: DEGREE_NOTE_DURATION,
+        velocity: MELODY_VELOCITY,
+      }),
+    ),
+  ]
+}
+
 /**
  * Silence whatever is sounding, and drop whatever is queued to sound next.
  *

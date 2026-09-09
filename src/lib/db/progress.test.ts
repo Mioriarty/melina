@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type {
   AttemptQuestion,
+  DegreeAttempt,
   IntervalAttempt,
   RhythmAttempt,
   ScaleAttempt,
@@ -239,5 +240,54 @@ describe('filtering rhythms', () => {
 
     expect((await accuracy({ kind: 'scale' })).total).toBe(1)
     expect((await accuracy({ mode: 'dorian' })).total).toBe(1)
+  })
+})
+
+describe('filtering scale degrees', () => {
+  const melody = (degrees: string, mode = 'ionian', tonic = 'E4'): DegreeAttempt => ({
+    kind: 'degree',
+    tonic,
+    mode: mode as DegreeAttempt['mode'],
+    clef: 'treble',
+    degrees,
+  })
+
+  async function logMelodies(): Promise<void> {
+    await log(
+      row('scales/degrees', melody('1,3,5'), true),
+      row('scales/degrees', melody('1,3,b6'), false),
+      row('scales/degrees', melody('1,2,3,4'), true),
+      row('scales/degrees', melody('1,3,5', 'aeolian', 'A4'), false),
+    )
+  }
+
+  it('narrows to a mode and to a tonic', async () => {
+    await logMelodies()
+    expect((await accuracy({ kind: 'degree' })).total).toBe(4)
+    expect((await accuracy({ mode: 'aeolian', kind: 'degree' })).total).toBe(1)
+    expect((await accuracy({ root: 'E' })).total).toBe(3)
+  })
+
+  it('narrows by how long the melody was, which is derived', async () => {
+    await logMelodies()
+    expect((await accuracy({ length: '3' })).total).toBe(3)
+    expect((await accuracy({ length: '4' })).total).toBe(1)
+  })
+
+  it('separates the melodies that stepped outside the key', async () => {
+    await logMelodies()
+    expect((await accuracy({ altered: true })).total).toBe(1)
+    expect((await accuracy({ altered: false })).total).toBe(3)
+  })
+
+  it('shares its root with intervals and scales, and nothing else', async () => {
+    // `root` is the one dimension all three kinds have, which is what lets a
+    // single query span the whole app.
+    await log(row('scales/hearing', SCALE, true))
+    await logMelodies()
+
+    expect((await accuracy({ root: 'C' })).total).toBe(1)
+    expect((await accuracy({ kind: 'scale' })).total).toBe(1)
+    expect((await accuracy({ kind: 'degree' })).total).toBe(4)
   })
 })

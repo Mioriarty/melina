@@ -334,5 +334,26 @@
     "3": "Triplet",
     "5": "Quintuplet"
   },
-  "tupletFallback": "{{division}} in the time of the beat"
+  "tupletFallback": "{{division}} in the time of the beat",
+  "degrees": {
+    "1": "first degree",
+    "2": "second degree",
+    "3": "third degree",
+    "4": "fourth degree",
+    "5": "fifth degree",
+    "6": "sixth degree",
+    "7": "seventh degree"
+  },
+  "degreeRaised": "raised {{degree}}",
+  "degreeLowered": "lowered {{degree}}",
+  "scaleNames": {
+    "ionian": "{{tonic}} major",
+    "aeolian": "{{tonic}} minor",
+    "dorian": "{{tonic}} dorian",
+    "phrygian": "{{tonic}} phrygian",
+    "lydian": "{{tonic}} lydian",
+    "mixolydian": "{{tonic}} mixolydian",
+    "locrian": "{{tonic}} locrian"
+  },
+  "scaleNameFallback": "{{tonic}} {{mode}}"
 }

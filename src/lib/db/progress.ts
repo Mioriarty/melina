@@ -80,6 +80,12 @@ export interface AttemptFilter {
   tempo?: OneOrMany<string>
   /** How many impacts the bar held, as a string. Derived. */
   impacts?: OneOrMany<string>
+
+  /** Scale degree questions only. */
+  /** How many notes the melody had, as a string. Derived. */
+  length?: OneOrMany<string>
+  /** True to count only melodies that stepped outside the key. Derived. */
+  altered?: boolean
 }
 
 /** How many recent matching answers an accuracy is measured over. */

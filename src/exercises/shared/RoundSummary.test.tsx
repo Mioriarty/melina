@@ -37,10 +37,10 @@ function summary(answers: readonly Answered<Question, string>[], onPlayAgain = v
     <MemoryRouter>
       <RoundSummary
         answers={answers}
-        subjectKey={(question) => question.subject}
-        subjectName={(question) => `the ${question.subject}`}
+        subjectKey={({ question }) => question.subject}
+        subjectName={({ question }) => `the ${question.subject}`}
         answerName={(chosen) => `the ${chosen}`}
-        chipTitle={(question) => `${question.subject} · ${question.clef}`}
+        chipTitle={({ question }) => `${question.subject} · ${question.clef}`}
         allCorrect="Nothing left to fix here."
         onPlayAgain={onPlayAgain}
         onChangeSettings={vi.fn()}

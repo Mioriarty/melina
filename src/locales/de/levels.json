@@ -160,5 +160,39 @@
       "title": "Alles",
       "blurb": "Jede Unterteilung und jede Taktart, und ein Takt darf mit Stille beginnen."
     }
+  },
+  "scale-degrees": {
+    "tonic-and-fifth": {
+      "title": "Grundton und Quinte",
+      "blurb": "Die drei Töne des eben gehörten Akkords, sonst nichts."
+    },
+    "first-five": {
+      "title": "Erste fünf",
+      "blurb": "Die untere Hälfte der Tonleiter, wo die Stufen am leichtesten liegen."
+    },
+    "whole-scale": {
+      "title": "Ganze Tonleiter",
+      "blurb": "Alle sieben Stufen, samt Sexte und Septime."
+    },
+    "minor": {
+      "title": "Moll",
+      "blurb": "Dieselben sieben Stufen, aber gegen einen Mollakkord gehört."
+    },
+    "no-anchor": {
+      "title": "Ohne Anker",
+      "blurb": "Die Melodie darf überall beginnen, der erste Ton ist nicht geschenkt."
+    },
+    "longer-melodies": {
+      "title": "Längere Melodien",
+      "blurb": "Sechs Töne zu behalten, im Violin- und im Bassschlüssel."
+    },
+    "outside-the-key": {
+      "title": "Außerhalb der Tonart",
+      "blurb": "Erhöhte und erniedrigte Töne gegen die der Tonleiter."
+    },
+    "everything": {
+      "title": "Alles",
+      "blurb": "Jeder Modus, jeder Schlüssel, alterierte Töne und kein Grundton zu Beginn."
+    }
   }
 }

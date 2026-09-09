@@ -6,6 +6,7 @@ import type { PlayDirection } from '@/lib/music/direction'
 import type { Interval, IntervalQuality } from '@/lib/music/interval'
 import type { KeySignatureId } from '@/lib/music/keySignature'
 import type { Pitch } from '@/lib/music/pitch'
+import type { Degree } from '@/lib/music/degree'
 import type { TimeSignature } from '@/lib/music/meter'
 import type { DivisionId } from '@/lib/music/rhythm'
 import type { ModeId } from '@/lib/music/scale'
@@ -82,6 +83,12 @@ export interface MusicNames {
   division: (id: DivisionId) => string
   /** A tuplet by its division: `Triplet`, `Quintuplet`. */
   tuplet: (division: number) => string
+  /** A scale degree, spoken: `raised second degree`, `erhöhte zweite Stufe`. */
+  degree: (degree: Degree) => string
+  /** The same on a key, where there is no room: `♯2`. */
+  degreeShort: (degree: Degree) => string
+  /** The key a melody is in: `E major`, `E dorian`, `E-Dur`. */
+  scaleName: (tonic: string, mode: ModeId) => string
 }
 
 export function useMusicNames(): MusicNames {
@@ -138,6 +145,24 @@ export function useMusicNames(): MusicNames {
       division: (id) => t(`divisions.${id}`),
       tuplet: (division) =>
         t(`tuplets.${division}`, { defaultValue: t('tupletFallback', { division }) }),
+      degree: ({ number, alteration }) =>
+        alteration === 0
+          ? t(`degrees.${number}`)
+          : t(alteration > 0 ? 'degreeRaised' : 'degreeLowered', {
+              degree: t(`degrees.${number}`),
+            }),
+      degreeShort: ({ number, alteration }) =>
+        `${alteration > 0 ? '♯' : alteration < 0 ? '♭' : ''}${number}`,
+      // Ionian and aeolian are far better known as major and minor, and a
+      // German reader expects "E-Dur" rather than "E ionisch".
+      scaleName: (tonic, mode) =>
+        t(`scaleNames.${mode}`, {
+          tonic: t(`tonics.${tonic}`, { defaultValue: tonic }),
+          defaultValue: t('scaleNameFallback', {
+            tonic: t(`tonics.${tonic}`, { defaultValue: tonic }),
+            mode: t(`modes.${mode}.label`),
+          }),
+        }),
     }
   }, [t])
 }

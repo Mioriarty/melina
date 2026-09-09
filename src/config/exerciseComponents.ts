@@ -22,6 +22,7 @@ const EXERCISE_COMPONENTS: Record<string, ExerciseComponent> = {
   ),
   'scales/hearing': lazy(() => import('@/exercises/scale-hearing/ScaleHearingExercise')),
   'scales/reading': lazy(() => import('@/exercises/scale-reading/ScaleReadingExercise')),
+  'scales/degrees': lazy(() => import('@/exercises/scale-degrees/ScaleDegreesExercise')),
 }
 
 export function exerciseComponent(

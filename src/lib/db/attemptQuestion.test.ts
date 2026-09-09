@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { attemptFacets, correctAnswer, type RhythmAttempt } from './attemptQuestion'
+import {
+  attemptFacets,
+  correctAnswer,
+  type DegreeAttempt,
+  type RhythmAttempt,
+} from './attemptQuestion'
 
 /**
  * The derived half of an attempt.
@@ -182,5 +187,44 @@ describe('a rhythm question', () => {
     expect(broken.division).toBeUndefined()
 
     expect(attemptFacets({ ...bar, meter: '9/16' }).division).toBeUndefined()
+  })
+})
+
+describe('a scale degree question', () => {
+  const melody: DegreeAttempt = {
+    kind: 'degree',
+    tonic: 'E4',
+    mode: 'ionian',
+    clef: 'treble',
+    degrees: '1,3,b6,5',
+  }
+
+  it('answers with the degrees, which is the whole of what was asked', () => {
+    expect(correctAnswer(melody)).toBe('1,3,b6,5')
+  })
+
+  it('works out what it was like rather than storing it', () => {
+    const facets = attemptFacets(melody)
+
+    expect(facets.kind).toBe('degree')
+    expect(facets.mode).toBe('ionian')
+    expect(facets.tonic).toBe('E4')
+    // The octave is dropped, so a question on E is a question on E whichever
+    // clef put it there — the dimension it shares with intervals and scales.
+    expect(facets.root).toBe('E')
+    expect(facets.length).toBe('4')
+    expect(facets.altered).toBe(true)
+  })
+
+  it('knows a melody that stayed inside its key', () => {
+    expect(attemptFacets({ ...melody, degrees: '1,3,5' }).altered).toBe(false)
+    expect(attemptFacets({ ...melody, degrees: '1,3,5' }).length).toBe('3')
+  })
+
+  it('keeps its bearings when the row cannot be read', () => {
+    const broken = attemptFacets({ ...melody, degrees: '1,9' })
+    expect(broken.kind).toBe('degree')
+    expect(broken.length).toBeUndefined()
+    expect(broken.altered).toBeUndefined()
   })
 })

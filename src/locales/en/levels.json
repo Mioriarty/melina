@@ -160,5 +160,39 @@
       "title": "Everything",
       "blurb": "Every subdivision and every metre, and a bar may open in silence."
     }
+  },
+  "scale-degrees": {
+    "tonic-and-fifth": {
+      "title": "Tonic and Fifth",
+      "blurb": "The three notes of the chord you just heard, and nothing else."
+    },
+    "first-five": {
+      "title": "First Five",
+      "blurb": "The lower half of the scale, where the steps are easiest to place."
+    },
+    "whole-scale": {
+      "title": "Whole Scale",
+      "blurb": "All seven degrees, including the sixth and seventh."
+    },
+    "minor": {
+      "title": "Minor",
+      "blurb": "The same seven degrees heard against a minor chord instead."
+    },
+    "no-anchor": {
+      "title": "No Anchor",
+      "blurb": "The melody may begin anywhere, so there is no free first note."
+    },
+    "longer-melodies": {
+      "title": "Longer Melodies",
+      "blurb": "Six notes to hold on to, in the treble and the bass."
+    },
+    "outside-the-key": {
+      "title": "Outside the Key",
+      "blurb": "Notes raised or lowered out of the scale, against the ones in it."
+    },
+    "everything": {
+      "title": "Everything",
+      "blurb": "Every mode, every clef, altered notes, and no opening tonic."
+    }
   }
 }

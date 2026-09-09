@@ -69,7 +69,8 @@ export const CATEGORIES: readonly CategoryDef[] = [
       },
       {
         id: 'degrees',
-        status: 'planned',
+        icon: 'locate',
+        status: 'ready',
       },
     ],
   },

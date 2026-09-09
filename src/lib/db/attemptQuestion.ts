@@ -3,6 +3,7 @@ import type { PlayDirection } from '@/lib/music/direction'
 import { parseIntervalKey, transpose } from '@/lib/music/interval'
 import type { KeySignatureId } from '@/lib/music/keySignature'
 import { chromaticValue, parsePitch, pitchKey, type Pitch } from '@/lib/music/pitch'
+import { parseDegreesKey, type Degree } from '@/lib/music/degree'
 import { isMeterKey, parseMeter } from '@/lib/music/meter'
 import { isOffBeat, parseOnsets, rhythmDivision } from '@/lib/music/rhythm'
 import { isModeId, scalePitches, tonicKey, type ModeId } from '@/lib/music/scale'
@@ -26,7 +27,7 @@ import { isModeId, scalePitches, tonicKey, type ModeId } from '@/lib/music/scale
  * `interval-shared/attempt.ts` and `scale-shared/attempt.ts`.
  */
 
-export type AttemptKind = 'interval' | 'scale' | 'rhythm'
+export type AttemptKind = 'interval' | 'scale' | 'rhythm' | 'degree'
 
 export interface IntervalAttempt {
   kind: 'interval'
@@ -71,7 +72,26 @@ export interface RhythmAttempt {
   tempo: number
 }
 
-export type AttemptQuestion = IntervalAttempt | ScaleAttempt | RhythmAttempt
+/**
+ * A scale degree question: a key, and the melody heard against it.
+ *
+ * The degrees and nothing else — the notes they name are spelled again by
+ * `degreePitch`, and the key signature the melody is written under is worked
+ * out again by `keySignatureFor`, so a row cannot disagree with the notation it
+ * would produce.
+ */
+export interface DegreeAttempt {
+  kind: 'degree'
+  /** The tonic *with* its octave, as a `pitchKey`: `E4`. */
+  tonic: string
+  mode: ModeId
+  clef: ClefId
+  /** The melody as degrees: `1,3,b6,5`. Also the answer the question wanted. */
+  degrees: string
+}
+
+export type AttemptQuestion =
+  IntervalAttempt | ScaleAttempt | RhythmAttempt | DegreeAttempt
 
 /** The answer the question was asking for. Derived, never stored twice. */
 export function correctAnswer(question: AttemptQuestion): string {
@@ -82,6 +102,8 @@ export function correctAnswer(question: AttemptQuestion): string {
       return question.mode
     case 'rhythm':
       return question.onsets
+    case 'degree':
+      return question.degrees
   }
 }
 
@@ -187,6 +209,38 @@ function rhythmFacets(question: RhythmAttempt): Facets {
   }
 }
 
+/**
+ * A degree question's dimensions.
+ *
+ * How long the melody was and whether anything strayed outside the key are both
+ * derived rather than stored — they are facts about the degrees, and a row that
+ * kept them could come to disagree with the melody it also keeps.
+ *
+ * Which *individual* degrees were asked is deliberately not a facet: a melody
+ * holds several and a facet holds one value, so "you keep missing the sixth" is
+ * a question the round summary answers, where the whole answer is still to
+ * hand, rather than one the log can.
+ */
+function degreeFacets(question: DegreeAttempt): Facets {
+  const base: Facets = {
+    kind: 'degree',
+    mode: question.mode,
+    clef: question.clef,
+    tonic: question.tonic,
+  }
+
+  const tonic = parsePitch(question.tonic)
+  const degrees: Degree[] | undefined = parseDegreesKey(question.degrees)
+  if (tonic === undefined || degrees === undefined) return base
+
+  return {
+    ...base,
+    root: tonicKey(tonic),
+    length: String(degrees.length),
+    altered: degrees.some((degree) => degree.alteration !== 0),
+  }
+}
+
 export function attemptFacets(question: AttemptQuestion): Facets {
   switch (question.kind) {
     case 'interval':
@@ -195,5 +249,7 @@ export function attemptFacets(question: AttemptQuestion): Facets {
       return scaleFacets(question)
     case 'rhythm':
       return rhythmFacets(question)
+    case 'degree':
+      return degreeFacets(question)
   }
 }

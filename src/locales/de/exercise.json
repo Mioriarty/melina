@@ -78,6 +78,25 @@
       "title": "Pause am Anfang",
       "hint": "Ein Takt darf vor dem ersten Schlag beginnen, statt immer auf der Eins.",
       "allow": "Takt darf mit Stille beginnen"
+    },
+    "degrees": {
+      "title": "Stufen",
+      "hint": "Welche Stufen vorkommen dürfen. Drei Töne um den Grundton sind eine andere Übung als alle sieben."
+    },
+    "alterations": {
+      "title": "Außerhalb der Tonart",
+      "hint": "Ein Ton darf erhöht oder erniedrigt werden. Damit erscheinen auch die beiden Vorzeichentasten.",
+      "allow": "Alterierte Töne zulassen"
+    },
+    "melodyLength": {
+      "title": "Länge der Melodie",
+      "hint": "Wie viele Töne aufzuschreiben sind. Ab vier ist es ebenso sehr Gedächtnis wie Gehör.",
+      "label": "{{count}} Töne"
+    },
+    "startOnTonic": {
+      "title": "Erster Ton",
+      "hint": "Jede Melodie beginnt auf dem Grundton, damit es immer einen Bezugspunkt gibt.",
+      "allow": "Auf dem Grundton beginnen"
     }
   },
   "round": {
@@ -88,12 +107,14 @@
     "keyboardLabel": {
       "interval": "Intervall-Antworten",
       "scale": "Tonleiter-Antworten",
-      "rhythm": "Rhythmustasten"
+      "rhythm": "Rhythmustasten",
+      "degree": "Stufentasten"
     },
     "prompt": {
       "interval": "Welches Intervall ist das?",
       "scale": "Welche Tonleiter ist das?",
-      "rhythm": "Schreibe den Rhythmus auf, den du hörst"
+      "rhythm": "Schreibe den Rhythmus auf, den du hörst",
+      "degree": "Welche Stufen hörst du?"
     }
   },
   "score": {
@@ -117,7 +138,8 @@
     "allCorrect": {
       "intervals": "Alles richtig. Nimm einen Schlüssel, eine Vorzeichnung oder die übermäßigen und verminderten Intervalle dazu.",
       "scales": "Alles richtig. Nimm einen Modus, einen entfernteren Grundton oder die C-Schlüssel dazu.",
-      "rhythm": "Alles richtig. Versuch eine feinere Unterteilung, eine andere Taktart, oder lass das Klicken nach dem Vorzähler aufhören."
+      "rhythm": "Alles richtig. Versuch eine feinere Unterteilung, eine andere Taktart, oder lass das Klicken nach dem Vorzähler aufhören.",
+      "degrees": "Alles richtig. Versuch eine längere Melodie, die ganze Tonleiter, oder lass Töne aus der Tonart heraustreten."
     },
     "thisRound": "Diese Runde",
     "questionLabel": "{{subject}} · {{clef}}",
@@ -154,6 +176,27 @@
     "summary": {
       "subject": "{{meter}} · {{division}}",
       "impacts": "{{count}} Schläge"
+    }
+  },
+  "degrees": {
+    "levelsBlurb": "Höre eine Tonart, dann eine Melodie darin, und benenne jeden Ton. Wähle ein Level oder stell es dir selbst ein.",
+    "setupBlurb": "Ein Akkord setzt die Tonart, dann folgt eine Melodie aus dieser Tonleiter. Schreib auf, welche Stufe jeder Ton ist — die Tonart wird dir genannt, gefragt sind die Töne.",
+    "replay": "Noch einmal hören",
+    "staff": {
+      "yours": "Du",
+      "correct": "Richtig"
+    },
+    "keyboard": {
+      "sharp": "Den nächsten Ton erhöhen",
+      "flat": "Den nächsten Ton erniedrigen",
+      "delete": "Das Letzte löschen"
+    },
+    "scoreLabel": {
+      "draft": "Die Melodie, die du schreibst, in {{key}}",
+      "comparison": "Was du in {{key}} geschrieben hast, über der richtigen Melodie"
+    },
+    "summary": {
+      "questionLabel": "{{key}} · {{degrees}}"
     }
   }
 }

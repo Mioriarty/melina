@@ -25,10 +25,10 @@ export function ScaleSummary({
   return (
     <RoundSummary
       answers={answers}
-      subjectKey={(question) => names.modeShort(question.mode)}
-      subjectName={(question) => names.modeFull(question.mode)}
+      subjectKey={({ question }) => names.modeShort(question.mode)}
+      subjectName={({ question }) => names.modeFull(question.mode)}
       answerName={(chosen) => names.mode(chosen)}
-      chipTitle={(question) =>
+      chipTitle={({ question }) =>
         t('summary.questionLabel', {
           subject: names.mode(question.mode),
           clef: names.clef(question.clef),

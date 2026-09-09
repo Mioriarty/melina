@@ -14,6 +14,12 @@ import {
   type RhythmRoundSpec,
 } from '@/exercises/rhythm-dictation/generate'
 import { RHYTHM_SETTINGS } from '@/exercises/rhythm-dictation/settings'
+import { DEGREE_DIFFICULTIES } from '@/exercises/scale-degrees/difficulties'
+import {
+  generateRound as generateDegreeRound,
+  type DegreeRoundSpec,
+} from '@/exercises/scale-degrees/generate'
+import { DEGREE_SETTINGS } from '@/exercises/scale-degrees/settings'
 import { SCALE_HEARING_DIFFICULTIES } from '@/exercises/scale-hearing/difficulties'
 import { SCALE_HEARING_SETTINGS } from '@/exercises/scale-hearing/settings'
 import { SCALE_READING_DIFFICULTIES } from '@/exercises/scale-reading/difficulties'
@@ -30,6 +36,7 @@ import { LANGUAGES } from '@/lib/i18n/languages'
 import { CATALOG_KEYS, HEARABLE_INTERVAL_KEYS } from '@/lib/music/catalog'
 import { isClefId } from '@/lib/music/clef'
 import { isKeySignatureId } from '@/lib/music/keySignature'
+import { DEGREE_NUMBERS, degreePitch, keySignatureFor } from '@/lib/music/degree'
 import { isMeterKey, meterKey } from '@/lib/music/meter'
 import { isValidRhythm } from '@/lib/music/rhythm'
 import { CELL_GROUP_IDS, isCellGroupId } from '@/lib/music/rhythmCells'
@@ -66,6 +73,7 @@ const ALL_GROUPS: readonly NamedLevels[] = [
   { group: 'scale-reading', levels: SCALE_READING_DIFFICULTIES },
   { group: 'scale-hearing', levels: SCALE_HEARING_DIFFICULTIES },
   { group: 'rhythm-dictation', levels: RHYTHM_DIFFICULTIES },
+  { group: 'scale-degrees', levels: DEGREE_DIFFICULTIES },
 ]
 
 describe.each(ALL_GROUPS)('$group levels', ({ group, levels }) => {
@@ -478,5 +486,113 @@ describe('rhythm dictation levels', () => {
   it('offers a metre other than four four', () => {
     const meters = new Set(RHYTHM_DIFFICULTIES.flatMap((level) => level.settings.meters))
     expect(meters.size).toBeGreaterThan(1)
+  })
+})
+
+/* --------------------------------------------------------------- degrees */
+
+describe('scale-degrees settings', () => {
+  it('only names modes, tonics, clefs and degrees that exist', () => {
+    for (const { id, settings } of DEGREE_DIFFICULTIES) {
+      expect(settings.modes.length, id).toBeGreaterThan(0)
+      expect(settings.tonics.length, id).toBeGreaterThan(0)
+      expect(settings.clefs.length, id).toBeGreaterThan(0)
+      expect(settings.degrees.length, id).toBeGreaterThan(0)
+
+      for (const mode of settings.modes)
+        expect(isModeId(mode), `${id}: ${mode}`).toBe(true)
+      for (const tonic of settings.tonics) {
+        expect(isTonicKey(tonic), `${id}: ${tonic}`).toBe(true)
+      }
+      for (const clef of settings.clefs)
+        expect(isClefId(clef), `${id}: ${clef}`).toBe(true)
+      for (const degree of settings.degrees) {
+        expect(DEGREE_NUMBERS, `${id}: ${degree}`).toContain(degree)
+      }
+    }
+  })
+
+  it('survives being stored and read back unchanged', () => {
+    for (const { id, settings } of DEGREE_DIFFICULTIES) {
+      expect(DEGREE_SETTINGS.parse(JSON.parse(JSON.stringify(settings))), id).toEqual(
+        settings,
+      )
+    }
+  })
+
+  it('actually generates a full round', () => {
+    // The failure a type cannot catch: a level whose modes will not spell on
+    // any of its tonics, or whose scale fits no clef, serving a short round.
+    for (const { id, settings } of DEGREE_DIFFICULTIES) {
+      for (const seed of [1, 2, 3]) {
+        const round = generateDegreeRound(createRandom(seed), settings as DegreeRoundSpec)
+        expect(round.length, `${id} (seed ${seed})`).toBe(settings.questionsPerRound)
+      }
+    }
+  })
+
+  it('asks only what the level allows', () => {
+    for (const { id, settings } of DEGREE_DIFFICULTIES) {
+      for (const question of generateDegreeRound(
+        createRandom(7),
+        settings as DegreeRoundSpec,
+      )) {
+        expect(settings.modes, id).toContain(question.mode)
+        expect(settings.clefs, id).toContain(question.clef)
+        expect(question.degrees.length, id).toBe(settings.melodyLength)
+        for (const degree of question.degrees) {
+          expect(settings.degrees, `${id}: degree ${degree.number}`).toContain(
+            degree.number,
+          )
+          if (!settings.alterations) expect(degree.alteration, id).toBe(0)
+        }
+      }
+    }
+  })
+
+  it('can write down every question it asks', () => {
+    // A key with no signature, or a degree that needs a triple accidental,
+    // would be unanswerable however well it was heard.
+    for (const { id, settings } of DEGREE_DIFFICULTIES) {
+      for (const question of generateDegreeRound(
+        createRandom(13),
+        settings as DegreeRoundSpec,
+      )) {
+        expect(keySignatureFor(question.tonic, question.mode), id).toBe(
+          question.keySignature,
+        )
+        for (const degree of question.degrees) {
+          expect(degreePitch(question.tonic, question.mode, degree), id).toBeDefined()
+        }
+      }
+    }
+  })
+})
+
+describe('scale degree levels', () => {
+  it('starts inside the chord and ends on the whole scale', () => {
+    const smallest = Math.min(
+      ...DEGREE_DIFFICULTIES.map((l) => l.settings.degrees.length),
+    )
+    const largest = Math.max(...DEGREE_DIFFICULTIES.map((l) => l.settings.degrees.length))
+
+    expect(smallest).toBeLessThanOrEqual(3)
+    expect(largest).toBe(DEGREE_NUMBERS.length)
+  })
+
+  it('has a level that stays in the key and one that leaves it', () => {
+    expect(DEGREE_DIFFICULTIES.some((level) => level.settings.alterations)).toBe(true)
+    expect(DEGREE_DIFFICULTIES.some((level) => !level.settings.alterations)).toBe(true)
+  })
+
+  it('has a level that gives the tonic away and one that does not', () => {
+    expect(DEGREE_DIFFICULTIES.some((level) => level.settings.startOnTonic)).toBe(true)
+    expect(DEGREE_DIFFICULTIES.some((level) => !level.settings.startOnTonic)).toBe(true)
+  })
+
+  it('covers major and minor somewhere', () => {
+    const modes = new Set(DEGREE_DIFFICULTIES.flatMap((level) => level.settings.modes))
+    expect(modes.has('ionian')).toBe(true)
+    expect(modes.has('aeolian')).toBe(true)
   })
 })

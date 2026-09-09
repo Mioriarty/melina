@@ -28,6 +28,7 @@ export type DifficultyGroup =
   | 'scale-reading'
   | 'scale-hearing'
   | 'rhythm-dictation'
+  | 'scale-degrees'
 
 export function difficultyTitleKey(group: DifficultyGroup, id: string): string {
   return `levels:${group}.${id}.title`

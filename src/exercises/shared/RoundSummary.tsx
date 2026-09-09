@@ -11,14 +11,19 @@ export interface RoundSummaryProps<TQuestion, TAnswer> {
   /**
    * Short, stable label for what was asked — `M3`, `dor`. Groups the misses
    * and labels the chips, so it has to fit in a very small square.
+   *
+   * Given the whole answer rather than just the question, because what is worth
+   * grouping by is not always a property of the question alone: a melody of
+   * scale degrees is grouped by *the degree the answer first got wrong*, which
+   * cannot be known without the answer.
    */
-  subjectKey: (question: TQuestion) => string
+  subjectKey: (answer: Answered<TQuestion, TAnswer>) => string
   /** The same thing spelled out: `Major third`. */
-  subjectName: (question: TQuestion) => string
+  subjectName: (answer: Answered<TQuestion, TAnswer>) => string
   /** What the player said instead. */
   answerName: (chosen: TAnswer) => string
   /** Tooltip on a chip: what was asked, and in what context. */
-  chipTitle: (question: TQuestion) => string
+  chipTitle: (answer: Answered<TQuestion, TAnswer>) => string
   /** Where to go next when nothing was missed. Exercise-specific advice. */
   allCorrect: string
   onPlayAgain: () => void
@@ -52,18 +57,18 @@ export function RoundSummary<TQuestion, TAnswer>({
   const total = answers.length
   const accuracy = total === 0 ? 0 : Math.round((correct / total) * 100)
 
-  // Keyed by the short label, but the question is kept so its full name can
-  // be rendered without parsing the key back apart.
+  // Keyed by the short label, but the answer is kept so its full name can be
+  // rendered without parsing the key back apart.
   const misses = new Map<
     string,
-    { question: TQuestion; count: number; answered: Set<string> }
+    { answer: Answered<TQuestion, TAnswer>; count: number; answered: Set<string> }
   >()
 
   for (const answer of answers) {
     if (answer.correct) continue
-    const key = subjectKey(answer.question)
+    const key = subjectKey(answer)
     const entry = misses.get(key) ?? {
-      question: answer.question,
+      answer,
       count: 0,
       answered: new Set<string>(),
     }
@@ -118,7 +123,7 @@ export function RoundSummary<TQuestion, TAnswer>({
                   </span>
                   <span className="min-w-0">
                     <span className="font-serif text-[1.0625rem] font-semibold">
-                      {subjectName(entry.question)}
+                      {subjectName(entry.answer)}
                     </span>
                     <span className="mt-0.5 block text-sm leading-snug text-ink-muted">
                       {t('exercise:summary.youAnswered', {
@@ -144,7 +149,7 @@ export function RoundSummary<TQuestion, TAnswer>({
             {answers.map((answer, index) => (
               <li
                 key={index}
-                title={chipTitle(answer.question)}
+                title={chipTitle(answer)}
                 className={cn(
                   'grid h-8 w-8 place-items-center rounded-lg text-[0.6875rem] font-semibold',
                   answer.correct
@@ -152,7 +157,7 @@ export function RoundSummary<TQuestion, TAnswer>({
                     : 'bg-wrong/12 text-wrong',
                 )}
               >
-                {subjectKey(answer.question)}
+                {subjectKey(answer)}
               </li>
             ))}
           </ol>

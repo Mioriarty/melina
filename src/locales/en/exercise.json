@@ -78,6 +78,25 @@
       "title": "Opening rest",
       "hint": "Let a bar begin before its first impact, rather than always on the downbeat.",
       "allow": "Allow a bar to start in silence"
+    },
+    "degrees": {
+      "title": "Degrees",
+      "hint": "Which steps of the scale may come up. Three notes around the tonic is a different exercise from all seven."
+    },
+    "alterations": {
+      "title": "Outside the key",
+      "hint": "Let a note be raised or lowered out of the scale. This also puts the two accidental keys on the keyboard.",
+      "allow": "Allow altered notes"
+    },
+    "melodyLength": {
+      "title": "Melody length",
+      "hint": "How many notes there are to write down. Past four this is memory as much as hearing.",
+      "label": "{{count}} notes"
+    },
+    "startOnTonic": {
+      "title": "Opening note",
+      "hint": "Begin every melody on the tonic, so there is always somewhere to reckon from.",
+      "allow": "Start on the tonic"
     }
   },
   "round": {
@@ -88,12 +107,14 @@
     "keyboardLabel": {
       "interval": "Interval answers",
       "scale": "Scale answers",
-      "rhythm": "Rhythm keys"
+      "rhythm": "Rhythm keys",
+      "degree": "Scale degree keys"
     },
     "prompt": {
       "interval": "What interval is this?",
       "scale": "What scale is this?",
-      "rhythm": "Write the rhythm you hear"
+      "rhythm": "Write the rhythm you hear",
+      "degree": "Which degrees do you hear?"
     }
   },
   "score": {
@@ -117,7 +138,8 @@
     "allCorrect": {
       "intervals": "Every one correct. Try adding a clef, a key signature, or the augmented and diminished intervals.",
       "scales": "Every one correct. Try adding a mode, a tonic further round the circle, or the C clefs.",
-      "rhythm": "Every one correct. Try a finer subdivision, another metre, or letting the click stop after the count-in."
+      "rhythm": "Every one correct. Try a finer subdivision, another metre, or letting the click stop after the count-in.",
+      "degrees": "Every one correct. Try a longer melody, the whole scale, or letting notes step outside the key."
     },
     "thisRound": "This round",
     "questionLabel": "{{subject}} · {{clef}}",
@@ -154,6 +176,27 @@
     "summary": {
       "subject": "{{meter}} · {{division}}",
       "impacts": "{{count}} impacts"
+    }
+  },
+  "degrees": {
+    "levelsBlurb": "Hear a key, then a melody in it, and name each note. Pick a level, or set it up yourself.",
+    "setupBlurb": "A chord sets the key, then a melody from that scale. Write down which degree each note is — the key is named for you, so what is being asked is the notes.",
+    "replay": "Hear it again",
+    "staff": {
+      "yours": "You",
+      "correct": "Correct"
+    },
+    "keyboard": {
+      "sharp": "Raise the next note",
+      "flat": "Lower the next note",
+      "delete": "Delete the last one"
+    },
+    "scoreLabel": {
+      "draft": "The melody you are writing, in {{key}}",
+      "comparison": "What you wrote in {{key}}, above the correct melody"
+    },
+    "summary": {
+      "questionLabel": "{{key}} · {{degrees}}"
     }
   }
 }

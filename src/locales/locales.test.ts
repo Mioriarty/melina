@@ -7,6 +7,7 @@ import { CATALOG } from '@/lib/music/catalog'
 import { CLEFS } from '@/lib/music/clef'
 import { PLAY_DIRECTIONS } from '@/lib/music/direction'
 import { KEY_SIGNATURES } from '@/lib/music/keySignature'
+import { DEGREE_NUMBERS } from '@/lib/music/degree'
 import { METER_KEYS } from '@/lib/music/meter'
 import { LETTERS } from '@/lib/music/pitch'
 import { DIVISION_IDS } from '@/lib/music/rhythm'
@@ -141,6 +142,14 @@ describe('keys built from registry ids', () => {
       }
     }
     for (const meter of METER_KEYS) named(`meters.${meter}`)
+
+    // Scale degrees. German inflects the adjective onto the noun — "erhöhte
+    // zweite Stufe" — and names a key as one word, "E-Dur", so none of these
+    // survive being built from English pieces.
+    for (const number of DEGREE_NUMBERS) named(`degrees.${number}`)
+    named('degreeRaised')
+    named('degreeLowered')
+    for (const mode of MODE_IDS) named(`scaleNames.${mode}`)
     for (const division of DIVISION_IDS) named(`divisions.${division}`)
     for (const tuplet of [3, 5]) named(`tuplets.${tuplet}`)
   })

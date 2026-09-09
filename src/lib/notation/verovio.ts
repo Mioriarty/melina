@@ -165,6 +165,66 @@ export function rhythmProfile(beats: number, staves: 1 | 2): VerovioOptions {
   return profile
 }
 
+/**
+ * **How a melody being written down is rendered.**
+ *
+ * The same problem the rhythm profile solves, and the same answer: a fixed page
+ * so the box, the staff size and the notes already placed cannot move while the
+ * answer is being typed. `melodyMei` supplies the other half by padding the
+ * unwritten tail with `<space>`, which keeps the measure its full length.
+ *
+ * The width is per **slot count**, because that is what the finished answer
+ * will be as wide as. Measured against the worst case there is — the longest
+ * melody, under seven accidentals, with every note carrying one of its own —
+ * so a page is never overrun by a key signature nobody thought about.
+ */
+const MELODY_PAGE_LEAD = 250
+const MELODY_PAGE_PER_SLOT = 62
+/** A second staff underneath needs room for itself and for both labels. */
+const MELODY_TWO_STAFF_LEAD = 390
+const MELODY_PAGE_HEIGHT = 190
+const MELODY_TWO_STAFF_HEIGHT = 350
+
+/**
+ * Cached for the same reason `rhythmProfile` is: `Score` compares the profile
+ * by identity, so a fresh object would re-render on every paint.
+ */
+const MELODY_PROFILES = new Map<string, VerovioOptions>()
+
+export function melodyProfile(slots: number, staves: 1 | 2): VerovioOptions {
+  const key = `${slots}:${staves}`
+  const cached = MELODY_PROFILES.get(key)
+  if (cached !== undefined) return cached
+
+  const lead = staves === 2 ? MELODY_TWO_STAFF_LEAD : MELODY_PAGE_LEAD
+  const profile: VerovioOptions = {
+    breaks: 'auto',
+    adjustPageWidth: false,
+    adjustPageHeight: false,
+    pageWidth: lead + MELODY_PAGE_PER_SLOT * slots,
+    pageHeight: staves === 2 ? MELODY_TWO_STAFF_HEIGHT : MELODY_PAGE_HEIGHT,
+  }
+  MELODY_PROFILES.set(key, profile)
+  return profile
+}
+
+/**
+ * One note on a bare staff, for a key on the degree keyboard.
+ *
+ * Fixed so that seven keys standing in a row are the same size and their staves
+ * line up. Left to itself the page shrinks to its content, and a key whose note
+ * prints an accidental or needs a ledger line would come out larger than the
+ * one beside it. Sized for the widest and tallest of them, measured across
+ * every clef, key and degree the exercise can offer.
+ */
+export const DEGREE_KEY_PROFILE: VerovioOptions = {
+  breaks: 'auto',
+  adjustPageWidth: false,
+  adjustPageHeight: false,
+  pageWidth: 140,
+  pageHeight: 195,
+}
+
 let toolkit: Promise<VerovioToolkit> | undefined
 
 function load(): Promise<VerovioToolkit> {

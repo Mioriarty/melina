@@ -381,3 +381,115 @@ export function rhythmMei({ meter, staves }: RhythmMeiOptions): string {
             </measure>`,
   )
 }
+
+/* ------------------------------------------------------------------ degrees
+
+   Scale degree identification writes its answer on a staff under a key
+   signature, the way the melody it heard would be written. Everything here is
+   engraving: what is *graded* is the degrees, which never come from here. */
+
+export interface MelodyStaffOptions {
+  /** The notes entered so far, in the order they are drawn. */
+  pitches: readonly Pitch[]
+  /** Drawn at the left. Passed in already translated, like every other string. */
+  label?: string
+}
+
+export interface MelodyMeiOptions {
+  clef: ClefId
+  keySignature: KeySignatureId
+  /**
+   * How many notes the answer will have.
+   *
+   * The tail is padded out to this with `<space>`, so a half-written answer is
+   * still a full-length measure — which is what keeps the notes already on the
+   * staff from re-spacing under the player's hands as more arrive. The same
+   * lesson `rhythmMei` learned, for the same reason.
+   */
+  slots: number
+  /** One staff, or two when a wrong answer is shown against the right one. */
+  staves: readonly MelodyStaffOptions[]
+}
+
+/**
+ * A melody of even notes under a key signature.
+ *
+ * No meter and no barlines: the melody has no rhythm, and drawing one would
+ * ask a second question. Quarter noteheads are simply the plainest thing to
+ * write a pitch on.
+ */
+export function melodyMei({
+  clef,
+  keySignature,
+  slots,
+  staves,
+}: MelodyMeiOptions): string {
+  const { sign, line } = getClef(clef)
+
+  const staffDefs = staves
+    .map((staff, index) => {
+      const attributes = `n="${index + 1}" lines="5" clef.shape="${sign}" clef.line="${line}"`
+      return staff.label === undefined
+        ? `<staffDef ${attributes}/>`
+        : `<staffDef ${attributes}><label>${escapeText(staff.label)}</label></staffDef>`
+    })
+    .join('\n              ')
+
+  const layers = staves
+    .map((staff, index) => {
+      const notes = staff.pitches
+        .map((pitch) => noteElement(pitch, keySignature, 'dur="4"'))
+        .join('')
+      const padding = '<space dur="4"/>'.repeat(Math.max(0, slots - staff.pitches.length))
+
+      return `<staff n="${index + 1}">
+                <layer n="1">${notes}${padding}</layer>
+              </staff>`
+    })
+    .join('\n              ')
+
+  return envelope(
+    `<scoreDef keysig="${meiKeySignature(keySignature)}">
+            <staffGrp>
+              ${staffDefs}
+            </staffGrp>
+          </scoreDef>`,
+    `<measure n="1" right="invis">
+              ${layers}
+            </measure>`,
+  )
+}
+
+/**
+ * One note on a bare staff — a key on the degree keyboard.
+ *
+ * **No clef and no printed key signature.** The staff above already carries
+ * both, and repeating them on seven small keys is noise that leaves no room for
+ * the note itself. The signature is still *in force*, which is the point: a
+ * degree that agrees with the key draws a plain notehead, and only one that has
+ * been raised or lowered out of it prints an accidental.
+ */
+export function degreeKeyMei({
+  pitch,
+  clef,
+  keySignature,
+}: {
+  pitch: Pitch
+  clef: ClefId
+  keySignature: KeySignatureId
+}): string {
+  const { sign, line } = getClef(clef)
+
+  return envelope(
+    `<scoreDef keysig="${meiKeySignature(keySignature)}">
+            <staffGrp>
+              <staffDef n="1" lines="5" clef.shape="${sign}" clef.line="${line}" clef.visible="false" keysig.visible="false"/>
+            </staffGrp>
+          </scoreDef>`,
+    `<measure n="1" right="invis">
+              <staff n="1">
+                <layer n="1">${noteElement(pitch, keySignature, 'dur="4"')}</layer>
+              </staff>
+            </measure>`,
+  )
+}

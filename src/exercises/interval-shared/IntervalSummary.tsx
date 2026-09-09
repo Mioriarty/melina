@@ -25,10 +25,10 @@ export function IntervalSummary({
   return (
     <RoundSummary
       answers={answers}
-      subjectKey={(question) => intervalKey(question.interval)}
-      subjectName={(question) => names.interval(question.interval)}
+      subjectKey={({ question }) => intervalKey(question.interval)}
+      subjectName={({ question }) => names.interval(question.interval)}
       answerName={(chosen) => names.interval(chosen)}
-      chipTitle={(question) =>
+      chipTitle={({ question }) =>
         t('summary.questionLabel', {
           subject: names.interval(question.interval),
           clef: names.clef(question.clef),

@@ -117,21 +117,32 @@ describe('path layout', () => {
     expect(stagger).toBeLessThan(drop / 2)
   })
 
-  it('joins the braid vertically and merges it into one station', () => {
-    // Joining consecutive nodes instead would zig-zag through all four,
-    // which claims scale reading comes after interval hearing.
+  it('runs two braided tracks down, and merges them once at the end', () => {
+    // Joining consecutive nodes instead would zig-zag across the column, which
+    // claims scale reading comes after interval hearing. It does not: the two
+    // tracks are independent all the way down, and meet only where the path
+    // genuinely needs both of them.
     const joins = (from: string, to: string) =>
       PATH_EDGES.some((edge) => edge.from === from && edge.to === to)
 
+    // The left track, and the right one.
     expect(joins('intervals/reading', 'intervals/hearing')).toBe(true)
-    expect(joins('scales/reading', 'scales/hearing')).toBe(true)
     expect(joins('intervals/hearing', 'dictation/rhythm')).toBe(true)
-    expect(joins('scales/hearing', 'dictation/rhythm')).toBe(true)
+    expect(joins('scales/reading', 'scales/hearing')).toBe(true)
+    expect(joins('scales/hearing', 'scales/degrees')).toBe(true)
 
-    // Nothing crosses between the columns before the merge.
+    // The merge: rhythm is the *when* and degrees the *what*, and what comes
+    // after needs both, so both arrive at the same station.
+    expect(joins('dictation/rhythm', 'harmonic-prediction')).toBe(true)
+    expect(joins('scales/degrees', 'harmonic-prediction')).toBe(true)
+
+    // Nothing crosses between the columns before that.
     expect(joins('intervals/reading', 'scales/reading')).toBe(false)
     expect(joins('scales/reading', 'intervals/hearing')).toBe(false)
     expect(joins('intervals/hearing', 'scales/hearing')).toBe(false)
+    expect(joins('dictation/rhythm', 'scales/degrees')).toBe(false)
+    expect(joins('intervals/hearing', 'scales/degrees')).toBe(false)
+    expect(joins('scales/hearing', 'dictation/rhythm')).toBe(false)
   })
 
   it('reaches every station from the first, and joins nothing that is missing', () => {

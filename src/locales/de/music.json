@@ -334,5 +334,26 @@
     "3": "Triole",
     "5": "Quintole"
   },
-  "tupletFallback": "{{division}} auf einen Schlag"
+  "tupletFallback": "{{division}} auf einen Schlag",
+  "degrees": {
+    "1": "erste Stufe",
+    "2": "zweite Stufe",
+    "3": "dritte Stufe",
+    "4": "vierte Stufe",
+    "5": "fünfte Stufe",
+    "6": "sechste Stufe",
+    "7": "siebte Stufe"
+  },
+  "degreeRaised": "erhöhte {{degree}}",
+  "degreeLowered": "erniedrigte {{degree}}",
+  "scaleNames": {
+    "ionian": "{{tonic}}-Dur",
+    "aeolian": "{{tonic}}-Moll",
+    "dorian": "{{tonic}} dorisch",
+    "phrygian": "{{tonic}} phrygisch",
+    "lydian": "{{tonic}} lydisch",
+    "mixolydian": "{{tonic}} mixolydisch",
+    "locrian": "{{tonic}} lokrisch"
+  },
+  "scaleNameFallback": "{{tonic}} {{mode}}"
 }

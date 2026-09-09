@@ -42,11 +42,16 @@ export interface PathNodePosition {
 /**
  * Hand-placed, in the order they are walked.
  *
- * The path opens as **two braided tracks and merges**: intervals down the
+ * The path runs as **two braided tracks that merge once**: intervals down the
  * left, scales down the right, reading above hearing on both. Read across and
  * it is the two subjects; read down and it is the two ways of knowing one.
  * A single file would have had to claim that scale reading comes after
  * interval hearing, which is not true of either the music or the player.
+ *
+ * The braid then continues rather than closing: Rhythmic Dictation carries the
+ * left track on and Scale Degrees the right, which is the *when* and the *what*
+ * of a melody. They meet at the station below, because what comes after needs
+ * both of them and neither has to be learned first.
  *
  * The braid is staggered rather than level, so the four stations still run
  * downhill and the two columns do not read as one wide row. The offset
@@ -84,15 +89,12 @@ export const PATH_NODES: readonly PathNodePosition[] = [
     x: SCALE_X + 2,
     y: PATH_TOP + 10 + BRAID_DROP + BRAID_STAGGER,
   },
-  // The merge. Centred, so the two tracks arrive symmetrically rather than
-  // one of them swinging across the column to reach it.
-  //
-  // Rhythmic Dictation stands here alone for now. It is the first half of a
-  // second braid — rhythm on one side, scale degrees on the other, the *when*
-  // and the *what* that melodic dictation needs both of — but one station
-  // cannot braid, and setting it off-centre to reserve the shape would read as
-  // a mistake until the other arrives.
-  { stationId: 'dictation/rhythm', x: 50, y: 700 },
+  // **The second braid.** Rhythmic Dictation and Scale Degrees stand side by
+  // side: the *when* and the *what*, which melodic dictation needs both of and
+  // which can be learned in either order. Staggered like the first braid, so
+  // the pair still runs downhill and does not read as one wide row.
+  { stationId: 'dictation/rhythm', x: INTERVAL_X + 1, y: 700 },
+  { stationId: 'scales/degrees', x: SCALE_X - 1, y: 700 + BRAID_STAGGER },
   { stationId: 'harmonic-prediction', x: 30, y: 960 },
   { stationId: 'harmonic-completion', x: 66, y: 1210 },
   { stationId: 'counterpoint', x: 35, y: 1495 },
@@ -117,8 +119,9 @@ export const PATH_EDGES: readonly PathEdge[] = [
   { from: 'intervals/reading', to: 'intervals/hearing' },
   { from: 'scales/reading', to: 'scales/hearing' },
   { from: 'intervals/hearing', to: 'dictation/rhythm' },
-  { from: 'scales/hearing', to: 'dictation/rhythm' },
+  { from: 'scales/hearing', to: 'scales/degrees' },
   { from: 'dictation/rhythm', to: 'harmonic-prediction' },
+  { from: 'scales/degrees', to: 'harmonic-prediction' },
   { from: 'harmonic-prediction', to: 'harmonic-completion' },
   { from: 'harmonic-completion', to: 'counterpoint' },
   { from: 'counterpoint', to: 'daily' },
