@@ -1,5 +1,4 @@
 // @vitest-environment node
-import sharp from 'sharp'
 import { describe, expect, it } from 'vitest'
 
 import { getClef, CLEFS, type ClefId } from '@/lib/music/clef'
@@ -7,6 +6,8 @@ import { DEGREE_NUMBERS, degreePitch, keySignatureFor } from '@/lib/music/degree
 import type { KeySignatureId } from '@/lib/music/keySignature'
 import { comparePitch, pitchKey, type Pitch } from '@/lib/music/pitch'
 import { MODE_IDS, TONIC_CHOICES, fittingOctaves, isCleanScale } from '@/lib/music/scale'
+
+import { measureInk } from '@/test/svgInk'
 
 import { degreeKeyMei, melodyMei } from './mei'
 import { DEGREE_KEY_PROFILE, melodyProfile, renderMei } from './verovio'
@@ -21,36 +22,17 @@ import { DEGREE_KEY_PROFILE, melodyProfile, renderMei } from './verovio'
  * inside the page by that measure and was sliced in half on screen. A minor and
  * A major both reach it, so it was not an exotic case either.
  *
- * So this measures **pixels**: it rasterises the extremes and insists on clear
- * space on every side. Slow, and worth it — it is the only check here that
- * looks at what is actually drawn rather than at what the markup says.
+ * So this measures the **drawing** — every glyph outline is embedded in the
+ * SVG's own `<defs>`, which makes the extent of the notation exactly
+ * computable. An earlier version rasterised instead, and that was worse than
+ * it looked: Verovio writes staff labels as `<text font-family="Times, serif">`,
+ * so the picture depended on which fonts the machine had, and the check passed
+ * on a laptop and failed on a Linux runner. See `test/svgInk.ts`.
  */
 
-/** The smallest gap between the ink and any edge, in pixels. */
-async function clearance(svg: string): Promise<number> {
-  const { data, info } = await sharp(Buffer.from(svg))
-    .flatten({ background: '#ffffff' })
-    .greyscale()
-    .raw()
-    .toBuffer({ resolveWithObject: true })
-
-  let top = info.height
-  let bottom = -1
-  let left = info.width
-  let right = -1
-
-  for (let y = 0; y < info.height; y += 1) {
-    for (let x = 0; x < info.width; x += 1) {
-      if ((data[y * info.width + x] ?? 255) >= 250) continue
-      if (y < top) top = y
-      if (y > bottom) bottom = y
-      if (x < left) left = x
-      if (x > right) right = x
-    }
-  }
-
-  if (bottom === -1) throw new Error('nothing was drawn')
-  return Math.min(top, info.height - 1 - bottom, left, info.width - 1 - right)
+/** The smallest gap between the ink and the edge of the page it is drawn on. */
+function clearance(svg: string): number {
+  return measureInk(svg).clearance
 }
 
 /** The lowest and highest note any degree can reach, per clef. */
