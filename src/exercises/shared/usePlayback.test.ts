@@ -13,15 +13,17 @@ import { usePlayback } from './usePlayback'
 
 const silent = () => Promise.resolve()
 
-const { loadInstrument, unlockAudio } = vi.hoisted(() => ({
+const { loadInstrument, stopPlayback, unlockAudio } = vi.hoisted(() => ({
   loadInstrument: vi.fn(() => Promise.resolve({})),
+  stopPlayback: vi.fn(),
   unlockAudio: vi.fn(() => Promise.resolve()),
 }))
 
-vi.mock('@/lib/audio/engine', () => ({ loadInstrument, unlockAudio }))
+vi.mock('@/lib/audio/engine', () => ({ loadInstrument, stopPlayback, unlockAudio }))
 
 beforeEach(() => {
   loadInstrument.mockReset().mockResolvedValue({})
+  stopPlayback.mockReset()
   unlockAudio.mockReset().mockResolvedValue(undefined)
 })
 
@@ -91,6 +93,42 @@ describe('usePlayback', () => {
     await waitFor(() => expect(result.current.status).toBe('ready'))
     expect(drums).toHaveBeenCalled()
     expect(loadInstrument).not.toHaveBeenCalled()
+  })
+
+  it('silences what is playing in the press itself, not once it is ready', () => {
+    // The press has to take effect now. Waiting for the new sound to be
+    // scheduled means a first press, with the samples still downloading,
+    // leaves the old one playing for as long as the download takes.
+    const { result } = playback(() => new Promise<void>(() => undefined))
+
+    act(() => result.current.play())
+
+    expect(stopPlayback).toHaveBeenCalled()
+  })
+
+  it('stops when the question changes', () => {
+    const { rerender } = renderHook(({ sound }) => usePlayback(sound), {
+      initialProps: { sound: () => Promise.resolve() },
+    })
+    expect(stopPlayback).not.toHaveBeenCalled()
+
+    // A new question is a new `sound`. A scale runs for nearly three seconds
+    // and a counted-in rhythm rather longer, so without this the last one
+    // plays on underneath the next.
+    rerender({ sound: () => Promise.resolve() })
+
+    expect(stopPlayback).toHaveBeenCalled()
+  })
+
+  it('stops when the exercise goes away', () => {
+    const { unmount } = playback(silent)
+    expect(stopPlayback).not.toHaveBeenCalled()
+
+    // Navigating off the page; the summary and the levels screen arrive here
+    // too, by way of `sound` becoming undefined.
+    unmount()
+
+    expect(stopPlayback).toHaveBeenCalled()
   })
 
   it('does nothing at all when there is no question to play', () => {

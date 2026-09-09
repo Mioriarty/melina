@@ -1,4 +1,4 @@
-import type { DrumMachine, Soundfont as SmplrInstrument } from 'smplr'
+import type { DrumMachine, Soundfont as SmplrInstrument, StopFn } from 'smplr'
 
 import { isMelodic, type PlayDirection } from '@/lib/music/direction'
 import { midiNumber, type Pitch } from '@/lib/music/pitch'
@@ -35,6 +35,24 @@ type SampledInstrument = SmplrInstrument
 let audioContext: AudioContext | undefined
 let player: Promise<SampledInstrument> | undefined
 let drums: Promise<DrumMachine> | undefined
+
+/**
+ * Everything currently sounding *or still waiting to sound*.
+ *
+ * smplr only registers a voice when its scheduler dispatches the note, which
+ * it does around 200ms ahead of time. `instrument.stop()` walks the voices,
+ * so it silences what has already begun and leaves everything further out
+ * queued to fire exactly on time — the rest of a scale, the second note of a
+ * melodic interval, a whole bar of drums after the count-in. Leaving a
+ * question or a page therefore used to take the sound with it only if the
+ * sound happened to be nearly over.
+ *
+ * The stop function `start` hands back is the one that also drops the note
+ * from that queue, so each scheduled note keeps its own and `stopPlayback`
+ * calls all of them. One list across both instruments: a rhythm and a piano
+ * are never wanted at once, and stopping is stopping.
+ */
+let sounding: readonly StopFn[] = []
 
 /** Trimmed so the piano is neither timid nor startling. */
 const GAIN = 1
@@ -150,17 +168,19 @@ async function playSequence(
 
   const start = context.currentTime + LEAD_IN
 
-  // Cut off anything still ringing, so a quick replay does not stack up.
-  instrument.stop()
+  // Cut off anything still ringing or still queued, so a quick replay does
+  // not stack up. After the awaits and immediately before scheduling, so a
+  // second call cannot silence the notes this one is about to lay down.
+  stopPlayback()
 
-  pitches.forEach((pitch, index) => {
+  sounding = pitches.map((pitch, index) =>
     instrument.start({
       note: midiNumber(pitch),
       time: start + index * gap,
       duration,
       velocity: 92,
-    })
-  })
+    }),
+  )
 }
 
 /* ------------------------------------------------------------------ rhythm
@@ -245,10 +265,9 @@ export async function playRhythm(
   if (context.state === 'suspended') await context.resume()
 
   // Cut off anything still counting, so a quick replay does not play two bars
-  // over each other. Straight on the resolved kit rather than through
-  // `stopPlayback`, which stops in a promise callback that could land *after*
+  // over each other. `stopPlayback` is synchronous, so it cannot land after
   // the notes below have been scheduled and silence them instead.
-  kit.stop()
+  stopPlayback()
 
   const schedule = rhythmSchedule(rhythm, {
     tempo,
@@ -256,20 +275,29 @@ export async function playRhythm(
     from: context.currentTime + LEAD_IN,
   })
 
-  for (const beat of schedule.clicks) {
-    kit.start({
-      note: beat.accented ? CLICK_ACCENT : CLICK_BEAT,
-      time: beat.time,
-      velocity: beat.accented ? ACCENT_VELOCITY : BEAT_VELOCITY,
-    })
-  }
-  for (const time of schedule.hits) {
-    kit.start({ note: SNARE, time, velocity: SNARE_VELOCITY })
-  }
+  sounding = [
+    ...schedule.clicks.map((beat) =>
+      kit.start({
+        note: beat.accented ? CLICK_ACCENT : CLICK_BEAT,
+        time: beat.time,
+        velocity: beat.accented ? ACCENT_VELOCITY : BEAT_VELOCITY,
+      }),
+    ),
+    ...schedule.hits.map((time) =>
+      kit.start({ note: SNARE, time, velocity: SNARE_VELOCITY }),
+    ),
+  ]
 }
 
-/** Silence whatever is currently sounding. */
+/**
+ * Silence whatever is sounding, and drop whatever is queued to sound next.
+ *
+ * Synchronous on purpose — it is called from a click handler and from effect
+ * cleanups, where anything deferred to a promise could land after the next
+ * question has already scheduled itself and cut *that* off instead.
+ */
 export function stopPlayback(): void {
-  void player?.then((instrument) => instrument.stop()).catch(() => undefined)
-  void drums?.then((kit) => kit.stop()).catch(() => undefined)
+  const pending = sounding
+  sounding = []
+  for (const stop of pending) stop()
 }

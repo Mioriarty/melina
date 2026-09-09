@@ -1,6 +1,6 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
-import { loadInstrument, unlockAudio } from '@/lib/audio/engine'
+import { loadInstrument, stopPlayback, unlockAudio } from '@/lib/audio/engine'
 
 /**
  * Sounding whatever question is on screen.
@@ -10,6 +10,14 @@ import { loadInstrument, unlockAudio } from '@/lib/audio/engine'
  * user gesture, and a status to show while that is happening or when it has
  * failed. Only *when* they play differs — a hearing question sounds itself,
  * a reading one waits to be asked.
+ *
+ * Nothing outlives the question it belongs to. A scale is nearly three
+ * seconds long and a counted-in rhythm rather more, so answering, moving on,
+ * quitting to the levels screen or leaving the exercise altogether all used
+ * to walk away from a sound that carried on into whatever came next — and
+ * then played underneath it. `sound` is bound to the question on screen, so
+ * its identity changing *is* the question changing, and that is what this
+ * hangs the silence on.
  */
 
 export type PlaybackStatus = 'idle' | 'loading' | 'ready' | 'failed'
@@ -20,6 +28,11 @@ export interface PlaybackController {
    * Sound the current question. Safe to call before the samples exist — the
    * download is what `loading` is for — and safe to call from a click, which
    * is the gesture the AudioContext needs.
+   *
+   * Always allowed, even while something is still sounding: replaying is how
+   * you listen again to the half you missed, and being made to wait out the
+   * half you did hear is the opposite of that. It silences what is playing
+   * first.
    */
   play: () => void
   /**
@@ -51,6 +64,11 @@ export function usePlayback(
   const play = useCallback(() => {
     if (sound === undefined) return
 
+    // Silence the old sound in the gesture itself rather than waiting for the
+    // new one to be scheduled: on the first press the samples may still be
+    // downloading, and the press has to take effect now either way.
+    stopPlayback()
+
     // Only announce a wait when there might be one: saying "loading" for a
     // few milliseconds on every replay is worse than saying nothing. Read
     // through the updater rather than from `status`, so this callback does
@@ -76,6 +94,13 @@ export function usePlayback(
       .then(() => setStatus('ready'))
       .catch(() => setStatus('failed'))
   }, [load])
+
+  // Stop when the question changes, and when the exercise goes away — the
+  // cleanup covers leaving for the summary, quitting to the levels screen and
+  // navigating off the page, since all of them either rebind `sound` or
+  // unmount. It runs before the effect that sounds a new question, because
+  // this hook is called above that effect in the exercise's body.
+  useEffect(() => stopPlayback, [sound])
 
   return { status, play, preload }
 }

@@ -16,6 +16,7 @@ The name comes from the toki pona word for melody.
 | `npm run format`    | Prettier (also sorts Tailwind classes)       |
 | `npm test`          | Vitest                                       |
 | `npm run icons`     | regenerate PWA icons from `scripts/mark.mjs` |
+| `npm run glyphs`    | re-extract Leland note glyphs from Verovio   |
 
 ## Architecture
 
@@ -25,7 +26,7 @@ routes all derive from it. **Never hardcode a category or exercise list in a
 component** — add it to the registry and the UI follows. The registry holds ids,
 icons and status only; titles and blurbs are translated (see below).
 
-Four config files, deliberately separate:
+Five config files, deliberately separate:
 
 - `config/curriculum.ts` — _what_ melina teaches (content)
 - `config/pathLayout.ts` — _where things sit_ on the homescreen (composition)
@@ -256,6 +257,21 @@ uneven, that the decoration samplers place their full count, that connectors
 start and end on the stations they join, and that no label overflows the column
 at any supported width. The last two are regression guards for real bugs.
 
+**Where a fact can be checked by round-tripping it, it is.** `modeOf` reads a
+scale back to the mode that spelled it, `onsetsOf` reads a written bar back to
+the impacts that produced it, and the settings parsers are fed their own output —
+each one checks the generator against the model rather than against a fixture
+somebody typed. Prefer this over asserting a list: `catalog.test.ts` enforces the
+_property_ that hearable intervals are one per semitone count, so a well-meant
+addition fails loudly instead of quietly making a question unanswerable.
+
+Two suites run in the **node environment** (`// @vitest-environment node`):
+`verovio.test.ts` and `rhythmVerovio.test.ts`, because jsdom cannot instantiate
+7 MB of WebAssembly. They are the only place the real engraver runs, so they
+carry the assertions nothing structural can make — that an accidental is drawn
+or not drawn, that asking and revealing a question engrave to the same size, and
+that a bar being typed into does not move.
+
 ## Music theory — `src/lib/music/`
 
 Ids and arithmetic only — every name a player reads is translated. See
@@ -296,6 +312,53 @@ mode needs no one to work the exceptions out again. `modeOf` reads a run of
 pitches back to the mode that spelled it, which is how the generator is checked
 rather than trusted.
 
+### Rhythm — `meter.ts`, `rhythm.ts`, `rhythmCells.ts`
+
+**A rhythm is a set of impacts and nothing else.** A snare hit has no audible
+length, so you cannot hear whether a note was held or stopped and followed by a
+rest: note values and rests are an _engraving_ decision, never a fact about the
+rhythm. They are not generated, not stored and not graded, which is what makes
+`sameRhythm` — the same impacts in the same places — the whole of being correct.
+
+**`TICKS_PER_BEAT` is 60 because that is LCM(4, 3, 5).** Sixteenths, triplets
+and quintuplets all land on whole numbers, so a rhythm compares with `===`,
+stores as a plain string and never rounds. Every exactness claim above rests on
+that one number.
+
+Metre is **only `n/4`**. 6/8 and 12/8 are not "six beats" and "twelve beats" but
+two and four _dotted_ beats, which changes what a beat is rather than how many
+there are; they need their own grouping and are left out rather than
+half-supported.
+
+**A note may not cross a boundary stronger than the one it starts on.** That
+single sentence is `maxDurationAt`, and it reproduces the familiar 4/4 table
+exactly — whole note on beat 1, half on beat 3, quarter on 2 and 4, eighth on
+the "and" — while generalising to 3/4 and 5/4 with nobody tabulating them.
+`metricLevel` ranks the boundaries (barline, beat group, beat, eighth,
+sixteenth, finer) and **smaller is stronger**. 4/4 is two halves rather than four
+equal beats, which is exactly why beat 3 may carry a half note; `BEAT_GROUPS`
+holds that per metre, since 5/4 has to be 3 + 2 or 2 + 3 and the choice belongs
+in a table rather than in an argument at every call site.
+
+**A bar is built one beat at a time.** A `RhythmCell` is a division of the beat
+plus which of its parts are struck, and that one idea buys three things at once:
+tuplets need no mechanism (a triplet is `division: 3`), no rhythm ever needs a
+tie because a cell cannot cross a beat, and the results come out idiomatic —
+rolling a coin per grid point across a whole bar reaches "the second and third
+sixteenth only", which is a valid set of impacts and not a rhythm anyone would
+write. No two cells may describe the same impacts, or a group would quietly
+weigh more than its weight claims.
+
+Cells are grouped and a level weights the **groups**, picking uniformly within
+one, so `sixteenth: 3` means three parts sixteenths however many patterns that
+group happens to hold. Weighting each cell instead would silently make the
+larger groups heavier.
+
+`rhythmDivision` labels a bar by **what it asks of the player**, not by its
+shortest note: a bar with one triplet in it is a triplet bar even where a
+sixteenth elsewhere is shorter, because "you keep missing triplets" is the
+finding the label exists to make possible.
+
 ## Notation — `src/lib/notation/` and `src/components/notation/`
 
 **Print an accidental only when it differs from the key signature.** `@accid` is
@@ -308,8 +371,8 @@ counting drawn glyphs.
 Verovio is **~7 MB of WebAssembly embedded in JavaScript**, not a separate `.wasm`
 file. It must stay lazy: dynamic `import()` only, from a `React.lazy` route, in its
 own named Rollup chunk, excluded from the Workbox precache by `globIgnores` and
-cached at runtime instead. If precache jumps from ~544 KiB to ~8 MB, that wiring
-has been broken. Leland ships inside the wasm; `setResourcePath` is a no-op on web.
+cached at runtime instead. If precache jumps from its usual ~750 KiB to ~8 MB,
+that wiring has been broken. Leland ships inside the wasm; `setResourcePath` is a no-op on web.
 
 The question generator anchors a note's accidental to the key signature ~78% of the
 time. Picking uniformly at random is what produced F♭ in D major and A♯♯ in C major
@@ -350,24 +413,81 @@ can see. Eight notes always span the column, and spacing decides how large the
 notes are within it. Widening it therefore spreads the notes _and_ shrinks the
 staff, in the same space on screen — which is the effect, not a side effect.
 
-Scales use 0.45 against Verovio's default of 0.25, which takes the staff from
-104px to 62px in a 375px phone's column. The scale is steeper than it looks:
-0.6 is already four times as wide as 0.25, and the engraver refuses anything
-above 1.0. Staff size still matters for an interval, which is two notes wide
-and never overflows.
+Scales ship at 0.3 against Verovio's default of 0.25, which takes the staff
+from 104px to 89px in a 375px phone's column; the table in `verovio.ts` carries
+the measured alternatives, because the value is meant to be turned. The scale is
+steeper than it looks: 0.6 is already four times as wide as 0.25, and the
+engraver refuses anything above 1.0. Nothing asserts the exact number — the
+tests only check a scale gets more room than the default and still fills its
+column. Staff size still matters for an interval, which is two notes wide and
+never overflows.
 
 Spacing is applied per render rather than once at startup, since one toolkit is
 shared by the whole app. `renderMei` sets the options immediately before the
 render they belong to, and everything from there to `renderToSVG` is
 synchronous, so no other render can interleave and pick up the wrong spacing.
 
+### Writing a rhythm down — `rhythmNotation.ts`
+
+This is the **spelling** half of a rhythm; `lib/music/rhythm.ts` holds the facts.
+Nothing decided here is ever graded. What it must be instead is readable and
+**stable**: the same impacts always spell the same way, and reading the impacts
+back off the spelling returns exactly what went in. `rhythmNotation.test.ts`
+asserts that round trip over every rhythm the generator can produce — the same
+trick `modeOf` plays on the scale generator.
+
+**There are no ties**, which is affordable only because tuplets are beat-local,
+and it is what keeps the keyboard down to one row of note values. There is no
+dotted sixteenth either: it is 22.5 ticks, and every impact is a whole number of
+them, so no gap can ever call for one.
+
+**A rhythm is engraved to a fixed page, not fitted to its content.** Every other
+example is engraved to its own width and then scaled down to the column — which
+is exactly wrong for a bar being typed into, because each keystroke widens the
+content, the column scales it down harder, and the staff shrinks under the
+player's hands. `rhythmProfile` pins `pageWidth` and `pageHeight` instead, so a
+note already placed never moves. Three things make it work: `breaks: 'auto'`
+(under `breaks: 'none'` Verovio ignores the width), a pinned height (left alone
+it grew the moment a beam appeared), and `rhythmMei` padding the unentered end
+of the bar with `<space>` so the measure keeps its full duration.
+
+**The page width is per metre.** It has to hold the densest bar the keyboard can
+produce — every sixteenth of every beat — since that is what a player might type
+whatever the question was. Sizing for the worst case in 5/4 and reusing it in
+2/4 would draw every 2/4 bar in the left third of a box twice as wide as it
+needs, halving the staff on a phone. Note spacing stays at the default here:
+widening it stretches the densest bar as much as the sparsest, so the page grows
+to match and the staff ends up smaller for no gain.
+
+A rhythm staff is **one line with a percussion clef** — there are no pitches to
+place — and stems point down so a bar filling with beams cannot push the line
+around.
+
+**The keyboard draws real Leland glyphs**, extracted from Verovio by
+`npm run glyphs` into `components/notation/glyphs.ts` and committed. Leland
+ships inside the wasm rather than as a font file, so there is nothing to subset,
+and the keyboard has to draw before the engraver has finished downloading. They
+were drawn by hand first and the rests gave that away: a quarter rest is a shape
+you cannot approximate and an eighth rest is not a "7". `NoteGlyph` places them
+from measured boxes, the way notation anchors them — a notehead's origin is its
+left edge, a rest's is the line it hangs from.
+
 ## Audio — `src/lib/audio/`
 
 Sampled, not synthesised: ear training is about timbre as much as pitch, and a
-sine wave teaches you to recognise a sine wave. `smplr` streams one instrument,
-a Steinway (`SplendidGrandPiano`). **What a question is played on is not one of
-the things melina asks anyone to decide** — there is no instrument setting, no
+sine wave teaches you to recognise a sine wave. `smplr` streams **one instrument
+per kind of question** — a Steinway (`SplendidGrandPiano`) for anything pitched,
+and a drum kit for rhythm. **What a question is played on is not one of the
+things melina asks anyone to decide**: there is no instrument setting, no
 instrument in the stored settings, and no level that differs only by timbre.
+
+The kit is the LinnDrum (`LM-2`) rather than the TR-808, because its drums are
+sampled acoustic ones — the snare has a real transient and a short decay, so
+adjacent sixteenths stay separate instead of smearing. **Samples are named one
+by one, never by group**: smplr resolves a bare `snare` to whichever variation
+comes first in the manifest, and on the 808 that is the one with tone and snap
+wound to zero, which measures as a kick and sounds like one. The count-in uses
+sidesticks — a click, plainly not a drum being struck.
 
 Two rules the browser imposes, both easy to get wrong:
 
@@ -382,9 +502,37 @@ schedules a run of notes; a gap of zero is what makes an interval harmonic. A
 scale is played faster and shorter than an interval — eight notes at interval pace
 is a series of separate notes rather than a scale.
 
+`playRhythm` counts a bar and then plays one. When everything sounds is pure
+arithmetic in `rhythmSchedule.ts`, deliberately kept out of `engine.ts` so it can
+be checked without a network or an AudioContext — otherwise the scheduling would
+be the one part of playback nothing could test. Whether the click keeps going
+under the bar being asked about (`MetronomeMode`) is a real difficulty axis
+rather than a preference: counted in and then left alone, you have to hold the
+pulse yourself, which is most of what rhythmic dictation is.
+
+**`instrument.stop()` does not stop what has not started yet.** smplr registers
+a voice only when its scheduler dispatches the note, ~200ms ahead, so stopping
+the instrument silences what is already sounding and leaves the rest of a scale,
+the second note of a melodic interval and a whole bar of drums queued to fire on
+time. The stop function `start` returns is the only handle that also drops a note
+from that queue, so the engine keeps one per scheduled note and `stopPlayback`
+calls all of them. It is synchronous for the same reason: called from a click or
+an effect cleanup, anything deferred to a promise can land after the _next_
+question has scheduled itself and cut that off instead.
+
+Nothing outlives the question it belongs to. `usePlayback` stops on unmount and
+whenever `sound` is rebound — which is every question change, and every move to
+the summary or the levels screen — and the replay control stops before it plays,
+inside the gesture, so it is pressable at any moment rather than only between
+sounds.
+
 Sample requests are cached at runtime (`melina-samples`), never precached — the
-piano is tens of megabytes, and a round of reading may never ask for it. `smplr` itself is a small lazy chunk and _is_
-precached, so only the samples need the network.
+piano is tens of megabytes, and a round of reading may never ask for it. `smplr`
+itself is a small lazy chunk and _is_ precached, so only the samples need the
+network. The drum kit is a few hundred kilobytes rather than tens of megabytes,
+which is why rhythmic dictation preloads it up front and passes `loadDrums` to
+`usePlayback`: without that it would quietly pull down the whole piano to play a
+snare.
 
 The player type is imported from smplr rather than declared by hand, so an
 upstream API change is a type error. Declaring it structurally hid the fact that
@@ -413,11 +561,12 @@ the path for an unplaced station so nothing can silently vanish, and
 
 ## Exercises — `src/exercises/`
 
-Four exercises in two pairs, and the folders say which is which:
+Five exercises — two reading/hearing pairs and one that is neither — and the
+folders say which is which:
 
 - `shared/` is **exercise-agnostic**. The levels → setup → round → summary state
   machine (`useRound`), the levels screen, the round screen, the summary, the
-  setup chips and the play button all live here, generic over what is being
+  setup chips and the playable score all live here, generic over what is being
   asked and what answers it. It must never learn what an interval or a mode is.
 - `interval-shared/` and `scale-shared/` bind that machinery to one subject: a
   generator, a `RoundRules` object (how to build a round, what counts as right,
@@ -426,12 +575,24 @@ Four exercises in two pairs, and the folders say which is which:
 - `interval-reading/`, `interval-hearing/`, `scale-reading/`, `scale-hearing/`
   hold only what differs: settings, levels, a setup screen, and the component
   that decides what notation to show.
+- `rhythm-dictation/` has no pair. It binds the same machinery to rhythms and
+  then supplies its own round screen, because the staff is where its _answer_
+  goes rather than where the question is.
 
 Within a pair, reading and hearing differ only in what notation they show and
 whether there is a play button beside it, so anything else belongs one level up.
 When a third pair arrives, generalise `shared/` rather than copying a sibling.
 
-**A string read by a shared screen may not name what only one pair asks
+**Rhythmic dictation is the exercise that says which parts of `shared/` are
+really generic**, and it fits without changing any of them: `useRound`,
+`RoundScreen`, `RoundSummary`, `LevelsScreen` and `usePlayback` all took it as
+written. What it needed instead were three escape hatches, each earned —
+`RoundScreen` takes a whole `score` node for a screen whose notation is not the
+question, `RoundSummary` groups by a caller-supplied label because a bar has no
+name to group by, and `usePlayback` takes the instrument to preload. Prefer that
+shape over widening a shared component's idea of what a question is.
+
+**A string read by a shared screen may not name what only one exercise asks
 about.** The Custom row said "choose the clefs, keys and intervals" and the
 play button was labelled "Play the interval again" — on screens that ask about
 modes. `ScaleExercise.test.tsx` walks the levels, settings and round screens
@@ -476,7 +637,10 @@ Reading is unaffected — there the spelling is on the page to be read.
 than a control beside it — the notation _is_ what is being played. It is
 pressable only when every note is on screen: a hearing question at any time,
 a reading question once its answer is out, since before that the sound would
-answer it. A muted caption under the staff carries the affordance and doubles
+answer it. Rhythmic dictation is the one exception, and the reason is the
+same rule read backwards: there the staff is where the answer is going, and
+pressing your own half-finished answer to hear the question would be
+backwards, so its replay control stands on its own above the bar. A muted caption under the staff carries the affordance and doubles
 as the place that says the samples are downloading or that playback failed;
 its height is reserved either way, so revealing an answer does not move the
 staff. `usePlayback` holds the whole of it — the gesture the AudioContext
@@ -506,14 +670,48 @@ On a keyless staff **the tonic decides how much ink is on the page** — B♭ lo
 prints seven accidentals in eight notes — which is why tonics are a setting and a
 level axis of their own.
 
+### Writing the answer — rhythmic dictation
+
+The first exercise where the answer is **written rather than chosen**, and so
+the first with no fixed set of answers at all.
+
+**The draft is the keys that were pressed, not the impacts they imply.** The
+staff has to show what the player wrote — someone who enters a quarter rest
+should see a quarter rest — so `RhythmDraft` keeps the entries and derives the
+impacts for grading. Only the impacts are graded, which is why choosing a rest
+over a held note can never be wrong.
+
+**The bar answers itself when it is exactly full.** There is no confirm key:
+every key that would overflow the bar is disabled instead, so the only press
+left is the one that completes it, and backspace covers everything before that.
+The submit rides on the shared screen's `onAnswer`, which is what gives it the
+same answer timing every other exercise is measured with.
+
+The keyboard is **modes, not keys**: sixteenth-through-whole times note-or-rest
+times plain-or-dotted is thirty keys, and thirty keys is a form rather than an
+instrument. Rest and dotted **mean exactly the next key** and switch themselves
+off once a value is entered, so half a bar cannot come out as rests because a
+switch was still down. The tuplet switch is not one of them — a bracket changes
+how long a value lasts, so it belongs to the draft, which is the thing that
+knows where the beat boundaries are, and it stays on until its beat is full.
+
+A level's `cellWeights` does two jobs with one field: a group at `0` is not in
+the level at all, and the rest are relative likelihoods. That is deliberate —
+"which subdivisions" and "how often" are the same question, and splitting them
+into a list and a table would let the two disagree.
+
 ## The attempt log — `src/lib/db/attemptQuestion.ts` and `progress.ts`
 
 Every answer is recorded, right or wrong. A row keeps **exactly enough to ask the
 question again and no more**: an interval is a lower note and an interval key
 (`C4` + `A4`), a scale is a tonic with its octave and a mode (`Bb3` + `dorian`),
-plus the clef, key signature and direction. What those imply is never stored —
-the upper note, the eight pitches of a scale, and the answer that would have been
-correct are all derived on the way back out, so a row cannot disagree with itself.
+plus the clef, key signature and direction. A rhythm is a metre, its impacts as
+ticks (`4/4` + `0,60,90,120`) and the tempo it went by at — the impacts _are_ the
+rhythm, and how the bar was spelled on the page is decided again by
+`notateRhythm`, so a row can never disagree with the notation it produces. What
+those imply is never stored — the upper note, the eight pitches of a scale, the
+note values of a bar, and the answer that would have been correct are all derived
+on the way back out, so a row cannot disagree with itself.
 
 Nothing about the _level_ is stored either. `staffOnly` narrowed the range the
 generator drew from; whether the notes it chose need ledger lines is a fact about
@@ -529,10 +727,18 @@ filter that names all of its dimensions at once (`intervalFilter`, `scaleFilter`
 they cannot disagree with it.
 
 The filter matches against the flat facets `attemptFacets` derives, which is what
-keeps `progress.ts` from knowing what an interval is — a third pair of exercises
-adds its dimensions there and every existing query keeps working. `root` is
-deliberately shared by both kinds: an interval's lower note and a scale's tonic
-are the same dimension, and that is what lets one query span the whole app.
+keeps `progress.ts` from knowing what an interval is — rhythmic dictation added
+`meter`, `tempo`, `division`, `offBeat` and `impacts` there and every existing
+query kept working, which was the design being tested. `root` is deliberately
+shared: an interval's lower note and a scale's tonic are the same dimension, and
+that is what lets one query span the whole app. A rhythm deliberately has **no**
+`root` — it is built on no note at all — so it drops out of every filter that
+asks about pitch, which is exactly the documented behaviour of a filter naming a
+dimension an attempt does not have.
+
+A rhythm level filters on metre and tempo, the dimensions it actually pins, and
+**not** on its cell weights: weights shape what comes up rather than bounding it,
+so a level cannot claim the bars it happened not to draw.
 
 The levels screen shows a level's accuracy beside it, but only past
 `ACCURACY_MINIMUM` (15) matching answers — below that the figure moves seven
@@ -604,14 +810,22 @@ start is what puts a day in its weekday row.
 Breakdowns go through `groupBy(rows, dimension)`, which groups on the same flat
 facets the accuracy filter matches on. It knows nothing about music, so `root`
 puts an interval's lower note and a scale's tonic in one list, and a derived
-dimension like `staffOnly` groups exactly as readily as a stored one. Lists are
+dimension like `staffOnly` groups exactly as readily as a stored one. The page
+currently lists `interval`, `mode`, `clef`, `keySignature` and `root`; the rhythm
+facets are derived and queryable but not yet shown, and adding one is a row on
+this page rather than anything new underneath it. Lists are
 ordered **weakest first**: a list you read from the top tells you what to
 practise next, and the strengths are still there at the other end.
 
 ## Not yet built
 
-Melodic dictation is next. Everything after Scale Training is still a placeholder
-page.
+Melodic dictation is next, and rhythmic dictation is the first half of it: the
+merge station is deliberately the _when_, waiting on a _what_. It stands centred
+and alone rather than off to one side, because one station cannot braid and
+reserving the shape early would read as a mistake until the other arrives.
+
+Everything after Rhythmic Dictation — harmonic prediction, harmonic completion,
+counterpoint, the daily round — is still a placeholder page.
 
 Settings holds one setting — the interface language. Like Progress it is
 reached only from the top bar and has no station on the path, because neither

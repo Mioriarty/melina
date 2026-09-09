@@ -29,6 +29,7 @@ vi.mock('@/lib/notation/verovio', async (importOriginal) => ({
 vi.mock('@/lib/audio/engine', () => ({
   loadInstrument: vi.fn(() => Promise.resolve({})),
   playScale: vi.fn(() => Promise.resolve()),
+  stopPlayback: vi.fn(),
   unlockAudio: vi.fn(() => Promise.resolve()),
 }))
 

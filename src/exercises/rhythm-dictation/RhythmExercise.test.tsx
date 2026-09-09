@@ -29,6 +29,7 @@ vi.mock('@/lib/audio/engine', () => ({
   loadDrums: vi.fn(() => Promise.resolve({})),
   loadInstrument: vi.fn(() => Promise.resolve({})),
   playRhythm: (...args: unknown[]) => playRhythm(...(args as [])),
+  stopPlayback: vi.fn(),
   unlockAudio: vi.fn(() => Promise.resolve()),
 }))
 
