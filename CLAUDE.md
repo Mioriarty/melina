@@ -354,6 +354,28 @@ one, so `sixteenth: 3` means three parts sixteenths however many patterns that
 group happens to hold. Weighting each cell instead would silently make the
 larger groups heavier.
 
+**`minOnsets` is held in view while a bar is built, never enforced by throwing
+a finished one away.** Drawing bars until one clears the floor sounds
+equivalent and is not: a bar survives that test in proportion to how densely it
+happened to be drawn, so the levels quietly got a different mixture from the
+one they declare. It halved every `hold` — 25% of the beats of Beats down to
+13%, which made **half** of that level's bars four identical quarter notes —
+and in Off the Beat it pushed plain eighths past the offbeats the level is
+named for. Topping a thin bar up afterwards leans the same way, since what it
+adds is downbeats. So a cell is refused only where taking it would put the
+floor out of reach for the beats that remain, and every other beat comes from
+the weights untouched. `generate.test.ts` measures the realized mixture against
+the declared one for every shipped level, which is the only way this is visible
+at all.
+
+**The floor is an absolute count, so a level mixing metres is read against its
+shortest bar.** Three impacts is nothing in 5/4 and forces a subdivision into
+every bar of 2/4. A floor at or above the beat count means every beat must be
+struck, which is not a floor but a demand for saturation: it is what made Beats
+(3 in a four-beat bar) unable to deliver the held notes it declares, since one
+held beat was all it could ever allow. Keep `minOnsets` well under the number
+of beats in the shortest metre a level offers.
+
 `rhythmDivision` labels a bar by **what it asks of the player**, not by its
 shortest note: a bar with one triplet in it is a triplet bar even where a
 sixteenth elsewhere is shorter, because "you keep missing triplets" is the

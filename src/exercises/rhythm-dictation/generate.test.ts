@@ -1,11 +1,23 @@
 import { describe, expect, it } from 'vitest'
 
 import { TICKS_PER_BEAT, meterKey, ticksPerMeasure } from '@/lib/music/meter'
-import { isValidRhythm, onsetsInBeat, rhythmDivision } from '@/lib/music/rhythm'
-import { CELL_GROUP_IDS, NO_CELLS } from '@/lib/music/rhythmCells'
+import {
+  isValidRhythm,
+  onsetsInBeat,
+  rhythmDivision,
+  type Rhythm,
+} from '@/lib/music/rhythm'
+import {
+  CELL_GROUP_IDS,
+  NO_CELLS,
+  RHYTHM_CELLS,
+  cellTicks,
+  type CellGroupId,
+} from '@/lib/music/rhythmCells'
 import { notateRhythm, onsetsOf } from '@/lib/notation/rhythmNotation'
 import { createRandom } from '@/lib/utils/seededRandom'
 
+import { RHYTHM_DIFFICULTIES } from './difficulties'
 import { generateRound, type RhythmRoundSpec } from './generate'
 import { DEFAULT_SETTINGS } from './settings'
 
@@ -183,6 +195,113 @@ describe('what a level bounds', () => {
       const last = rhythm.onsets[rhythm.onsets.length - 1] ?? 0
       expect(last).toBeLessThan(ticksPerMeasure(rhythm.meter))
     }
+  })
+})
+
+describe('the mixture a level asks for', () => {
+  /**
+   * That a weight means what it says.
+   *
+   * This is a property nothing else can see. `minOnsets` used to be enforced
+   * by drawing bars until one cleared the floor, and a bar clears it in
+   * proportion to how densely it happened to be drawn — so the surviving bars
+   * carried a different mixture from the one the level declares, silently and
+   * with every test still green. It halved `hold` in every level (25% of the
+   * beats of Beats down to 13%, which made half of its bars four plain
+   * quarters) and in Off the Beat it pushed ordinary eighths past the offbeats
+   * the level is named for.
+   *
+   * The tolerance is wide because two constraints legitimately bend the
+   * mixture — a bar may not open in silence unless the level says so, and the
+   * beat after a tuplet must be struck — but far tighter than the drift the
+   * rejection loop produced.
+   */
+  const TOLERANCE = 5
+
+  /** Which cell group produced each beat of a bar. Cells are unique by impacts. */
+  function groupsInBar(rhythm: Rhythm): CellGroupId[] {
+    const groups: CellGroupId[] = []
+    for (let beat = 0; beat < rhythm.meter.beats; beat += 1) {
+      const struck = onsetsInBeat(rhythm, beat)
+      const cell = RHYTHM_CELLS.find(
+        (candidate) =>
+          candidate.attacks.length === struck.length &&
+          cellTicks(candidate, 0).every((tick, index) => tick === struck[index]),
+      )
+      if (cell !== undefined) groups.push(cell.group)
+    }
+    return groups
+  }
+
+  const MANY = Array.from({ length: 40 }, (_, index) => index * 7919 + 1)
+
+  /** What share of the beats each cell group actually took, as percentages. */
+  function mixture(settings: RhythmRoundSpec): Map<CellGroupId, number> {
+    const seen = new Map<CellGroupId, number>()
+    let beats = 0
+
+    for (const seed of MANY) {
+      for (const { rhythm } of generateRound(createRandom(seed), settings)) {
+        groupsInBar(rhythm).forEach((group, beat) => {
+          // A silent cell is only ever a candidate where the bar is allowed to
+          // be silent, so its share is read against those beats alone.
+          if (beat === 0 && !settings.allowInitialRest) return
+          seen.set(group, (seen.get(group) ?? 0) + 1)
+          beats += 1
+        })
+      }
+    }
+
+    return new Map(
+      [...seen].map(([group, count]) => [group, (count / beats) * 100] as const),
+    )
+  }
+
+  /** The share a level asked for, as a percentage of all its weight. */
+  function declared(settings: RhythmRoundSpec, group: CellGroupId): number {
+    const total = CELL_GROUP_IDS.reduce(
+      (sum, id) => sum + Math.max(0, settings.cellWeights[id] ?? 0),
+      0,
+    )
+    return ((settings.cellWeights[group] ?? 0) / total) * 100
+  }
+
+  it.each(RHYTHM_DIFFICULTIES.map((level) => [level.id, level.settings] as const))(
+    'delivers %s roughly as weighted',
+    (id, settings) => {
+      const got = mixture(settings)
+
+      for (const group of CELL_GROUP_IDS) {
+        if ((settings.cellWeights[group] ?? 0) <= 0) continue
+
+        const want = declared(settings, group)
+        const real = got.get(group) ?? 0
+        expect(
+          Math.abs(real - want),
+          `${id}: ${group} declared ${want.toFixed(1)}%, got ${real.toFixed(1)}%`,
+        ).toBeLessThan(TOLERANCE)
+      }
+    },
+  )
+
+  it('keeps the held notes even where the floor is what decides the bar', () => {
+    // The level a well-tuned one cannot expose: `minOnsets` binding on most
+    // bars. Both it and the weights control how full a bar is, and the floor
+    // must not quietly win. Enforced by drawing bars until one clears it, the
+    // held beats here come out around 43% rather than 50%, because a bar
+    // clears the floor in proportion to how densely it happened to be drawn —
+    // and topping a thin bar up afterwards leans the same way, since what it
+    // adds is downbeats.
+    const tight = spec({
+      minOnsets: 2,
+      cellWeights: { ...NO_CELLS, quarter: 1, hold: 1 },
+    })
+
+    const held = mixture(tight).get('hold') ?? 0
+    expect(
+      Math.abs(held - declared(tight, 'hold')),
+      `hold ${held.toFixed(1)}%`,
+    ).toBeLessThan(TOLERANCE)
   })
 })
 

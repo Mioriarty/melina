@@ -113,17 +113,62 @@ function candidates(
   })
 }
 
-/** One bar, or `undefined` when the weights allow nothing that fits. */
+/**
+ * The most impacts one beat could still contribute.
+ *
+ * An upper bound over everything the level allows, used to see whether the
+ * floor is still reachable. Silent cells cannot raise it and the tuplet rule
+ * only ever removes them, so one number over the whole vocabulary is exact
+ * enough to never forbid a cell that would in fact have been fine.
+ */
+function densestBeat(spec: RhythmRoundSpec): number {
+  return RHYTHM_CELLS.filter((cell) => (spec.cellWeights[cell.group] ?? 0) > 0).reduce(
+    (most, cell) => Math.max(most, cell.attacks.length),
+    0,
+  )
+}
+
+/**
+ * One bar, or `undefined` when the weights allow nothing that fits.
+ *
+ * **`minOnsets` is honoured while the bar is being built, never by throwing a
+ * finished one away.** Drawing bars until one happens to clear the floor
+ * sounds equivalent and is not: a bar survives that test in proportion to how
+ * densely it happened to be drawn, so the levels quietly got a different
+ * mixture from the one they declare. Measured on the shipped levels it halved
+ * every `hold` — 25% of beats down to 13% in Beats — and in Off the Beat it
+ * pushed plain eighths past the offbeats the level is named for. Topping a
+ * thin bar up afterwards biases the same way, since what it adds is downbeats.
+ *
+ * So the floor is a constraint instead: a cell is refused only at the point
+ * where taking it would put the floor out of reach for the beats that remain.
+ * Every other beat is drawn from the level's weights untouched, which is what
+ * makes a weight mean what it says.
+ */
 function buildBar(
   random: Random,
   meter: TimeSignature,
   spec: RhythmRoundSpec,
 ): Rhythm | undefined {
   const onsets: number[] = []
+  const densest = densestBeat(spec)
   let afterTuplet = false
 
   for (let beat = 0; beat < meter.beats; beat += 1) {
-    const cell = pickCell(random, spec.cellWeights, candidates(spec, beat, afterTuplet))
+    const allowed = candidates(spec, beat, afterTuplet)
+    const remaining = meter.beats - beat - 1
+
+    // Keep only the cells that leave the floor reachable. When nothing does,
+    // the level cannot reach its own minimum at all — `difficulties.test.ts`
+    // guards against shipping one — so take the densest and let `atLeast`
+    // make up the rest rather than failing the round.
+    const reachable = allowed.filter(
+      (cell) =>
+        onsets.length + cell.attacks.length + densest * remaining >= spec.minOnsets,
+    )
+    const usable = reachable.length > 0 ? reachable : allowed
+
+    const cell = pickCell(random, spec.cellWeights, usable)
     if (cell === undefined) return undefined
 
     onsets.push(...cellTicks(cell, beat))
@@ -134,19 +179,23 @@ function buildBar(
 }
 
 /**
- * Make sure a bar has enough in it to be worth hearing.
+ * The last resort, for a floor the level cannot actually reach.
  *
- * A bar can come out almost empty when the level is weighted towards held
- * notes, and a round of those is silence with a barline. Rather than rejecting
- * it forever, the thinnest bars gain plain downbeats: always writable, never a
- * tuplet, and they cannot break the rule about what follows one.
+ * `buildBar` already holds the floor in view as it goes, so a bar arrives here
+ * short only when no bar the level can spell would have cleared it — asking
+ * for five impacts in a bar of four quarters, say. Those gain plain downbeats:
+ * always writable, never a tuplet, and they cannot break the rule about what
+ * follows one.
  *
- * **Bounded by one impact per beat**, since a downbeat is all it will add — a
- * level asking for five impacts in a bar of four quarters is asking for
- * something its own vocabulary cannot spell, and filling the gap with eighths
- * would put a subdivision in the bar that the level had switched off. That is a
- * level to fix rather than a bar to fake, so `difficulties.test.ts` insists
- * every shipped level reaches its own minimum.
+ * **Bounded by one impact per beat**, since a downbeat is all it will add.
+ * Filling the gap with eighths would put a subdivision in the bar that the
+ * level had switched off, which is a level to fix rather than a bar to fake —
+ * so `difficulties.test.ts` insists every shipped level reaches its own
+ * minimum, and nothing shipped should ever land here.
+ *
+ * It must stay the exception. What it adds is downbeats, so a level that leant
+ * on it would quietly be a level with more quarter notes than it asked for —
+ * the same way the rejection loop it replaced quietly had fewer held ones.
  */
 function atLeast(random: Random, rhythm: Rhythm, minOnsets: number): Rhythm {
   const onsets = new Set(rhythm.onsets)
@@ -164,22 +213,12 @@ function atLeast(random: Random, rhythm: Rhythm, minOnsets: number): Rhythm {
   return { ...rhythm, onsets: [...onsets].sort((a, b) => a - b) }
 }
 
-/** How many bars to draw before settling for one that has to be filled out. */
-const ATTEMPTS = 8
-
 export function buildQuestion(
   random: Random,
   meter: TimeSignature,
   spec: RhythmRoundSpec,
 ): RhythmQuestion | undefined {
-  let bar: Rhythm | undefined
-
-  for (let attempt = 0; attempt < ATTEMPTS; attempt += 1) {
-    bar = buildBar(random, meter, spec)
-    if (bar === undefined) return undefined
-    if (bar.onsets.length >= spec.minOnsets) break
-  }
-
+  const bar = buildBar(random, meter, spec)
   if (bar === undefined) return undefined
 
   return {

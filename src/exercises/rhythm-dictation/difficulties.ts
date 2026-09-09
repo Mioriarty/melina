@@ -21,10 +21,10 @@ export const RHYTHM_DIFFICULTIES: readonly Difficulty<RhythmSettings>[] = [
     id: 'quarters',
     settings: {
       ...DEFAULT_SETTINGS,
-      cellWeights: { ...NO_CELLS, quarter: 6, hold: 2 },
+      cellWeights: { ...NO_CELLS, quarter: 5, hold: 3 },
       metronome: 'throughout',
       tempo: 80,
-      minOnsets: 3,
+      minOnsets: 2,
     },
   },
   {
@@ -34,7 +34,7 @@ export const RHYTHM_DIFFICULTIES: readonly Difficulty<RhythmSettings>[] = [
       cellWeights: { ...NO_CELLS, quarter: 5, hold: 2, eighth: 5 },
       metronome: 'throughout',
       tempo: 80,
-      minOnsets: 4,
+      minOnsets: 3,
     },
   },
   {
@@ -44,7 +44,7 @@ export const RHYTHM_DIFFICULTIES: readonly Difficulty<RhythmSettings>[] = [
       cellWeights: { ...NO_CELLS, quarter: 3, hold: 2, eighth: 4, offbeat: 5 },
       metronome: 'throughout',
       tempo: 80,
-      minOnsets: 4,
+      minOnsets: 3,
     },
   },
   {
@@ -79,7 +79,7 @@ export const RHYTHM_DIFFICULTIES: readonly Difficulty<RhythmSettings>[] = [
       meters: ['3/4'],
       cellWeights: { ...NO_CELLS, quarter: 4, hold: 2, eighth: 4, sixteenth: 2 },
       tempo: 80,
-      minOnsets: 3,
+      minOnsets: 2,
     },
   },
   {
@@ -89,7 +89,7 @@ export const RHYTHM_DIFFICULTIES: readonly Difficulty<RhythmSettings>[] = [
       meters: ['2/4', '3/4', '5/4'],
       cellWeights: { ...NO_CELLS, quarter: 5, hold: 2, eighth: 4, offbeat: 1 },
       tempo: 80,
-      minOnsets: 3,
+      minOnsets: 2,
     },
   },
   {
@@ -110,7 +110,7 @@ export const RHYTHM_DIFFICULTIES: readonly Difficulty<RhythmSettings>[] = [
       },
       tempo: 60,
       allowInitialRest: true,
-      minOnsets: 4,
+      minOnsets: 3,
       questionsPerRound: 20,
     },
   },
