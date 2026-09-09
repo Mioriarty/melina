@@ -76,12 +76,12 @@ const INTERVAL_X = 26
 const SCALE_X = 74
 
 export const PATH_NODES: readonly PathNodePosition[] = [
-  { stationId: 'intervals/reading', x: INTERVAL_X, y: PATH_TOP + 10 },
-  { stationId: 'scales/reading', x: SCALE_X, y: PATH_TOP + 10 + BRAID_STAGGER },
-  { stationId: 'intervals/hearing', x: INTERVAL_X, y: PATH_TOP + 10 + BRAID_DROP },
+  { stationId: 'intervals/reading', x: INTERVAL_X + 2, y: PATH_TOP + 10 },
+  { stationId: 'scales/reading', x: SCALE_X - 2, y: PATH_TOP + 10 + BRAID_STAGGER },
+  { stationId: 'intervals/hearing', x: INTERVAL_X - 2, y: PATH_TOP + 10 + BRAID_DROP },
   {
     stationId: 'scales/hearing',
-    x: SCALE_X,
+    x: SCALE_X + 2,
     y: PATH_TOP + 10 + BRAID_DROP + BRAID_STAGGER,
   },
   // The merge. Centred, so the two tracks arrive symmetrically rather than
@@ -150,6 +150,89 @@ export function connectorPath(from: PathNodePosition, to: PathNodePosition): str
     `M ${from.x} ${startY}` +
     ` C ${from.x} ${startY + bend} ${to.x} ${endY - bend} ${to.x} ${endY}`
   )
+}
+
+/* --------------------------------------------------------------- labels */
+
+/**
+ * The column the path is drawn in, mirrored from `PathView`:
+ * `max-w-[34rem] px-4`, so the content is `min(100vw, 34rem) - 32px`.
+ */
+const COLUMN_MAX = 544
+const COLUMN_PADDING = 32
+/** Widest a station label is ever drawn, and its share of a narrow screen. */
+const LABEL_CAP = 168
+const LABEL_VW = 42
+/** Clear air demanded between two labels standing side by side. */
+const LABEL_GUTTER = 8
+
+/** How far a station reaches above and below its anchor point. */
+const NODE_ABOVE = MEDALLION_SIZE / 2
+const NODE_BELOW = CONNECTOR_LEAVE
+
+/** Whether two stations sit level enough for their labels to meet. */
+export function standLevel(a: PathNodePosition, b: PathNodePosition): boolean {
+  return !(a.y + NODE_BELOW < b.y - NODE_ABOVE || b.y + NODE_BELOW < a.y - NODE_ABOVE)
+}
+
+/**
+ * The nearest station standing level with this one, if any.
+ *
+ * Only the braid has one. It is what decides how wide a label may be: two
+ * labels each wanting `min(10.5rem, 42vw)` is most of a 320px column between
+ * them, so the closer the pair is placed the narrower each has to be drawn.
+ * Deriving it from the positions rather than pinning a second number means
+ * the braid can be nudged sideways without anything having to be kept in
+ * step by hand.
+ */
+function neighbourOf(node: PathNodePosition): PathNodePosition | undefined {
+  return PATH_NODES.filter(
+    (other) => other.stationId !== node.stationId && standLevel(node, other),
+  ).reduce<PathNodePosition | undefined>(
+    (closest, other) =>
+      closest === undefined || Math.abs(other.x - node.x) < Math.abs(closest.x - node.x)
+        ? other
+        : closest,
+    undefined,
+  )
+}
+
+/** A station's share of the column, 0-1, before its neighbour is reached. */
+function labelShare(node: PathNodePosition): number | undefined {
+  const neighbour = neighbourOf(node)
+  return neighbour === undefined ? undefined : Math.abs(node.x - neighbour.x) / 100
+}
+
+/**
+ * How wide a station's label may be drawn, as CSS.
+ *
+ * Consumed by `PathNode` rather than written there, so the width and the
+ * positions it has to fit between come from one place.
+ */
+export function labelWidthCss(node: PathNodePosition): string {
+  const share = labelShare(node)
+  const cap = `min(${LABEL_CAP / 16}rem, ${LABEL_VW}vw)`
+  if (share === undefined) return cap
+
+  const column = `(min(100vw, ${COLUMN_MAX / 16}rem) - ${COLUMN_PADDING}px)`
+  return `min(${LABEL_CAP / 16}rem, ${LABEL_VW}vw, calc(${share} * ${column} - ${LABEL_GUTTER}px))`
+}
+
+/** The same width in pixels, for the geometry tests. */
+export function labelWidthPx(node: PathNodePosition, viewport: number): number {
+  const column = Math.min(viewport, COLUMN_MAX) - COLUMN_PADDING
+  const share = labelShare(node)
+
+  return Math.min(
+    LABEL_CAP,
+    (viewport * LABEL_VW) / 100,
+    ...(share === undefined ? [] : [share * column - LABEL_GUTTER]),
+  )
+}
+
+/** The drawable width of the column at a given viewport width, in px. */
+export function columnWidth(viewport: number): number {
+  return Math.min(viewport, COLUMN_MAX) - COLUMN_PADDING
 }
 
 const POSITIONS = new Map(PATH_NODES.map((node) => [node.stationId, node]))

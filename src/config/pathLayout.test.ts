@@ -7,7 +7,10 @@ import {
   CONNECTOR_LEAVE,
   MEDALLION_SIZE,
   PATH_EDGES,
+  columnWidth,
   connectorPath,
+  labelWidthPx,
+  standLevel,
   MUSIC,
   MUSIC_COUNT,
   PATH_HEIGHT,
@@ -16,6 +19,9 @@ import {
   SPLAT_COUNT,
   orderedPathNodes,
 } from './pathLayout'
+
+/** The widths the layout has to survive, narrowest phone upwards. */
+const VIEWPORTS = [320, 360, 375, 390, 414, 480, 600, 768, 1024, 1440]
 
 describe('path layout', () => {
   it('places every station exactly once, and nothing else', () => {
@@ -75,12 +81,20 @@ describe('path layout', () => {
   it('braids intervals down the left and scales down the right', () => {
     // Read across and it is the two subjects; read down and it is the two
     // ways of knowing one. A station on the wrong side breaks both readings.
+    //
+    // The two tracks may lean — they are hand-placed, and a column drawn
+    // dead straight reads as a table rather than as a route. What has to
+    // hold is the side, and that the tracks never cross.
     const at = (id: string) => PATH_NODES.find((node) => node.stationId === id)!
+    const intervals = [at('intervals/reading'), at('intervals/hearing')]
+    const scales = [at('scales/reading'), at('scales/hearing')]
 
-    expect(at('intervals/reading').x).toBe(at('intervals/hearing').x)
-    expect(at('scales/reading').x).toBe(at('scales/hearing').x)
-    expect(at('intervals/reading').x).toBeLessThan(50)
-    expect(at('scales/reading').x).toBeGreaterThan(50)
+    for (const node of intervals) expect(node.x, node.stationId).toBeLessThan(50)
+    for (const node of scales) expect(node.x, node.stationId).toBeGreaterThan(50)
+
+    expect(Math.max(...intervals.map((node) => node.x))).toBeLessThan(
+      Math.min(...scales.map((node) => node.x)),
+    )
   })
 
   it('puts reading above hearing, and the columns level with each other', () => {
@@ -143,12 +157,13 @@ describe('path layout', () => {
     expect(reached.size).toBe(ids.size)
   })
 
-  it('keeps every station within the column', () => {
+  it('keeps every station inside the column', () => {
     for (const node of PATH_NODES) {
-      // Nodes are 168px wide and centred, so they need room on both sides
-      // even on a narrow phone.
-      expect(node.x, node.stationId).toBeGreaterThanOrEqual(25)
-      expect(node.x, node.stationId).toBeLessThanOrEqual(75)
+      // A loose sanity bound only — whether a label actually fits is checked
+      // against the real geometry further down, and that is the guard that
+      // matters. This one catches a coordinate typed as 7 or 107.
+      expect(node.x, node.stationId).toBeGreaterThanOrEqual(20)
+      expect(node.x, node.stationId).toBeLessThanOrEqual(80)
       expect(node.y).toBeLessThan(PATH_HEIGHT)
     }
   })
@@ -205,19 +220,16 @@ describe('path layout', () => {
   })
 
   it('keeps every station label on screen at any supported width', () => {
-    // Mirrors PathNode: the column is `min(100%, 34rem)` inside 16px of
-    // padding, and the label is `min(10.5rem, 42vw)` wide, centred on the
-    // station. Regression guard for titles being clipped by the side of a
-    // narrow screen.
-    const viewports = [320, 360, 375, 390, 414, 480, 600, 768, 1024, 1440]
-
-    for (const viewport of viewports) {
-      const column = Math.min(viewport - 32, 544)
-      const labelWidth = Math.min(168, viewport * 0.42)
-      const half = labelWidth / 2
+    // Regression guard for titles being clipped by the side of a narrow
+    // screen. The column is `max-w-[34rem] px-4`, so its drawable width is
+    // `min(100vw, 544) - 32` — not `min(100vw - 32, 544)`, which overstates
+    // it by the padding on every screen wide enough to hit the cap.
+    for (const viewport of VIEWPORTS) {
+      const column = columnWidth(viewport)
 
       for (const node of PATH_NODES) {
         const centre = (node.x / 100) * column
+        const half = labelWidthPx(node, viewport) / 2
         expect(
           centre - half,
           `${node.stationId} overflows the left edge at ${viewport}px`,
@@ -232,33 +244,44 @@ describe('path layout', () => {
 
   it('never lets two side-by-side stations overlap, at any supported width', () => {
     // New with the braid: before it, no two stations were ever level enough
-    // for their labels to meet. Mirrors PathNode — the column is
-    // `min(100%, 34rem)` inside 16px of padding, the label box is
-    // `min(10.5rem, 42vw)`, and a station occupies its medallion plus the
-    // label hanging beneath it.
-    const viewports = [320, 360, 375, 390, 414, 480, 600, 768, 1024, 1440]
-
-    for (const viewport of viewports) {
-      const column = Math.min(viewport - 32, 544)
-      const half = Math.min(168, viewport * 0.42) / 2
+    // for their labels to meet. Widths come from `labelWidthPx`, which is
+    // what `PathNode` draws with — asserting against a copy of the rule here
+    // would only prove the copy agreed with itself.
+    for (const viewport of VIEWPORTS) {
+      const column = columnWidth(viewport)
 
       for (const a of PATH_NODES) {
         for (const b of PATH_NODES) {
-          if (a.stationId >= b.stationId) continue
-
-          const apart =
-            a.y + CONNECTOR_LEAVE < b.y - MEDALLION_SIZE / 2 ||
-            b.y + CONNECTOR_LEAVE < a.y - MEDALLION_SIZE / 2
-          if (apart) continue
+          if (a.stationId >= b.stationId || !standLevel(a, b)) continue
 
           const gap = Math.abs((a.x - b.x) / 100) * column
+          const needed = labelWidthPx(a, viewport) / 2 + labelWidthPx(b, viewport) / 2
           expect(
             gap,
             `${a.stationId} and ${b.stationId} collide at ${viewport}px`,
-          ).toBeGreaterThanOrEqual(half * 2)
+          ).toBeGreaterThanOrEqual(needed)
         }
       }
     }
+  })
+
+  it('narrows a label only where a station has to share the column', () => {
+    // The braid is what pays for standing two abreast; the single file below
+    // it keeps the full width. Without this, shrinking the braid to fit
+    // could quietly shrink every title on the page.
+    const at = (id: string) => PATH_NODES.find((node) => node.stationId === id)!
+
+    for (const viewport of VIEWPORTS) {
+      const full = Math.min(168, (viewport * 42) / 100)
+      expect(labelWidthPx(at('counterpoint'), viewport)).toBeCloseTo(full, 6)
+      expect(labelWidthPx(at('intervals/reading'), viewport)).toBeLessThanOrEqual(
+        full + 1e-9,
+      )
+    }
+
+    // And it really does bind on the narrowest screen, where the pair is
+    // closest together — otherwise this is testing nothing.
+    expect(labelWidthPx(at('intervals/reading'), 320)).toBeLessThan(320 * 0.42)
   })
 
   it('scatters every requested decoration', () => {

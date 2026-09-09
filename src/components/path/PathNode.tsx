@@ -4,7 +4,7 @@ import { Link } from 'react-router'
 import { Icon } from '@/components/ui/Icon'
 import type { Station } from '@/config/curriculum'
 import { isCategoryEnabled } from '@/config/features'
-import { MEDALLION_SIZE, type PathNodePosition } from '@/config/pathLayout'
+import { labelWidthCss, MEDALLION_SIZE, type PathNodePosition } from '@/config/pathLayout'
 import { cn } from '@/lib/utils/cn'
 
 /**
@@ -35,8 +35,12 @@ export interface PathNodeProps {
  * amount depending on whether the title wraps, and the connectors drawn from
  * `position.y` would no longer meet the circles.
  *
- * The label is sized `min(10.5rem, 42vw)` so a station near the edge of the
- * column can never have its title clipped by the side of a narrow screen.
+ * The label width comes from `labelWidthCss`, not from a class here: it is
+ * normally `min(10.5rem, 42vw)`, so a station near the edge of the column can
+ * never have its title clipped on a narrow screen, and narrower still for a
+ * station in the braid, which has to share the column with the one standing
+ * beside it. Both numbers depend on the positions, so they are worked out
+ * where the positions live.
  *
  * Open stations are links; everything else is a button marked `aria-disabled`
  * rather than a `div`, so the whole path stays reachable by keyboard and a
@@ -83,7 +87,14 @@ export function PathNode({ station, position, index, reducedMotion }: PathNodePr
   )
 
   const shell =
-    'group absolute top-0 left-0 flex w-[min(10.5rem,42vw)] flex-col items-center rounded-2xl px-1 text-center'
+    'group absolute top-0 left-0 flex flex-col items-center rounded-2xl px-1 text-center'
+
+  // Lift by half a medallion so the circle, not the box, sits on the anchor
+  // point the connectors are drawn to.
+  const box = {
+    width: labelWidthCss(position),
+    transform: `translate(-50%, ${-MEDALLION_SIZE / 2}px)`,
+  }
 
   return (
     <div
@@ -95,21 +106,14 @@ export function PathNode({ station, position, index, reducedMotion }: PathNodePr
       }}
     >
       {state === 'open' ? (
-        <Link
-          to={station.path}
-          className={shell}
-          // Lift by half a medallion so the circle, not the box, sits on the
-          // anchor point the connectors are drawn to.
-          style={{ transform: `translate(-50%, ${-MEDALLION_SIZE / 2}px)` }}
-          draggable={false}
-        >
+        <Link to={station.path} className={shell} style={box} draggable={false}>
           {content}
         </Link>
       ) : (
         <button
           type="button"
           className={cn(shell, 'cursor-not-allowed')}
-          style={{ transform: `translate(-50%, ${-MEDALLION_SIZE / 2}px)` }}
+          style={box}
           aria-disabled="true"
           onClick={(event) => event.preventDefault()}
         >
