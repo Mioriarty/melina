@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import type { InstrumentId } from '@/lib/audio/instruments'
 import type { ClefId } from '@/lib/music/clef'
 import type { PlayDirection } from '@/lib/music/direction'
 import type { Interval, IntervalQuality } from '@/lib/music/interval'
@@ -37,8 +36,6 @@ export interface MusicNames {
   keyName: (id: KeySignatureId) => string
   direction: (id: PlayDirection) => string
   directionHint: (id: PlayDirection) => string
-  instrument: (id: InstrumentId) => string
-  instrumentHint: (id: InstrumentId) => string
   /** Standalone quality, as on a keyboard key: `Perfect`. */
   quality: (quality: IntervalQuality) => string
   /** Compact form for narrow screens: `Perf`. */
@@ -90,8 +87,6 @@ export function useMusicNames(): MusicNames {
         }),
       direction: (id) => t(`directions.${id}.label`),
       directionHint: (id) => t(`directions.${id}.hint`),
-      instrument: (id) => t(`instruments.${id}.label`),
-      instrumentHint: (id) => t(`instruments.${id}.hint`),
       quality: (quality) => t(`qualities.${quality}`),
       qualityShort: (quality) => t(`qualitiesShort.${quality}`),
       number,

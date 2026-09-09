@@ -208,12 +208,13 @@ describe('Scale Hearing', () => {
     expect(screen.getByText('Tap the notes to hear them')).toBeTruthy()
   })
 
-  it('chooses the instrument and the direction, which reading does not', async () => {
+  it('chooses the direction, which reading does not', async () => {
     open(<ScaleHearingExercise />)
     fireEvent.click(await screen.findByText('Custom'))
 
-    expect(await screen.findByRole('heading', { name: 'Instrument' })).toBeTruthy()
-    expect(screen.getByRole('heading', { name: 'How it is played' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'How it is played' })).toBeTruthy()
     expect(screen.getByRole('button', { name: /ascending/i })).toBeTruthy()
+    // Everything is played on the piano; there is nothing to choose.
+    expect(screen.queryByRole('heading', { name: 'Instrument' })).toBeNull()
   })
 })

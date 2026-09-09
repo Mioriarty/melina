@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 
+import type { AttemptQuestion } from '@/lib/db/attemptQuestion'
 import { recordAttempt } from '@/lib/db/attempts'
 import { createRandom, type Random } from '@/lib/utils/seededRandom'
 
@@ -23,12 +24,14 @@ export interface RoundRules<TSpec, TQuestion, TAnswer> {
    */
   generate: (random: Random, spec: TSpec) => readonly TQuestion[]
   isCorrect: (chosen: TAnswer, question: TQuestion) => boolean
-  /** What was asked, for the attempt log. */
-  subject: (question: TQuestion) => string
-  /** What was answered, for the attempt log, when it was wrong. */
+  /**
+   * The question as the attempt log keeps it: enough to ask it again, and no
+   * more. Opaque here on purpose — this machine records rounds without ever
+   * learning what a round is about.
+   */
+  attempt: (question: TQuestion) => AttemptQuestion
+  /** What the player answered, in the same vocabulary as the answer. */
   answerKey: (chosen: TAnswer) => string
-  /** Anything else worth keeping about the question: clef, key, direction. */
-  context: (question: TQuestion) => Record<string, string>
 }
 
 export interface RoundController<TSpec, TQuestion, TAnswer> {
@@ -82,14 +85,15 @@ export function useRound<TSpec, TQuestion, TAnswer>(
 
       const correct = rules.isCorrect(chosen, question)
 
+      // Every answer, right or wrong: an exercise you always get right is a
+      // fact about you, and a log that only keeps mistakes cannot say it.
       recordAttempt({
         exerciseId,
         ts: Date.now(),
         correct,
-        subject: rules.subject(question),
-        ...(correct ? {} : { answered: rules.answerKey(chosen) }),
+        question: rules.attempt(question),
+        answered: rules.answerKey(chosen),
         ms,
-        context: rules.context(question),
       })
 
       const recorded: Answered<TQuestion, TAnswer> = { question, chosen, correct, ms }

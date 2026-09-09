@@ -1,0 +1,48 @@
+{
+  "title": "Fortschritt",
+  "blurb": "Alles, was du beantwortet hast – und was es darüber sagt, was als Nächstes dran ist.",
+  "empty": "Noch nichts geübt. Spiele eine Runde, dann füllt sich das hier.",
+  "toPath": "Zurück zum Weg",
+  "stats": {
+    "title": "Gesamt",
+    "answers": "Antworten",
+    "days": "Tage geübt",
+    "accuracy": "Trefferquote",
+    "longest": "Längste Serie"
+  },
+  "chart": {
+    "title": "Wie viel, und wie gut",
+    "range": "Zeitraum",
+    "ranges": {
+      "fortnight": "14 Tage",
+      "weeks": "8 Wochen",
+      "year": "Jahr"
+    },
+    "pick": "Wähle eine Säule, um den Tag dahinter zu sehen.",
+    "day": "{{day}}: {{answers}} Antworten, {{percent}} % richtig",
+    "emptyDay": "{{day}}: nichts geübt",
+    "week": "Woche vom {{from}} – {{to}}"
+  },
+  "heatmap": {
+    "title": "Die letzten sechs Monate",
+    "hint": "Ein Feld pro Tag; je dunkler, desto mehr beantwortet.",
+    "streak_one": "{{count}} Tag in Folge",
+    "streak_other": "{{count}} Tage in Folge",
+    "summary": "Die letzten {{weeks}} Wochen, ein Feld pro Tag. An {{days}} davon wurde geübt."
+  },
+  "lists": {
+    "none": "Hier ist noch nichts beantwortet.",
+    "row": "{{percent}} % richtig bei {{answers}} Antworten",
+    "exercises": "Wohin die Übung geht",
+    "exercisesHint": "Jede Übung, die schwächste zuerst.",
+    "intervals": "Intervalle",
+    "intervalsHint": "Lesen und Hören zusammen – das Intervall, das du verfehlst, ist in beiden dasselbe.",
+    "modes": "Modi",
+    "modesHint": "Welche Tonleitern falsch herauskommen.",
+    "clefs": "Schlüssel",
+    "keys": "Vorzeichen",
+    "keysHint": "Die Vorzeichnung, unter der die Frage stand – nicht die Tonart des Intervalls.",
+    "roots": "Grundtöne",
+    "rootsHint": "Der Ton, auf dem die Frage aufgebaut war: der untere Ton eines Intervalls oder der Grundton einer Tonleiter."
+  }
+}

@@ -129,6 +129,29 @@ describe('App', () => {
     expect(screen.getByRole('link', { name: 'Settings' })).toBe(links[0])
   })
 
+  it('reaches progress from the header and nowhere else', async () => {
+    // The mirror of settings: progress is not something you practise, so it
+    // has no station and the streak button is the only door.
+    render(<App />)
+    await screen.findByRole('heading', { name: 'Your path' })
+
+    const links = screen
+      .getAllByRole('link')
+      .filter((link) => link.getAttribute('href') === '/progress')
+    expect(links).toHaveLength(1)
+    expect(screen.queryByText('Progress Overview')).toBeNull()
+  })
+
+  it('opens the progress screen', async () => {
+    window.history.pushState({}, '', '/progress')
+    try {
+      render(<App />)
+      expect(await screen.findByRole('heading', { name: 'Progress' })).toBeTruthy()
+    } finally {
+      window.history.pushState({}, '', '/')
+    }
+  })
+
   it('opens the settings screen', async () => {
     window.history.pushState({}, '', '/settings')
     try {

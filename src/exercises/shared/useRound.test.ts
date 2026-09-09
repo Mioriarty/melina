@@ -20,12 +20,21 @@ interface Spec {
   pool: readonly string[]
 }
 
+/**
+ * A stand-in question. The machine treats the logged question as opaque, so
+ * this only has to be a valid one — which mode it names is beside the point.
+ */
 const RULES: RoundRules<Spec, string, string> = {
   generate: (_random: Random, spec) => spec.pool.slice(0, spec.count),
   isCorrect: (chosen, question) => chosen === question,
-  subject: (question) => question,
+  attempt: (question) => ({
+    kind: 'scale',
+    tonic: `C${question.length + 3}`,
+    mode: 'dorian',
+    clef: 'treble',
+    direction: 'ascending',
+  }),
   answerKey: (chosen) => chosen,
-  context: (question) => ({ question }),
 }
 
 const SPEC: Spec = { count: 3, pool: ['a', 'b', 'c'] }
@@ -143,9 +152,9 @@ describe('useRound', () => {
     expect(result.current.phase).toEqual({ name: 'levels' })
   })
 
-  it('logs what was asked, and what was answered when it was wrong', async () => {
-    // The substrate Progress will read. A silently broken log costs nothing
-    // today and everything the day that screen is built.
+  it('logs the question and the answer, right or wrong', async () => {
+    // The substrate every statistic is read from. A silently broken log costs
+    // nothing today and everything the day that screen is built.
     const { result } = round(SPEC, 'test/logging')
     act(() => result.current.start())
     act(() => result.current.answer('a', 1500))
@@ -158,13 +167,13 @@ describe('useRound', () => {
     expect(attempts[0]).toMatchObject({
       exerciseId: 'test/logging',
       correct: true,
-      subject: 'a',
+      answered: 'a',
       ms: 1500,
-      context: { question: 'a' },
+      question: { kind: 'scale', mode: 'dorian', clef: 'treble' },
     })
-    // Right answers carry no `answered`: it would only ever repeat `subject`.
-    expect(attempts[0]?.answered).toBeUndefined()
 
-    expect(attempts[1]).toMatchObject({ correct: false, subject: 'b', answered: 'a' })
+    // A right answer is recorded too: an exercise never got wrong is a fact
+    // about the player, and a log of mistakes alone cannot state it.
+    expect(attempts[1]).toMatchObject({ correct: false, answered: 'a' })
   })
 })

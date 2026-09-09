@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react'
 
 import { loadInstrument, unlockAudio } from '@/lib/audio/engine'
-import type { InstrumentId } from '@/lib/audio/instruments'
 
 /**
  * Sounding whatever question is on screen.
@@ -31,62 +30,40 @@ export interface PlaybackController {
   preload: () => void
 }
 
-/**
- * The status, tagged with the instrument it describes.
- *
- * Tagging rather than resetting is what makes switching instrument read as
- * "not loaded yet" during render instead of needing an effect to clear it —
- * and it means a download that lands after the switch cannot report the new
- * instrument as ready, because it is filed under the old one.
- */
-interface Tagged {
-  instrument: InstrumentId | undefined
-  status: PlaybackStatus
-}
-
 export function usePlayback(
-  instrument: InstrumentId | undefined,
   /** Plays the question currently on screen. `undefined` when there is none. */
-  sound: ((instrument: InstrumentId) => Promise<void>) | undefined,
+  sound: (() => Promise<void>) | undefined,
 ): PlaybackController {
-  const [state, setState] = useState<Tagged>({ instrument: undefined, status: 'idle' })
-
-  const status = state.instrument === instrument ? state.status : 'idle'
+  const [status, setStatus] = useState<PlaybackStatus>('idle')
 
   const play = useCallback(() => {
-    if (instrument === undefined || sound === undefined) return
+    if (sound === undefined) return
 
     // Only announce a wait when there might be one: saying "loading" for a
     // few milliseconds on every replay is worse than saying nothing. Read
     // through the updater rather than from `status`, so this callback does
     // not change identity every time the status does — it is a dependency of
     // the effect that auto-plays a hearing question, which would replay it.
-    setState((previous) =>
-      previous.instrument === instrument && previous.status === 'ready'
-        ? previous
-        : { instrument, status: 'loading' },
-    )
+    setStatus((previous) => (previous === 'ready' ? previous : 'loading'))
 
     void (async () => {
       try {
         await unlockAudio()
-        await sound(instrument)
-        setState({ instrument, status: 'ready' })
+        await sound()
+        setStatus('ready')
       } catch {
         // A failed download or a blocked context must not strand the round:
         // the notation is still there and the question can still be answered.
-        setState({ instrument, status: 'failed' })
+        setStatus('failed')
       }
     })()
-  }, [instrument, sound])
+  }, [sound])
 
   const preload = useCallback(() => {
-    if (instrument === undefined) return
-
-    loadInstrument(instrument)
-      .then(() => setState({ instrument, status: 'ready' }))
-      .catch(() => setState({ instrument, status: 'failed' }))
-  }, [instrument])
+    loadInstrument()
+      .then(() => setStatus('ready'))
+      .catch(() => setStatus('failed'))
+  }, [])
 
   return { status, play, preload }
 }

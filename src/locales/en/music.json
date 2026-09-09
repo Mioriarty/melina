@@ -124,16 +124,6 @@
       "hint": "Upper note first — the hardest of the three."
     }
   },
-  "instruments": {
-    "piano": {
-      "label": "Piano",
-      "hint": "Steinway grand, four velocity layers."
-    },
-    "harp": {
-      "label": "Harp",
-      "hint": "Orchestral harp. Clearer attack, longer decay."
-    }
-  },
   "qualities": {
     "doubly-diminished": "Doubly diminished",
     "diminished": "Diminished",

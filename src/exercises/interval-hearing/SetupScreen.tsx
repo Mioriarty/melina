@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { Icon } from '@/components/ui/Icon'
 import { SetupChip, SetupSection } from '@/exercises/shared/SetupControls'
 import { useMusicNames } from '@/hooks/useMusicNames'
-import { INSTRUMENTS } from '@/lib/audio/instruments'
 import { HEARABLE_CATALOG, QUALITY_ORDER } from '@/lib/music/catalog'
 import { CLEFS } from '@/lib/music/clef'
 import { PLAY_DIRECTIONS } from '@/lib/music/direction'
@@ -23,9 +22,9 @@ export interface SetupScreenProps {
 /**
  * What to practise, before a round starts.
  *
- * The same shape as the reading setup, plus the two things only a hearing
- * exercise needs: which instrument plays the notes, and whether an interval
- * may be sounded upwards, downwards or all at once.
+ * The same shape as the reading setup, plus the one thing only a hearing
+ * exercise needs: whether an interval may be sounded upwards, downwards or
+ * all at once.
  */
 export function SetupScreen({ settings, onChange, onStart, onBack }: SetupScreenProps) {
   const { t } = useTranslation(['exercise', 'curriculum'])
@@ -73,24 +72,6 @@ export function SetupScreen({ settings, onChange, onStart, onBack }: SetupScreen
             {t('exercise:intervals.hearing.setupBlurb')}
           </p>
         </header>
-
-        <SetupSection title={t('exercise:setup.instrument')}>
-          <div className="flex flex-wrap gap-2">
-            {INSTRUMENTS.map((instrument) => (
-              <SetupChip
-                key={instrument.id}
-                selected={settings.instrument === instrument.id}
-                onClick={() => onChange({ ...settings, instrument: instrument.id })}
-                label={t('exercise:setup.chipLabel', {
-                  label: names.instrument(instrument.id),
-                  hint: names.instrumentHint(instrument.id),
-                })}
-              >
-                {names.instrument(instrument.id)}
-              </SetupChip>
-            ))}
-          </div>
-        </SetupSection>
 
         <SetupSection
           title={t('exercise:setup.direction.title')}

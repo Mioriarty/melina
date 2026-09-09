@@ -86,17 +86,6 @@ export const HEARING_DIFFICULTIES: readonly Difficulty<IntervalHearingSettings>[
     },
   },
   {
-    id: 'harp',
-    settings: {
-      ...DEFAULT_SETTINGS,
-      instrument: 'harp',
-      intervals: [...HEARABLE_INTERVAL_KEYS],
-      directions: ['ascending', 'descending'],
-      clefs: ['treble', 'bass'],
-      keySignatures: ['0'],
-    },
-  },
-  {
     id: 'everything',
     settings: {
       ...DEFAULT_SETTINGS,

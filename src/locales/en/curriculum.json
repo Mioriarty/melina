@@ -119,20 +119,6 @@
           "blurb": "Take one motif and put it through its paces."
         }
       }
-    },
-    "progress": {
-      "title": "Progress",
-      "blurb": "Where you are strong, and where to aim next.",
-      "exercises": {
-        "overview": {
-          "title": "Overview",
-          "blurb": "Practice history and streaks at a glance."
-        },
-        "weak-spots": {
-          "title": "Weak Spots",
-          "blurb": "The intervals and chords that keep catching you out."
-        }
-      }
     }
   }
 }

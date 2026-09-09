@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { exerciseTitleKey } from '@/config/curriculum'
 import { IntervalRoundScreen } from '@/exercises/interval-shared/IntervalRoundScreen'
 import { IntervalSummary } from '@/exercises/interval-shared/IntervalSummary'
+import { intervalFilter } from '@/exercises/interval-shared/attempt'
 import { allowedIntervals, type RoundSpec } from '@/exercises/interval-shared/generate'
 import { useIntervalRound } from '@/exercises/interval-shared/useIntervalRound'
 import { LevelsScreen } from '@/exercises/shared/LevelsScreen'
@@ -11,7 +12,6 @@ import { usePlayback } from '@/exercises/shared/usePlayback'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { playInterval } from '@/lib/audio/engine'
-import { DEFAULT_INSTRUMENT, type InstrumentId } from '@/lib/audio/instruments'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
 import { harmonicIntervalMei } from '@/lib/notation/mei'
 import { preloadEngraver } from '@/lib/notation/verovio'
@@ -67,14 +67,14 @@ export default function IntervalReadingExercise() {
   // front: the piano is tens of megabytes and most reading rounds never ask
   // for it.
   const sound = useCallback(
-    (id: InstrumentId) =>
+    () =>
       current === undefined
         ? Promise.resolve()
-        : playInterval([current.lower, current.upper], 'harmonic', id),
+        : playInterval([current.lower, current.upper], 'harmonic'),
     [current],
   )
 
-  const audio = usePlayback(DEFAULT_INSTRUMENT, sound)
+  const audio = usePlayback(sound)
 
   // Start fetching the ~7 MB engraver while the setup screen is being read,
   // so the first question is not waiting on a download.
@@ -95,6 +95,12 @@ export default function IntervalReadingExercise() {
         blurbKey="exercise:intervals.reading.levelsBlurb"
         group="interval-reading"
         levels={READING_DIFFICULTIES}
+        accuracyFilter={(level) =>
+          intervalFilter(
+            { ...level.settings, directions: READING_DIRECTIONS },
+            EXERCISE_ID,
+          )
+        }
         onPick={(level) => {
           // Persist the level so Custom opens where you just were, and start
           // from the level itself rather than waiting for state to settle.

@@ -58,10 +58,6 @@
       "title": "Zusammen gespielt",
       "blurb": "Beide Töne gleichzeitig, ohne melodische Gestalt zum Anlehnen."
     },
-    "harp": {
-      "title": "Auf der Harfe",
-      "blurb": "Dieselben Intervalle auf einem anderen Instrument. Klangfarbe weg, Ohren auf."
-    },
     "everything": {
       "title": "Alles",
       "blurb": "Alle Intervalle, alle drei Richtungen, alle vier Schlüssel."
@@ -125,10 +121,6 @@
     "descending": {
       "title": "Alles abwärts",
       "blurb": "Jeder Modus, von der Oktave fallend. Schwerer als es klingt."
-    },
-    "harp": {
-      "title": "Auf der Harfe",
-      "blurb": "Dieselben Modi auf einem anderen Instrument. Klangfarbe weg, Ohren auf."
     },
     "everything": {
       "title": "Alles",

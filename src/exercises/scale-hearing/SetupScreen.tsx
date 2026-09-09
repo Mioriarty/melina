@@ -4,7 +4,6 @@ import { SCALE_DIRECTIONS } from '@/exercises/scale-shared/generate'
 import { SetupChip, SetupSection } from '@/exercises/shared/SetupControls'
 import { Icon } from '@/components/ui/Icon'
 import { useMusicNames } from '@/hooks/useMusicNames'
-import { INSTRUMENTS } from '@/lib/audio/instruments'
 import { CLEFS } from '@/lib/music/clef'
 import { MODE_IDS, TONIC_CHOICES, tonicKey } from '@/lib/music/scale'
 
@@ -21,9 +20,9 @@ export interface SetupScreenProps {
 /**
  * What to practise, before a round starts.
  *
- * The same shape as the scale reading setup, plus the two things only a
- * hearing exercise needs: which instrument plays the scale, and whether it
- * runs up from the tonic or down from the octave above it.
+ * The same shape as the scale reading setup, plus the one thing only a
+ * hearing exercise needs: whether the scale runs up from the tonic or down
+ * from the octave above it.
  */
 export function SetupScreen({ settings, onChange, onStart, onBack }: SetupScreenProps) {
   const { t } = useTranslation(['exercise', 'curriculum'])
@@ -67,24 +66,6 @@ export function SetupScreen({ settings, onChange, onStart, onBack }: SetupScreen
             {t('exercise:scales.hearing.setupBlurb')}
           </p>
         </header>
-
-        <SetupSection title={t('exercise:setup.instrument')}>
-          <div className="flex flex-wrap gap-2">
-            {INSTRUMENTS.map((instrument) => (
-              <SetupChip
-                key={instrument.id}
-                selected={settings.instrument === instrument.id}
-                onClick={() => onChange({ ...settings, instrument: instrument.id })}
-                label={t('exercise:setup.chipLabel', {
-                  label: names.instrument(instrument.id),
-                  hint: names.instrumentHint(instrument.id),
-                })}
-              >
-                {names.instrument(instrument.id)}
-              </SetupChip>
-            ))}
-          </div>
-        </SetupSection>
 
         <SetupSection
           title={t('exercise:setup.scaleDirection.title')}

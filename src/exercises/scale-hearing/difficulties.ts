@@ -76,15 +76,6 @@ export const SCALE_HEARING_DIFFICULTIES: readonly Difficulty<ScaleHearingSetting
     },
   },
   {
-    id: 'harp',
-    settings: {
-      ...DEFAULT_SETTINGS,
-      instrument: 'harp',
-      directions: ['ascending', 'descending'],
-      clefs: ['treble', 'bass'],
-    },
-  },
-  {
     id: 'everything',
     settings: {
       ...DEFAULT_SETTINGS,

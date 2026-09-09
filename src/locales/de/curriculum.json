@@ -119,20 +119,6 @@
           "blurb": "Ein Motiv nehmen und durch alle Verwandlungen führen."
         }
       }
-    },
-    "progress": {
-      "title": "Fortschritt",
-      "blurb": "Wo du stark bist und worauf du als Nächstes zielst.",
-      "exercises": {
-        "overview": {
-          "title": "Überblick",
-          "blurb": "Übungsverlauf und Serien auf einen Blick."
-        },
-        "weak-spots": {
-          "title": "Schwachstellen",
-          "blurb": "Die Intervalle und Akkorde, die dich immer wieder erwischen."
-        }
-      }
     }
   }
 }

@@ -156,21 +156,6 @@ export const CATEGORIES: readonly CategoryDef[] = [
       },
     ],
   },
-  {
-    id: 'progress',
-    icon: 'analytics',
-    status: 'planned',
-    exercises: [
-      {
-        id: 'overview',
-        status: 'planned',
-      },
-      {
-        id: 'weak-spots',
-        status: 'planned',
-      },
-    ],
-  },
 ]
 
 export function getCategory(categoryId: string | undefined): CategoryDef | undefined {

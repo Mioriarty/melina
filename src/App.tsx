@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import ExercisePage from '@/pages/ExercisePage'
 import HomePage from '@/pages/HomePage'
+import ProgressPage from '@/pages/ProgressPage'
 import SettingsPage from '@/pages/SettingsPage'
 
 // Initialises i18next as a side effect, before any component asks for a
@@ -21,6 +22,7 @@ export function App() {
         <Route element={<AppShell />}>
           <Route index element={<HomePage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="progress" element={<ProgressPage />} />
         </Route>
 
         {/* Exercises run without the header — they fill the screen and carry

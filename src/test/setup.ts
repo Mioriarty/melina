@@ -55,8 +55,9 @@ if (hasDom) globalThis.ResizeObserver = TestResizeObserver
 
 beforeEach(async () => {
   // fake-indexeddb persists for the whole file, so without this a test that
-  // writes a setting would leak it into the next one.
+  // writes a setting or answers a question would leak it into the next one.
   await db.settings.clear()
+  await db.attempts.clear()
 
   // Assertions are written against the English strings, and the machine
   // running the tests may well be German.

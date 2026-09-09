@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { scaleFilter } from '@/exercises/scale-shared/attempt'
 import { allowedModes, type ScaleRoundSpec } from '@/exercises/scale-shared/generate'
 import { ScaleRoundScreen } from '@/exercises/scale-shared/ScaleRoundScreen'
 import { ScaleSummary } from '@/exercises/scale-shared/ScaleSummary'
@@ -10,7 +11,6 @@ import { usePlayback } from '@/exercises/shared/usePlayback'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { playScale } from '@/lib/audio/engine'
-import { DEFAULT_INSTRUMENT, type InstrumentId } from '@/lib/audio/instruments'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
 import { scaleMei } from '@/lib/notation/mei'
 import { preloadEngraver } from '@/lib/notation/verovio'
@@ -63,12 +63,11 @@ export default function ScaleReadingExercise() {
   // are fetched on that first press rather than up front, since most reading
   // rounds never ask for them.
   const sound = useCallback(
-    (id: InstrumentId) =>
-      current === undefined ? Promise.resolve() : playScale(current.pitches, id),
+    () => (current === undefined ? Promise.resolve() : playScale(current.pitches)),
     [current],
   )
 
-  const audio = usePlayback(DEFAULT_INSTRUMENT, sound)
+  const audio = usePlayback(sound)
 
   // Start fetching the ~7 MB engraver while the levels screen is being read,
   // so the first question is not waiting on a download.
@@ -89,6 +88,9 @@ export default function ScaleReadingExercise() {
         blurbKey="exercise:scales.reading.levelsBlurb"
         group="scale-reading"
         levels={SCALE_READING_DIFFICULTIES}
+        accuracyFilter={(level) =>
+          scaleFilter({ ...level.settings, directions: READING_DIRECTIONS }, EXERCISE_ID)
+        }
         onPick={(level) => {
           // Persist the level so Custom opens where you just were, and start
           // from the level itself rather than waiting for state to settle.

@@ -20,12 +20,13 @@
     "custom": {
       "title": "Custom",
       "blurb": "Set up exactly what you want to be asked."
-    }
+    },
+    "accuracy": "{{percent}}%",
+    "accuracyLabel": "{{percent}}% correct across your last {{answers}} answers"
   },
   "setup": {
     "back": "Levels",
     "chipLabel": "{{label}}. {{hint}}",
-    "instrument": "Instrument",
     "direction": {
       "title": "How it is played",
       "hint": "Ascending and simultaneous intervals show their lower note first; descending ones show the upper note."

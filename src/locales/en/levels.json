@@ -58,10 +58,6 @@
       "title": "Played Together",
       "blurb": "Both notes at once, with no melodic shape to lean on."
     },
-    "harp": {
-      "title": "On the Harp",
-      "blurb": "The same intervals on a different instrument. Timbre off, ears on."
-    },
     "everything": {
       "title": "Everything",
       "blurb": "All intervals, all three directions, all four clefs."
@@ -125,10 +121,6 @@
     "descending": {
       "title": "All Descending",
       "blurb": "Every mode, falling from the octave. Harder than it sounds."
-    },
-    "harp": {
-      "title": "On the Harp",
-      "blurb": "The same modes on a different instrument. Timbre off, ears on."
     },
     "everything": {
       "title": "Everything",

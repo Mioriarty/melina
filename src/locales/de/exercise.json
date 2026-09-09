@@ -20,12 +20,13 @@
     "custom": {
       "title": "Eigene Einstellung",
       "blurb": "Stelle genau ein, was gefragt werden soll."
-    }
+    },
+    "accuracy": "{{percent}} %",
+    "accuracyLabel": "{{percent}} % richtig in deinen letzten {{answers}} Antworten"
   },
   "setup": {
     "back": "Level",
     "chipLabel": "{{label}}. {{hint}}",
-    "instrument": "Instrument",
     "direction": {
       "title": "Art des Erklingens",
       "hint": "Aufwärts und gleichzeitig gespielte Intervalle zeigen zuerst den unteren Ton; abwärts gespielte den oberen."

@@ -13,6 +13,13 @@ export function recordAttempt(attempt: AttemptRow): void {
   })
 }
 
+/**
+ * Every answer given in one exercise, oldest first.
+ *
+ * The whole log, unbounded — for exporting or for a test. Anything that wants
+ * to *measure* practice wants `accuracy` in `progress.ts`, which reads a
+ * bounded window and stops early.
+ */
 export async function attemptsFor(exerciseId: string): Promise<AttemptRow[]> {
-  return db.attempts.where('exerciseId').equals(exerciseId).toArray()
+  return db.attempts.where('exerciseId').equals(exerciseId).sortBy('ts')
 }

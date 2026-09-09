@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { exerciseTitleKey } from '@/config/curriculum'
+import { intervalFilter } from '@/exercises/interval-shared/attempt'
 import { IntervalRoundScreen } from '@/exercises/interval-shared/IntervalRoundScreen'
 import { IntervalSummary } from '@/exercises/interval-shared/IntervalSummary'
 import {
@@ -17,7 +18,6 @@ import { usePlayback } from '@/exercises/shared/usePlayback'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { playInterval, unlockAudio } from '@/lib/audio/engine'
-import type { InstrumentId } from '@/lib/audio/instruments'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
 import { isMelodic } from '@/lib/music/direction'
 import { harmonicIntervalMei, melodicIntervalMei } from '@/lib/notation/mei'
@@ -58,8 +58,6 @@ export default function IntervalHearingExercise() {
     [spec],
   )
 
-  const instrument = settings?.instrument
-
   const current =
     round.phase.name === 'asking' || round.phase.name === 'revealed'
       ? round.questions[round.phase.index]
@@ -68,14 +66,14 @@ export default function IntervalHearingExercise() {
   // Bound to the question on screen, so the hook itself knows nothing about
   // intervals.
   const sound = useCallback(
-    (id: InstrumentId) =>
+    () =>
       current === undefined
         ? Promise.resolve()
-        : playInterval(playOrder(current), current.direction, id),
+        : playInterval(playOrder(current), current.direction),
     [current],
   )
 
-  const audio = usePlayback(instrument, sound)
+  const audio = usePlayback(sound)
   const { play, preload } = audio
 
   useEffect(preloadEngraver, [])
@@ -107,6 +105,7 @@ export default function IntervalHearingExercise() {
         blurbKey="exercise:intervals.hearing.levelsBlurb"
         group="interval-hearing"
         levels={HEARING_DIFFICULTIES}
+        accuracyFilter={(level) => intervalFilter(level.settings, EXERCISE_ID)}
         onPick={(level) => {
           // Unlock audio inside the tap itself — a level starts a round
           // straight away, and the first question plays by itself.

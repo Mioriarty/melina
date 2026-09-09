@@ -1,8 +1,3 @@
-import {
-  DEFAULT_INSTRUMENT,
-  isInstrumentId,
-  type InstrumentId,
-} from '@/lib/audio/instruments'
 import { isScaleDirection, type ScaleDirection } from '@/exercises/scale-shared/generate'
 import type { SettingSpec } from '@/lib/db/settings'
 import { DEFAULT_CLEF_IDS, isClefId, type ClefId } from '@/lib/music/clef'
@@ -17,9 +12,8 @@ import {
 /**
  * What the player is allowed to be asked, and how it should sound.
  *
- * The reading settings plus the two things only a hearing exercise needs:
- * which instrument plays the scale, and whether it runs up from the tonic or
- * down from the octave above it.
+ * The reading settings plus the one thing only a hearing exercise needs:
+ * whether the scale runs up from the tonic or down from the octave above it.
  *
  * Every mode sounds different from every other, so unlike interval hearing
  * there is nothing to leave out here — the answer set is the same seven.
@@ -30,7 +24,6 @@ export interface ScaleHearingSettings {
   /** Tonic keys, e.g. `Bb`. */
   tonics: readonly string[]
   directions: readonly ScaleDirection[]
-  instrument: InstrumentId
   questionsPerRound: number
 }
 
@@ -41,7 +34,6 @@ export const DEFAULT_SETTINGS: ScaleHearingSettings = {
   modes: DEFAULT_MODE_IDS,
   tonics: DEFAULT_TONIC_KEYS,
   directions: ['ascending'],
-  instrument: DEFAULT_INSTRUMENT,
   questionsPerRound: 20,
 }
 
@@ -59,7 +51,6 @@ function parseSettings(value: unknown): ScaleHearingSettings | undefined {
   const modes = stringArray(raw.modes)?.filter(isModeId) ?? []
   const tonics = stringArray(raw.tonics)?.filter(isTonicKey) ?? []
   const directions = stringArray(raw.directions)?.filter(isScaleDirection) ?? []
-  const instrument = raw.instrument
   const questions = raw.questionsPerRound
 
   return {
@@ -67,10 +58,6 @@ function parseSettings(value: unknown): ScaleHearingSettings | undefined {
     modes: modes.length > 0 ? modes : DEFAULT_SETTINGS.modes,
     tonics: tonics.length > 0 ? tonics : DEFAULT_SETTINGS.tonics,
     directions: directions.length > 0 ? directions : DEFAULT_SETTINGS.directions,
-    instrument:
-      typeof instrument === 'string' && isInstrumentId(instrument)
-        ? instrument
-        : DEFAULT_SETTINGS.instrument,
     questionsPerRound:
       typeof questions === 'number' && ROUND_LENGTHS.includes(questions as 10 | 20 | 30)
         ? questions

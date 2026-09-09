@@ -4,6 +4,7 @@ import deExercise from './de/exercise.json'
 import deLevels from './de/levels.json'
 import deMusic from './de/music.json'
 import dePath from './de/path.json'
+import deProgress from './de/progress.json'
 import deSettings from './de/settings.json'
 import enCommon from './en/common.json'
 import enCurriculum from './en/curriculum.json'
@@ -11,6 +12,7 @@ import enExercise from './en/exercise.json'
 import enLevels from './en/levels.json'
 import enMusic from './en/music.json'
 import enPath from './en/path.json'
+import enProgress from './en/progress.json'
 import enSettings from './en/settings.json'
 
 /**
@@ -31,6 +33,7 @@ import enSettings from './en/settings.json'
  * - `exercise`   — everything inside an exercise: setup, round, summary
  * - `music`      — theory vocabulary: clefs, keys, intervals, pitches
  * - `settings`   — the settings screen
+ * - `progress`   — the progress overview
  */
 export const NAMESPACES = [
   'common',
@@ -40,6 +43,7 @@ export const NAMESPACES = [
   'exercise',
   'music',
   'settings',
+  'progress',
 ] as const
 
 export type Namespace = (typeof NAMESPACES)[number]
@@ -55,6 +59,7 @@ export const RESOURCES = {
     exercise: enExercise,
     music: enMusic,
     settings: enSettings,
+    progress: enProgress,
   },
   de: {
     common: deCommon,
@@ -64,5 +69,6 @@ export const RESOURCES = {
     exercise: deExercise,
     music: deMusic,
     settings: deSettings,
+    progress: deProgress,
   },
 } as const

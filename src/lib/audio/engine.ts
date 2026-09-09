@@ -3,14 +3,17 @@ import type { Soundfont as SmplrInstrument } from 'smplr'
 import { isMelodic, type PlayDirection } from '@/lib/music/direction'
 import { midiNumber, type Pitch } from '@/lib/music/pitch'
 
-import { getInstrument, type InstrumentId } from './instruments'
-
 /**
  * Playback.
  *
- * smplr streams real samples from a CDN, so an instrument is loaded once,
- * lazily, and kept for the life of the page. The service worker caches those
- * requests, which is what lets a practised instrument still work offline.
+ * Sampled, not synthesised: ear training is about timbre as much as pitch,
+ * and a sine wave teaches you to recognise a sine wave. One instrument, a
+ * Steinway with four velocity layers — what a piece is heard on is not one of
+ * the things melina asks anyone to decide.
+ *
+ * smplr streams the samples from a CDN, so the piano is loaded once, lazily,
+ * and kept for the life of the page. The service worker caches those
+ * requests, which is what lets it still work offline once practised.
  *
  * Browsers refuse to start an AudioContext without a user gesture, so the
  * context is created on first use — by which time the player has pressed
@@ -19,15 +22,20 @@ import { getInstrument, type InstrumentId } from './instruments'
  */
 
 /**
- * smplr's instrument surface, imported as a type so it is erased from the
- * bundle. Every instrument shares this shape, so the harp and the piano are
- * interchangeable here. Declaring it by hand instead would mean TypeScript
- * could not catch an upstream API change.
+ * smplr's player surface, imported as a type so it is erased from the
+ * bundle. Declaring it by hand instead would mean TypeScript could not catch
+ * an upstream API change — which is how `output.setVolume` went on being
+ * called here after it had been deprecated.
  */
 type SampledInstrument = SmplrInstrument
 
 let audioContext: AudioContext | undefined
-const players = new Map<InstrumentId, Promise<SampledInstrument>>()
+let player: Promise<SampledInstrument> | undefined
+
+/** Trimmed so the piano is neither timid nor startling. */
+const GAIN = 1
+/** Seconds a single note of an interval sounds for. */
+const NOTE_DURATION = 1.9
 
 /** Gap between the two notes of a melodic interval, in seconds. */
 const MELODIC_GAP = 0.62
@@ -49,43 +57,27 @@ export function getAudioContext(): AudioContext {
   return audioContext
 }
 
-async function createPlayer(id: InstrumentId): Promise<SampledInstrument> {
+async function createPlayer(): Promise<SampledInstrument> {
   const context = getAudioContext()
-  const { SplendidGrandPiano, Soundfont } = await import('smplr')
+  const { SplendidGrandPiano } = await import('smplr')
 
-  const player =
-    id === 'piano'
-      ? SplendidGrandPiano(context)
-      : Soundfont(context, { instrument: 'orchestral_harp', kit: 'MusyngKite' })
-
-  const instrument = player as unknown as SampledInstrument
+  const instrument = SplendidGrandPiano(context) as unknown as SampledInstrument
   await instrument.ready
   // `setVolume` is deprecated upstream; the property is the current API.
-  instrument.output.volume = getInstrument(id).gain * 100
+  instrument.output.volume = GAIN * 100
   return instrument
 }
 
 /**
- * Load an instrument, reusing the in-flight promise if one is already loading.
+ * Load the piano, reusing the in-flight promise if one is already loading.
  * Failures are not cached, so a dropped connection can be retried.
  */
-export function loadInstrument(id: InstrumentId): Promise<SampledInstrument> {
-  const existing = players.get(id)
-  if (existing !== undefined) return existing
-
-  const pending = createPlayer(id).catch((error: unknown) => {
-    players.delete(id)
+export function loadInstrument(): Promise<SampledInstrument> {
+  player ??= createPlayer().catch((error: unknown) => {
+    player = undefined
     throw error
   })
-  players.set(id, pending)
-  return pending
-}
-
-/** Begin fetching an instrument without waiting for it. */
-export function preloadInstrument(id: InstrumentId): void {
-  void loadInstrument(id).catch(() => {
-    // Surfaced when playback is actually attempted, not here.
-  })
+  return player
 }
 
 /**
@@ -118,12 +110,10 @@ export class PlaybackError extends Error {
 export async function playInterval(
   pitches: readonly [Pitch, Pitch],
   direction: PlayDirection,
-  instrumentId: InstrumentId,
 ): Promise<void> {
-  const { duration } = getInstrument(instrumentId)
-  await playSequence(pitches, instrumentId, {
+  await playSequence(pitches, {
     gap: isMelodic(direction) ? MELODIC_GAP : 0,
-    duration,
+    duration: NOTE_DURATION,
   })
 }
 
@@ -133,14 +123,8 @@ export async function playInterval(
  * `pitches` arrive in the order they should be heard, so a descending scale
  * is simply passed in reversed.
  */
-export async function playScale(
-  pitches: readonly Pitch[],
-  instrumentId: InstrumentId,
-): Promise<void> {
-  await playSequence(pitches, instrumentId, {
-    gap: SCALE_GAP,
-    duration: SCALE_NOTE_DURATION,
-  })
+export async function playScale(pitches: readonly Pitch[]): Promise<void> {
+  await playSequence(pitches, { gap: SCALE_GAP, duration: SCALE_NOTE_DURATION })
 }
 
 /**
@@ -152,10 +136,9 @@ export async function playScale(
  */
 async function playSequence(
   pitches: readonly Pitch[],
-  instrumentId: InstrumentId,
   { gap, duration }: { gap: number; duration: number },
 ): Promise<void> {
-  const instrument = await loadInstrument(instrumentId)
+  const instrument = await loadInstrument()
   const context = getAudioContext()
 
   // A context can be suspended by the browser at any point after creation.
@@ -178,7 +161,5 @@ async function playSequence(
 
 /** Silence whatever is currently sounding. */
 export function stopPlayback(): void {
-  for (const pending of players.values()) {
-    void pending.then((instrument) => instrument.stop()).catch(() => undefined)
-  }
+  void player?.then((instrument) => instrument.stop()).catch(() => undefined)
 }

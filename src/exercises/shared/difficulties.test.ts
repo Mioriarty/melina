@@ -198,13 +198,6 @@ describe('interval hearing levels', () => {
     )
     expect([...covered].sort()).toEqual(['ascending', 'descending', 'harmonic'])
   })
-
-  it('covers both instruments somewhere', () => {
-    const covered = new Set(
-      HEARING_DIFFICULTIES.map((level) => level.settings.instrument),
-    )
-    expect([...covered].sort()).toEqual(['harp', 'piano'])
-  })
 })
 
 describe('interval reading levels', () => {
@@ -320,13 +313,6 @@ describe('scale hearing levels', () => {
       SCALE_HEARING_DIFFICULTIES.flatMap((level) => level.settings.directions),
     )
     expect([...covered].sort()).toEqual(['ascending', 'descending'])
-  })
-
-  it('covers both instruments somewhere', () => {
-    const covered = new Set(
-      SCALE_HEARING_DIFFICULTIES.map((level) => level.settings.instrument),
-    )
-    expect([...covered].sort()).toEqual(['harp', 'piano'])
   })
 
   it('sets the modes that sound alike against each other', () => {

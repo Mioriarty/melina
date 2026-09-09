@@ -14,7 +14,6 @@ describe('interval hearing settings', () => {
       keySignatures: ['3f'],
       intervals: ['m3', 'P5'],
       directions: ['descending'],
-      instrument: 'harp',
       staffOnly: true,
       questionsPerRound: 10,
     }
@@ -40,7 +39,9 @@ describe('interval hearing settings', () => {
       keySignatures: [],
       intervals: [],
       directions: [],
-      instrument: 'kazoo',
+      // Left over from when the instrument was a setting: an unknown key
+      // is simply not carried across.
+      instrument: 'harp',
       staffOnly: 'yes',
       questionsPerRound: 7,
     })
@@ -49,8 +50,6 @@ describe('interval hearing settings', () => {
     expect(parsed?.keySignatures).toEqual(DEFAULT_SETTINGS.keySignatures)
     expect(parsed?.intervals).toEqual(DEFAULT_SETTINGS.intervals)
     expect(parsed?.directions).toEqual(DEFAULT_SETTINGS.directions)
-    // An unknown instrument cannot be loaded, so it falls back too.
-    expect(parsed?.instrument).toBe(DEFAULT_SETTINGS.instrument)
     expect(parsed?.questionsPerRound).toBe(DEFAULT_SETTINGS.questionsPerRound)
     expect(parsed?.staffOnly).toBe(DEFAULT_SETTINGS.staffOnly)
   })
@@ -76,12 +75,11 @@ describe('interval hearing settings', () => {
 
   it('rejects values that are not settings at all', () => {
     expect(parse(null)).toBeUndefined()
-    expect(parse('harp')).toBeUndefined()
+    expect(parse('everything')).toBeUndefined()
     expect(parse(42)).toBeUndefined()
   })
 
   it('defaults to something immediately practisable', () => {
-    expect(DEFAULT_SETTINGS.instrument).toBe('piano')
     expect(DEFAULT_SETTINGS.directions).toEqual(['ascending'])
     expect(DEFAULT_SETTINGS.clefs.length).toBeGreaterThan(0)
     expect(DEFAULT_SETTINGS.intervals.length).toBeGreaterThan(0)

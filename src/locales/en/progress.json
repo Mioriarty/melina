@@ -1,0 +1,48 @@
+{
+  "title": "Progress",
+  "blurb": "Everything you have answered, and what it says about where to practise next.",
+  "empty": "Nothing practised yet. Answer a round and this fills in.",
+  "toPath": "Back to the path",
+  "stats": {
+    "title": "Totals",
+    "answers": "Answers",
+    "days": "Days practised",
+    "accuracy": "Accuracy",
+    "longest": "Longest streak"
+  },
+  "chart": {
+    "title": "How much, and how well",
+    "range": "Time span",
+    "ranges": {
+      "fortnight": "14 days",
+      "weeks": "8 weeks",
+      "year": "Year"
+    },
+    "pick": "Pick a column to see the day behind it.",
+    "day": "{{day}}: {{answers}} answers, {{percent}}% correct",
+    "emptyDay": "{{day}}: nothing practised",
+    "week": "Week of {{from}} – {{to}}"
+  },
+  "heatmap": {
+    "title": "The last six months",
+    "hint": "One square per day; the darker it is, the more you answered.",
+    "streak_one": "{{count}} day in a row",
+    "streak_other": "{{count}} days in a row",
+    "summary": "The last {{weeks}} weeks, one square per day. {{days}} of them were practised."
+  },
+  "lists": {
+    "none": "Nothing answered here yet.",
+    "row": "{{percent}}% correct across {{answers}} answers",
+    "exercises": "Where the practice goes",
+    "exercisesHint": "Each game, weakest first.",
+    "intervals": "Intervals",
+    "intervalsHint": "Reading and hearing together — the interval you keep missing is the same interval either way.",
+    "modes": "Modes",
+    "modesHint": "Which scales come out wrong.",
+    "clefs": "Clefs",
+    "keys": "Key signatures",
+    "keysHint": "The signature a question was written under, not the key of the interval.",
+    "roots": "Starting notes",
+    "rootsHint": "The note the question was built on: an interval's lower note, or a scale's tonic."
+  }
+}

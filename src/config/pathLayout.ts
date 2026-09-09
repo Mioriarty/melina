@@ -40,21 +40,82 @@ export interface PathNodePosition {
 }
 
 /**
- * Hand-placed, alternating side to side. The vertical gaps are deliberately
- * uneven — a constant rhythm reads as a list, and the point of the path is
- * that it reads as a journey.
+ * Hand-placed, in the order they are walked.
+ *
+ * The path opens as **two braided tracks and merges**: intervals down the
+ * left, scales down the right, reading above hearing on both. Read across and
+ * it is the two subjects; read down and it is the two ways of knowing one.
+ * A single file would have had to claim that scale reading comes after
+ * interval hearing, which is not true of either the music or the player.
+ *
+ * The braid is staggered rather than level, so the four stations still run
+ * downhill and the two columns do not read as one wide row. The offset
+ * between the columns (`BRAID_STAGGER`) is much smaller than the drop from
+ * reading to hearing (`BRAID_DROP`), which is what makes the vertical pairs
+ * the ones the eye joins.
+ *
+ * Below the merge it is single file again, and there the vertical gaps are
+ * deliberately uneven — a constant rhythm reads as a list, and the point of
+ * the path is that it reads as a journey.
  */
+
+/** How far the scale column sits below the interval column beside it. */
+const BRAID_STAGGER = 70
+/** Reading to hearing: the drop that the braid's own connectors span. */
+const BRAID_DROP = 260
+
+/**
+ * Left for intervals, right for scales, held for the whole braid.
+ *
+ * Pushed as far apart as the column allows rather than sat either side of
+ * centre: two labels standing side by side each want `min(10.5rem, 42vw)`,
+ * which is most of a 320px screen between them. `pathLayout.test.ts` checks
+ * the pair never overlaps at any supported width.
+ */
+const INTERVAL_X = 26
+const SCALE_X = 74
+
 export const PATH_NODES: readonly PathNodePosition[] = [
-  { stationId: 'intervals/hearing', x: 50, y: 130 },
-  { stationId: 'intervals/reading', x: 26, y: 400 },
-  { stationId: 'scales/hearing', x: 71, y: 640 },
-  { stationId: 'scales/reading', x: 33, y: 900 },
-  { stationId: 'dictation', x: 64, y: 1180 },
-  { stationId: 'harmonic-prediction', x: 30, y: 1440 },
-  { stationId: 'harmonic-completion', x: 66, y: 1690 },
-  { stationId: 'counterpoint', x: 35, y: 1975 },
-  { stationId: 'daily', x: 62, y: 2215 },
-  { stationId: 'progress', x: 45, y: 2470 },
+  { stationId: 'intervals/reading', x: INTERVAL_X, y: PATH_TOP + 10 },
+  { stationId: 'scales/reading', x: SCALE_X, y: PATH_TOP + 10 + BRAID_STAGGER },
+  { stationId: 'intervals/hearing', x: INTERVAL_X, y: PATH_TOP + 10 + BRAID_DROP },
+  {
+    stationId: 'scales/hearing',
+    x: SCALE_X,
+    y: PATH_TOP + 10 + BRAID_DROP + BRAID_STAGGER,
+  },
+  // The merge. Centred, so the two tracks arrive symmetrically rather than
+  // one of them swinging across the column to reach it.
+  { stationId: 'dictation', x: 50, y: 700 },
+  { stationId: 'harmonic-prediction', x: 30, y: 960 },
+  { stationId: 'harmonic-completion', x: 66, y: 1210 },
+  { stationId: 'counterpoint', x: 35, y: 1495 },
+  { stationId: 'daily', x: 62, y: 1735 },
+]
+
+/**
+ * Which stations the dashed route joins.
+ *
+ * Explicit rather than "each node to the next", because the path is a graph
+ * once it braids: reading joins hearing down each column, and both hearings
+ * join the station below. Joining consecutive nodes instead would draw a
+ * zig-zag through all four, which says they are done in that order — the one
+ * thing the braid exists to deny.
+ */
+export interface PathEdge {
+  from: string
+  to: string
+}
+
+export const PATH_EDGES: readonly PathEdge[] = [
+  { from: 'intervals/reading', to: 'intervals/hearing' },
+  { from: 'scales/reading', to: 'scales/hearing' },
+  { from: 'intervals/hearing', to: 'dictation' },
+  { from: 'scales/hearing', to: 'dictation' },
+  { from: 'dictation', to: 'harmonic-prediction' },
+  { from: 'harmonic-prediction', to: 'harmonic-completion' },
+  { from: 'harmonic-completion', to: 'counterpoint' },
+  { from: 'counterpoint', to: 'daily' },
 ]
 
 const lastNode = PATH_NODES[PATH_NODES.length - 1]
@@ -70,7 +131,7 @@ export const CONNECTOR_LEAVE = MEDALLION_SIZE / 2 + 62
 export const CONNECTOR_ARRIVE = MEDALLION_SIZE / 2 + 14
 
 /**
- * Connector between two consecutive nodes.
+ * Connector between two joined nodes.
  *
  * Rendered in a single SVG spanning the column with `preserveAspectRatio
  * ="none"` and a `0 0 100 PATH_HEIGHT` viewBox, so x units are percentages
@@ -91,14 +152,18 @@ export function connectorPath(from: PathNodePosition, to: PathNodePosition): str
   )
 }
 
-export const CONNECTORS: readonly { id: string; d: string }[] = PATH_NODES.slice(
-  0,
-  -1,
-).map((node, index) => {
-  // `index + 1` is in range because we sliced off the final node.
-  const next = PATH_NODES[index + 1] as PathNodePosition
-  return { id: `${node.stationId}-${next.stationId}`, d: connectorPath(node, next) }
-})
+const POSITIONS = new Map(PATH_NODES.map((node) => [node.stationId, node]))
+
+export const CONNECTORS: readonly { id: string; d: string }[] = PATH_EDGES.flatMap(
+  (edge) => {
+    const from = POSITIONS.get(edge.from)
+    const to = POSITIONS.get(edge.to)
+    // An edge naming a station with no position draws nothing rather than a
+    // path full of NaN. `pathLayout.test.ts` asserts it never happens.
+    if (from === undefined || to === undefined) return []
+    return [{ id: `${edge.from}-${edge.to}`, d: connectorPath(from, to) }]
+  },
+)
 
 export interface Decoration {
   id: string
@@ -144,18 +209,39 @@ function distanceToNearestNode(x: number, y: number): number {
   )
 }
 
+/** How close in y two stations must be to count as standing side by side. */
+const BESIDE = 150
+
+/**
+ * Whether both sides of the column are occupied at this depth — which is the
+ * braid, where the route runs down both edges at once.
+ */
+function braidedAt(y: number): boolean {
+  const level = PATH_NODES.filter((node) => Math.abs(node.y - y) < BESIDE)
+  return level.some((node) => node.x < 50) && level.some((node) => node.x > 50)
+}
+
 /**
  * Pick an x on the opposite side of the column from whichever station sits at
  * this depth. Purely random placement clumps, and clumps land on the path;
  * pushing decorations into the outside of each bend balances the page and
  * keeps the route clear.
+ *
+ * Where the path braids there is no opposite side — both edges are taken —
+ * so the free space is the channel between the two tracks, and decorations
+ * go down the middle instead.
  */
 function oppositeSide(
   random: () => number,
   y: number,
   near: readonly [number, number],
   far: readonly [number, number],
+  middle?: readonly [number, number],
 ): number {
+  if (middle !== undefined && braidedAt(y)) {
+    return randomBetween(random, middle[0], middle[1])
+  }
+
   return nearestNode(y).x >= 50
     ? randomBetween(random, near[0], near[1])
     : randomBetween(random, far[0], far[1])
@@ -253,7 +339,8 @@ function scatterMusic(
       y = DECOR_TOP + 60 + band * (i + randomBetween(random, 0.2, 0.8))
       // Notation stays inside the column — a clef half off the screen reads
       // as a mistake, where a splat bleeding off the edge reads as intent.
-      x = oppositeSide(random, y, [10, 34], [66, 90])
+      // Beside the braid the only room left is between its two tracks.
+      x = oppositeSide(random, y, [10, 34], [66, 90], [42, 58])
 
       if (distanceToNearestNode(x, y) < 110) continue
       // Notation sitting on a splat turns into mud.
@@ -299,6 +386,12 @@ export const MUSIC: readonly MusicDecoration[] = scatterMusic(
  * vanishing, which is what keeps shipping a new exercise from silently
  * dropping it off the homescreen. `pathLayout.test.ts` asserts every station
  * has a real position, so the fallback should never actually be used.
+ *
+ * **Sorted down the page, not by the curriculum.** The registry lists hearing
+ * before reading; the path puts reading first and braids the two subjects, so
+ * following the registry would tab a keyboard from the third station to the
+ * first and back down again. Layout decides the order things are walked in,
+ * which is exactly what this file is for.
  */
 export function orderedPathNodes(): readonly {
   position: PathNodePosition
@@ -306,12 +399,14 @@ export function orderedPathNodes(): readonly {
 }[] {
   const placed = new Map(PATH_NODES.map((node) => [node.stationId, node]))
 
-  return stations().map((station, index) => ({
-    position: placed.get(station.id) ?? {
-      stationId: station.id,
-      x: index % 2 === 0 ? 42 : 60,
-      y: PATH_HEIGHT + index * 250,
-    },
-    station,
-  }))
+  return stations()
+    .map((station, index) => ({
+      position: placed.get(station.id) ?? {
+        stationId: station.id,
+        x: index % 2 === 0 ? 42 : 60,
+        y: PATH_HEIGHT + index * 250,
+      },
+      station,
+    }))
+    .sort((a, b) => a.position.y - b.position.y)
 }

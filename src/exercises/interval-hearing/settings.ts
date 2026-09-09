@@ -1,8 +1,3 @@
-import {
-  DEFAULT_INSTRUMENT,
-  isInstrumentId,
-  type InstrumentId,
-} from '@/lib/audio/instruments'
 import { HEARABLE_INTERVAL_KEYS } from '@/lib/music/catalog'
 import { DEFAULT_CLEF_IDS, isClefId, type ClefId } from '@/lib/music/clef'
 import {
@@ -21,9 +16,9 @@ import type { SettingSpec } from '@/lib/db/settings'
  * What the player is allowed to be asked, and how it should sound.
  *
  * Parsed defensively on the way out of IndexedDB: a stored setting can be
- * stale after the catalog changes, and an unknown clef, interval or
- * instrument must degrade to the default rather than producing a question
- * that cannot be asked or an instrument that cannot be loaded.
+ * stale after the catalog changes, and an unknown clef or interval must
+ * degrade to the default rather than producing a question that cannot be
+ * asked.
  *
  * Intervals are restricted to the *hearable* set — see
  * `HEARABLE_INTERVAL_KEYS`. Spelling is inaudible, so offering two names for
@@ -37,7 +32,6 @@ export interface IntervalHearingSettings {
   /** Keep both notes on the staff, with no ledger lines. */
   staffOnly: boolean
   directions: readonly PlayDirection[]
-  instrument: InstrumentId
   questionsPerRound: number
 }
 
@@ -49,7 +43,6 @@ export const DEFAULT_SETTINGS: IntervalHearingSettings = {
   intervals: HEARABLE_INTERVAL_KEYS,
   staffOnly: false,
   directions: DEFAULT_PLAY_DIRECTIONS,
-  instrument: DEFAULT_INSTRUMENT,
   questionsPerRound: 20,
 }
 
@@ -77,7 +70,6 @@ function parseSettings(value: unknown): IntervalHearingSettings | undefined {
     stringArray(raw.intervals)?.filter((key) => HEARABLE_INTERVAL_KEYS.includes(key)) ??
     []
   const directions = stringArray(raw.directions)?.filter(isPlayDirection) ?? []
-  const instrument = raw.instrument
   const questions = raw.questionsPerRound
   const staffOnly = raw.staffOnly
 
@@ -87,10 +79,6 @@ function parseSettings(value: unknown): IntervalHearingSettings | undefined {
       keySignatures.length > 0 ? keySignatures : DEFAULT_SETTINGS.keySignatures,
     intervals: intervals.length > 0 ? intervals : DEFAULT_SETTINGS.intervals,
     directions: directions.length > 0 ? directions : DEFAULT_SETTINGS.directions,
-    instrument:
-      typeof instrument === 'string' && isInstrumentId(instrument)
-        ? instrument
-        : DEFAULT_SETTINGS.instrument,
     staffOnly: typeof staffOnly === 'boolean' ? staffOnly : DEFAULT_SETTINGS.staffOnly,
     questionsPerRound:
       typeof questions === 'number' && ROUND_LENGTHS.includes(questions as 10 | 20 | 30)

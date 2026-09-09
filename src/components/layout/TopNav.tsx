@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 
 import { Icon } from '@/components/ui/Icon'
 
+import { StreakButton } from './StreakButton'
 import { Wordmark } from './Wordmark'
 
 /**
@@ -12,10 +13,11 @@ import { Wordmark } from './Wordmark'
  * it earned nothing, and on mobile a hamburger opening a menu of the same
  * eight stations was pure ceremony.
  *
- * Settings sit at the far left and are the only way into that screen, so the
- * wordmark is centred and balanced by a spacer the same width as the button.
- * Centring with `absolute` instead would take the wordmark out of the flow
- * and let a long future control overlap it.
+ * Settings sit at the far left and Progress at the far right, and each is the
+ * only way into its screen — neither is something you practise, so neither
+ * has a station on the path. The wordmark sits between them in the flow
+ * rather than being centred with `absolute`, which would let either control
+ * overlap it once its label grew.
  */
 export function TopNav() {
   const { t } = useTranslation()
@@ -34,8 +36,7 @@ export function TopNav() {
           <Wordmark />
         </div>
 
-        {/* Balances the settings button so the wordmark sits on the centre. */}
-        <span className="-mr-2 h-11 w-11 shrink-0" aria-hidden="true" />
+        <StreakButton />
       </div>
     </header>
   )

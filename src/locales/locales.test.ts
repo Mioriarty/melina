@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
 import { CATEGORIES, categoryBlurbKey, categoryTitleKey } from '@/config/curriculum'
-import { INSTRUMENTS } from '@/lib/audio/instruments'
 import { i18n } from '@/lib/i18n'
 import { DEFAULT_LANGUAGE, LANGUAGES } from '@/lib/i18n/languages'
 import { CATALOG } from '@/lib/music/catalog'
@@ -106,10 +105,6 @@ describe('keys built from registry ids', () => {
     for (const direction of PLAY_DIRECTIONS) {
       named(`directions.${direction}.label`)
       named(`directions.${direction}.hint`)
-    }
-    for (const instrument of INSTRUMENTS) {
-      named(`instruments.${instrument.id}.label`)
-      named(`instruments.${instrument.id}.hint`)
     }
     for (const interval of CATALOG) {
       named(`qualities.${interval.quality}`)

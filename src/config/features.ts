@@ -15,7 +15,6 @@ export const FEATURES = {
   'harmonic-completion': false,
   counterpoint: false,
   daily: false,
-  progress: false,
 } satisfies Record<string, boolean>
 
 export type FeatureKey = keyof typeof FEATURES

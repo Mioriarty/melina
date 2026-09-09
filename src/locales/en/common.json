@@ -3,5 +3,13 @@
   "backToPath": "Back to the path",
   "path": "Path",
   "loading": "Loading…",
-  "openSettings": "Settings"
+  "openSettings": "Settings",
+  "openProgress": "Open progress",
+  "streak": {
+    "today_one": "Progress. {{count}} day in a row, including today.",
+    "today_other": "Progress. {{count}} days in a row, including today.",
+    "pending_zero": "Progress. No streak yet.",
+    "pending_one": "Progress. {{count}} day in a row, but nothing practised today yet.",
+    "pending_other": "Progress. {{count}} days in a row, but nothing practised today yet."
+  }
 }

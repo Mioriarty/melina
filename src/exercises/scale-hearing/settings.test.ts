@@ -11,7 +11,6 @@ describe('scale hearing settings', () => {
       modes: ['lydian'],
       tonics: ['Eb'],
       directions: ['descending'],
-      instrument: 'harp',
       questionsPerRound: 30,
     }
     expect(parse(stored)).toEqual(stored)
@@ -30,12 +29,6 @@ describe('scale hearing settings', () => {
   it('falls back when every stored direction is gone', () => {
     expect(parse({ ...DEFAULT_SETTINGS, directions: ['harmonic'] })?.directions).toEqual(
       DEFAULT_SETTINGS.directions,
-    )
-  })
-
-  it('refuses an instrument that cannot be loaded', () => {
-    expect(parse({ ...DEFAULT_SETTINGS, instrument: 'theremin' })?.instrument).toBe(
-      DEFAULT_SETTINGS.instrument,
     )
   })
 

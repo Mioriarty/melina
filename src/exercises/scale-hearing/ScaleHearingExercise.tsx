@@ -7,6 +7,7 @@ import {
   playOrder,
   type ScaleRoundSpec,
 } from '@/exercises/scale-shared/generate'
+import { scaleFilter } from '@/exercises/scale-shared/attempt'
 import { ScaleRoundScreen } from '@/exercises/scale-shared/ScaleRoundScreen'
 import { ScaleSummary } from '@/exercises/scale-shared/ScaleSummary'
 import { useScaleRound } from '@/exercises/scale-shared/useScaleRound'
@@ -15,7 +16,6 @@ import { usePlayback } from '@/exercises/shared/usePlayback'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { playScale, unlockAudio } from '@/lib/audio/engine'
-import type { InstrumentId } from '@/lib/audio/instruments'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
 import { scaleMei } from '@/lib/notation/mei'
 import { preloadEngraver } from '@/lib/notation/verovio'
@@ -52,8 +52,6 @@ export default function ScaleHearingExercise() {
   const round = useScaleRound(spec, EXERCISE_ID)
   const options = useMemo(() => (spec === undefined ? [] : allowedModes(spec)), [spec])
 
-  const instrument = settings?.instrument
-
   const current =
     round.phase.name === 'asking' || round.phase.name === 'revealed'
       ? round.questions[round.phase.index]
@@ -62,12 +60,11 @@ export default function ScaleHearingExercise() {
   // Bound to the question on screen, so the hook itself knows nothing about
   // scales.
   const sound = useCallback(
-    (id: InstrumentId) =>
-      current === undefined ? Promise.resolve() : playScale(playOrder(current), id),
+    () => (current === undefined ? Promise.resolve() : playScale(playOrder(current))),
     [current],
   )
 
-  const audio = usePlayback(instrument, sound)
+  const audio = usePlayback(sound)
   const { play, preload } = audio
 
   useEffect(preloadEngraver, [])
@@ -99,6 +96,7 @@ export default function ScaleHearingExercise() {
         blurbKey="exercise:scales.hearing.levelsBlurb"
         group="scale-hearing"
         levels={SCALE_HEARING_DIFFICULTIES}
+        accuracyFilter={(level) => scaleFilter(level.settings, EXERCISE_ID)}
         onPick={(level) => {
           // Unlock audio inside the tap itself — a level starts a round
           // straight away, and the first question plays by itself.

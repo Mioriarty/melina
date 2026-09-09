@@ -3,5 +3,13 @@
   "backToPath": "Zurück zum Weg",
   "path": "Weg",
   "loading": "Wird geladen…",
-  "openSettings": "Einstellungen"
+  "openSettings": "Einstellungen",
+  "openProgress": "Fortschritt öffnen",
+  "streak": {
+    "today_one": "Fortschritt. {{count}} Tag in Folge, heute eingeschlossen.",
+    "today_other": "Fortschritt. {{count}} Tage in Folge, heute eingeschlossen.",
+    "pending_zero": "Fortschritt. Noch keine Serie.",
+    "pending_one": "Fortschritt. {{count}} Tag in Folge, aber heute noch nichts geübt.",
+    "pending_other": "Fortschritt. {{count}} Tage in Folge, aber heute noch nichts geübt."
+  }
 }

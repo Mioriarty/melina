@@ -2,6 +2,8 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 
 import { Icon } from '@/components/ui/Icon'
+import { useAccuracies } from '@/hooks/useAccuracy'
+import { isReportable, type AttemptFilter } from '@/lib/db/progress'
 import { cn } from '@/lib/utils/cn'
 
 import {
@@ -19,6 +21,13 @@ export interface LevelsScreenProps<TSettings> {
   /** Which block of `levels.json` names these presets. */
   group: DifficultyGroup
   levels: readonly Difficulty<TSettings>[]
+  /**
+   * Which past answers count towards a level's accuracy. Given as a filter
+   * per level rather than as a number, so this screen stays generic: it
+   * never learns what its levels are made of, only how to ask about them.
+   * Omit it and no accuracies are shown.
+   */
+  accuracyFilter?: (level: Difficulty<TSettings>) => AttemptFilter
   onPick: (level: Difficulty<TSettings>) => void
   onCustom: () => void
 }
@@ -36,10 +45,18 @@ export function LevelsScreen<TSettings>({
   blurbKey,
   group,
   levels,
+  accuracyFilter,
   onPick,
   onCustom,
 }: LevelsScreenProps<TSettings>) {
   const { t } = useTranslation(['exercise', 'common'])
+
+  // One pass over the log for the whole screen, and `undefined` until it has
+  // answered — a percentage that appears a moment late is far better than a
+  // zero that flips to 82%.
+  const accuracies = useAccuracies(
+    accuracyFilter === undefined ? [] : levels.map(accuracyFilter),
+  )
 
   return (
     <div className="h-full overflow-y-auto overscroll-contain">
@@ -58,35 +75,59 @@ export function LevelsScreen<TSettings>({
         </header>
 
         <ul className="grid gap-2">
-          {levels.map((level, index) => (
-            <li key={level.id}>
-              <button
-                type="button"
-                onClick={() => onPick(level)}
-                className={cn(
-                  'group flex w-full items-center gap-3.5 rounded-2xl border border-rule bg-paper-raised p-3.5 text-left',
-                  'transition-colors duration-150 hover:border-accent',
-                )}
-              >
-                <span className="tabular grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent-tint font-serif text-[1.0625rem] font-semibold text-accent">
-                  {index + 1}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block font-serif text-[1.0625rem] font-semibold">
-                    {t(difficultyTitleKey(group, level.id))}
+          {levels.map((level, index) => {
+            const measured = accuracies?.[index]
+            // A level with too little history behind it shows nothing rather
+            // than a number that would move ten points on the next answer.
+            const percent = isReportable(measured)
+              ? Math.round((measured?.rate ?? 0) * 100)
+              : undefined
+
+            return (
+              <li key={level.id}>
+                <button
+                  type="button"
+                  onClick={() => onPick(level)}
+                  className={cn(
+                    'group flex w-full items-center gap-3.5 rounded-2xl border border-rule bg-paper-raised p-3.5 text-left',
+                    'transition-colors duration-150 hover:border-accent',
+                  )}
+                >
+                  <span className="tabular grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent-tint font-serif text-[1.0625rem] font-semibold text-accent">
+                    {index + 1}
                   </span>
-                  <span className="mt-0.5 block text-sm leading-snug text-ink-muted">
-                    {t(difficultyBlurbKey(group, level.id))}
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-serif text-[1.0625rem] font-semibold">
+                      {t(difficultyTitleKey(group, level.id))}
+                    </span>
+                    <span className="mt-0.5 block text-sm leading-snug text-ink-muted">
+                      {t(difficultyBlurbKey(group, level.id))}
+                    </span>
                   </span>
-                </span>
-                <Icon
-                  name="chevronForward"
-                  size={18}
-                  className="shrink-0 text-ink-faint transition-colors group-hover:text-accent"
-                />
-              </button>
-            </li>
-          ))}
+                  {percent !== undefined && (
+                    <span className="tabular shrink-0 text-sm font-medium text-ink-muted">
+                      {/* The bare figure reads as "82% of what?" out of context,
+                        so the spoken form says what it measures instead. */}
+                      <span aria-hidden="true">
+                        {t('exercise:levels.accuracy', { percent })}
+                      </span>
+                      <span className="sr-only">
+                        {t('exercise:levels.accuracyLabel', {
+                          percent,
+                          answers: measured?.total ?? 0,
+                        })}
+                      </span>
+                    </span>
+                  )}
+                  <Icon
+                    name="chevronForward"
+                    size={18}
+                    className="shrink-0 text-ink-faint transition-colors group-hover:text-accent"
+                  />
+                </button>
+              </li>
+            )
+          })}
 
           <li>
             <button

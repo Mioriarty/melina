@@ -124,16 +124,6 @@
       "hint": "Oberer Ton zuerst — das schwerste der drei."
     }
   },
-  "instruments": {
-    "piano": {
-      "label": "Klavier",
-      "hint": "Steinway-Flügel, vier Anschlagstärken."
-    },
-    "harp": {
-      "label": "Harfe",
-      "hint": "Orchesterharfe. Klarerer Anschlag, längerer Nachklang."
-    }
-  },
   "qualities": {
     "doubly-diminished": "Doppelt vermindert",
     "diminished": "Vermindert",
