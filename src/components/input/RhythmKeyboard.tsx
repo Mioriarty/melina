@@ -13,22 +13,24 @@ import { answerKeyClasses, type KeyboardState } from './keyClasses'
 /**
  * The rhythm keyboard.
  *
- * A row of note values, and above it the three switches that change what those
- * values mean: rest, dotted, and — where a level has them — tuplet. Modes
- * rather than five times as many keys, because sixteenth through whole times
- * note-or-rest times plain-or-dotted is thirty keys, and thirty keys is a
- * form rather than an instrument.
+ * **Two rows of values — notes above, rests below — and the switches that
+ * change what the next one means.**
  *
- * Rest and dotted are this component's own state: they change what the *next*
- * key means and nothing about the bar so far. **They mean exactly the next
- * key** — both switch themselves off once a value has been entered, so they
- * read as "make this one dotted" rather than as a mode that has to be
- * remembered and turned back off. Half a bar entered as rests because the
- * switch was still down is a slip that cannot happen this way.
+ * Rests were a switch once, like the dot still is. They are a row of their own
+ * now because of how often they are wanted: a rest is not a variation on the
+ * note before it, it is the other half of writing a bar down, and putting one
+ * in cost two presses and left a switch down that the next note had to have
+ * turned off again. Ten keys is more keys, and far fewer presses.
  *
- * The tuplet is not one of them — a bracket changes how long a value lasts, so
- * it belongs to the draft, which is the thing that knows where the beat
- * boundaries are, and it stays on until its beat is full.
+ * The dot stays a switch, because it really is a variation: it applies to
+ * whichever value comes next, note or rest, so it multiplies the rows rather
+ * than adding to them. It is **one-shot** — it lets go once a value is entered,
+ * so it reads as "make this one dotted" rather than as a mode to remember and
+ * turn back off.
+ *
+ * The tuplet is neither: a bracket changes how long a value lasts, so it
+ * belongs to the draft, which is the thing that knows where the beat boundaries
+ * are, and it stays on until its beat is full.
  *
  * There is no submit key. The bar is answered the moment it is exactly full,
  * which is why every key that would overflow it is disabled instead.
@@ -55,11 +57,9 @@ export function RhythmKeyboard({
   const { t } = useTranslation('exercise')
   const names = useMusicNames()
 
-  const [rest, setRest] = useState(false)
   const [dotted, setDotted] = useState(false)
 
   const revealed = state === 'revealed'
-  const kind = rest ? 'rest' : 'note'
   const dots = dotted ? 1 : 0
 
   return (
@@ -70,21 +70,12 @@ export function RhythmKeyboard({
     >
       <div className="flex flex-wrap items-center justify-center gap-1.5">
         <Switch
-          pressed={rest}
-          disabled={revealed}
-          label={t('rhythm.keyboard.rest')}
-          onClick={() => setRest((current) => !current)}
-        >
-          <NoteGlyph value={4} kind="rest" dotted={dotted} size={20} />
-        </Switch>
-
-        <Switch
           pressed={dotted}
           disabled={revealed}
           label={t('rhythm.keyboard.dotted')}
           onClick={() => setDotted((current) => !current)}
         >
-          <NoteGlyph value={4} kind={kind} dotted size={20} />
+          <NoteGlyph value={4} kind="note" dotted size={20} />
         </Switch>
 
         {tuplets.map((division) => (

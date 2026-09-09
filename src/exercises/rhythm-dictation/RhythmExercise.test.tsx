@@ -51,6 +51,25 @@ function labels(container: HTMLElement): string {
     .join(' | ')
 }
 
+/** Every switch in the keyboard: a button that is either on or off. */
+function switches(): HTMLElement[] {
+  return screen
+    .queryAllByRole('button')
+    .filter((button) => button.getAttribute('aria-pressed') !== null)
+}
+
+/** Every key that enters a value, found by the names those keys carry. */
+function valueKeys(): HTMLElement[] {
+  const wanted = new Set(
+    [16, 8, 4, 2, 1].flatMap((dur) =>
+      ['note', 'rest'].map((kind) => value(`${dur}.plain.${kind}`)),
+    ),
+  )
+  return screen
+    .queryAllByRole('button')
+    .filter((button) => wanted.has(button.getAttribute('aria-label') ?? ''))
+}
+
 /** Press a note-value key by its spoken name. */
 function press(name: string) {
   fireEvent.click(screen.getByRole('button', { name }))
@@ -100,9 +119,13 @@ describe('Rhythmic Dictation', () => {
     expect(screen.getByRole('button', { name: value('4.plain.note') })).toBeTruthy()
     expect(screen.getByRole('button', { name: value('4.plain.rest') })).toBeTruthy()
     expect(screen.getByRole('button', { name: value('16.plain.rest') })).toBeTruthy()
-    expect(
-      screen.queryByRole('button', { name: 'Write rests instead of notes' }),
-    ).toBeNull()
+
+    // Counted rather than looked up by name. An earlier version of this test
+    // asked whether a button called "Write rests instead of notes" was gone,
+    // and passed because the *label* had been deleted while the switch itself
+    // was still sitting there. A count cannot pass that way.
+    expect(valueKeys()).toHaveLength(10)
+    expect(switches()).toHaveLength(1)
   })
 
   it('enters a rest in one press', async () => {
@@ -202,6 +225,8 @@ describe('Rhythmic Dictation', () => {
   it('offers a triplet switch only where the level has triplets', async () => {
     await startRound('triplets')
     expect(screen.getByRole('button', { name: 'Triplet' })).toBeTruthy()
+    // The dot and the triplet, and nothing else that is on or off.
+    expect(switches()).toHaveLength(2)
   })
 
   it('has no triplet switch on a level without them', async () => {
