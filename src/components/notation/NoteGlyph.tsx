@@ -1,16 +1,34 @@
 import type { NoteValue } from '@/lib/notation/rhythmNotation'
 
+import {
+  flag8thDown,
+  flag16thDown,
+  noteheadBlack,
+  noteheadHalf,
+  noteheadWhole,
+  rest8th,
+  rest16th,
+  restHalf,
+  restQuarter,
+  restWhole,
+  type Glyph,
+} from './glyphs'
+
 /**
- * A single note or rest, drawn.
+ * A single note or rest, for a keyboard key.
  *
- * Hand-drawn rather than typeset. Leland lives inside the Verovio WebAssembly
- * and is not a web font, the app's own two faces are Latin-only, and the
- * Unicode musical symbols that do exist have no rests below the whole and are
- * unreliably shaped across platforms. Twelve small paths cost nothing, work
- * offline, take `currentColor`, and — unlike a font — never arrive late.
+ * The outlines are Leland's own, lifted out of Verovio — see `glyphs.ts`. They
+ * were drawn by hand first and the rests gave that away: a quarter rest is a
+ * shape you cannot approximate, and an eighth rest is not a "7". Using the real
+ * font also means a key looks like exactly what pressing it will put on the
+ * staff, which is the whole point of drawing notation on a button.
  *
- * These are keyboard glyphs, not engraving: what appears on the staff is
- * Verovio's, and this never has to match it exactly.
+ * Stems point **down**, matching the staff, where they hang below the single
+ * line so a bar filling with beams cannot push the line around — see `mei.ts`.
+ *
+ * Everything is placed from the measured boxes rather than by eye, because
+ * these glyphs are anchored the way notation anchors them: a notehead's origin
+ * is its left edge, and a rest's is the line it hangs from.
  */
 
 export interface NoteGlyphProps {
@@ -21,130 +39,87 @@ export interface NoteGlyphProps {
   className?: string
 }
 
-/** Notehead centre and stem, in the 24 x 28 box every glyph is drawn in. */
-const HEAD_X = 8
-const HEAD_Y = 19
-const STEM_X = 12.7
-const STEM_TOP = 4
-
-function Flag({ at }: { at: number }) {
-  return (
-    <path
-      d={`M ${STEM_X} ${at} C ${STEM_X + 4.6} ${at + 2.2} ${STEM_X + 5.8} ${at + 5.4} ${STEM_X + 3.6} ${at + 9.4} C ${STEM_X + 4.4} ${at + 5.6} ${STEM_X + 2.4} ${at + 3.6} ${STEM_X} ${at + 3}  Z`}
-      fill="currentColor"
-    />
-  )
+interface Box {
+  x0: number
+  x1: number
+  y0: number
+  y1: number
 }
 
-function Head({ filled }: { filled: boolean }) {
-  return (
-    <ellipse
-      cx={HEAD_X}
-      cy={HEAD_Y}
-      rx={5.3}
-      ry={3.9}
-      transform={`rotate(-22 ${HEAD_X} ${HEAD_Y})`}
-      fill={filled ? 'currentColor' : 'none'}
-      stroke="currentColor"
-      strokeWidth={filled ? 0 : 1.7}
-    />
-  )
+/* -------------------------------------------------------------- geometry */
+
+/** A downward stem meets the notehead at its left edge, which is x = 0. */
+const STEM_WIDTH = 30
+/**
+ * Long enough for a flag, which reaches some 820 units back up towards the
+ * notehead from the end of the stem. A shorter stem would put the hook through
+ * the note.
+ */
+const STEM_LENGTH = 850
+
+const HEADS: Record<NoteValue, Glyph> = {
+  1: noteheadWhole,
+  2: noteheadHalf,
+  4: noteheadBlack,
+  8: noteheadBlack,
+  16: noteheadBlack,
 }
 
-function Stem() {
-  return (
-    <path
-      d={`M ${STEM_X} ${HEAD_Y - 1.4} L ${STEM_X} ${STEM_TOP}`}
-      stroke="currentColor"
-      strokeWidth={1.6}
-      strokeLinecap="round"
-    />
-  )
+const FLAGS: Partial<Record<NoteValue, Glyph>> = {
+  8: flag8thDown,
+  16: flag16thDown,
 }
 
-function NoteShape({ value }: { value: NoteValue }) {
-  if (value === 1) return <Head filled={false} />
-
-  return (
-    <>
-      <Head filled={value !== 2} />
-      <Stem />
-      {value === 8 && <Flag at={STEM_TOP} />}
-      {value === 16 && (
-        <>
-          <Flag at={STEM_TOP} />
-          <Flag at={STEM_TOP + 5.4} />
-        </>
-      )}
-    </>
-  )
+const RESTS: Record<NoteValue, Glyph> = {
+  1: restWhole,
+  2: restHalf,
+  4: restQuarter,
+  8: rest8th,
+  16: rest16th,
 }
 
-/** A hooked stroke, which is what an eighth and a sixteenth rest are made of. */
-function RestHook({ at }: { at: number }) {
-  return (
-    <>
-      <circle cx={7.4} cy={at} r={2.1} fill="currentColor" />
-      <path
-        d={`M 9.3 ${at - 1.1} C 12.4 ${at - 2.2} 13.4 ${at - 1.4} 13.2 ${at + 1.2}`}
-        stroke="currentColor"
-        strokeWidth={1.5}
-        fill="none"
-        strokeLinecap="round"
-      />
-    </>
-  )
-}
+/** A whole note is the only value with no stem at all. */
+const hasStem = (value: NoteValue) => value !== 1
 
-function RestShape({ value }: { value: NoteValue }) {
-  // A whole rest hangs from its line and a half rest sits on it, and that is
-  // the *only* thing that tells them apart — so on a key, where there is no
-  // staff to refer to, the line has to come with them or the two are the same
-  // picture.
-  if (value === 1 || value === 2) {
-    return (
-      <>
-        <path
-          d="M 3.4 17.2 L 17.6 17.2"
-          stroke="currentColor"
-          strokeWidth={1}
-          opacity={0.4}
-        />
-        <rect
-          x={5.6}
-          y={value === 1 ? 17.2 : 12.8}
-          width={10.4}
-          height={4.4}
-          fill="currentColor"
-        />
-      </>
-    )
+function union(a: Box, b: Box): Box {
+  return {
+    x0: Math.min(a.x0, b.x0),
+    x1: Math.max(a.x1, b.x1),
+    y0: Math.min(a.y0, b.y0),
+    y1: Math.max(a.y1, b.y1),
   }
+}
 
-  if (value === 4) {
-    // The quarter rest's zigzag, then the hook that finishes it.
-    return (
-      <path
-        d="M 7.4 5.2 L 13.1 11.6 C 10.4 13.6 10.2 15 12.6 17.2 L 7.6 13.6 C 10.6 16.6 9.4 19.4 12.4 22.4 C 9.4 20.8 6.6 22 8.4 25.4 C 5.2 22.4 6.2 18.6 10.4 19.8 L 5.6 14.2 C 8.6 12.4 8.8 10.6 6.2 8.2 Z"
-        fill="currentColor"
-      />
-    )
-  }
+function shift(box: Box, dy: number): Box {
+  return { ...box, y0: box.y0 + dy, y1: box.y1 + dy }
+}
 
-  const hooks = value === 16 ? [10.6, 16.4] : [12.6]
-  return (
-    <>
-      <path
-        d={`M ${13.2} ${(hooks[0] as number) - 1.6} L 9.6 24`}
-        stroke="currentColor"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-      />
-      {hooks.map((at) => (
-        <RestHook key={at} at={at} />
-      ))}
-    </>
-  )
+function noteBox(value: NoteValue): Box {
+  const head = HEADS[value].box
+  if (!hasStem(value)) return head
+
+  const stem: Box = { x0: 0, x1: STEM_WIDTH, y0: -STEM_LENGTH, y1: 0 }
+  const flag = FLAGS[value]
+  const withStem = union(head, stem)
+  return flag === undefined ? withStem : union(withStem, shift(flag.box, -STEM_LENGTH))
+}
+
+/**
+ * One scale for every glyph, so a whole note really is wider than a quarter and
+ * the row reads as notation rather than as five icons fitted to five boxes.
+ * Sized by the tallest thing drawn, which is a stemmed and flagged note.
+ */
+const BOX_HEIGHT = 28
+const BOX_WIDTH = 24
+const PADDING = 2
+const TALLEST = STEM_LENGTH + noteheadBlack.box.y1
+const UNIT = (BOX_HEIGHT - PADDING * 2) / TALLEST
+
+/** Where a rest's own line sits, for the two rests that are told apart by it. */
+const LINE_Y = BOX_HEIGHT / 2
+
+function Outline({ glyph }: { glyph: Glyph }) {
+  return <path d={glyph.d} fill="currentColor" />
 }
 
 export function NoteGlyph({
@@ -154,24 +129,64 @@ export function NoteGlyph({
   size = 26,
   className,
 }: NoteGlyphProps) {
+  const glyph = kind === 'note' ? undefined : RESTS[value]
+  const box = kind === 'note' ? noteBox(value) : glyph!.box
+
+  // A whole rest hangs below its line and a half rest sits on it, and that is
+  // all that separates them — so those two keep their anchor on a drawn line
+  // instead of being centred like everything else.
+  const onLine = kind === 'rest' && (value === 1 || value === 2)
+
+  const x = BOX_WIDTH / 2 - ((box.x0 + box.x1) / 2) * UNIT
+  const y = onLine ? LINE_Y : BOX_HEIGHT / 2 + ((box.y0 + box.y1) / 2) * UNIT
+
+  // Just clear of the ink, on the notehead's own line.
+  const dotX = x + (box.x1 + 110) * UNIT
+  const dotY = kind === 'note' ? y : y - ((box.y0 + box.y1) / 2) * UNIT
+
   return (
     <svg
-      viewBox="0 0 24 28"
+      viewBox={`0 0 ${BOX_WIDTH} ${BOX_HEIGHT}`}
       width={size}
-      height={(size * 28) / 24}
+      height={(size * BOX_HEIGHT) / BOX_WIDTH}
       className={className}
       aria-hidden="true"
       focusable="false"
     >
-      {kind === 'note' ? <NoteShape value={value} /> : <RestShape value={value} />}
-      {dotted && (
-        <circle
-          cx={kind === 'note' ? HEAD_X + 8.6 : 18.4}
-          cy={kind === 'note' ? HEAD_Y : 17}
-          r={1.55}
-          fill="currentColor"
+      {onLine && (
+        <path
+          d={`M ${BOX_WIDTH / 2 - 6} ${LINE_Y} h 12`}
+          stroke="currentColor"
+          strokeWidth={0.9}
+          opacity={0.45}
         />
       )}
+
+      <g transform={`translate(${x}, ${y}) scale(${UNIT}, ${-UNIT})`}>
+        {glyph === undefined ? (
+          <>
+            <Outline glyph={HEADS[value]} />
+            {hasStem(value) && (
+              <rect
+                x={0}
+                y={-STEM_LENGTH}
+                width={STEM_WIDTH}
+                height={STEM_LENGTH}
+                fill="currentColor"
+              />
+            )}
+            {FLAGS[value] !== undefined && (
+              <g transform={`translate(0, ${-STEM_LENGTH})`}>
+                <Outline glyph={FLAGS[value] as Glyph} />
+              </g>
+            )}
+          </>
+        ) : (
+          <Outline glyph={glyph} />
+        )}
+      </g>
+
+      {dotted && <circle cx={dotX} cy={dotY} r={1.35} fill="currentColor" />}
     </svg>
   )
 }

@@ -108,6 +108,21 @@ describe('Rhythmic Dictation', () => {
     expect(screen.getByRole('button', { name: value('4.dotted.note') })).toBeTruthy()
   })
 
+  it('lets go of both switches once a value has been entered', async () => {
+    // They mean "make *this* one dotted", not a mode to remember and turn back
+    // off. Half a bar entered as rests because the switch was still down is the
+    // slip this prevents.
+    await startRound()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dot the next value' }))
+    press(value('4.dotted.note'))
+    expect(screen.getByRole('button', { name: value('4.plain.note') })).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Write rests instead of notes' }))
+    press(value('8.plain.rest'))
+    expect(screen.getByRole('button', { name: value('8.plain.note') })).toBeTruthy()
+  })
+
   it('answers itself the moment the bar is full', async () => {
     await startRound()
 

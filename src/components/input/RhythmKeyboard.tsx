@@ -20,9 +20,15 @@ import { answerKeyClasses, type KeyboardState } from './keyClasses'
  * form rather than an instrument.
  *
  * Rest and dotted are this component's own state: they change what the *next*
- * key means and nothing about the bar so far. The tuplet is not — a bracket
- * changes how long a value lasts, so it belongs to the draft, which is the
- * thing that knows where the beat boundaries are.
+ * key means and nothing about the bar so far. **They mean exactly the next
+ * key** — both switch themselves off once a value has been entered, so they
+ * read as "make this one dotted" rather than as a mode that has to be
+ * remembered and turned back off. Half a bar entered as rests because the
+ * switch was still down is a slip that cannot happen this way.
+ *
+ * The tuplet is not one of them — a bracket changes how long a value lasts, so
+ * it belongs to the draft, which is the thing that knows where the beat
+ * boundaries are, and it stays on until its beat is full.
  *
  * There is no submit key. The bar is answered the moment it is exactly full,
  * which is why every key that would overflow it is disabled instead.
@@ -120,7 +126,12 @@ export function RhythmKeyboard({
               type="button"
               disabled={!allowed}
               aria-label={names.noteValue(value, kind, dotted)}
-              onClick={() => onAppend({ kind, dur: value, dots })}
+              onClick={() => {
+                onAppend({ kind, dur: value, dots })
+                // Both switches are for the key just pressed, and nothing more.
+                setRest(false)
+                setDotted(false)
+              }}
               className={answerKeyClasses(
                 { showCorrect: false, showWrong: false, revealed },
                 cn(

@@ -165,23 +165,44 @@ async function playSequence(
 
 /* ------------------------------------------------------------------ rhythm
 
-   Rhythmic dictation needs two sounds the pitched exercises do not: a drum to
-   play the rhythm on, and a click to count it in. They are loaded very
-   differently on purpose — see below. */
+   Rhythmic dictation needs a drum to play the rhythm on and a click to count
+   it in. Both come from one sampled kit, which is a few hundred kilobytes
+   rather than the piano's tens of megabytes. */
 
-/** Where the snare comes from. One kit, chosen the way the piano was. */
-const DRUM_MACHINE = 'TR-808'
-const SNARE = 'snare'
-/** Trimmed against the click so the rhythm is clearly the thing in front. */
-const SNARE_VELOCITY = 100
+/**
+ * The kit. The LinnDrum rather than the TR-808: its drums are sampled acoustic
+ * ones, so the snare has a real transient and a short decay, and adjacent
+ * sixteenths stay separate instead of smearing into each other.
+ */
+const DRUM_MACHINE = 'LM-2'
+
+/**
+ * **Named sample by sample, never by group.**
+ *
+ * smplr resolves a bare group name — `snare` — to whichever variation happens
+ * to come first in the kit's manifest, and on the TR-808 that is `snare/sd0000`:
+ * the one with both tone and snap wound down to zero. Measured, it has a
+ * spectral centroid of 243 Hz against the kick's 128 Hz and the same
+ * low-to-high energy ratio, which is to say it *is* a kick to any ear, and it
+ * was what this played for its first draft. Every name here is therefore a
+ * whole sample name, and adding one means picking the variation deliberately.
+ */
+const SNARE = 'snare-m'
+/** The count-in. Sidesticks: a click, plainly not a drum being struck. */
+const CLICK_ACCENT = 'stick-h'
+const CLICK_BEAT = 'stick-m'
+
+/** The rhythm is the foreground; the click sits behind it. */
+const SNARE_VELOCITY = 110
+const ACCENT_VELOCITY = 72
+const BEAT_VELOCITY = 48
 
 /**
  * Load the drum kit.
  *
- * A few hundred kilobytes rather than the piano's tens of megabytes, so a
- * rhythm exercise can afford to fetch it up front — it plays by itself, the
- * way the hearing exercises do. Cached at runtime by the service worker, never
- * precached, for the same reason as the piano.
+ * Small enough that a rhythm exercise can fetch it up front — it plays by
+ * itself, the way the hearing exercises do. Cached at runtime by the service
+ * worker, never precached, for the same reason as the piano.
  */
 export function loadDrums(): Promise<DrumMachine> {
   drums ??= (async () => {
@@ -198,35 +219,6 @@ export function loadDrums(): Promise<DrumMachine> {
   })
 
   return drums
-}
-
-/**
- * The metronome click, synthesised rather than sampled.
- *
- * "Sampled, not synthesised" is a rule about the material being *heard as
- * music* — a sine wave teaches you to recognise a sine wave. A metronome is
- * not a timbre anyone is being trained to recognise, it is a marker; and it
- * has to be instant, weightless and available before any download finishes,
- * none of which a sample would be.
- */
-function click(context: AudioContext, time: number, accented: boolean): void {
-  const oscillator = context.createOscillator()
-  const gain = context.createGain()
-
-  oscillator.type = 'square'
-  oscillator.frequency.value = accented ? 1600 : 1050
-
-  // A very short blip: long enough to place, too short to have a pitch worth
-  // hearing against the drum.
-  const peak = accented ? 0.28 : 0.16
-  gain.gain.setValueAtTime(0.0001, time)
-  gain.gain.linearRampToValueAtTime(peak, time + 0.002)
-  gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.045)
-
-  oscillator.connect(gain)
-  gain.connect(context.destination)
-  oscillator.start(time)
-  oscillator.stop(time + 0.06)
 }
 
 export interface RhythmPlaybackOptions {
@@ -264,7 +256,13 @@ export async function playRhythm(
     from: context.currentTime + LEAD_IN,
   })
 
-  for (const beat of schedule.clicks) click(context, beat.time, beat.accented)
+  for (const beat of schedule.clicks) {
+    kit.start({
+      note: beat.accented ? CLICK_ACCENT : CLICK_BEAT,
+      time: beat.time,
+      velocity: beat.accented ? ACCENT_VELOCITY : BEAT_VELOCITY,
+    })
+  }
   for (const time of schedule.hits) {
     kit.start({ note: SNARE, time, velocity: SNARE_VELOCITY })
   }
