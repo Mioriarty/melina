@@ -419,8 +419,16 @@ the measured alternatives, because the value is meant to be turned. The scale is
 steeper than it looks: 0.6 is already four times as wide as 0.25, and the
 engraver refuses anything above 1.0. Nothing asserts the exact number — the
 tests only check a scale gets more room than the default and still fills its
-column. Staff size still matters for an interval, which is two notes wide and
-never overflows.
+column.
+
+Staff size therefore only matters for an interval, which is two notes wide and
+never overflows. `DEFAULT_STAFF_SIZE` came down from 126 to **110** for exactly
+that reason: at 126 a two-note staff stood 258px tall on a desktop while a scale
+beside it stood 166px and a bar of rhythm 113px, so the notation was largest in
+the exercise showing the least of it. Because a scale is fitted to the column at
+every supported width, the same change provably leaves it alone — at both 126 and
+110 it renders 343×91 on a 375px phone — and a rhythm is fitted the same way in
+every metre but 2/4.
 
 Spacing is applied per render rather than once at startup, since one toolkit is
 shared by the whole app. `renderMei` sets the options immediately before the
@@ -462,6 +470,29 @@ to match and the staff ends up smaller for no gain.
 A rhythm staff is **one line with a percussion clef** — there are no pitches to
 place — and stems point down so a bar filling with beams cannot push the line
 around.
+
+### Engraved text takes the app's serif
+
+Verovio writes `font-family="Times, serif"` onto the inner `<svg>` of every
+render. `Score` overrides it with one `[&_svg]:font-serif` class, and every
+Verovio render in the app goes through `Score`, so that is the whole mechanism.
+
+It rests on two properties of Verovio's output, neither obvious and neither ours
+to control, so `rhythmVerovio.test.ts` pins both:
+
+- The font is a **presentation attribute**, which the cascade ranks below every
+  author rule — a plain class beats it with no `!important`. Emitted as
+  `style="…"` it would not budge.
+- **The only real `<text>` is staff labels.** Noteheads, rests, clefs, time
+  signatures and tuplet numbers are all glyph outlines, so restyling text cannot
+  reach the notation and turn it into type.
+
+Verovio still _lays the label out_ with Times metrics — it indents the system by
+exactly the width it measures, leaving no slack — so a swapped face that ran
+wider would be clipped by the inner `<svg>`, which has no `overflow`. EB Garamond
+is narrower than Times for both labels (0.99 and 0.97 of the width, against a
+1.15 ceiling), so there is room; a much longer label, or a change of face, is
+what would spend it.
 
 **The keyboard draws real Leland glyphs**, extracted from Verovio by
 `npm run glyphs` into `components/notation/glyphs.ts` and committed. Leland

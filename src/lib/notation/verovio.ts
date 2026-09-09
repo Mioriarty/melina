@@ -56,8 +56,22 @@ const OPTIONS: VerovioOptions = {
  * How big the staff is drawn, as a percentage of Verovio's own default.
  * An interval is two notes wide and never overflows, so this is what sets
  * its size on screen.
+ *
+ * **This is the interval dial, and only the interval dial.** A scale is 971px
+ * of engraved width against a 624px column at its widest, so it is fitted to
+ * the column at every supported size and this number cannot move it — which is
+ * what makes it safe to turn without touching how a scale reads. A rhythm is
+ * fitted the same way in every metre but 2/4.
+ *
+ * It came down from 126 because the interval was the one example drawn larger
+ * than the column would ever have forced: at 126 a two-note staff stood 258px
+ * tall on a desktop while a scale beside it stood 166px and a bar of rhythm
+ * 113px, so the notation looked overbearing in the exercise that shows the
+ * least of it. 110 keeps the interval comfortably the largest thing on screen —
+ * it is still the centre of the app — without it being half again the size of
+ * everything else.
  */
-export const DEFAULT_STAFF_SIZE = 126
+export const DEFAULT_STAFF_SIZE = 110
 
 /**
  * How much horizontal room each note is given. Verovio's own default.

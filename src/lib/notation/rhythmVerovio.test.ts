@@ -227,6 +227,38 @@ describe('two staves', () => {
     expect(svg).toContain('Correct')
   })
 
+  it('leaves its labels as text the app can restyle, and its notation as outlines', async () => {
+    // `Score` gives engraved text the app's serif with one CSS class. That
+    // works only because of two properties of this output, neither obvious
+    // and neither ours to control, so they are pinned here rather than
+    // discovered when the labels quietly go back to Times.
+    const svg = await renderMei(
+      rhythmMei({
+        meter: FOUR_FOUR,
+        staves: [
+          { nodes: notateRhythm(bar([0, 60, 120, 180])), label: 'Yours' },
+          { nodes: notateRhythm(bar([0, 60, 120, 180])), label: 'Correct' },
+        ],
+      }),
+      undefined,
+      rhythmProfile(4, 2),
+    )
+
+    // One: the font is a *presentation attribute*, which the cascade ranks
+    // below every author rule. As `style="..."` it would take `!important`
+    // to shift.
+    expect(svg).toMatch(/<svg[^>]*\sfont-family="Times, serif"/)
+    expect(svg).not.toMatch(/style="[^"]*font-family/)
+
+    // Two: the only real text is the labels. Noteheads, rests, clefs and the
+    // time signature are glyph outlines, so restyling text cannot reach them
+    // and turn the notation into type.
+    const texts = [...svg.matchAll(/<text\b[^>]*>([\s\S]*?)<\/text>/g)].map(([whole]) =>
+      whole.replace(/<[^>]+>/g, '').trim(),
+    )
+    expect(texts).toEqual(['Yours', 'Correct'])
+  })
+
   it('escapes a label rather than injecting it', async () => {
     const svg = await renderMei(
       rhythmMei({

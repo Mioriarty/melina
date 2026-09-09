@@ -43,6 +43,10 @@ const NO_PROFILE: VerovioOptions = {}
  * Verovio returns a complete SVG string, which is injected as markup. That is
  * safe here because the input is MEI this app generated itself from typed
  * pitch data — no user or network content ever reaches it.
+ *
+ * **Every Verovio render in the app passes through here**, which is what makes
+ * one class enough to give engraved text the app's own serif — see the
+ * `font-serif` note below.
  */
 export function Score({
   mei,
@@ -114,9 +118,17 @@ export function Score({
       // maximums scales it down proportionally when it will not fit —
       // narrow screens especially — and otherwise leaves it at its natural,
       // consistent size.
+      //
+      // `font-serif` overrides the `font-family="Times, serif"` Verovio writes
+      // onto its inner `<svg>`. That is a *presentation attribute*, which the
+      // cascade ranks below every author rule, so a plain class wins without
+      // `!important`. It reaches only real `<text>` — staff labels, and later
+      // any directive or tempo mark — because notation itself is drawn as
+      // glyph outlines, not as type.
       className={cn(
         'flex items-center justify-center',
         '[&_svg]:h-auto [&_svg]:max-h-full [&_svg]:w-auto [&_svg]:max-w-full',
+        '[&_svg]:font-serif',
         className,
       )}
       role="img"
