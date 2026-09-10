@@ -256,6 +256,70 @@ export function melodyProfile(slots: number, staves: 1 | 2): VerovioOptions {
 }
 
 /**
+ * **How a melody being written down over several bars is rendered.**
+ *
+ * The same fixed page as the rhythm and melody profiles above, with one thing
+ * they did not need: **where the systems break.**
+ *
+ * A phrase of two bars laid out by the engraver's own judgement sits on one
+ * system while it is short and jumps to two the moment a bar fills, which
+ * halves the staff under the player's hands — the exact failure the fixed page
+ * exists to prevent, arriving by a different door. So `melodicPhraseMei` writes
+ * an `<sb/>` where each system ends and this asks for `breaks: 'encoded'`,
+ * which uses those and only those. The number of systems is then a property of
+ * the question rather than of how much has been typed.
+ *
+ * **The width reserves one system's worth of the worst case** — every beat of
+ * every bar on that system divided into sixteenths, each with an accidental in
+ * front of it, since that is what a player might type whatever the question
+ * was. Reserving the whole phrase on one line instead is what makes multi-bar
+ * unreadable: two bars of that side by side come out around 1300px, which a
+ * 375px phone scales to a staff of some 35px.
+ *
+ * The height follows the system count, and both are pinned, so the box the
+ * notation is drawn in never changes size while the answer grows.
+ */
+const MELODIC_PAGE_LEAD = 380
+/** A second staff underneath needs room for both labels. */
+const MELODIC_TWO_STAFF_LEAD = 540
+const MELODIC_PAGE_PER_BEAT = 165
+/**
+ * One system's height, measured rather than reasoned: a melody may reach two
+ * ledger lines either side of the staff, and a beamed group of sixteenths adds
+ * its stems on top of that.
+ */
+const MELODIC_SYSTEM_HEIGHT = 330
+const MELODIC_TWO_STAFF_SYSTEM_HEIGHT = 580
+
+const MELODIC_PROFILES = new Map<string, VerovioOptions>()
+
+export function melodicPhraseProfile(
+  beats: number,
+  bars: number,
+  barsPerSystem: number,
+  staves: 1 | 2,
+): VerovioOptions {
+  const key = `${beats}:${bars}:${barsPerSystem}:${staves}`
+  const cached = MELODIC_PROFILES.get(key)
+  if (cached !== undefined) return cached
+
+  const systems = Math.max(1, Math.ceil(bars / barsPerSystem))
+  const perSystem = staves === 2 ? MELODIC_TWO_STAFF_SYSTEM_HEIGHT : MELODIC_SYSTEM_HEIGHT
+  const lead = staves === 2 ? MELODIC_TWO_STAFF_LEAD : MELODIC_PAGE_LEAD
+
+  const profile: VerovioOptions = {
+    ...FILL_THE_PAGE,
+    breaks: 'encoded',
+    adjustPageWidth: false,
+    adjustPageHeight: false,
+    pageWidth: lead + MELODIC_PAGE_PER_BEAT * beats * Math.min(bars, barsPerSystem),
+    pageHeight: systems * perSystem,
+  }
+  MELODIC_PROFILES.set(key, profile)
+  return profile
+}
+
+/**
  * One note on a bare staff, for a key on the degree keyboard.
  *
  * Fixed so that seven keys standing in a row are the same size and their staves

@@ -45,7 +45,7 @@ export function RhythmSummary({
       }
       // Every wrong bar is its own bar, so naming what was pressed would be a
       // list of tick offsets. How many impacts it had is the useful shape.
-      answerName={(chosen) =>
+      answerName={({ chosen }) =>
         t('rhythm.summary.impacts', { count: chosen.onsets.length })
       }
       chipTitle={({ question }) => kindOf(question)}

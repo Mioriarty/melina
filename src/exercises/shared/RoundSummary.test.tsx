@@ -39,7 +39,7 @@ function summary(answers: readonly Answered<Question, string>[], onPlayAgain = v
         answers={answers}
         subjectKey={({ question }) => question.subject}
         subjectName={({ question }) => `the ${question.subject}`}
-        answerName={(chosen) => `the ${chosen}`}
+        answerName={({ chosen }) => `the ${chosen}`}
         chipTitle={({ question }) => `${question.subject} · ${question.clef}`}
         allCorrect="Nothing left to fix here."
         onPlayAgain={onPlayAgain}

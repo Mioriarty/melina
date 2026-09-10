@@ -93,12 +93,17 @@ export const PATH_NODES: readonly PathNodePosition[] = [
   // side: the *when* and the *what*, which melodic dictation needs both of and
   // which can be learned in either order. Staggered like the first braid, so
   // the pair still runs downhill and does not read as one wide row.
-  { stationId: 'dictation/rhythm', x: INTERVAL_X + 1, y: 700 },
-  { stationId: 'scales/degrees', x: SCALE_X - 1, y: 700 + BRAID_STAGGER },
-  { stationId: 'harmonic-prediction', x: 30, y: 960 },
-  { stationId: 'harmonic-completion', x: 66, y: 1210 },
-  { stationId: 'counterpoint', x: 35, y: 1495 },
-  { stationId: 'daily', x: 62, y: 1735 },
+  { stationId: 'dictation/rhythm', x: INTERVAL_X + 1, y: 660 },
+  { stationId: 'scales/degrees', x: SCALE_X - 1, y: 660 + BRAID_STAGGER },
+  // **Where the second braid merges.** Melodic dictation needs both of the
+  // stations above it — the *when* and the *what* — so it stands centred and
+  // alone rather than off to one side, and both of them join it. It is the
+  // first station since the top of the path with two edges arriving.
+  { stationId: 'dictation/short-melodies', x: 50, y: 990 },
+  { stationId: 'harmonic-prediction', x: 30, y: 1250 },
+  { stationId: 'harmonic-completion', x: 66, y: 1500 },
+  { stationId: 'counterpoint', x: 35, y: 1785 },
+  { stationId: 'daily', x: 62, y: 2025 },
 ]
 
 /**
@@ -120,8 +125,9 @@ export const PATH_EDGES: readonly PathEdge[] = [
   { from: 'scales/reading', to: 'scales/hearing' },
   { from: 'intervals/hearing', to: 'dictation/rhythm' },
   { from: 'scales/hearing', to: 'scales/degrees' },
-  { from: 'dictation/rhythm', to: 'harmonic-prediction' },
-  { from: 'scales/degrees', to: 'harmonic-prediction' },
+  { from: 'dictation/rhythm', to: 'dictation/short-melodies' },
+  { from: 'scales/degrees', to: 'dictation/short-melodies' },
+  { from: 'dictation/short-melodies', to: 'harmonic-prediction' },
   { from: 'harmonic-prediction', to: 'harmonic-completion' },
   { from: 'harmonic-completion', to: 'counterpoint' },
   { from: 'counterpoint', to: 'daily' },

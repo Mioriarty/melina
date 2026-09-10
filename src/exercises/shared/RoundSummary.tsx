@@ -20,8 +20,16 @@ export interface RoundSummaryProps<TQuestion, TAnswer> {
   subjectKey: (answer: Answered<TQuestion, TAnswer>) => string
   /** The same thing spelled out: `Major third`. */
   subjectName: (answer: Answered<TQuestion, TAnswer>) => string
-  /** What the player said instead. */
-  answerName: (chosen: TAnswer) => string
+  /**
+   * What the player said instead.
+   *
+   * Given the whole answer rather than only what was chosen, for the same
+   * reason `subjectKey` is: what is worth reporting back is not always a
+   * property of the answer alone. Melodic dictation asks two things at once
+   * and reports which of them went wrong, which it can only know by comparing
+   * the answer against the question it was answering.
+   */
+  answerName: (answer: Answered<TQuestion, TAnswer>) => string
   /** Tooltip on a chip: what was asked, and in what context. */
   chipTitle: (answer: Answered<TQuestion, TAnswer>) => string
   /** Where to go next when nothing was missed. Exercise-specific advice. */
@@ -73,7 +81,7 @@ export function RoundSummary<TQuestion, TAnswer>({
       answered: new Set<string>(),
     }
     entry.count += 1
-    entry.answered.add(answerName(answer.chosen))
+    entry.answered.add(answerName(answer))
     misses.set(key, entry)
   }
 

@@ -2,7 +2,9 @@ import { getClef, type ClefId } from '@/lib/music/clef'
 import { ticksPerMeasure, type TimeSignature } from '@/lib/music/meter'
 import {
   notatedTicks,
+  onsetsOf,
   padding,
+  type NoteValue,
   type RhythmNode,
   type RhythmSymbol,
 } from '@/lib/notation/rhythmNotation'
@@ -524,6 +526,176 @@ export function melodyMei({
   )
 }
 
+/* ------------------------------------------------------- melodic dictation
+
+   The two halves at once: a run of bars in a metre, each note carrying a
+   pitch. Everything here is engraving — what is graded is the impacts and the
+   sounding pitches, neither of which comes from this file. */
+
+export interface MelodicStaffOptions {
+  /**
+   * The spelling, one list of nodes per bar. Always as many lists as the
+   * finished answer will have bars, empty ones included: a bar that has not
+   * been reached yet still has to occupy its width, or the notes already
+   * written would re-space the moment it was.
+   */
+  bars: readonly (readonly RhythmNode[])[]
+  /** One per note, in the order they sound, across the whole phrase. */
+  pitches: readonly Pitch[]
+  /** Drawn at the left. Passed in already translated, like every other string. */
+  label?: string
+}
+
+export interface MelodicPhraseMeiOptions {
+  meter: TimeSignature
+  clef: ClefId
+  keySignature: KeySignatureId
+  /**
+   * How many bars share one system.
+   *
+   * **Encoded rather than left to the engraver.** Verovio decides where to
+   * break by what will fit, so a half-written phrase would sit on one system
+   * and jump to two the moment a bar grew — the staff resizing under the
+   * player's hands, which is the exact failure the fixed page exists to stop.
+   * A `<sb/>` says where the line ends whatever is on it.
+   */
+  barsPerSystem: number
+  /** One staff, or two when a wrong answer is shown against the right one. */
+  staves: readonly MelodicStaffOptions[]
+}
+
+/**
+ * How many notes a bar's spelling holds, which is how many pitches it eats.
+ *
+ * Read off the spelling rather than counted separately, so the pitches cannot
+ * drift out of step with the noteheads they belong to.
+ */
+function notesIn(nodes: readonly RhythmNode[]): number {
+  return onsetsOf(nodes).length
+}
+
+/**
+ * One bar's worth of nodes, with each note wearing the next pitch.
+ *
+ * `take` hands out pitches in order and `accidentals` was computed for this
+ * bar alone — see `measureAccidentals`, and the barline that resets it.
+ */
+function melodicNodeElement(
+  node: RhythmNode,
+  take: () => { pitch: Pitch | undefined; accidental: string },
+): string {
+  if (node.kind === 'beam') {
+    return `<beam>${node.children.map((child) => melodicNodeElement(child, take)).join('')}</beam>`
+  }
+
+  if (node.kind === 'tuplet') {
+    return (
+      `<tuplet num="${node.num}" numbase="${node.numbase}" bracket.place="above" num.place="above">` +
+      `${node.children.map((child) => melodicNodeElement(child, take)).join('')}</tuplet>`
+    )
+  }
+
+  const dots = attribute('dots', node.dots)
+  if (node.kind === 'rest') return `<rest dur="${node.dur}"${dots}/>`
+
+  const { pitch, accidental } = take()
+  // A note with no pitch behind it cannot happen — every note entry carries
+  // one — so this draws a rest rather than throwing inside a render.
+  if (pitch === undefined) return `<rest dur="${node.dur}"${dots}/>`
+
+  return `<note pname="${pitch.letter.toLowerCase()}" oct="${pitch.octave}" dur="${node.dur}"${dots}${accidental}/>`
+}
+
+/**
+ * A melody: bars of pitched notes under a key signature and a time signature.
+ *
+ * **The key signature is printed here, unlike a scale.** A scale must be
+ * keyless because the mode is read off its accidentals; a melody's key is told
+ * to the player above the staff instead, so writing the signature is what makes
+ * the notation read the way the melody would actually be written down.
+ *
+ * **Accidentals reset at every barline**, which is the whole reason this cannot
+ * reuse `melodyMei`: that writes one measure, so its `measureAccidentals` runs
+ * once over everything. Here each bar gets its own, and a note repeated across
+ * a barline prints its accidental again — which is what the notation means.
+ */
+export function melodicPhraseMei({
+  meter,
+  clef,
+  keySignature,
+  barsPerSystem,
+  staves,
+}: MelodicPhraseMeiOptions): string {
+  const { sign, line } = getClef(clef)
+  const total = ticksPerMeasure(meter)
+  const barCount = staves[0]?.bars.length ?? 0
+
+  const staffDefs = staves
+    .map((staff, index) => {
+      const attributes = `n="${index + 1}" lines="5" clef.shape="${sign}" clef.line="${line}"`
+      return staff.label === undefined
+        ? `<staffDef ${attributes}/>`
+        : `<staffDef ${attributes}><label>${escapeText(staff.label)}</label></staffDef>`
+    })
+    .join('\n              ')
+
+  /** Where each staff's pitches have been used up to, bar by bar. */
+  const consumed = staves.map(() => 0)
+
+  const measures = Array.from({ length: barCount }, (_, bar) => {
+    const layers = staves
+      .map((staff, index) => {
+        const nodes = staff.bars[bar] ?? []
+        const from = consumed[index] ?? 0
+        const count = notesIn(nodes)
+        const pitches = staff.pitches.slice(from, from + count)
+        consumed[index] = from + count
+
+        // One bar at a time, so an accidental printed in this bar governs the
+        // rest of it and nothing beyond it.
+        const accidentals = measureAccidentals(pitches, keySignature)
+        let at = 0
+        const take = () => {
+          const pitch = pitches[at]
+          const accidental = accidentals[at] ?? ''
+          at += 1
+          return { pitch, accidental }
+        }
+
+        const written = notatedTicks(nodes)
+        const rest = padding(meter, written, total).map(spaceElement).join('')
+        const layer = nodes.map((node) => melodicNodeElement(node, take)).join('') + rest
+
+        return `<staff n="${index + 1}">
+                <layer n="1">${layer}</layer>
+              </staff>`
+      })
+      .join('\n              ')
+
+    // The closing barline is hidden only on the last bar, so the phrase reads
+    // as a fragment rather than as a finished piece — the same reason every
+    // other example here hides its own.
+    const right = bar === barCount - 1 ? ' right="invis"' : ''
+    const measure = `<measure n="${bar + 1}"${right}>
+              ${layers}
+            </measure>`
+
+    // A break before every bar that starts a new system, never before the
+    // first — a leading `<sb/>` would open the score with an empty line.
+    const brk = bar > 0 && bar % barsPerSystem === 0 ? '<sb/>\n            ' : ''
+    return `${brk}${measure}`
+  }).join('\n            ')
+
+  return envelope(
+    `<scoreDef keysig="${meiKeySignature(keySignature)}" meter.count="${meter.beats}" meter.unit="${meter.unit}">
+            <staffGrp>
+              ${staffDefs}
+            </staffGrp>
+          </scoreDef>`,
+    measures,
+  )
+}
+
 /**
  * How a note is written on a key.
  *
@@ -534,8 +706,15 @@ export function melodyMei({
  * below the staff — A flat 3 in the treble — whose ledger lines reach further
  * than any stem does. Dropping the stem therefore bought no room at all, and
  * cost the key a notehead that looked like no note in any notation.
+ *
+ * The value is a plain quarter unless the caller asks otherwise. Melodic
+ * dictation does: there a pitch key writes whatever the note-value row has
+ * armed, so the key draws that — a dotted half if a dotted half is what
+ * pressing it would put on the staff.
  */
-const KEY_NOTE = 'dur="4"'
+function keyNote(dur: NoteValue, dots: 0 | 1): string {
+  return `dur="${dur}"${attribute('dots', dots)}`
+}
 
 /**
  * One note on a bare staff — a key on the degree keyboard.
@@ -550,10 +729,14 @@ export function degreeKeyMei({
   pitch,
   clef,
   keySignature,
+  dur = 4,
+  dots = 0,
 }: {
   pitch: Pitch
   clef: ClefId
   keySignature: KeySignatureId
+  dur?: NoteValue
+  dots?: 0 | 1
 }): string {
   const { sign, line } = getClef(clef)
 
@@ -565,7 +748,7 @@ export function degreeKeyMei({
           </scoreDef>`,
     `<measure n="1" right="invis">
               <staff n="1">
-                <layer n="1">${noteElement(pitch, keySignature, KEY_NOTE)}</layer>
+                <layer n="1">${noteElement(pitch, keySignature, keyNote(dur, dots))}</layer>
               </staff>
             </measure>`,
   )

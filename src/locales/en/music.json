@@ -346,6 +346,8 @@
   },
   "degreeRaised": "raised {{degree}}",
   "degreeLowered": "lowered {{degree}}",
+  "degreeOctaveUp": "{{degree}}, an octave above",
+  "degreeOctaveDown": "{{degree}}, an octave below",
   "scaleNames": {
     "ionian": "{{tonic}} major",
     "aeolian": "{{tonic}} minor",

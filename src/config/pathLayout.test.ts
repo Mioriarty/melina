@@ -68,10 +68,18 @@ describe('path layout', () => {
   })
 
   it('spaces the single-file stations unevenly', () => {
-    // The braid at the top is regular by design — two columns keeping step.
-    // Everything below the merge is a single file, and there a constant
-    // rhythm would read as a list rather than as a journey.
-    const single = PATH_NODES.slice(4)
+    // The braids are regular by design — two columns keeping step. Everything
+    // from the merge down is a single file, and there a constant rhythm would
+    // read as a list rather than as a journey.
+    //
+    // Found by where the merge is rather than by a fixed index: a braid gains
+    // and loses stations as exercises are built, and an index would quietly
+    // start measuring a pair of braided nodes as though they were a run.
+    const merge = PATH_NODES.findIndex(
+      (node) => node.stationId === 'dictation/short-melodies',
+    )
+    expect(merge, 'the merge station is not on the path').toBeGreaterThan(0)
+    const single = PATH_NODES.slice(merge)
     const gaps = single.slice(1).map((node, i) => node.y - single[i]!.y)
 
     expect(gaps.length).toBeGreaterThan(2)
@@ -131,10 +139,11 @@ describe('path layout', () => {
     expect(joins('scales/reading', 'scales/hearing')).toBe(true)
     expect(joins('scales/hearing', 'scales/degrees')).toBe(true)
 
-    // The merge: rhythm is the *when* and degrees the *what*, and what comes
-    // after needs both, so both arrive at the same station.
-    expect(joins('dictation/rhythm', 'harmonic-prediction')).toBe(true)
-    expect(joins('scales/degrees', 'harmonic-prediction')).toBe(true)
+    // The merge: rhythm is the *when* and degrees the *what*, and melodic
+    // dictation needs both, so both arrive at the same station.
+    expect(joins('dictation/rhythm', 'dictation/short-melodies')).toBe(true)
+    expect(joins('scales/degrees', 'dictation/short-melodies')).toBe(true)
+    expect(joins('dictation/short-melodies', 'harmonic-prediction')).toBe(true)
 
     // Nothing crosses between the columns before that.
     expect(joins('intervals/reading', 'scales/reading')).toBe(false)

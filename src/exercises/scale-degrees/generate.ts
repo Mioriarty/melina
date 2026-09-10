@@ -185,7 +185,7 @@ export function buildQuestion(
     const notes = buildMelody(random, tonic, mode, spec)
     if (keySignature === undefined || notes === undefined) continue
 
-    const degrees = nameMelody(notes)
+    const degrees = nameMelody(tonic, mode, notes)
     const pitches = degrees.map((degree) => degreePitch(tonic, mode, degree))
     // `degreeNotes` only ever collects degrees that spell, so this cannot
     // fail — it is here so the type says so rather than an assertion.

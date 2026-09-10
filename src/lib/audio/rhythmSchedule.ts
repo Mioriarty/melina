@@ -1,4 +1,5 @@
 import { TICKS_PER_BEAT } from '@/lib/music/meter'
+import { phraseOnsets, phraseTicks, type Phrase } from '@/lib/music/phrase'
 import type { Rhythm } from '@/lib/music/rhythm'
 
 /**
@@ -87,4 +88,73 @@ export function rhythmSchedule(
     startsAt,
     endsAt: startsAt + beats * secondsPerBeat,
   }
+}
+
+/**
+ * The same, for a phrase of several bars.
+ *
+ * One count-in bar however many bars follow it: what a count-in establishes is
+ * the metre — where beat one is — and that does not need saying twice.
+ *
+ * The click, when it runs throughout, accents the first beat of **every** bar
+ * rather than only the first of the phrase. That is what makes the barlines
+ * audible, and a player writing down two bars has to know which one a note
+ * landed in.
+ */
+export function phraseSchedule(
+  phrase: Phrase,
+  { tempo, metronome, from = 0 }: ScheduleOptions,
+): RhythmSchedule {
+  const secondsPerBeat = 60 / tempo
+  const { beats } = phrase.meter
+  const startsAt = from + beats * secondsPerBeat
+  const totalBeats = phraseTicks(phrase) / TICKS_PER_BEAT
+
+  const countIn = Array.from({ length: beats }, (_, beat) => ({
+    time: from + beat * secondsPerBeat,
+    accented: beat === 0,
+  }))
+
+  const under =
+    metronome === 'throughout'
+      ? Array.from({ length: totalBeats }, (_, beat) => ({
+          time: startsAt + beat * secondsPerBeat,
+          accented: beat % beats === 0,
+        }))
+      : []
+
+  return {
+    clicks: [...countIn, ...under],
+    hits: phraseOnsets(phrase).map(
+      (tick) => startsAt + (tick / TICKS_PER_BEAT) * secondsPerBeat,
+    ),
+    startsAt,
+    endsAt: startsAt + totalBeats * secondsPerBeat,
+  }
+}
+
+/**
+ * How long each note of a melody rings: until the next impact, and the last
+ * one until the end of the phrase.
+ *
+ * **Legato, and that is load-bearing rather than a matter of taste.** Note
+ * values are not graded, on the claim that a held note and a note followed by
+ * a rest say the same thing. If a half note damped where a quarter and a rest
+ * did not, that claim would be false the moment anybody listened: the spelling
+ * would be audible, and a player could be marked right for writing down
+ * something other than what they heard. Ringing every note into the next keeps
+ * the two identical in sound, which is what makes them identical in grading.
+ */
+export function melodyDurations(
+  phrase: Phrase,
+  { tempo }: { tempo: number },
+): readonly number[] {
+  const secondsPerBeat = 60 / tempo
+  const onsets = phraseOnsets(phrase)
+  const end = phraseTicks(phrase)
+
+  return onsets.map((tick, index) => {
+    const next = onsets[index + 1] ?? end
+    return ((next - tick) / TICKS_PER_BEAT) * secondsPerBeat
+  })
 }

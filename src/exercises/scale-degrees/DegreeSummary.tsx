@@ -63,7 +63,7 @@ export function DegreeSummary({
       answers={answers}
       subjectKey={(answer) => names.degreeShort(firstMiss(answer))}
       subjectName={(answer) => names.degree(firstMiss(answer))}
-      answerName={(chosen) => degreesKey(chosen)}
+      answerName={({ chosen }) => degreesKey(chosen)}
       chipTitle={({ question }) =>
         t('degrees.summary.questionLabel', {
           key: names.scaleName(tonicKey(question.tonic), question.mode),

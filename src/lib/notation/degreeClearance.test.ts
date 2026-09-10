@@ -9,6 +9,8 @@ import { MODE_IDS, TONIC_CHOICES, fittingOctaves, isCleanScale } from '@/lib/mus
 
 import { measureInk } from '@/test/svgInk'
 
+import { NOTE_VALUES } from './rhythmNotation'
+
 import { degreeKeyMei, melodyMei } from './mei'
 import { DEGREE_KEY_PROFILE, melodyProfile, renderMei } from './verovio'
 
@@ -96,6 +98,39 @@ describe('the extremes a degree can reach', () => {
         }
       }
     },
+  )
+
+  it.each(CLEFS.map((clef) => clef.id))(
+    'fits on a key at every note value in the %s clef',
+    async (clefId) => {
+      // Melodic dictation draws each pitch key as the value that pressing it
+      // would write, so the key page now has to hold more shapes than a plain
+      // quarter: a sixteenth hangs a flag well below its stem, and a dotted
+      // whole note reaches further right than anything else. The page is fixed
+      // so that a row of keys is one size, which means it has to hold all of
+      // them rather than the one it was measured against.
+      const { lowest, highest } = extremes(clefId)
+
+      for (const pitch of [lowest, highest]) {
+        for (const dur of NOTE_VALUES) {
+          for (const dots of [0, 1] as const) {
+            // No dotted sixteenth: it is 22.5 ticks and cannot be written.
+            if (dur === 16 && dots === 1) continue
+
+            const svg = await renderMei(
+              degreeKeyMei({ pitch, clef: clefId, keySignature: '7s', dur, dots }),
+              undefined,
+              DEGREE_KEY_PROFILE,
+            )
+            expect(
+              await clearance(svg),
+              `${clefId} ${pitchKey(pitch)} as ${dur}${dots === 1 ? ' dotted' : ''}`,
+            ).toBeGreaterThan(0)
+          }
+        }
+      }
+    },
+    30000,
   )
 
   it.each(CLEFS.map((clef) => clef.id))(

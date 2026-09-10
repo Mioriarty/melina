@@ -341,9 +341,33 @@ than tabulating it means adding a degree widens the level on its own, and it is
 what keeps a raised seventh out of a major key, where it is not a seventh at all
 but the octave.
 
+**A degree carries an octave.** `octave` is an offset from the tonic's own, so
+`1` is the tonic and `1'` the octave above it, and scale degree identification —
+which never leaves that first octave — simply never sets it. That is what lets
+melodic dictation reach a fifth below its tonic and an octave above, with the
+fifth below still being _the fifth_: a degree keeps its meaning wherever it
+sits. `stepRange(low, high)` walks the ladder between two of them, and the run
+it returns is both the vocabulary a melody draws on and the keys on the
+keyboard. The stored form marks the octave `'` up and `_` down — not the
+Helmholtz comma, because `degreesKey` joins a melody with commas and a
+separator that appears inside a value is a format that cannot be read back.
+
 Which name gets printed follows the line: a note the scale has takes the
 scale's own name, and one from outside it is raised where the melody carries on
-up and lowered where it turns back down. The keyboard is unaffected — every
+up and lowered where it turns back down. **Unless one of the two cannot be
+written**: across an octave boundary the "equally true" names stop being equally
+writable — in B♭ mixolydian the note under the octave is ♯7 (A♮) or ♭1′ (B𝄫),
+and no direction of line makes a double flat the right way to write A. So
+`nameMelody` drops the spellings needing a _double_ accidental and lets the
+direction decide among what is left.
+
+Only doubles, deliberately. Keeping the smallest printed accidental instead is a
+different and worse rule: in F♯ major it turns a rising ♯4 — B♯, the
+conventional spelling of an ascending chromatic note — into C♮, purely because a
+natural is less ink than a sharp. Choosing between two single accidentals is
+exactly what the direction is for.
+
+The keyboard is unaffected — every
 degree stays pressable, including the ones that never generate, because a
 player reaching for ♭1 should find it rather than a dead key.
 
@@ -410,6 +434,24 @@ struck, which is not a floor but a demand for saturation: it is what made Beats
 (3 in a four-beat bar) unable to deliver the held notes it declares, since one
 held beat was all it could ever allow. Keep `minOnsets` well under the number
 of beats in the shortest metre a level offers.
+
+### A phrase — `phrase.ts`
+
+**A phrase is a list of bars, not a long bar.** One stretch of ticks would have
+been fewer lines and would have cost the thing that makes melodic dictation
+possible: a bar is the unit every existing function already understands.
+`buildBar` fills one, `notateRhythm` spells one, `maxDurationAt` knows what a
+note may cross inside one. Keeping the bar whole is why going from one to four
+of them changed none of them — `barRhythm(phrase, i)` hands a bar to anything
+built for a single bar and it works unchanged.
+
+**That is also why there are still no ties.** A note may not cross a boundary
+stronger than the one it starts on, and the barline is the strongest there is,
+so `maxDurationAt` already refuses it. A sound running past a barline is written
+as a note and then a rest in the next bar — exactly what one bar already does
+for any gap a single value cannot span. Since impacts are the whole of what is
+graded, and playback rings every note until the next impact, the two spell the
+same sound and nothing is lost.
 
 `rhythmDivision` labels a bar by **what it asks of the player**, not by its
 shortest note: a bar with one triplet in it is a triplet bar even where a
@@ -491,6 +533,41 @@ Spacing is applied per render rather than once at startup, since one toolkit is
 shared by the whole app. `renderMei` sets the options immediately before the
 render they belong to, and everything from there to `renderToSVG` is
 synchronous, so no other render can interleave and pick up the wrong spacing.
+
+### A phrase on the page — `melodicPhraseMei`, `melodicPhraseProfile`
+
+A five-line staff under a key signature, one `<measure>` per bar, each note
+taking its pitch from a list zipped against the note-symbols of `notateRhythm`.
+Three things are load-bearing and two of them are invisible when wrong, so
+`melodicVerovio.test.ts` pins all three:
+
+- **`measureAccidentals` resets at every barline.** It exists for precisely this
+  and had only ever seen one measure: `melodyMei` writes the whole of scale
+  degrees' answer as a single measure, so reusing it would have run one
+  accidental state across the entire phrase and printed a note bare that reads
+  as the pitch before it.
+- **The system breaks are encoded** — an `<sb/>` per system under
+  `breaks: 'encoded'`. Verovio otherwise breaks by what fits, so a half-written
+  phrase sits on one system and jumps to two the moment a bar fills, halving the
+  staff under the player's hands. That is the failure the fixed page exists to
+  stop, arriving by another door.
+- **The page reserves one system of the worst case**, not the whole phrase. The
+  reserve is what a player might still type — every beat of the bar divided into
+  a quintuplet, each note carrying a double accidental, under a seven-sharp
+  signature — and two of those side by side come out around 1300 units wide,
+  which a 375px phone scales to a staff of some 35px. So **one bar to a
+  system**, and a phrase is read down the page.
+
+The width is checked twice, and the second check is the one that bites. Nothing
+running off the page is the obvious test and it is not enough: Verovio _fits_ a
+system to the width it is given, so a page that is too narrow produces notation
+with no room between the notes rather than notation hanging off the edge —
+invisible to any measurement of where the ink stops. So the reserve is also
+compared against what the same music wants when it sizes its own page.
+
+`SCORE_BOX` has a sibling, `PHRASE_SCORE_BOX`, a little taller: two stacked
+systems at the single-staff ceiling come out around half the height one staff
+gets, which is the wrong way round for the thing that is _more_ to read.
 
 ### Writing a rhythm down — `rhythmNotation.ts`
 
@@ -629,6 +706,13 @@ Two rules the browser imposes, both easy to get wrong:
 - A context can be **suspended again** whenever a tab is backgrounded, so
   `playSequence` resumes defensively before every note.
 
+`playMelody` is the first question in the app that needs **two instruments at
+once** — a piano for the notes and the kit's sidesticks to count the bar in —
+and they share the one list of scheduled notes, because a melody and its own
+count-in are never wanted separately. It is also the most expensive preload
+there is, and still a preload: the exercise plays by itself the moment a
+question appears.
+
 `playInterval` and `playScale` are both thin wrappers over `playSequence`, which
 schedules a run of notes; a gap of zero is what makes an interval harmonic. A
 scale is played faster and shorter than an interval — eight notes at interval pace
@@ -681,6 +765,13 @@ rather than one that has to guess which you meant.
 A station carries `titleKey` and `blurbKey`, not a title — the words come from
 `curriculum.json`.
 
+**The second braid merges.** Rhythmic Dictation and Scale Degrees stand side by
+side — the _when_ and the _what_, learnable in either order — and Melodic
+Dictation sits centred and alone below them with both edges arriving at it,
+because it is the thing that needs both. It is the first station since the top
+of the path with two edges arriving, which is what the graph in `PATH_EDGES`
+exists to express.
+
 `orderedPathNodes` sorts by `position.y`, **not** by the curriculum. The
 registry lists hearing before reading and the path puts reading first, so
 following the registry would tab a keyboard from the third station to the first
@@ -710,6 +801,11 @@ folders say which is which:
 - `rhythm-dictation/` has no pair. It binds the same machinery to rhythms and
   then supplies its own round screen, because the staff is where its _answer_
   goes rather than where the question is.
+- `dictation-shared/` is what the two dictation exercises genuinely share: the
+  draft being typed into, and `buildBar`. Neither was written twice — the draft
+  moved here and grew two things when melodic dictation arrived, and the bar
+  builder moved untouched.
+- `melodic-dictation/` is the two halves at once, and is described below.
 
 Within a pair, reading and hearing differ only in what notation they show and
 whether there is a play button beside it, so anything else belongs one level up.
@@ -855,6 +951,79 @@ the level at all, and the rest are relative likelihoods. That is deliberate —
 "which subdivisions" and "how often" are the same question, and splitting them
 into a list and a table would let the two disagree.
 
+### Melodic dictation — the culmination of the two beside it
+
+Hear a phrase, see its first note, write down the rest. **Nothing underneath it
+was new**: the bar builder, the degree model, the round machinery, the playback
+hook and the attempt log all took it as written, and what it needed instead were
+three widenings, each earned — a degree gained an octave, a rhythm gained bars,
+and `RoundSummary`'s `answerName` was given the whole answer rather than only
+what was chosen.
+
+**Correctness is two independent facts.** The impacts are in the right places,
+bar by bar (`samePhrase`), and the notes are the right notes **by sound**
+(`sameSounds`). Everything the player had to decide that could not be heard —
+how a rhythm was spelled, how a note was spelled — is a decision that cannot
+cost them the answer. `♯4` and `♭5` are one note, and so are a held quarter and
+a quarter followed by a rest.
+
+**That second one is only true because playback is legato.** Every note rings
+until the next impact begins. A half note that damped where a quarter-and-a-rest
+did not would make the spelling audible, and a player could then be marked right
+for writing down something other than what they heard. `melodyDurations` is that
+rule, and `rhythmSchedule.test.ts` holds it — including across a barline, which
+is the case that lets the tie go.
+
+**The first note is given, and locked.** It is the leading symbol of the correct
+answer's own spelling, carrying the first pitch, taken from `notateRhythm`
+rather than worked out again — a hint that disagreed with the answer would be
+worse than no hint. Backspace stops above it. Only as far as the first note,
+though: the rests after it would say how long the gap to the _second_ note is,
+which is a thing to hear rather than a thing to be told. So beat one of bar one
+is always struck, and a phrase always has more than one impact — a phrase whose
+only impact was the one being given away would answer itself on sight.
+
+**The vocabulary is a contiguous run of scale steps**, `low` to `high`, and the
+run _is_ the keyboard: one key per step. A range rather than a set because a
+melody moves through its range rather than picking out of it, and because two
+ends is one thing to choose where a set is seven. It caps the key count
+structurally — `MAX_STEPS` is 13 — and it reuses `stepNotes`, so a melody is
+still drawn as **notes rather than names** and can never be asked to distinguish
+two spellings of one sound.
+
+**Two bars ship and four do not.** One bar to a system is what keeps the staff
+the size rhythmic dictation's is, so four bars is four systems, and four systems
+in the room the notation gets on a phone is smaller than anyone can read. It
+stays a Custom setting rather than a level that looks fine on a desk.
+
+The keyboard is three rows, and the middle one is what makes writing a melody
+one press per note. The switches on top mean the next key only — the two
+accidentals, the dot, the tuplet brackets. **The note value is a mode that
+stays**: a bar of eighths is eight presses of the same length, and a value that
+let go after every note would double the work of writing anything down. Then the
+notes, one key per step, plus a rest.
+
+**Each pitch key draws the note that pressing it would write**, at the armed
+value and dots — arm a dotted half and the keys become dotted halves. That is
+what makes the value row legible without reading it: the mode is visible in the
+thing it modifies rather than only in the switch that set it. `MiniStaff` holds
+its last picture rather than blanking while the new one engraves, because
+redrawing a whole row on a value change otherwise flickers under the hand that
+just pressed it.
+
+**The armed value falls back rather than going dead.** Three beats into a bar of
+four with a half note armed, nothing on the bottom row could be pressed; instead
+the largest value that _does_ fit is used for this press, and the player's own
+choice returns the moment there is room for it again. The row highlights what
+will actually be written, since that is the honest thing for it to say. A
+keyboard where every key is grey and nothing says why is the worst of the
+available behaviours.
+
+The summary is the one place the two halves separate again. Grading is a single
+verdict, but a melody can be right in its rhythm and wrong in its notes or the
+reverse, and "you had the rhythm" is the most useful thing there is to read
+back — which is why `answerName` sees the question as well as the answer.
+
 ## The attempt log — `src/lib/db/attemptQuestion.ts` and `progress.ts`
 
 Every answer is recorded, right or wrong. A row keeps **exactly enough to ask the
@@ -890,6 +1059,15 @@ that is what lets one query span the whole app. A rhythm deliberately has **no**
 `root` — it is built on no note at all — so it drops out of every filter that
 asks about pitch, which is exactly the documented behaviour of a filter naming a
 dimension an attempt does not have.
+
+A melody row is the two vocabularies side by side — a rhythm's metre and
+impacts, a degree question's tonic, mode and degrees — and **nothing had to be
+invented for it**, which was the design being tested a third time. The impacts
+are kept bar by bar, because which bar a note fell in is part of the answer:
+`0,60|0,90` is not the melody `0,60,300,390`. Its facets are likewise both sets
+at once plus `bars` and `span`, so every query that already existed reaches it:
+`{ root: 'Eb' }` meant "every question built on an E♭" before melodies existed
+and did not have to learn that they now do.
 
 A rhythm level filters on metre and tempo, the dimensions it actually pins, and
 **not** on its cell weights: weights shape what comes up rather than bounding it,
@@ -974,12 +1152,7 @@ practise next, and the strengths are still there at the other end.
 
 ## Not yet built
 
-Melodic dictation is next, and rhythmic dictation is the first half of it: the
-merge station is deliberately the _when_, waiting on a _what_. It stands centred
-and alone rather than off to one side, because one station cannot braid and
-reserving the shape early would read as a mistake until the other arrives.
-
-Everything after Rhythmic Dictation — harmonic prediction, harmonic completion,
+Everything after Melodic Dictation — harmonic prediction, harmonic completion,
 counterpoint, the daily round — is still a placeholder page.
 
 Settings holds one setting — the interface language. Like Progress it is

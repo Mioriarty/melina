@@ -8,6 +8,13 @@ import {
   READING_DIRECTIONS,
 } from '@/exercises/interval-reading/settings'
 import { generateRound, type RoundSpec } from '@/exercises/interval-shared/generate'
+import { MELODY_DIFFICULTIES } from '@/exercises/melodic-dictation/difficulties'
+import {
+  allowedSteps,
+  generateRound as generateMelodyRound,
+  type MelodyRoundSpec,
+} from '@/exercises/melodic-dictation/generate'
+import { MELODY_SETTINGS, MAX_STEPS } from '@/exercises/melodic-dictation/settings'
 import { RHYTHM_DIFFICULTIES } from '@/exercises/rhythm-dictation/difficulties'
 import {
   generateRound as generateRhythmRound,
@@ -35,9 +42,18 @@ import { i18n } from '@/lib/i18n'
 import { LANGUAGES } from '@/lib/i18n/languages'
 import { CATALOG_KEYS, HEARABLE_INTERVAL_KEYS } from '@/lib/music/catalog'
 import { isClefId } from '@/lib/music/clef'
+import { chromaticValue } from '@/lib/music/pitch'
 import { isKeySignatureId } from '@/lib/music/keySignature'
-import { DEGREE_NUMBERS, degreePitch, keySignatureFor } from '@/lib/music/degree'
-import { isMeterKey, meterKey } from '@/lib/music/meter'
+import {
+  DEGREE_NUMBERS,
+  degreeKey,
+  degreePitch,
+  keySignatureFor,
+  parseDegreeKey,
+  stepIndex,
+} from '@/lib/music/degree'
+import { isMeterKey, meterKey, parseMeter } from '@/lib/music/meter'
+import { barRhythm, impactCount, opensOnDownbeat } from '@/lib/music/phrase'
 import { isValidRhythm } from '@/lib/music/rhythm'
 import { CELL_GROUP_IDS, isCellGroupId } from '@/lib/music/rhythmCells'
 import { notateRhythm, onsetsOf } from '@/lib/notation/rhythmNotation'
@@ -74,6 +90,7 @@ const ALL_GROUPS: readonly NamedLevels[] = [
   { group: 'scale-hearing', levels: SCALE_HEARING_DIFFICULTIES },
   { group: 'rhythm-dictation', levels: RHYTHM_DIFFICULTIES },
   { group: 'scale-degrees', levels: DEGREE_DIFFICULTIES },
+  { group: 'melodic-dictation', levels: MELODY_DIFFICULTIES },
 ]
 
 describe.each(ALL_GROUPS)('$group levels', ({ group, levels }) => {
@@ -594,5 +611,236 @@ describe('scale degree levels', () => {
     const modes = new Set(DEGREE_DIFFICULTIES.flatMap((level) => level.settings.modes))
     expect(modes.has('ionian')).toBe(true)
     expect(modes.has('aeolian')).toBe(true)
+  })
+})
+
+/* --------------------------------------------------------------- melodies */
+
+describe('melodic-dictation settings', () => {
+  it('only names modes, tonics, clefs, metres and cell groups that exist', () => {
+    for (const { id, settings } of MELODY_DIFFICULTIES) {
+      expect(settings.modes.length, id).toBeGreaterThan(0)
+      expect(settings.tonics.length, id).toBeGreaterThan(0)
+      expect(settings.clefs.length, id).toBeGreaterThan(0)
+      expect(settings.meters.length, id).toBeGreaterThan(0)
+
+      for (const mode of settings.modes)
+        expect(isModeId(mode), `${id}: ${mode}`).toBe(true)
+      for (const tonic of settings.tonics) {
+        expect(isTonicKey(tonic), `${id}: ${tonic}`).toBe(true)
+      }
+      for (const clef of settings.clefs)
+        expect(isClefId(clef), `${id}: ${clef}`).toBe(true)
+      for (const meter of settings.meters) {
+        expect(isMeterKey(meter), `${id}: ${meter}`).toBe(true)
+      }
+      for (const group of Object.keys(settings.cellWeights)) {
+        expect(isCellGroupId(group), `${id}: ${group}`).toBe(true)
+      }
+      expect(
+        CELL_GROUP_IDS.some((group) => settings.cellWeights[group] > 0),
+        `${id} allows no cells`,
+      ).toBe(true)
+    }
+  })
+
+  it('names a range that runs upwards and fits on a keyboard', () => {
+    // The range *is* the key count, so one that is inverted or absurdly wide
+    // is a keyboard that cannot be laid out rather than a level that is merely
+    // hard.
+    for (const { id, settings } of MELODY_DIFFICULTIES) {
+      const low = parseDegreeKey(settings.low)
+      const high = parseDegreeKey(settings.high)
+      expect(low, `${id}: ${settings.low}`).toBeDefined()
+      expect(high, `${id}: ${settings.high}`).toBeDefined()
+
+      const span = stepIndex(high!) - stepIndex(low!)
+      expect(span, `${id} range runs downwards`).toBeGreaterThanOrEqual(1)
+      expect(span + 1, `${id} range is too wide for a keyboard`).toBeLessThanOrEqual(
+        MAX_STEPS,
+      )
+    }
+  })
+
+  it('asks for fewer impacts per bar than the shortest bar has beats', () => {
+    // A floor at or above the beat count is not a floor but a demand that
+    // every beat be struck, and the level then cannot deliver the held notes
+    // it declares. The floor is per bar, so it is read against the shortest
+    // metre the level offers.
+    for (const { id, settings } of MELODY_DIFFICULTIES) {
+      const shortest = Math.min(
+        ...settings.meters.map((key) => parseMeter(key)?.beats ?? Infinity),
+      )
+      expect(settings.minOnsets, `${id} in ${shortest} beats`).toBeLessThan(shortest)
+    }
+  })
+
+  it('survives being stored and read back unchanged', () => {
+    for (const { id, settings } of MELODY_DIFFICULTIES) {
+      expect(MELODY_SETTINGS.parse(JSON.parse(JSON.stringify(settings))), id).toEqual(
+        settings,
+      )
+    }
+  })
+
+  it('actually generates a full round', () => {
+    for (const { id, settings } of MELODY_DIFFICULTIES) {
+      for (const seed of [1, 2, 3]) {
+        const round = generateMelodyRound(createRandom(seed), settings as MelodyRoundSpec)
+        expect(round.length, `${id} (seed ${seed})`).toBe(settings.questionsPerRound)
+      }
+    }
+  })
+
+  it('asks only what the level allows', () => {
+    for (const { id, settings } of MELODY_DIFFICULTIES) {
+      const steps = allowedSteps(settings as MelodyRoundSpec)
+      const lowest = steps[0]
+      const highest = steps[steps.length - 1]
+
+      for (const question of generateMelodyRound(
+        createRandom(7),
+        settings as MelodyRoundSpec,
+      )) {
+        expect(settings.modes, id).toContain(question.mode)
+        expect(settings.clefs, id).toContain(question.clef)
+        expect(settings.meters, id).toContain(meterKey(question.phrase.meter))
+        expect(question.phrase.bars.length, id).toBe(settings.bars)
+        expect(question.tempo, id).toBe(settings.tempo)
+
+        // **Checked by sound, not by name.** A chromatic note is spelled as
+        // whichever neighbouring degree the line is heading towards, so its
+        // printed number can sit outside the range even though the note it
+        // names does not — ♯7 and ♭1 of the octave are one sound. The bound
+        // the level actually promises is the one `stepNotes` enforces: no note
+        // below its lowest step or above its highest.
+        const floor = degreePitch(question.tonic, question.mode, lowest!)!
+        const ceiling = degreePitch(question.tonic, question.mode, highest!)!
+
+        for (const [index, degree] of question.degrees.entries()) {
+          if (!settings.alterations) expect(degree.alteration, id).toBe(0)
+
+          const sounding = chromaticValue(question.pitches[index]!)
+          expect(
+            sounding,
+            `${id}: ${degreeKey(degree)} sits below the range`,
+          ).toBeGreaterThanOrEqual(chromaticValue(floor))
+          expect(
+            sounding,
+            `${id}: ${degreeKey(degree)} sits above the range`,
+          ).toBeLessThanOrEqual(chromaticValue(ceiling))
+        }
+      }
+    }
+  })
+
+  it('always gives the first note somewhere to sit, and something to ask after it', () => {
+    // The first note is shown, so beat one of bar one must be struck — and a
+    // phrase whose only impact was the one being given away would answer
+    // itself the moment it appeared.
+    for (const { id, settings } of MELODY_DIFFICULTIES) {
+      for (const seed of [1, 2, 3]) {
+        for (const question of generateMelodyRound(
+          createRandom(seed),
+          settings as MelodyRoundSpec,
+        )) {
+          expect(opensOnDownbeat(question.phrase), id).toBe(true)
+          expect(impactCount(question.phrase), id).toBeGreaterThan(1)
+        }
+      }
+    }
+  })
+
+  it('gives every impact exactly one note', () => {
+    for (const { id, settings } of MELODY_DIFFICULTIES) {
+      for (const question of generateMelodyRound(
+        createRandom(13),
+        settings as MelodyRoundSpec,
+      )) {
+        expect(question.pitches.length, id).toBe(impactCount(question.phrase))
+        expect(question.degrees.length, id).toBe(question.pitches.length)
+      }
+    }
+  })
+
+  it('can write down every phrase it asks', () => {
+    // A bar the engraver cannot spell, or a degree needing a triple
+    // accidental, would be unanswerable however well it was heard.
+    for (const { id, settings } of MELODY_DIFFICULTIES) {
+      for (const question of generateMelodyRound(
+        createRandom(13),
+        settings as MelodyRoundSpec,
+      )) {
+        expect(keySignatureFor(question.tonic, question.mode), id).toBe(
+          question.keySignature,
+        )
+        for (const degree of question.degrees) {
+          expect(degreePitch(question.tonic, question.mode, degree), id).toBeDefined()
+        }
+        for (let bar = 0; bar < question.phrase.bars.length; bar += 1) {
+          const rhythm = barRhythm(question.phrase, bar)
+          expect(isValidRhythm(rhythm), `${id}: ${rhythm.onsets}`).toBe(true)
+          expect(onsetsOf(notateRhythm(rhythm)), `${id}: ${rhythm.onsets}`).toEqual([
+            ...rhythm.onsets,
+          ])
+        }
+      }
+    }
+  })
+})
+
+describe('melodic dictation levels', () => {
+  it('covers every subdivision somewhere', () => {
+    const covered = new Set(
+      MELODY_DIFFICULTIES.flatMap((level) =>
+        CELL_GROUP_IDS.filter((group) => level.settings.cellWeights[group] > 0),
+      ),
+    )
+    expect([...covered].sort()).toEqual([...CELL_GROUP_IDS].sort())
+  })
+
+  it('starts with beats and the first five degrees', () => {
+    // The first level has to be the easiest thing this exercise can ask, or
+    // the two halves arrive at once and a miss says nothing about which.
+    const [first] = MELODY_DIFFICULTIES
+    expect(first).toBeDefined()
+    expect(first!.settings.bars).toBe(1)
+    expect(first!.settings.alterations).toBe(false)
+    expect(
+      CELL_GROUP_IDS.filter((group) => first!.settings.cellWeights[group] > 0).sort(),
+    ).toEqual(['hold', 'quarter'])
+  })
+
+  it('has a level that reaches below the tonic and one that reaches above it', () => {
+    const rungs = MELODY_DIFFICULTIES.map((level) => ({
+      low: stepIndex(parseDegreeKey(level.settings.low)!),
+      high: stepIndex(parseDegreeKey(level.settings.high)!),
+    }))
+    expect(Math.min(...rungs.map((range) => range.low))).toBeLessThan(0)
+    // Past the seventh, which is where the octave above the tonic starts.
+    expect(Math.max(...rungs.map((range) => range.high))).toBeGreaterThanOrEqual(7)
+  })
+
+  it('has a level that stays in the key and one that leaves it', () => {
+    expect(MELODY_DIFFICULTIES.some((level) => level.settings.alterations)).toBe(true)
+    expect(MELODY_DIFFICULTIES.some((level) => !level.settings.alterations)).toBe(true)
+  })
+
+  it('covers both ways of using the click', () => {
+    const covered = new Set(MELODY_DIFFICULTIES.map((level) => level.settings.metronome))
+    expect([...covered].sort()).toEqual(['count-in', 'throughout'])
+  })
+
+  it('offers more than one bar somewhere, and never the four-bar page', () => {
+    // Four bars is four systems, which is smaller than anyone can read in the
+    // room the notation gets on a phone. It stays a Custom setting.
+    const counts = new Set(MELODY_DIFFICULTIES.map((level) => level.settings.bars))
+    expect(counts.has(2)).toBe(true)
+    expect(counts.has(4)).toBe(false)
+  })
+
+  it('offers a metre other than four four', () => {
+    const meters = new Set(MELODY_DIFFICULTIES.flatMap((level) => level.settings.meters))
+    expect(meters.size).toBeGreaterThan(1)
   })
 })

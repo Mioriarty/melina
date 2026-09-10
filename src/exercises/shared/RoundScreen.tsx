@@ -221,8 +221,8 @@ function Feedback<TQuestion, TAnswer>({
 
   if (answer.correct) {
     return (
-      <p className="flex items-center gap-1.5 font-medium text-correct">
-        <Icon name="correct" size={20} />
+      <p className="flex items-center gap-1.5 text-sm font-medium text-correct">
+        <Icon name="correct" size={17} />
         {t('round.correct')}
       </p>
     )
@@ -234,11 +234,16 @@ function Feedback<TQuestion, TAnswer>({
       onClick={onNext}
       autoFocus
       className={cn(
-        'flex min-h-11 items-center gap-2 rounded-full bg-ink px-5 font-medium text-paper',
+        // Sized down against the question above it: the staff is what the
+        // screen is about, and a pill in body type read as the loudest thing
+        // on it. The height stays at the 44px touch target — that is the
+        // thumb's minimum, not a visual choice — so what gives is the type,
+        // the glyph and the padding around them.
+        'flex min-h-11 items-center gap-1.5 rounded-full bg-ink px-3.5 text-sm font-medium text-paper',
         'transition-colors hover:opacity-90',
       )}
     >
-      <Icon name="arrowForward" size={18} />
+      <Icon name="arrowForward" size={15} />
       {t('round.next')}
     </button>
   )

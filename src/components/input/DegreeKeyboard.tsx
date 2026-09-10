@@ -13,6 +13,7 @@ import type { ModeId } from '@/lib/music/scale'
 import { cn } from '@/lib/utils/cn'
 
 import { answerKeyClasses, type KeyboardState } from './keyClasses'
+import { Switch } from './Switch'
 
 /**
  * The scale degree keyboard.
@@ -219,38 +220,5 @@ export function DegreeKeyboard({
         })}
       </div>
     </div>
-  )
-}
-
-interface SwitchProps {
-  pressed: boolean
-  disabled: boolean
-  label: string
-  /** The key that does the same thing, for a mouse pointer to discover. */
-  hint: string
-  onClick: () => void
-  children: React.ReactNode
-}
-
-function Switch({ pressed, disabled, label, hint, onClick, children }: SwitchProps) {
-  return (
-    <button
-      type="button"
-      aria-pressed={pressed}
-      aria-label={label}
-      title={`${label} (${hint})`}
-      disabled={disabled}
-      onClick={onClick}
-      className={cn(
-        'inline-flex h-11 min-w-11 items-center justify-center rounded-full border px-3',
-        'text-[1.0625rem] transition-[background-color,border-color,color] duration-150',
-        pressed
-          ? 'border-accent bg-accent-tint text-accent'
-          : 'border-rule bg-paper-raised text-ink-muted hover:border-accent hover:text-accent',
-        'disabled:cursor-default disabled:opacity-40',
-      )}
-    >
-      {children}
-    </button>
   )
 }

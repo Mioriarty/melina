@@ -20,3 +20,16 @@
  * dominating a tall screen where there is room to spare.
  */
 export const SCORE_BOX = 'h-full max-h-[30dvh] min-h-0 flex-1'
+
+/**
+ * The same box, for notation that is several systems tall.
+ *
+ * Melodic dictation draws one bar per system, so a two-bar phrase is two
+ * staves stacked and a comparison is four. At `SCORE_BOX`'s ceiling those come
+ * out around half the height a single staff gets, which is the wrong way round:
+ * the phrase is *more* to read, not less. The extra viewport fraction comes out
+ * of room the keyboard was not using — its own cap is what bounds it from below
+ * — and the flex chain still decides the real height, so on a short screen this
+ * is no different from `SCORE_BOX`.
+ */
+export const PHRASE_SCORE_BOX = 'h-full max-h-[40dvh] min-h-0 flex-1'

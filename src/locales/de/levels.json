@@ -194,5 +194,55 @@
       "title": "Alles",
       "blurb": "Jeder Modus, jeder Schlüssel, alterierte Töne und kein Grundton zu Beginn."
     }
+  },
+  "melodic-dictation": {
+    "beats-and-steps": {
+      "title": "Zählzeiten und Stufen",
+      "blurb": "Die ersten fünf Stufen, eine Note pro Zählzeit. Zu hören ist nur, welche Note."
+    },
+    "stepwise": {
+      "title": "Schrittweise",
+      "blurb": "Achtel kommen dazu, weiterhin innerhalb der ersten fünf Stufen."
+    },
+    "the-octave": {
+      "title": "Die ganze Oktave",
+      "blurb": "Bis zur Oktave über dem Grundton, also mit Sexte und Septime."
+    },
+    "below-the-tonic": {
+      "title": "Unter dem Grundton",
+      "blurb": "Von der Quinte darunter bis zur Quinte darüber. Der Grundton ist nicht mehr die Grenze."
+    },
+    "off-the-beat": {
+      "title": "Gegen die Zählzeit",
+      "blurb": "Noten zwischen den Zählzeiten, mit durchlaufendem Klick."
+    },
+    "sixteenths": {
+      "title": "Sechzehntel",
+      "blurb": "Feinere Unterteilungen und punktierte Figuren, langsam genommen."
+    },
+    "minor": {
+      "title": "Moll",
+      "blurb": "Eine ganze Oktave natürliches Moll, ohne Klick unter dem Takt."
+    },
+    "two-bars": {
+      "title": "Zwei Takte",
+      "blurb": "Doppelt so viel zu behalten, bevor du zu schreiben anfängst."
+    },
+    "triplets": {
+      "title": "Triolen",
+      "blurb": "Drei gegen zwei auf der Zählzeit, in ruhigerem Tempo."
+    },
+    "three-four": {
+      "title": "Drei Viertel",
+      "blurb": "Ein anderer Takt zu spüren, über die ganze Oktave."
+    },
+    "outside-the-key": {
+      "title": "Außerhalb der Tonart",
+      "blurb": "Gelegentlich Noten, die aus der Tonleiter heraus erhöht oder erniedrigt sind."
+    },
+    "everything": {
+      "title": "Alles",
+      "blurb": "Sechs Modi, zwei Taktarten, zwei Takte und jede Unterteilung. Zwanzig Fragen."
+    }
   }
 }

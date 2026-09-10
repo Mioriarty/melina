@@ -6,7 +6,7 @@ import type { PlayDirection } from '@/lib/music/direction'
 import type { Interval, IntervalQuality } from '@/lib/music/interval'
 import type { KeySignatureId } from '@/lib/music/keySignature'
 import type { Pitch } from '@/lib/music/pitch'
-import type { Degree } from '@/lib/music/degree'
+import { degreeOctave, type Degree } from '@/lib/music/degree'
 import type { TimeSignature } from '@/lib/music/meter'
 import type { DivisionId } from '@/lib/music/rhythm'
 import type { ModeId } from '@/lib/music/scale'
@@ -83,9 +83,16 @@ export interface MusicNames {
   division: (id: DivisionId) => string
   /** A tuplet by its division: `Triplet`, `Quintuplet`. */
   tuplet: (division: number) => string
-  /** A scale degree, spoken: `raised second degree`, `erhöhte zweite Stufe`. */
+  /**
+   * A scale degree, spoken: `raised second degree`, `erhöhte zweite Stufe`.
+   *
+   * Qualified by its octave once a melody leaves the tonic's own — a keyboard
+   * reaching from the fifth below to the octave above has two keys that would
+   * otherwise both be read out as "first degree", and a screen reader user
+   * would have no way to tell which one they were on.
+   */
   degree: (degree: Degree) => string
-  /** The same on a key, where there is no room: `♯2`. */
+  /** The same on a key, where there is no room: `♯2`, `↑1`, `↓5`. */
   degreeShort: (degree: Degree) => string
   /** The key a melody is in: `E major`, `E dorian`, `E-Dur`. */
   scaleName: (tonic: string, mode: ModeId) => string
@@ -145,14 +152,28 @@ export function useMusicNames(): MusicNames {
       division: (id) => t(`divisions.${id}`),
       tuplet: (division) =>
         t(`tuplets.${division}`, { defaultValue: t('tupletFallback', { division }) }),
-      degree: ({ number, alteration }) =>
-        alteration === 0
-          ? t(`degrees.${number}`)
-          : t(alteration > 0 ? 'degreeRaised' : 'degreeLowered', {
-              degree: t(`degrees.${number}`),
-            }),
-      degreeShort: ({ number, alteration }) =>
-        `${alteration > 0 ? '♯' : alteration < 0 ? '♭' : ''}${number}`,
+      degree: (degree) => {
+        const { number, alteration } = degree
+        const plain =
+          alteration === 0
+            ? t(`degrees.${number}`)
+            : t(alteration > 0 ? 'degreeRaised' : 'degreeLowered', {
+                degree: t(`degrees.${number}`),
+              })
+
+        const octave = degreeOctave(degree)
+        if (octave === 0) return plain
+        return t(octave > 0 ? 'degreeOctaveUp' : 'degreeOctaveDown', { degree: plain })
+      },
+      degreeShort: (degree) => {
+        const octave = degreeOctave(degree)
+        // An arrow rather than a prime or a comma: a key is read at a glance
+        // and by people who have never met Helmholtz notation, and the staff
+        // drawn on the key above it already says which octave it really is.
+        const mark = octave > 0 ? '↑' : octave < 0 ? '↓' : ''
+        const accidental = degree.alteration > 0 ? '♯' : degree.alteration < 0 ? '♭' : ''
+        return `${mark}${accidental}${degree.number}`
+      },
       // Ionian and aeolian are far better known as major and minor, and a
       // German reader expects "E-Dur" rather than "E ionisch".
       scaleName: (tonic, mode) =>

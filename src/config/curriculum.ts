@@ -81,7 +81,8 @@ export const CATEGORIES: readonly CategoryDef[] = [
     exercises: [
       {
         id: 'short-melodies',
-        status: 'planned',
+        icon: 'musicalNotes',
+        status: 'ready',
       },
       {
         id: 'rhythm',

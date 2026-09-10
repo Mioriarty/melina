@@ -81,11 +81,17 @@ export interface AttemptFilter {
   /** How many impacts the bar held, as a string. Derived. */
   impacts?: OneOrMany<string>
 
-  /** Scale degree questions only. */
+  /** Scale degree and melodic dictation questions. */
   /** How many notes the melody had, as a string. Derived. */
   length?: OneOrMany<string>
   /** True to count only melodies that stepped outside the key. Derived. */
   altered?: boolean
+
+  /** Melodic dictation only. */
+  /** How many bars the phrase ran to, as a string. Derived. */
+  bars?: OneOrMany<string>
+  /** How far the melody ranged, in semitones, as a string. Derived. */
+  span?: OneOrMany<string>
 }
 
 /** How many recent matching answers an accuracy is measured over. */

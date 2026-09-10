@@ -27,7 +27,7 @@ export function ScaleSummary({
       answers={answers}
       subjectKey={({ question }) => names.modeShort(question.mode)}
       subjectName={({ question }) => names.modeFull(question.mode)}
-      answerName={(chosen) => names.mode(chosen)}
+      answerName={({ chosen }) => names.mode(chosen)}
       chipTitle={({ question }) =>
         t('summary.questionLabel', {
           subject: names.mode(question.mode),

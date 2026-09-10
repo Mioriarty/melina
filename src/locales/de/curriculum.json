@@ -48,7 +48,8 @@
       "exercises": {
         "short-melodies": {
           "title": "Kurze Melodien",
-          "blurb": "Eine zwei- bis viertaktige Melodie nach wenigen Durchgängen notieren."
+          "short": "Melodie",
+          "blurb": "Höre eine Phrase und schreibe sie auf: wo die Noten liegen und welche es sind."
         },
         "rhythm": {
           "title": "Rhythmusdiktat",

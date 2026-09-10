@@ -2,9 +2,15 @@ import type { DrumMachine, Soundfont as SmplrInstrument, StopFn } from 'smplr'
 
 import { isMelodic, type PlayDirection } from '@/lib/music/direction'
 import { midiNumber, type Pitch } from '@/lib/music/pitch'
+import type { Phrase } from '@/lib/music/phrase'
 import type { Rhythm } from '@/lib/music/rhythm'
 
-import { rhythmSchedule, type MetronomeMode } from './rhythmSchedule'
+import {
+  melodyDurations,
+  phraseSchedule,
+  rhythmSchedule,
+  type MetronomeMode,
+} from './rhythmSchedule'
 
 /**
  * Playback.
@@ -353,6 +359,86 @@ export async function playDegrees(
       }),
     ),
   ]
+}
+
+/* ------------------------------------------------------- melodic dictation
+
+   The two halves at once, and the first question in the app that needs two
+   instruments to sound: a piano for the notes, and the kit's sidesticks to
+   count the bar in. */
+
+/** The melody is the question; the click behind it is only the pulse. */
+const MELODY_NOTE_VELOCITY = 95
+
+/**
+ * Count a bar, then play a melody in time.
+ *
+ * **Every note rings until the next one begins** — see `melodyDurations`. That
+ * is what makes "a held note and a note followed by a rest are the same answer"
+ * true in the ear as well as in the grading: if the spelling were audible, a
+ * player could be marked right for writing down something they did not hear.
+ *
+ * Two instruments at once, which nothing else here needs. They share the one
+ * list of scheduled notes, because stopping is stopping — a melody and its own
+ * count-in are never wanted separately.
+ *
+ * Resolves once everything has been *scheduled*, not once it has finished, so
+ * the replay control comes back immediately.
+ */
+export async function playMelody(
+  phrase: Phrase,
+  pitches: readonly Pitch[],
+  { tempo, metronome }: RhythmPlaybackOptions,
+): Promise<void> {
+  const [instrument, kit] = await Promise.all([loadInstrument(), loadDrums()])
+  const context = getAudioContext()
+
+  // A context can be suspended by the browser at any point after creation.
+  if (context.state === 'suspended') await context.resume()
+
+  // After the awaits and immediately before scheduling, so a second call
+  // cannot silence the notes this one is about to lay down.
+  stopPlayback()
+
+  const from = context.currentTime + LEAD_IN
+  const schedule = phraseSchedule(phrase, { tempo, metronome, from })
+  const durations = melodyDurations(phrase, { tempo })
+
+  sounding = [
+    ...schedule.clicks.map((beat) =>
+      kit.start({
+        note: beat.accented ? CLICK_ACCENT : CLICK_BEAT,
+        time: beat.time,
+        velocity: beat.accented ? ACCENT_VELOCITY : BEAT_VELOCITY,
+      }),
+    ),
+    ...schedule.hits.flatMap((time, index) => {
+      const pitch = pitches[index]
+      // One note per impact; a phrase and its melody cannot disagree, but the
+      // types do not know that and a missing note must not stop the bar.
+      if (pitch === undefined) return []
+      return [
+        instrument.start({
+          note: midiNumber(pitch),
+          time,
+          duration: durations[index] ?? SCALE_NOTE_DURATION,
+          velocity: MELODY_NOTE_VELOCITY,
+        }),
+      ]
+    }),
+  ]
+}
+
+/**
+ * Fetch what melodic dictation plays on: the piano *and* the kit.
+ *
+ * Both, because it counts itself in and then plays pitches. The kit is a few
+ * hundred kilobytes and the piano tens of megabytes, so this is the most
+ * expensive preload in the app — and it is still a preload, because the
+ * exercise plays by itself the moment a question appears.
+ */
+export function loadMelodyInstruments(): Promise<unknown> {
+  return Promise.all([loadInstrument(), loadDrums()])
 }
 
 /**

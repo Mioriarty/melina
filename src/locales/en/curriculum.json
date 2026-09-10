@@ -48,7 +48,8 @@
       "exercises": {
         "short-melodies": {
           "title": "Short Melodies",
-          "blurb": "Notate a two to four bar melody after limited hearings."
+          "short": "Melody",
+          "blurb": "Hear a phrase and write it down: where the notes fall, and which notes they are."
         },
         "rhythm": {
           "title": "Rhythmic Dictation",

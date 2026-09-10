@@ -135,6 +135,36 @@ export function pitchesEqual(a: Pitch, b: Pitch): boolean {
   return a.letter === b.letter && a.alteration === b.alteration && a.octave === b.octave
 }
 
+/**
+ * Whether two pitches are the same *sound*, however they are spelled.
+ *
+ * The opposite of `pitchesEqual`, and both are needed: a spelling is what this
+ * model is for, but an ear cannot hear one. F sharp and G flat are one note to
+ * a listener, so an exercise that asks someone to write down what they heard
+ * has to accept either — see `sameSounds`.
+ */
+export function soundsEqual(a: Pitch, b: Pitch): boolean {
+  return chromaticValue(a) === chromaticValue(b)
+}
+
+/**
+ * Whether two readings of a melody name the same notes.
+ *
+ * By sound, never by spelling. This is the pitch half of grading melodic
+ * dictation, and it is the same claim `degreesSoundEqual` makes about degrees:
+ * marking a listener wrong for choosing the enharmonic name would be marking
+ * them wrong for something there was nothing to hear.
+ */
+export function sameSounds(a: readonly Pitch[], b: readonly Pitch[]): boolean {
+  return (
+    a.length === b.length &&
+    a.every((value, index) => {
+      const other = b[index]
+      return other !== undefined && soundsEqual(value, other)
+    })
+  )
+}
+
 /** Ordering by sound, then by spelling, so sorts are stable. */
 export function comparePitch(a: Pitch, b: Pitch): number {
   return chromaticValue(a) - chromaticValue(b) || diatonicValue(a) - diatonicValue(b)

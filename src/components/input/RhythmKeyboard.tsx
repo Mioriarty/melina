@@ -3,12 +3,18 @@ import { useTranslation } from 'react-i18next'
 
 import { NoteGlyph } from '@/components/notation/NoteGlyph'
 import { Icon } from '@/components/ui/Icon'
-import { canAppend, canArm, type RhythmDraft } from '@/exercises/rhythm-dictation/draft'
+import {
+  canAppend,
+  canArm,
+  canRemove,
+  type BarDraft,
+} from '@/exercises/dictation-shared/draft'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { NOTE_VALUES, type NoteValue } from '@/lib/notation/rhythmNotation'
 import { cn } from '@/lib/utils/cn'
 
 import { answerKeyClasses, type KeyboardState } from './keyClasses'
+import { Switch } from './Switch'
 
 /**
  * The rhythm keyboard.
@@ -37,7 +43,7 @@ import { answerKeyClasses, type KeyboardState } from './keyClasses'
  */
 
 export interface RhythmKeyboardProps {
-  draft: RhythmDraft
+  draft: BarDraft
   /** Tuplet divisions this level offers. Empty hides the switch entirely. */
   tuplets: readonly number[]
   state?: KeyboardState
@@ -94,7 +100,7 @@ export function RhythmKeyboard({
 
         <button
           type="button"
-          disabled={revealed || draft.entries.length === 0}
+          disabled={revealed || !canRemove(draft)}
           onClick={onRemove}
           className={cn(
             'ml-auto grid h-11 w-11 shrink-0 place-items-center rounded-full',
@@ -143,35 +149,5 @@ export function RhythmKeyboard({
         </div>
       ))}
     </div>
-  )
-}
-
-interface SwitchProps {
-  pressed: boolean
-  disabled: boolean
-  label: string
-  onClick: () => void
-  children: React.ReactNode
-}
-
-function Switch({ pressed, disabled, label, onClick, children }: SwitchProps) {
-  return (
-    <button
-      type="button"
-      aria-pressed={pressed}
-      aria-label={label}
-      disabled={disabled}
-      onClick={onClick}
-      className={cn(
-        'inline-flex h-11 min-w-11 items-center justify-center rounded-full border px-3',
-        'transition-[background-color,border-color,color] duration-150',
-        pressed
-          ? 'border-accent bg-accent-tint text-accent'
-          : 'border-rule bg-paper-raised text-ink-muted hover:border-accent hover:text-accent',
-        'disabled:cursor-default disabled:opacity-40',
-      )}
-    >
-      {children}
-    </button>
   )
 }

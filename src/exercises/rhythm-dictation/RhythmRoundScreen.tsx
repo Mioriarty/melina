@@ -5,6 +5,7 @@ import { RhythmKeyboard } from '@/components/input/RhythmKeyboard'
 import { RoundScreen } from '@/exercises/shared/RoundScreen'
 import type { ActivePhase } from '@/exercises/shared/round'
 import type { PlaybackStatus } from '@/exercises/shared/usePlayback'
+import { barRhythm } from '@/lib/music/phrase'
 import type { Rhythm } from '@/lib/music/rhythm'
 import { notateRhythm } from '@/lib/notation/rhythmNotation'
 
@@ -12,12 +13,12 @@ import {
   append,
   arm,
   draftNodes,
-  draftRhythm,
+  draftPhrase,
   emptyDraft,
   isFull,
   removeLast,
-  type RhythmDraft,
-} from './draft'
+  type BarDraft,
+} from '@/exercises/dictation-shared/draft'
 import type { RhythmQuestion } from './generate'
 import { RhythmScore } from './RhythmScore'
 
@@ -62,7 +63,7 @@ export function RhythmRoundScreen({
   onQuit,
 }: RhythmRoundScreenProps) {
   const { t } = useTranslation('exercise')
-  const [draft, setDraft] = useState<RhythmDraft>(() => emptyDraft(question.rhythm.meter))
+  const [draft, setDraft] = useState<BarDraft>(() => emptyDraft(question.rhythm.meter))
 
   const revealed = phase.name === 'revealed'
   const wrong = revealed && !phase.answer.correct
@@ -83,7 +84,7 @@ export function RhythmRoundScreen({
           // What the player wrote, spelled the way they wrote it — never a
           // tidied-up version, which would look like being corrected for
           // something that was not wrong.
-          nodes={draftNodes(draft)}
+          nodes={draftNodes(draft)[0] ?? []}
           {...(wrong ? { answer: notateRhythm(question.rhythm) } : {})}
           onPlay={onPlay}
           status={playStatus}
@@ -100,7 +101,8 @@ export function RhythmRoundScreen({
             // would answer the question twice.
             const next = append(draft, value)
             setDraft(next)
-            if (isFull(next)) binding.onAnswer(draftRhythm(next))
+            // One bar, so the phrase the draft says is that one bar.
+            if (isFull(next)) binding.onAnswer(barRhythm(draftPhrase(next), 0))
           }}
           onRemove={() => setDraft(removeLast)}
           onArm={(division) => setDraft((current) => arm(current, division))}

@@ -194,5 +194,55 @@
       "title": "Everything",
       "blurb": "Every mode, every clef, altered notes, and no opening tonic."
     }
+  },
+  "melodic-dictation": {
+    "beats-and-steps": {
+      "title": "Beats and Steps",
+      "blurb": "The first five degrees, one note to a beat. Everything to hear is which note."
+    },
+    "stepwise": {
+      "title": "Stepwise",
+      "blurb": "Eighths join the beats, still inside the first five degrees."
+    },
+    "the-octave": {
+      "title": "The Whole Octave",
+      "blurb": "Up to the octave above the tonic, so the sixth and seventh are in play."
+    },
+    "below-the-tonic": {
+      "title": "Below the Tonic",
+      "blurb": "The fifth below up to the fifth above. The tonic stops being the floor."
+    },
+    "off-the-beat": {
+      "title": "Off the Beat",
+      "blurb": "Notes that land between the beats, with the click still running."
+    },
+    "sixteenths": {
+      "title": "Sixteenths",
+      "blurb": "Finer subdivisions and dotted figures, taken slowly."
+    },
+    "minor": {
+      "title": "Minor",
+      "blurb": "A whole octave of the natural minor, with no click under the bar."
+    },
+    "two-bars": {
+      "title": "Two Bars",
+      "blurb": "Twice as much to hold in your head before you start writing."
+    },
+    "triplets": {
+      "title": "Triplets",
+      "blurb": "Three to the beat against two, at a slower tempo."
+    },
+    "three-four": {
+      "title": "Three Four",
+      "blurb": "A different bar to feel, across the whole octave."
+    },
+    "outside-the-key": {
+      "title": "Outside the Key",
+      "blurb": "Notes raised and lowered out of the scale, once in a while."
+    },
+    "everything": {
+      "title": "Everything",
+      "blurb": "Six modes, two metres, two bars and every subdivision. Twenty questions."
+    }
   }
 }

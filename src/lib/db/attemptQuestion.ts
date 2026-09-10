@@ -3,9 +3,10 @@ import type { PlayDirection } from '@/lib/music/direction'
 import { parseIntervalKey, transpose } from '@/lib/music/interval'
 import type { KeySignatureId } from '@/lib/music/keySignature'
 import { chromaticValue, parsePitch, pitchKey, type Pitch } from '@/lib/music/pitch'
-import { parseDegreesKey, type Degree } from '@/lib/music/degree'
-import { isMeterKey, parseMeter } from '@/lib/music/meter'
-import { isOffBeat, parseOnsets, rhythmDivision } from '@/lib/music/rhythm'
+import { degreePitch, parseDegreesKey, type Degree } from '@/lib/music/degree'
+import { isMeterKey, parseMeter, type TimeSignature } from '@/lib/music/meter'
+import { parsePhraseBars, phraseOnsets, phraseRhythms } from '@/lib/music/phrase'
+import { DIVISION_IDS, isOffBeat, parseOnsets, rhythmDivision } from '@/lib/music/rhythm'
 import { isModeId, scalePitches, tonicKey, type ModeId } from '@/lib/music/scale'
 
 /**
@@ -27,7 +28,7 @@ import { isModeId, scalePitches, tonicKey, type ModeId } from '@/lib/music/scale
  * `interval-shared/attempt.ts` and `scale-shared/attempt.ts`.
  */
 
-export type AttemptKind = 'interval' | 'scale' | 'rhythm' | 'degree'
+export type AttemptKind = 'interval' | 'scale' | 'rhythm' | 'degree' | 'melody'
 
 export interface IntervalAttempt {
   kind: 'interval'
@@ -90,8 +91,39 @@ export interface DegreeAttempt {
   degrees: string
 }
 
+/**
+ * A melodic dictation question: a key, when the notes fall, and which they are.
+ *
+ * The two halves of the log's existing vocabulary side by side — a rhythm's
+ * metre and impacts, a degree question's tonic, mode and degrees — which is
+ * what this exercise is. Nothing new had to be invented for it, and that was
+ * the design being tested.
+ *
+ * The impacts are bar by bar, since which bar a note is in is part of the
+ * answer: `0,60|0,90` is not the same melody as `0,60,300,390`. The notes are
+ * degrees for the same reason scale degrees stores degrees — they are spelled
+ * again on the way out, so a row cannot disagree with its own notation — and
+ * the degrees now carry an octave, since a melody leaves the one its tonic is
+ * in.
+ */
+export interface MelodyAttempt {
+  kind: 'melody'
+  /** The tonic *with* its octave, as a `pitchKey`: `Eb4`. */
+  tonic: string
+  mode: ModeId
+  clef: ClefId
+  /** Meter key, e.g. `4/4`. */
+  meter: string
+  /** Tick offsets from each barline, bars separated by a pipe: `0,60|0,90`. */
+  onsets: string
+  /** The melody as degrees: `1,3,5,1'`. Also the answer the question wanted. */
+  degrees: string
+  /** Beats per minute it was played at. */
+  tempo: number
+}
+
 export type AttemptQuestion =
-  IntervalAttempt | ScaleAttempt | RhythmAttempt | DegreeAttempt
+  IntervalAttempt | ScaleAttempt | RhythmAttempt | DegreeAttempt | MelodyAttempt
 
 /** The answer the question was asking for. Derived, never stored twice. */
 export function correctAnswer(question: AttemptQuestion): string {
@@ -103,6 +135,8 @@ export function correctAnswer(question: AttemptQuestion): string {
     case 'rhythm':
       return question.onsets
     case 'degree':
+      return question.degrees
+    case 'melody':
       return question.degrees
   }
 }
@@ -241,6 +275,85 @@ function degreeFacets(question: DegreeAttempt): Facets {
   }
 }
 
+/**
+ * A melodic dictation question's dimensions.
+ *
+ * **The two sets of facets at once, and nothing invented.** The pitch half is
+ * scale degrees' — mode, clef, tonic, root, length, altered — and the rhythm
+ * half is rhythmic dictation's — meter, tempo, division, offBeat, impacts —
+ * with `bars` and `span` added. Every existing query over any of those keeps
+ * working and now reaches this exercise too, which is what the flat facet model
+ * was for: `{ root: 'Eb' }` already means "every question built on an E flat",
+ * and it did not have to learn that melodies exist.
+ *
+ * `span` is how far the melody actually ranged, in semitones. Derived rather
+ * than read off the level, exactly as `staffOnly` is: the level said which
+ * notes were *available*, and how far this melody went is a fact about the
+ * melody.
+ */
+function melodyFacets(question: MelodyAttempt): Facets {
+  const base: Facets = {
+    kind: 'melody',
+    mode: question.mode,
+    clef: question.clef,
+    tonic: question.tonic,
+    meter: question.meter,
+    tempo: String(question.tempo),
+  }
+
+  const tonic = parsePitch(question.tonic)
+  const degrees = parseDegreesKey(question.degrees)
+  const meter = isMeterKey(question.meter) ? parseMeter(question.meter) : undefined
+  const bars = parsePhraseBars(question.onsets)
+  // A row can only fail to read if it was hand-edited or written by a version
+  // that stored something else. It then matches no filter that asks about the
+  // melody, rather than throwing inside a statistics query.
+  if (
+    tonic === undefined ||
+    degrees === undefined ||
+    meter === undefined ||
+    bars === undefined
+  ) {
+    return base
+  }
+
+  const phrase = { meter, bars }
+  const onsets = phraseOnsets(phrase)
+  const pitches = degrees.map((degree) => degreePitch(tonic, question.mode, degree))
+  const sounding = pitches.filter((pitch): pitch is Pitch => pitch !== undefined)
+  const reach = sounding.map(chromaticValue)
+
+  return {
+    ...base,
+    root: tonicKey(tonic),
+    bars: String(bars.length),
+    length: String(degrees.length),
+    altered: degrees.some((degree) => degree.alteration !== 0),
+    impacts: String(onsets.length),
+    // Measured across the phrase rather than per bar: the division a melody
+    // asks of a player is the finest thing anywhere in it.
+    division: phraseDivision(phrase),
+    offBeat: phraseRhythms(phrase).some(isOffBeat),
+    ...(reach.length === 0
+      ? {}
+      : { span: String(Math.max(...reach) - Math.min(...reach)) }),
+  }
+}
+
+/** The finest division anywhere in a phrase — see `rhythmDivision`. */
+function phraseDivision(phrase: {
+  meter: TimeSignature
+  bars: readonly (readonly number[])[]
+}): string {
+  return phraseRhythms(phrase).reduce<string>((finest, bar) => {
+    const division = rhythmDivision(bar)
+    return DIVISION_IDS.indexOf(division) >
+      DIVISION_IDS.indexOf(finest as (typeof DIVISION_IDS)[number])
+      ? division
+      : finest
+  }, 'quarter')
+}
+
 export function attemptFacets(question: AttemptQuestion): Facets {
   switch (question.kind) {
     case 'interval':
@@ -251,5 +364,7 @@ export function attemptFacets(question: AttemptQuestion): Facets {
       return rhythmFacets(question)
     case 'degree':
       return degreeFacets(question)
+    case 'melody':
+      return melodyFacets(question)
   }
 }
