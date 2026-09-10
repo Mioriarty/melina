@@ -175,9 +175,10 @@ export function DegreeKeyboard({
           onClick={onRemove}
           className={cn(
             'ml-auto grid h-11 w-11 shrink-0 place-items-center rounded-full',
-            'border border-rule bg-paper-raised text-ink-muted transition-colors',
-            'hover:border-accent hover:text-accent',
-            'disabled:cursor-default disabled:opacity-40 disabled:hover:border-rule disabled:hover:text-ink-muted',
+            'border border-rule bg-paper-raised text-ink-muted',
+            'transition-[background-color,border-color,color,transform] duration-150',
+            'hover:border-accent hover:text-accent active:scale-95',
+            'disabled:cursor-default disabled:opacity-40 disabled:hover:border-rule disabled:hover:text-ink-muted disabled:active:scale-100',
           )}
         >
           <Icon name="backspace" size={20} label={t('degrees.keyboard.delete')} />

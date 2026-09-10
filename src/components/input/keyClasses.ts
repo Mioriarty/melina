@@ -28,8 +28,10 @@ export function answerKeyClasses(
   return cn(
     'relative flex min-h-11 min-w-0 items-center justify-center rounded-full px-3',
     'border text-[0.8125rem] font-medium whitespace-nowrap',
-    'transition-[background-color,border-color,color] duration-150',
-    'disabled:cursor-default',
+    // A key that gives back nothing under a thumb gives back nothing at all:
+    // a touch screen has no hover, so the press itself has to be visible.
+    'transition-[background-color,border-color,color,transform] duration-150',
+    'active:scale-95 disabled:cursor-default disabled:active:scale-100',
     showCorrect && 'border-correct bg-correct text-white',
     showWrong && 'border-wrong bg-wrong text-white',
     !showCorrect &&
