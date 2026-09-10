@@ -96,10 +96,14 @@ export const PATH_NODES: readonly PathNodePosition[] = [
   { stationId: 'dictation/rhythm', x: INTERVAL_X + 1, y: 660 },
   { stationId: 'scales/degrees', x: SCALE_X - 1, y: 660 + BRAID_STAGGER },
   // **Where the second braid merges.** Melodic dictation needs both of the
-  // stations above it — the *when* and the *what* — so it stands centred and
-  // alone rather than off to one side, and both of them join it. It is the
-  // first station since the top of the path with two edges arriving.
-  { stationId: 'dictation/short-melodies', x: 50, y: 990 },
+  // stations above it — the *when* and the *what* — and both of them join it.
+  // It is the first station since the top of the path with two edges arriving.
+  //
+  // Left of centre rather than on it, because the room to its right is spoken
+  // for: the next exercise stands beside it. Placed now rather than when that
+  // arrives, so shipping it is a coordinate and not a re-layout of everything
+  // below.
+  { stationId: 'dictation/short-melodies', x: 38, y: 990 },
   { stationId: 'harmonic-prediction', x: 30, y: 1250 },
   { stationId: 'harmonic-completion', x: 66, y: 1500 },
   { stationId: 'counterpoint', x: 35, y: 1785 },

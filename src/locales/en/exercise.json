@@ -108,6 +108,15 @@
       "title": "Bars",
       "hint": "How many bars a phrase runs to. Each one is a line of its own, so four is a lot of staff on a small screen.",
       "label": "{{count}} bars"
+    },
+    "shape": {
+      "title": "Melodic shape",
+      "hint": "What decides how far the line may leap. This changes the melodies, never the rhythms.",
+      "steady": "Steady",
+      "steadyHint": "The same spread of intervals at every note, so a wide leap can land on a quick one. Harder to hear.",
+      "paced": "Paced",
+      "pacedHint": "The time before a note decides how far the line may move to it: quick notes step, long ones may leap.",
+      "guide": "How this works"
     }
   },
   "round": {

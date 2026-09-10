@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { TICKS_PER_BEAT, ticksPerMeasure, type TimeSignature } from '@/lib/music/meter'
 import { barRhythm } from '@/lib/music/phrase'
-import { notateRhythm, onsetsOf } from '@/lib/notation/rhythmNotation'
+import { onsetsOf } from '@/lib/notation/rhythmNotation'
 
 import {
   append,
@@ -18,9 +18,7 @@ import {
   emptyDraft,
   entryTicks,
   isFull,
-  leadingEntries,
   removeLast,
-  seededDraft,
   totalTicks,
   type BarDraft,
 } from './draft'
@@ -353,37 +351,23 @@ describe('the barline a value may not cross', () => {
   })
 })
 
-describe('the note that was given', () => {
-  const seed = seededDraft(FOUR_FOUR, 1, [
-    { kind: 'note', dur: 4, dots: 0, pitch: middleC },
-  ])
-
-  it('is already written, and counts towards the bar', () => {
-    expect(draftTicks(seed)).toBe(TICKS_PER_BEAT)
-    expect(draftPhrase(seed).bars).toEqual([[0]])
-    expect(draftPitches(seed)).toEqual([middleC])
+describe('taking a key back', () => {
+  it('has nothing to take from an empty draft', () => {
+    // Nothing is given away in the draft any more — the first note's pitch is
+    // a placeholder drawn on the staff, not an entry — so an untouched draft
+    // is genuinely empty and backspace is dead.
+    const draft = emptyDraft(FOUR_FOUR)
+    expect(canRemove(draft)).toBe(false)
+    expect(removeLast(draft).entries).toHaveLength(0)
   })
 
-  it('cannot be taken back', () => {
-    expect(canRemove(seed)).toBe(false)
-    expect(removeLast(seed).entries).toHaveLength(1)
-  })
-
-  it('lets everything typed after it be taken back, and no further', () => {
-    const written = typeInto(seed, [
+  it('takes back everything that was typed', () => {
+    const draft = typeInto(emptyDraft(FOUR_FOUR), [
+      { kind: 'note', dur: 4, dots: 0, pitch: middleC },
       { kind: 'note', dur: 4, dots: 0, pitch: d4 },
-      { kind: 'rest', dur: 4, dots: 0 },
     ])
-    expect(canRemove(written)).toBe(true)
-
-    const back = removeLast(removeLast(written))
-    expect(back.entries).toHaveLength(1)
-    expect(canRemove(back)).toBe(false)
-    expect(removeLast(back).entries).toHaveLength(1)
-  })
-
-  it('opens on the downbeat, which is where the phrase has to start', () => {
-    expect(draftPhrase(seed).bars[0]?.[0]).toBe(0)
+    expect(canRemove(draft)).toBe(true)
+    expect(canRemove(removeLast(removeLast(draft)))).toBe(false)
   })
 })
 
@@ -402,45 +386,5 @@ describe('the notes a draft says', () => {
 
   it('is empty for a rhythm, which has no pitches at all', () => {
     expect(draftPitches(type(FOUR_FOUR, [note(4), note(4)]))).toEqual([])
-  })
-})
-
-describe('the entries a spelling opens with', () => {
-  it('takes the first note and stops there', () => {
-    // Not the rests after it: how long the gap to the second note is, is a
-    // thing to hear rather than a thing to be told.
-    const nodes = notateRhythm({ meter: FOUR_FOUR, onsets: [0, 75] })
-    const entries = leadingEntries(nodes, middleC)
-
-    expect(entries).toHaveLength(1)
-    expect(entries[0]).toMatchObject({ kind: 'note', dur: 4, dots: 0, pitch: middleC })
-  })
-
-  it('reaches into a beam for it', () => {
-    const nodes = notateRhythm({ meter: FOUR_FOUR, onsets: [0, 30, 60, 120, 180] })
-    expect(leadingEntries(nodes, middleC)).toHaveLength(1)
-    expect(leadingEntries(nodes, middleC)[0]).toMatchObject({ dur: 8 })
-  })
-
-  it('carries the bracket when the first note is inside a tuplet', () => {
-    const nodes = notateRhythm({ meter: FOUR_FOUR, onsets: [0, 20, 40, 60, 120, 180] })
-    expect(leadingEntries(nodes, middleC)[0]).toMatchObject({ tuplet: 3 })
-  })
-
-  it('arms that bracket, so the next key lands inside it too', () => {
-    const nodes = notateRhythm({ meter: FOUR_FOUR, onsets: [0, 20, 40, 60, 120, 180] })
-    const seeded = seededDraft(FOUR_FOUR, 1, leadingEntries(nodes, middleC))
-    expect(seeded.tuplet).toBe(3)
-  })
-
-  it('keeps the leading rest of a bar that opens in silence', () => {
-    const nodes = notateRhythm({ meter: FOUR_FOUR, onsets: [60, 120] })
-    const entries = leadingEntries(nodes, middleC)
-    expect(entries[0]?.kind).toBe('rest')
-    expect(entries[entries.length - 1]?.kind).toBe('note')
-  })
-
-  it('gives nothing back for a bar with no notes in it', () => {
-    expect(leadingEntries(notateRhythm({ meter: FOUR_FOUR, onsets: [] }))).toEqual([])
   })
 })

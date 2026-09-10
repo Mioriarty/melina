@@ -15,6 +15,8 @@ import type { RhythmNode } from '@/lib/notation/rhythmNotation'
 import { melodicPhraseProfile } from '@/lib/notation/verovio'
 import { cn } from '@/lib/utils/cn'
 
+import { PLACEHOLDER_LEDGERS, PLACEHOLDER_NOTE } from './placeholderClasses'
+
 /**
  * The melody being written down, the key it is in, and the button that plays it.
  *
@@ -39,6 +41,8 @@ export interface MelodyScoreProps {
   /** What the player has written: the spelling, bar by bar, and its notes. */
   bars: readonly (readonly RhythmNode[])[]
   pitches: readonly Pitch[]
+  /** The first note's pitch, shown greyed until something is written. */
+  placeholder?: Pitch
   /** The right answer, once it has been given and was wrong. */
   answer?: { bars: readonly (readonly RhythmNode[])[]; pitches: readonly Pitch[] }
   onPlay: () => void
@@ -54,6 +58,7 @@ export function MelodyScore({
   barsPerSystem,
   bars,
   pitches,
+  placeholder,
   answer,
   onPlay,
   status,
@@ -79,7 +84,7 @@ export function MelodyScore({
             label: t('melody.staff.correct'),
           },
         ]
-      : [{ bars, pitches }],
+      : [{ bars, pitches, ...(placeholder === undefined ? {} : { placeholder }) }],
   })
 
   return (
@@ -113,7 +118,16 @@ export function MelodyScore({
 
       <div className="flex min-h-0 w-full max-w-full flex-1 items-stretch justify-center">
         <Score
-          className={PHRASE_SCORE_BOX}
+          // The placeholder is faded from here rather than coloured in the
+          // MEI: `@type` reaches the rendered element as a class, so how faint
+          // "faint" is stays with the rest of the styling. Its ledger lines
+          // are a separate rule and are only faded while it is showing — see
+          // `placeholderClasses.ts` for why both of those are true.
+          className={cn(
+            PHRASE_SCORE_BOX,
+            PLACEHOLDER_NOTE,
+            placeholder !== undefined && PLACEHOLDER_LEDGERS,
+          )}
           mei={mei}
           profile={melodicPhraseProfile(
             meter.beats,

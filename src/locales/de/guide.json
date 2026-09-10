@@ -1,0 +1,77 @@
+{
+  "back": "Zurück zu den Einstellungen",
+  "source": "Jede Kurve auf dieser Seite entsteht, indem das Modell selbst ausgewertet wird — sie ist nicht nachgezeichnet. Sie kann also nicht etwas beschreiben, was die App längst anders macht.",
+  "gaps": {
+    "sixteenth": "Nach einer Sechzehntel",
+    "eighth": "Nach einer Achtel",
+    "quarter": "Nach einer Viertel",
+    "half": "Nach einer Halben",
+    "whole": "Nach einer Ganzen"
+  },
+  "shape": {
+    "title": "Wie die Noten gewählt werden",
+    "intro": "Eine Melodie ist hier kein Zufallsweg. Jede Note wird gegen eine Kurve gezogen, die auf der vorherigen Note zentriert ist, und die beiden Führungen unterscheiden sich in genau einem Punkt: ob der Rhythmus mitbestimmt, wie breit diese Kurve ist."
+  },
+  "order": {
+    "title": "Die Reihenfolge",
+    "body": "Der Rhythmus steht fest, bevor irgendeine Tonhöhe gewählt wird. Genau das macht die zeitbemessene Führung überhaupt möglich: Wenn eine Note eine Tonhöhe braucht, ist längst bekannt, wie viel Zeit vor ihr liegt.",
+    "step1": "Die Takte entstehen Zählzeit für Zählzeit aus den Unterteilungen, die das Level erlaubt. Noch ohne Tonhöhen.",
+    "step2": "Die erste Note wird gezogen — bevorzugt ein Ton des Tonika-Dreiklangs, damit die Tonart einen Bezugspunkt hat.",
+    "step3": "Jede weitere Note wird der Reihe nach gezogen, von links nach rechts, jeweils gegen die Note davor."
+  },
+  "first": {
+    "title": "Die Note, die du bekommst",
+    "body": "Ihre Tonhöhe steht ausgegraut im Notensystem, bevor du etwas schreibst. Nur die Tonhöhe — wie lang sie ist, sollst du hören, deshalb steht es nicht im Hinweis, und du tippst sie selbst ein wie jede andere Note."
+  },
+  "next": {
+    "title": "Jede weitere Note",
+    "body": "Zur Auswahl stehen die Tonleiterstufen im Tonumfang des Levels, und jede bekommt ein Gewicht. Gezogen wird dann zufällig im Verhältnis dieser Gewichte — nichts wird also durch eine Regel entschieden, die ja oder nein sagt, sondern nur durch eine, die wahrscheinlicher oder unwahrscheinlicher sagt.",
+    "pools": "Töne außerhalb der Tonart werden vorher zurückgehalten: etwa jede sechste Note wird aus den leiterfremden Tönen gezogen, der Rest aus der Tonleiter selbst. Das macht einen alterierten Ton zum Ereignis statt zur Gewohnheit."
+  },
+  "curves": {
+    "figureLabel": "Kurven, die zeigen, wie wahrscheinlich jedes Intervall ist — eine je Länge des Abstands. Alle drei haben ihr Maximum neben der letzten Note; je länger der Abstand, desto flacher die Kurve.",
+    "axisLow": "eine Oktave tiefer",
+    "axisCentre": "die letzte Note",
+    "axisHigh": "eine Oktave höher",
+    "notchKey": "eine wiederholte Note",
+    "caption": "Die Kurve hat bei jedem Abstand dieselbe Form — nur ihre Breite ändert sich. Die Punkte sind die Noten, die beim kürzesten Abstand wirklich zur Wahl stehen; der mittlere liegt unter seiner eigenen Kurve, weil eine Wiederholung absichtlich gedämpft wird."
+  },
+  "paced": {
+    "title": "Zeitbemessen: der Abstand setzt die Breite",
+    "body": "Das Gewicht fällt ab, je weiter man sich von der letzten Note entfernt, und wie schnell es fällt, ist das Einzige, was der Rhythmus ändert. Nach einer Sechzehntel ist die Kurve schmal, Sekunden und Terzen bekommen also fast alles. Nach einer Halben ist dieselbe Kurve auseinandergezogen, und eine Oktave ist ein ganz normaler Schritt.",
+    "width": "Die Breite wächst mit dem Abstand und hört dann auf. Die Grenze ist Absicht: Ohne sie würde eine lange Note irgendwann jedes Intervall gleich wahrscheinlich machen — genau die ziellose Linie, die hier vermieden werden soll.",
+    "concrete": "Was das für die Schritte bedeutet, die man benennen kann — als Anteil am jeweils wahrscheinlichsten Schritt:"
+  },
+  "width": {
+    "figureLabel": "Eine steigende Kurve, die die Breite der Intervallkurve gegen die Länge des Abstands zeigt und an ihrer Grenze flach wird.",
+    "axisShort": "eine Sechzehntel",
+    "axisLong": "eine Ganze",
+    "caption": "Wie breit die Kurve ist, in Halbtönen, gegen die Zeit vor der Note: etwa {{narrow}} nach einer Sechzehntel und {{wide}} nach einer Ganzen. Ab {{beats}} Zählzeiten wächst sie nicht weiter."
+  },
+  "steady": {
+    "title": "Gleichmäßig: eine Tabelle für alle Noten",
+    "body": "Die andere Führung nutzt eine feste Gewichtstabelle und fragt den Rhythmus nie. Sekunden sind weiterhin deutlich wahrscheinlicher als Sprünge, aber ein weites Intervall kann auf einer kurzen Note landen — schwerer zu hören, und genau darum geht es bei dieser Option.",
+    "figureLabel": "Ein Balkendiagramm der festen Gewichte je Intervall: eine Treppe, die in Stufen abfällt statt gleichmäßig.",
+    "caption": "Eine Treppe statt einer Kurve: Innerhalb einer Stufe ist jedes Intervall gleich wahrscheinlich, und die Stufe bleibt dieselbe, egal wie der Rhythmus aussieht."
+  },
+  "compare": {
+    "move": "Schritt",
+    "after": "{{gap}}",
+    "caption": "Lies eine Zeile von links nach rechts: Dasselbe Intervall wird wahrscheinlicher, je mehr Zeit dafür da ist. Die Ausnahme ist der Einklang — er wird bei jedem Abstand gedämpft.",
+    "intervals": {
+      "0": "Dieselbe Note",
+      "2": "Eine Sekunde",
+      "4": "Eine Terz",
+      "7": "Eine Quinte",
+      "12": "Eine Oktave"
+    }
+  },
+  "rules": {
+    "title": "Was immer gilt",
+    "body": "Unabhängig von Führung und Abstand gelten immer vier Dinge:",
+    "range": "Der eingestellte Tonumfang ist die einzige harte Grenze. Nichts außerhalb wird je gezogen, und alles innerhalb kann gezogen werden.",
+    "nothing": "Kein Intervall innerhalb des Umfangs ist unmöglich. Die Kurve wird sehr klein, aber nie null — auch ein weiter Sprung nach einer Sechzehntel kommt irgendwann vor.",
+    "unison": "Eine Note zu wiederholen ist immer möglich und immer gedämpft: Der Rhythmus unterscheidet zwei Noten auf derselben Tonhöhe, aber eine Linie, die stehen bleibt, fragt nichts.",
+    "rhythm": "Die Führung ändert die Tonhöhen und nie den Rhythmus. Derselbe Zufallswert ergibt unter beiden Einstellungen dieselben Takte."
+  }
+}

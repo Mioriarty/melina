@@ -269,6 +269,10 @@ export function melodyProfile(slots: number, staves: 1 | 2): VerovioOptions {
  * which uses those and only those. The number of systems is then a property of
  * the question rather than of how much has been typed.
  *
+ * A single system is the exception, and only because there is nothing to
+ * honour: one bar carries no `<sb/>`, and Verovio warns on every render when
+ * asked to lay out by encoded breaks it cannot find.
+ *
  * **The width reserves one system's worth of the worst case** — every beat of
  * every bar on that system divided into sixteenths, each with an accidental in
  * front of it, since that is what a player might type whatever the question
@@ -309,7 +313,11 @@ export function melodicPhraseProfile(
 
   const profile: VerovioOptions = {
     ...FILL_THE_PAGE,
-    breaks: 'encoded',
+    // `encoded` only when there is something encoded to honour. A phrase of
+    // one system carries no `<sb/>` at all, and asking Verovio to lay out by
+    // breaks that are not there warns on every render — one bar cannot be
+    // broken anyway, and the page is sized so it never needs to be.
+    breaks: systems > 1 ? 'encoded' : 'auto',
     adjustPageWidth: false,
     adjustPageHeight: false,
     pageWidth: lead + MELODIC_PAGE_PER_BEAT * beats * Math.min(bars, barsPerSystem),

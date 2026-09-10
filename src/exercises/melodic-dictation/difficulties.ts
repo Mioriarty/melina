@@ -23,6 +23,13 @@ import { DEFAULT_SETTINGS, type MelodySettings } from './settings'
  * anyone can read in the room the notation gets on a phone, so it stays a
  * Custom setting rather than a level that looks fine on the desk it was built
  * on.
+ *
+ * Every level but one is `paced` — the rhythm decides how far the line may
+ * move, which is what keeps a run of sixteenths singable. Leaps is the
+ * exception and is the reason the other shape exists: there the rhythm stops
+ * limiting the intervals, so a wide leap can land on a quick note. That is a
+ * genuinely harder thing to hear rather than a tidier one, which is why it is
+ * a level and not a preference.
  */
 export const MELODY_DIFFICULTIES: readonly Difficulty<MelodySettings>[] = [
   {
@@ -147,6 +154,18 @@ export const MELODY_DIFFICULTIES: readonly Difficulty<MelodySettings>[] = [
       cellWeights: { ...NO_CELLS, quarter: 4, hold: 2, eighth: 4, sixteenth: 1 },
       low: '1',
       high: "1'",
+      tempo: 80,
+      minOnsets: 2,
+    },
+  },
+  {
+    id: 'leaps',
+    settings: {
+      ...DEFAULT_SETTINGS,
+      cellWeights: { ...NO_CELLS, quarter: 4, hold: 2, eighth: 3 },
+      low: '5_',
+      high: "1'",
+      shape: 'steady',
       tempo: 80,
       minOnsets: 2,
     },

@@ -1,6 +1,7 @@
 import deCommon from './de/common.json'
 import deCurriculum from './de/curriculum.json'
 import deExercise from './de/exercise.json'
+import deGuide from './de/guide.json'
 import deLevels from './de/levels.json'
 import deMusic from './de/music.json'
 import dePath from './de/path.json'
@@ -9,6 +10,7 @@ import deSettings from './de/settings.json'
 import enCommon from './en/common.json'
 import enCurriculum from './en/curriculum.json'
 import enExercise from './en/exercise.json'
+import enGuide from './en/guide.json'
 import enLevels from './en/levels.json'
 import enMusic from './en/music.json'
 import enPath from './en/path.json'
@@ -31,6 +33,7 @@ import enSettings from './en/settings.json'
  * - `curriculum` — category and exercise names, keyed by their registry ids
  * - `levels`     — the named practice presets, keyed by exercise and level id
  * - `exercise`   — everything inside an exercise: setup, round, summary
+ * - `guide`      — the explainer pages, read from the setting they explain
  * - `music`      — theory vocabulary: clefs, keys, intervals, pitches
  * - `settings`   — the settings screen
  * - `progress`   — the progress overview
@@ -41,6 +44,7 @@ export const NAMESPACES = [
   'curriculum',
   'levels',
   'exercise',
+  'guide',
   'music',
   'settings',
   'progress',
@@ -57,6 +61,7 @@ export const RESOURCES = {
     curriculum: enCurriculum,
     levels: enLevels,
     exercise: enExercise,
+    guide: enGuide,
     music: enMusic,
     settings: enSettings,
     progress: enProgress,
@@ -67,6 +72,7 @@ export const RESOURCES = {
     curriculum: deCurriculum,
     levels: deLevels,
     exercise: deExercise,
+    guide: deGuide,
     music: deMusic,
     settings: deSettings,
     progress: deProgress,

@@ -108,6 +108,15 @@
       "title": "Takte",
       "hint": "Wie viele Takte eine Phrase umfasst. Jeder steht auf einer eigenen Zeile, vier sind auf einem kleinen Bildschirm also viel.",
       "label": "{{count}} Takte"
+    },
+    "shape": {
+      "title": "Melodieführung",
+      "hint": "Was entscheidet, wie weit die Linie springen darf. Das ändert die Melodien, nie die Rhythmen.",
+      "steady": "Gleichmäßig",
+      "steadyHint": "Bei jeder Note derselbe Bereich an Intervallen — ein weiter Sprung kann also auch auf eine kurze Note fallen. Schwerer zu hören.",
+      "paced": "Zeitbemessen",
+      "pacedHint": "Die Zeit vor einer Note entscheidet, wie weit die Linie zu ihr springen darf: kurze Noten gehen schrittweise, lange dürfen springen.",
+      "guide": "Wie das funktioniert"
     }
   },
   "round": {

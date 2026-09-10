@@ -29,9 +29,12 @@ import {
  * - **A pitch on an entry.** A rhythm has none and never sets one, so its
  *   behaviour is untouched.
  *
- * There is a third thing a melody needs and a rhythm does not: a **locked**
- * prefix. Melodic dictation gives the first note away, and a hint that can be
- * deleted is not a hint.
+ * Nothing else. Melodic dictation gives its first note away, and an earlier
+ * version did that by seeding the draft with it and locking it against
+ * backspace — which meant giving away the note's *length* as well as its
+ * pitch, since a draft entry is a written value. The length is a thing to
+ * hear, so the hint is drawn on the staff as a greyed placeholder instead and
+ * the draft starts empty. See `MelodicStaffOptions.placeholder`.
  */
 
 export interface DraftEntry {
@@ -55,41 +58,10 @@ export interface BarDraft {
    * left half open across a barline.
    */
   tuplet?: number
-  /**
-   * How many entries at the front were given rather than typed.
-   *
-   * Backspace stops here. Melodic dictation shows the first note — correct in
-   * pitch and in length — so that it is somewhere to reckon from; a player who
-   * deleted it would be left with a question that no longer says where it
-   * starts.
-   */
-  locked: number
 }
 
 export function emptyDraft(meter: TimeSignature, bars = 1): BarDraft {
-  return { meter, bars, entries: [], locked: 0 }
-}
-
-/**
- * A draft that opens with something already written, and locked.
- *
- * The entries are taken from the spelling of the correct answer rather than
- * invented here — see `leadingEntries` — so the note that is given always
- * agrees with the note that will be marked.
- */
-export function seededDraft(
-  meter: TimeSignature,
-  bars: number,
-  entries: readonly DraftEntry[],
-): BarDraft {
-  const draft: BarDraft = { meter, bars, entries, locked: entries.length }
-
-  // Landing inside an unfinished bracket arms it, exactly as deleting back
-  // into one does: otherwise the next key would be entered as a plain value in
-  // the middle of a tuplet.
-  const last = entries[entries.length - 1]
-  const inside = last?.tuplet !== undefined && draftTicks(draft) % TICKS_PER_BEAT !== 0
-  return inside ? { ...draft, tuplet: last.tuplet as number } : draft
+  return { meter, bars, entries: [] }
 }
 
 /**
@@ -222,7 +194,7 @@ export function canArm(draft: BarDraft): boolean {
 
 /** Whether backspace has anything left to take. */
 export function canRemove(draft: BarDraft): boolean {
-  return draft.entries.length > draft.locked
+  return draft.entries.length > 0
 }
 
 /** Set or clear the bracket, with no questions asked. */
@@ -265,9 +237,9 @@ export function append(
 /**
  * Take back the last key.
  *
- * Never past the locked prefix, and if that lands back inside an unfinished
- * tuplet the tuplet is armed again — otherwise the next key would be entered
- * as a plain value in the middle of a bracket.
+ * If that lands back inside an unfinished tuplet the tuplet is armed again —
+ * otherwise the next key would be entered as a plain value in the middle of a
+ * bracket.
  */
 export function removeLast(draft: BarDraft): BarDraft {
   if (!canRemove(draft)) return setTuplet(draft, undefined)
@@ -351,48 +323,4 @@ function barNodes(meter: TimeSignature, placed: readonly Placed[]): RhythmNode[]
 
 function toSymbol({ entry, at, ticks }: Placed): RhythmSymbol {
   return { kind: entry.kind, dur: entry.dur, dots: entry.dots, at, ticks }
-}
-
-/**
- * The entries a spelling opens with, down to and including its first note.
- *
- * What melodic dictation gives away. Taken from `notateRhythm`'s own output
- * rather than worked out again, so the note that is shown is exactly the note
- * the finished answer would have been spelled with — a hint that disagreed
- * with the answer would be worse than no hint.
- *
- * Only as far as the first note: the rests that follow it say how long the gap
- * to the *second* note is, which is a thing to hear rather than a thing to be
- * told.
- */
-export function leadingEntries(
-  nodes: readonly RhythmNode[],
-  pitch?: Pitch,
-): DraftEntry[] {
-  const entries: DraftEntry[] = []
-
-  const walk = (list: readonly RhythmNode[], tuplet: number | undefined): boolean => {
-    for (const node of list) {
-      if (node.kind === 'beam') {
-        if (walk(node.children, tuplet)) return true
-        continue
-      }
-      if (node.kind === 'tuplet') {
-        if (walk(node.children, node.num)) return true
-        continue
-      }
-
-      entries.push({
-        kind: node.kind,
-        dur: node.dur,
-        dots: node.dots,
-        ...(tuplet === undefined ? {} : { tuplet }),
-        ...(node.kind === 'note' && pitch !== undefined ? { pitch } : {}),
-      })
-      if (node.kind === 'note') return true
-    }
-    return false
-  }
-
-  return walk(nodes, undefined) ? entries : []
 }

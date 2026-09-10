@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router'
 
 import { NoteGlyph } from '@/components/notation/NoteGlyph'
 import { Icon } from '@/components/ui/Icon'
@@ -17,6 +18,7 @@ import {
   METER_CHOICES,
   ON_WEIGHT,
   ROUND_LENGTHS,
+  SHAPE_CHOICES,
   TEMPOS,
   type MelodySettings,
 } from './settings'
@@ -214,6 +216,51 @@ export function SetupScreen({ settings, onChange, onStart, onBack }: SetupScreen
               {t('exercise:setup.alterations.allow')}
             </SetupChip>
           </div>
+        </SetupSection>
+
+        <SetupSection
+          title={t('exercise:setup.shape.title')}
+          hint={t('exercise:setup.shape.hint')}
+          action={
+            <Link
+              to="/guide/melodic-shape"
+              aria-label={t('exercise:setup.shape.guide')}
+              title={t('exercise:setup.shape.guide')}
+              className="-mt-1 -mr-2 grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-faint transition-colors hover:bg-accent-tint hover:text-accent"
+            >
+              <Icon name="help" size={20} />
+            </Link>
+          }
+        >
+          <div className="flex flex-wrap gap-2">
+            {SHAPE_CHOICES.map((shape) => (
+              <SetupChip
+                key={shape}
+                selected={settings.shape === shape}
+                onClick={() => onChange({ ...settings, shape })}
+              >
+                {t(`exercise:setup.shape.${shape}`)}
+              </SetupChip>
+            ))}
+          </div>
+
+          {/*
+            One line, following the selection, rather than a sentence under
+            each chip: the two shapes are a real either/or and their names do
+            not say which is which, but only one of them is in force at a time.
+
+            `aria-live` because the text changes without anything else moving —
+            a sighted reader sees it swap under the chip they just pressed, and
+            this is what says the same thing to a screen reader. Its height is
+            reserved for two lines so the chips do not jump under the finger
+            that tapped them when the two explanations wrap differently.
+          */}
+          <p
+            aria-live="polite"
+            className="mt-3 min-h-11 text-sm leading-relaxed text-ink-faint"
+          >
+            {t(`exercise:setup.shape.${settings.shape}Hint`)}
+          </p>
         </SetupSection>
 
         <SetupSection title={t('exercise:setup.clefs')}>

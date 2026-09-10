@@ -236,6 +236,10 @@
       "title": "Drei Viertel",
       "blurb": "Ein anderer Takt zu spüren, über die ganze Oktave."
     },
+    "leaps": {
+      "title": "Sprünge",
+      "blurb": "Weite Intervalle, die nicht mehr auf eine lange Note warten."
+    },
     "outside-the-key": {
       "title": "Außerhalb der Tonart",
       "blurb": "Gelegentlich Noten, die aus der Tonleiter heraus erhöht oder erniedrigt sind."

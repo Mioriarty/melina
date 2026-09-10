@@ -14,7 +14,13 @@ import {
 import type { KeySignatureId } from '@/lib/music/keySignature'
 import { parseMeter, type TimeSignature } from '@/lib/music/meter'
 import { chromaticValue, diatonicValue, type Pitch } from '@/lib/music/pitch'
-import { impactCount, opensOnDownbeat, type Phrase } from '@/lib/music/phrase'
+import { leapWeight, type MelodicShape } from '@/lib/music/contour'
+import {
+  impactCount,
+  opensOnDownbeat,
+  phraseOnsets,
+  type Phrase,
+} from '@/lib/music/phrase'
 import type { CellWeights } from '@/lib/music/rhythmCells'
 import {
   isCleanScale,
@@ -70,6 +76,8 @@ export interface MelodyRoundSpec {
   low: string
   high: string
   alterations: boolean
+  /** Which rule decides how far the line may leap — see `contour.ts`. */
+  shape: MelodicShape
   meters: readonly string[]
   cellWeights: CellWeights
   bars: number
@@ -97,34 +105,6 @@ export const BARS_PER_SYSTEM = 1
  * the thing the notes are heard against.
  */
 const ALTERATION_CHANCE = 0.18
-
-/**
- * How likely the next note is, by how far it is from the last one.
- *
- * **This is what makes a generated line a melody rather than a list of
- * pitches.** Drawing uniformly from a range of nine notes gives a leap on
- * almost every note, which is both unmusical and far harder to hear than the
- * level claims to be — the difficulty would come from the leaps rather than
- * from the subdivisions or the degrees the level actually names. Seconds are
- * therefore common, thirds ordinary, and anything wider rare.
- *
- * A repeated note is allowed and uncommon. Unlike in scale degrees, where a
- * repeat is a note not asked about, here the rhythm distinguishes them: two
- * notes on the same pitch a beat apart are two things to write down.
- */
-const MOTION_WEIGHTS: readonly { within: number; weight: number }[] = [
-  { within: 0, weight: 1.5 },
-  { within: 2, weight: 8 },
-  { within: 4, weight: 5 },
-  { within: 7, weight: 2 },
-  { within: 12, weight: 0.8 },
-]
-const FAR_WEIGHT = 0.2
-
-function motionWeight(from: DegreeNote, to: DegreeNote): number {
-  const distance = Math.abs(to.semitones - from.semitones)
-  return MOTION_WEIGHTS.find((step) => distance <= step.within)?.weight ?? FAR_WEIGHT
-}
 
 export function allowedModes(spec: MelodyRoundSpec): readonly ModeId[] {
   return spec.modes.filter(isModeId)
@@ -236,20 +216,27 @@ function buildPhrase(
  * the melody cannot contain a note the range does not reach, nor one whose only
  * name is a second spelling of a note it already has. The names are chosen
  * afterwards, once the whole line is known and its direction can decide them.
+ *
+ * **The rhythm is already decided when this runs, and that is deliberate.** The
+ * onsets come in, so every note knows how long there is before it — which is
+ * what `paced` needs and what `steady` ignores. Generating the pitches first
+ * and the rhythm after would make that impossible, and it is the whole reason
+ * the two are in this order.
  */
 function buildLine(
   random: Random,
   tonic: Pitch,
   mode: ModeId,
   spec: MelodyRoundSpec,
-  length: number,
+  onsets: readonly number[],
 ): readonly DegreeNote[] | undefined {
   const offered = stepNotes(tonic, mode, allowedSteps(spec), allowedAlterations(spec))
   const plain = offered.filter(isScaleNote)
-  if (plain.length === 0 || length === 0) return undefined
+  if (plain.length === 0 || onsets.length === 0) return undefined
 
-  // The opening note is given away, so it is worth it being one the key is
-  // easy to reckon from: a member of the tonic triad if the range holds one.
+  // The opening note is shown as a placeholder, so it is worth it being one
+  // the key is easy to reckon from: a member of the tonic triad if the range
+  // holds one.
   const anchors = plain.filter((note) => {
     const above = ((note.semitones % 12) + 12) % 12
     return above === 0 || above === 3 || above === 4 || above === 7
@@ -260,14 +247,18 @@ function buildLine(
 
   const line: DegreeNote[] = [randomPick(random, [firstChoice, ...restChoices])]
 
-  for (let index = 1; index < length; index += 1) {
+  for (let index = 1; index < onsets.length; index += 1) {
     // Altered notes are the exception, so they are drawn against a chance
     // rather than sitting in the pool as equals with the scale's own notes.
     const chromatic = offered.filter((note) => !isScaleNote(note))
     const pool = chromatic.length > 0 && random() < ALTERATION_CHANCE ? chromatic : plain
 
     const previous = line[line.length - 1] as DegreeNote
-    const next = weightedPick(random, pool, (note) => motionWeight(previous, note))
+    const gap = (onsets[index] as number) - (onsets[index - 1] as number)
+
+    const next = weightedPick(random, pool, (note) =>
+      leapWeight(spec.shape, note.semitones - previous.semitones, gap),
+    )
     if (next === undefined) return undefined
     line.push(next)
   }
@@ -304,7 +295,7 @@ export function buildQuestion(
     // and something left over to be asked about once it has.
     if (!opensOnDownbeat(phrase) || impactCount(phrase) < 2) continue
 
-    const line = buildLine(random, tonic, mode, spec, impactCount(phrase))
+    const line = buildLine(random, tonic, mode, spec, phraseOnsets(phrase))
     if (line === undefined) continue
 
     const degrees = nameMelody(tonic, mode, line)

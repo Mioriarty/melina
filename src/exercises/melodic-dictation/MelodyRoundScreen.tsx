@@ -8,16 +8,16 @@ import {
   draftNodes,
   draftPhrase,
   draftPitches,
+  emptyDraft,
   isFull,
-  leadingEntries,
   removeLast,
-  seededDraft,
   type BarDraft,
 } from '@/exercises/dictation-shared/draft'
 import { RoundScreen } from '@/exercises/shared/RoundScreen'
 import type { ActivePhase } from '@/exercises/shared/round'
 import type { PlaybackStatus } from '@/exercises/shared/usePlayback'
 import type { Degree } from '@/lib/music/degree'
+import type { Pitch } from '@/lib/music/pitch'
 import { barRhythm } from '@/lib/music/phrase'
 import { notateRhythm } from '@/lib/notation/rhythmNotation'
 
@@ -76,13 +76,7 @@ export function MelodyRoundScreen({
 }: MelodyRoundScreenProps) {
   const { t } = useTranslation('exercise')
   const [draft, setDraft] = useState<BarDraft>(() =>
-    seededDraft(
-      question.phrase.meter,
-      question.phrase.bars.length,
-      // Taken from the spelling of the answer rather than worked out again, so
-      // the note that is given is exactly the note that will be marked.
-      leadingEntries(notateRhythm(barRhythm(question.phrase, 0)), question.pitches[0]),
-    ),
+    emptyDraft(question.phrase.meter, question.phrase.bars.length),
   )
 
   const revealed = phase.name === 'revealed'
@@ -118,6 +112,9 @@ export function MelodyRoundScreen({
           // something that was not wrong.
           bars={draftNodes(draft)}
           pitches={draftPitches(draft)}
+          {...(draft.entries.length === 0
+            ? { placeholder: question.pitches[0] as Pitch }
+            : {})}
           {...(wrong ? { answer } : {})}
           onPlay={onPlay}
           status={playStatus}

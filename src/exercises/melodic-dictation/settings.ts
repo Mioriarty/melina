@@ -1,6 +1,7 @@
 import { isMetronomeMode, type MetronomeMode } from '@/lib/audio/rhythmSchedule'
 import type { SettingSpec } from '@/lib/db/settings'
 import { DEFAULT_CLEF_IDS, isClefId, type ClefId } from '@/lib/music/clef'
+import { isMelodicShape, MELODIC_SHAPES, type MelodicShape } from '@/lib/music/contour'
 import { degreeKey, parseDegreeKey, stepIndex, stepRange } from '@/lib/music/degree'
 import { METER_KEYS, isMeterKey } from '@/lib/music/meter'
 import {
@@ -35,6 +36,14 @@ export interface MelodySettings {
   /** The highest, e.g. `1'` for the octave above the tonic. */
   high: string
   alterations: boolean
+  /**
+   * Which rule decides how far the line may leap — see `lib/music/contour.ts`.
+   *
+   * A level axis of its own rather than a preference: a melody whose leaps are
+   * paced by its rhythm and one whose leaps ignore it are different things to
+   * hear, and neither is a tidier version of the other.
+   */
+  shape: MelodicShape
   /** Meter keys, e.g. `4/4`. */
   meters: readonly string[]
   cellWeights: CellWeights
@@ -90,6 +99,7 @@ export const DEFAULT_SETTINGS: MelodySettings = {
   low: '1',
   high: '5',
   alterations: false,
+  shape: 'paced',
   meters: ['4/4'],
   cellWeights: DEFAULT_WEIGHTS,
   bars: 1,
@@ -183,6 +193,10 @@ function parseSettings(value: unknown): MelodySettings | undefined {
       typeof raw.alterations === 'boolean'
         ? raw.alterations
         : DEFAULT_SETTINGS.alterations,
+    shape:
+      typeof raw.shape === 'string' && isMelodicShape(raw.shape)
+        ? raw.shape
+        : DEFAULT_SETTINGS.shape,
     meters: meters.length > 0 ? meters : DEFAULT_SETTINGS.meters,
     cellWeights: parseWeights(raw.cellWeights) ?? DEFAULT_SETTINGS.cellWeights,
     bars: oneOf(raw.bars, BAR_COUNTS) ?? DEFAULT_SETTINGS.bars,
@@ -213,4 +227,5 @@ export const WEIGHT_GROUPS = CELL_GROUP_IDS
 export const ON_WEIGHT = 3
 
 export const METER_CHOICES = METER_KEYS
+export const SHAPE_CHOICES = MELODIC_SHAPES
 export { DEFAULT_CLEF_IDS }

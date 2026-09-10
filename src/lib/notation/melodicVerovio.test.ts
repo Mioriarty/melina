@@ -13,7 +13,7 @@ import type { KeySignatureId } from '@/lib/music/keySignature'
 import { measureInk } from '@/test/svgInk'
 
 import { melodicPhraseMei } from './mei'
-import { notateRhythm } from './rhythmNotation'
+import { notateRhythm, type RhythmNode } from './rhythmNotation'
 import { melodicPhraseProfile, renderMei } from './verovio'
 
 /**
@@ -352,4 +352,128 @@ describe('a phrase on the page', () => {
     for (const stage of sizes) expect(stage).toEqual(sizes[0])
     expect(sizes[0]?.width).toBeGreaterThan(0)
   }, 30000)
+})
+
+describe('the placeholder first note', () => {
+  const note = (
+    letter: 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G',
+    alteration: -2 | -1 | 0 | 1 | 2,
+    octave: number,
+  ): Pitch => ({ letter, alteration, octave })
+
+  /**
+   * A bar the player has not reached is an **empty** list of nodes, not a bar
+   * of rests: that is what `draftNodes` hands over, and it is what leaves room
+   * for the placeholder to stand in.
+   */
+  const untouched: readonly RhythmNode[] = []
+  const typed = (onsets: readonly number[]) => notateRhythm({ meter: FOUR_FOUR, onsets })
+
+  async function render(
+    bars: (readonly RhythmNode[])[],
+    pitches: Pitch[],
+    placeholder?: Pitch,
+    keySignature: KeySignatureId = '0',
+  ) {
+    const staff = {
+      bars,
+      pitches,
+      ...(placeholder === undefined ? {} : { placeholder }),
+    }
+    return renderMei(
+      melodicPhraseMei({
+        meter: FOUR_FOUR,
+        clef: 'treble',
+        keySignature,
+        barsPerSystem: 1,
+        staves: [staff],
+      }),
+      undefined,
+      melodicPhraseProfile(4, bars.length, 1, 1),
+    )
+  }
+
+  /** The class Verovio copies out of `@type`, which is how it is greyed. */
+  const marked = (svg: string) => (svg.match(/class="note placeholder"/g) ?? []).length
+
+  it('draws one greyed note when nothing has been written', async () => {
+    const svg = await render([untouched, untouched], [], note('G', 0, 4))
+
+    expect(countOf(svg, 'notehead')).toBe(1)
+    // Marked rather than coloured, so the stylesheet decides what grey is.
+    expect(marked(svg)).toBe(1)
+  })
+
+  it('gives away the pitch and not the length', async () => {
+    // A quarter note whatever the answer turns out to be: the length is the
+    // thing there is to hear, so it is not in the hint.
+    const svg = await render([untouched], [], note('G', 0, 4))
+    // One notehead, no beam and no flag — a plain quarter.
+    expect(countOf(svg, 'notehead')).toBe(1)
+    expect(countOf(svg, 'beam')).toBe(0)
+    expect(countOf(svg, 'flag')).toBe(0)
+  })
+
+  it('carries its own accidental, so the pitch is unambiguous', async () => {
+    const bare = await render([untouched], [], note('G', 0, 4))
+    const sharp = await render([untouched], [], note('F', 1, 4))
+
+    expect(drawnAccidentals(bare)).toBe(0)
+    expect(drawnAccidentals(sharp)).toBe(1)
+  })
+
+  it('says nothing where the key signature already has', async () => {
+    const svg = await render([untouched], [], note('F', 1, 4), '1s')
+    expect(drawnAccidentals(svg)).toBe(0)
+  })
+
+  it('disappears the moment something is written', async () => {
+    const svg = await render([typed([0]), untouched], [note('B', 0, 4)], note('G', 0, 4))
+
+    expect(marked(svg)).toBe(0)
+    // And what is drawn is what was written, not the placeholder.
+    expect(countOf(svg, 'notehead')).toBe(1)
+  })
+
+  it('stands only in the first bar', async () => {
+    // Writing in bar one clears it even though bar two is still untouched.
+    const svg = await render([typed([0]), untouched], [note('B', 0, 4)], note('G', 0, 4))
+    expect(marked(svg)).toBe(0)
+  })
+
+  it('keeps the page the same size whether it is there or not', async () => {
+    // It stands in a measure padded to full length like everything else, so
+    // the box cannot move when it goes.
+    const withGhost = await render([untouched, untouched], [], note('G', 0, 4))
+    const without = await render([untouched, untouched], [])
+    const written = await render(
+      [typed([0]), untouched],
+      [note('G', 0, 4)],
+      note('G', 0, 4),
+    )
+
+    expect(pageSize(withGhost)).toEqual(pageSize(without))
+    expect(pageSize(written)).toEqual(pageSize(without))
+  })
+
+  it('is not drawn on the staff showing the correct answer', async () => {
+    // Only the staff being written into has a placeholder; the answer beside
+    // it is an answer.
+    const svg = await renderMei(
+      melodicPhraseMei({
+        meter: FOUR_FOUR,
+        clef: 'treble',
+        keySignature: '0',
+        barsPerSystem: 1,
+        staves: [
+          { bars: [untouched], pitches: [], placeholder: note('G', 0, 4), label: 'You' },
+          { bars: [typed([0])], pitches: [note('G', 0, 4)], label: 'Correct' },
+        ],
+      }),
+      undefined,
+      melodicPhraseProfile(4, 1, 1, 2),
+    )
+
+    expect(marked(svg)).toBe(1)
+  })
 })

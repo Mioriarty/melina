@@ -15,13 +15,25 @@ export interface SetupSectionProps {
   title: string
   /** One line on what this choice actually does, where it is not obvious. */
   hint?: string
+  /**
+   * Something in the top right corner of the section — a link to a guide,
+   * where one line of hint is not enough to explain the choice.
+   *
+   * A corner rather than a line under the hint, so it does not compete with
+   * the options themselves: it is there for the first time you meet the
+   * setting and invisible every time after.
+   */
+  action?: ReactNode
   children: ReactNode
 }
 
-export function SetupSection({ title, hint, children }: SetupSectionProps) {
+export function SetupSection({ title, hint, action, children }: SetupSectionProps) {
   return (
     <section className="border-t border-rule py-5 first-of-type:border-t-0 first-of-type:pt-0">
-      <h2 className="mb-1 text-heading">{title}</h2>
+      <div className="mb-1 flex items-start justify-between gap-3">
+        <h2 className="text-heading">{title}</h2>
+        {action}
+      </div>
       {hint !== undefined && (
         <p className="mb-3 text-sm leading-relaxed text-ink-faint">{hint}</p>
       )}

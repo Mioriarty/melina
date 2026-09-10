@@ -1,0 +1,77 @@
+{
+  "back": "Back to the settings",
+  "source": "Every curve on this page is drawn by evaluating the model itself, not by redrawing it — so it cannot come to describe something the app no longer does.",
+  "gaps": {
+    "sixteenth": "After a sixteenth",
+    "eighth": "After an eighth",
+    "quarter": "After a quarter",
+    "half": "After a half note",
+    "whole": "After a whole note"
+  },
+  "shape": {
+    "title": "How the notes are chosen",
+    "intro": "A melody here is not a random walk. Each note is drawn against a curve centred on the note before it, and the two shapes differ in one thing only: whether the rhythm gets a say in how wide that curve is."
+  },
+  "order": {
+    "title": "The order things happen in",
+    "body": "The rhythm is decided before any pitch is. That ordering is what makes the paced shape possible at all: by the time a note needs a pitch, it is already known how long there is before it.",
+    "step1": "The bars are built one beat at a time, from the subdivisions the level allows. No pitches yet.",
+    "step2": "The first note is drawn — preferring a member of the tonic triad, so the key has somewhere to be reckoned from.",
+    "step3": "Every note after it is drawn in turn, left to right, each one against the note before it."
+  },
+  "first": {
+    "title": "The note you are given",
+    "body": "Its pitch is shown greyed on the staff before you write anything. Only its pitch — how long it lasts is a thing to hear, so it is not in the hint, and you type it yourself like every other note."
+  },
+  "next": {
+    "title": "Every note after that",
+    "body": "The notes available are the scale steps the level's range covers, and each one is given a weight. One is then drawn at random in proportion to those weights — so nothing is ever chosen by a rule that says yes or no, only by one that says more likely or less.",
+    "pools": "Notes from outside the key are held back first: about one note in six is drawn from the chromatic notes and the rest from the scale's own, which is what keeps an altered note an event rather than a habit."
+  },
+  "curves": {
+    "figureLabel": "Curves showing how likely each interval is, one for each length of gap. All three peak next to the last note; the longer the gap, the flatter the curve.",
+    "axisLow": "an octave below",
+    "axisCentre": "the last note",
+    "axisHigh": "an octave above",
+    "notchKey": "a repeated note",
+    "caption": "The curve is the same shape at every gap — only its width changes. The dots are the notes that actually exist to be chosen, at the shortest gap; the one in the middle sits below its own curve because a repeat is damped on purpose."
+  },
+  "paced": {
+    "title": "Paced: the gap sets the width",
+    "body": "The weight falls away from the last note the further you go, and how fast it falls is the only thing the rhythm changes. After a sixteenth the curve is narrow, so steps and thirds take almost all of it. After a half note the same curve is smeared out, and an octave is an ordinary move.",
+    "width": "The width grows with the gap and then stops. The cap is deliberate: without it a long note would eventually make every interval equally likely, which is the aimless line this exists to avoid.",
+    "concrete": "What that comes to for the moves you can name, as a share of the likeliest move at that gap:"
+  },
+  "width": {
+    "figureLabel": "A rising curve showing the width of the interval curve against the length of the gap, flattening at its cap.",
+    "axisShort": "a sixteenth",
+    "axisLong": "a whole note",
+    "caption": "How wide the curve is, in semitones, against how long there is before the note: about {{narrow}} after a sixteenth and {{wide}} after a whole note. Past {{beats}} beats it stops growing."
+  },
+  "steady": {
+    "title": "Steady: one table, every note",
+    "body": "The other shape uses a fixed table of weights and never consults the rhythm. Steps are still far likelier than leaps, but a wide interval can land on a quick note — which is harder to hear, and is the point of the option rather than a flaw in it.",
+    "figureLabel": "A bar chart of the fixed weights by interval: a staircase that steps down in blocks rather than falling away smoothly.",
+    "caption": "A staircase rather than a curve: within a block every interval is equally likely, and the block is the same whatever the rhythm."
+  },
+  "compare": {
+    "move": "Move",
+    "after": "{{gap}}",
+    "caption": "Read across a row to see the same interval get likelier as there is more time for it. The unison is the exception: it is damped at every gap.",
+    "intervals": {
+      "0": "The same note",
+      "2": "A step",
+      "4": "A third",
+      "7": "A fifth",
+      "12": "An octave"
+    }
+  },
+  "rules": {
+    "title": "What is guaranteed",
+    "body": "Whatever the shape and whatever the gap, four things always hold:",
+    "range": "The range you set is the only hard boundary. Nothing outside it is ever drawn, and everything inside it can be.",
+    "nothing": "No interval inside the range is ever impossible. The curve gets very small, never zero, so even a wide leap after a sixteenth will happen eventually.",
+    "unison": "Repeating a note is always possible and always damped — the rhythm tells two notes on one pitch apart, but a line that sits still is not asking you anything.",
+    "rhythm": "The shape changes the pitches and never the rhythm. The same seed gives the same bars under either setting."
+  }
+}

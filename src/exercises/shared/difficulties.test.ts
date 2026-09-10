@@ -843,4 +843,13 @@ describe('melodic dictation levels', () => {
     const meters = new Set(MELODY_DIFFICULTIES.flatMap((level) => level.settings.meters))
     expect(meters.size).toBeGreaterThan(1)
   })
+
+  it('covers both melodic shapes, and is mostly paced', () => {
+    // Paced is what keeps a run of sixteenths singable, so it is the rule
+    // nearly everywhere; the one steady level is what the other shape is for,
+    // and without it the option would be reachable only from Custom.
+    const shapes = MELODY_DIFFICULTIES.map((level) => level.settings.shape)
+    expect(new Set(shapes)).toEqual(new Set(['paced', 'steady']))
+    expect(shapes.filter((shape) => shape === 'steady')).toHaveLength(1)
+  })
 })

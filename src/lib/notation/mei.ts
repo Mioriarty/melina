@@ -1,5 +1,5 @@
 import { getClef, type ClefId } from '@/lib/music/clef'
-import { ticksPerMeasure, type TimeSignature } from '@/lib/music/meter'
+import { TICKS_PER_BEAT, ticksPerMeasure, type TimeSignature } from '@/lib/music/meter'
 import {
   notatedTicks,
   onsetsOf,
@@ -542,6 +542,21 @@ export interface MelodicStaffOptions {
   bars: readonly (readonly RhythmNode[])[]
   /** One per note, in the order they sound, across the whole phrase. */
   pitches: readonly Pitch[]
+  /**
+   * The first note's pitch, shown greyed until the player writes something.
+   *
+   * **A placeholder, in the sense a form field means it**: it says what the
+   * first note is without being an answer, and the moment anything is typed it
+   * is gone. Melodic dictation gives the pitch away and not the length — the
+   * length is a thing to hear — so this is drawn as a plain quarter note
+   * whatever the answer turns out to be, which is why it cannot simply be the
+   * first entry of the draft.
+   *
+   * Marked `@type="placeholder"`, which Verovio puts into the rendered
+   * element's `class`, so what colour "greyed" is stays in the stylesheet with
+   * the rest of the design tokens rather than being a hex value written here.
+   */
+  placeholder?: Pitch
   /** Drawn at the left. Passed in already translated, like every other string. */
   label?: string
 }
@@ -563,6 +578,16 @@ export interface MelodicPhraseMeiOptions {
   /** One staff, or two when a wrong answer is shown against the right one. */
   staves: readonly MelodicStaffOptions[]
 }
+
+/**
+ * The `@type` Verovio copies into the rendered element's `class`, so a
+ * placeholder can be greyed from the stylesheet rather than from a hex value
+ * written into the MEI. See `MelodicStaffOptions.placeholder`.
+ */
+export const PLACEHOLDER = 'placeholder'
+
+/** A placeholder is always a quarter note: the length is not being given away. */
+const PLACEHOLDER_TICKS = TICKS_PER_BEAT
 
 /**
  * How many notes a bar's spelling holds, which is how many pitches it eats.
@@ -651,6 +676,14 @@ export function melodicPhraseMei({
         const pitches = staff.pitches.slice(from, from + count)
         consumed[index] = from + count
 
+        // The placeholder stands in the first bar only, and only while that
+        // bar is still untouched — anything written replaces it, which is what
+        // makes it read as a placeholder rather than as a note already there.
+        const ghost =
+          bar === 0 && staff.placeholder !== undefined && nodes.length === 0
+            ? staff.placeholder
+            : undefined
+
         // One bar at a time, so an accidental printed in this bar governs the
         // rest of it and nothing beyond it.
         const accidentals = measureAccidentals(pitches, keySignature)
@@ -663,8 +696,15 @@ export function melodicPhraseMei({
         }
 
         const written = notatedTicks(nodes)
-        const rest = padding(meter, written, total).map(spaceElement).join('')
-        const layer = nodes.map((node) => melodicNodeElement(node, take)).join('') + rest
+        const lead =
+          ghost === undefined
+            ? ''
+            : `<note pname="${ghost.letter.toLowerCase()}" oct="${ghost.octave}" dur="4"${accidentalAttributes(ghost, keySignature)} type="${PLACEHOLDER}"/>`
+        const filled = ghost === undefined ? written : PLACEHOLDER_TICKS
+
+        const rest = padding(meter, filled, total).map(spaceElement).join('')
+        const layer =
+          lead + nodes.map((node) => melodicNodeElement(node, take)).join('') + rest
 
         return `<staff n="${index + 1}">
                 <layer n="1">${layer}</layer>

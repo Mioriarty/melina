@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import ExercisePage from '@/pages/ExercisePage'
 import HomePage from '@/pages/HomePage'
+import MelodyShapePage from '@/pages/MelodyShapePage'
 import ProgressPage from '@/pages/ProgressPage'
 import SettingsPage from '@/pages/SettingsPage'
 
@@ -26,8 +27,10 @@ export function App() {
         </Route>
 
         {/* Exercises run without the header — they fill the screen and carry
-            their own navigation. */}
+            their own navigation. The guides are read from inside one and go
+            back to it, so they are the same kind of screen. */}
         <Route element={<AppShell header={false} />}>
+          <Route path="guide/melodic-shape" element={<MelodyShapePage />} />
           <Route path="train/:categoryId/:exerciseId" element={<ExercisePage />} />
           <Route path="*" element={<ExercisePage />} />
         </Route>

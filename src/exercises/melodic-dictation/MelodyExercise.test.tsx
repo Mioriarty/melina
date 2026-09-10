@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { i18n } from '@/lib/i18n'
 
 import MelodicDictationExercise from './MelodicDictationExercise'
+import { PLACEHOLDER_LEDGERS, PLACEHOLDER_NOTE } from './placeholderClasses'
 
 /**
  * Render smoke tests for Melodic Dictation.
@@ -34,9 +35,9 @@ vi.mock('@/lib/audio/engine', () => ({
   unlockAudio: vi.fn(() => Promise.resolve()),
 }))
 
-function open() {
+function open(entry = '/train/dictation/short-melodies') {
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[entry]}>
       <MelodicDictationExercise />
     </MemoryRouter>,
   )
@@ -116,31 +117,42 @@ describe('Melodic Dictation', () => {
     expect(document.body.textContent ?? '').toMatch(/major|minor/i)
   })
 
-  it('gives the first note away, and will not let it be deleted', async () => {
-    // Two bars, because a round is seeded from the clock: in a single bar the
-    // given note can leave exactly one beat, and then the press below fills
-    // the bar, answers the question and disables the whole keyboard for a
-    // reason that has nothing to do with what is being tested.
+  it('starts with an empty answer, since the hint is only a placeholder', async () => {
+    // The first note's pitch is shown greyed on the staff — see
+    // `melodicVerovio.test.ts` — rather than written into the answer, so the
+    // player types every note including the first and backspace starts dead.
     await startRound('two-bars')
 
-    // Something is already written, so the staff is not empty — but backspace
-    // has nothing to take, because what is written was not typed.
-    expect(screen.getByRole('button', { name: 'Delete the last one' })).toHaveProperty(
-      'disabled',
-      true,
-    )
+    const back = () => screen.getByRole('button', { name: 'Delete the last one' })
+    expect(back()).toHaveProperty('disabled', true)
 
     press(degree('1'))
-    expect(screen.getByRole('button', { name: 'Delete the last one' })).toHaveProperty(
-      'disabled',
-      false,
-    )
+    expect(back()).toHaveProperty('disabled', false)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Delete the last one' }))
-    expect(screen.getByRole('button', { name: 'Delete the last one' })).toHaveProperty(
-      'disabled',
-      true,
+    fireEvent.click(back())
+    expect(back()).toHaveProperty('disabled', true)
+  })
+
+  it('fades the placeholder, and its ledger lines only while it is showing', async () => {
+    // Ledger lines are drawn by Verovio inside the *staff*, as a sibling of
+    // the layer rather than inside the note that needs them, so nothing scoped
+    // to the note can fade them. Fading every ledger line on the staff is only
+    // exact while the placeholder is the sole note on it — after that they
+    // belong to what was written, and to the correct answer beside it.
+    await startRound('two-bars')
+
+    // The staff is engraved asynchronously, so it is not an image until the
+    // first render lands.
+    const staff = () => screen.findByRole('img', { name: /melody you are writing/i })
+
+    expect((await staff()).className).toContain(PLACEHOLDER_NOTE)
+    expect((await staff()).className).toContain(PLACEHOLDER_LEDGERS)
+
+    press(degree('1'))
+    await waitFor(async () =>
+      expect((await staff()).className).not.toContain(PLACEHOLDER_LEDGERS),
     )
+    expect((await staff()).className).toContain(PLACEHOLDER_NOTE)
   })
 
   it('keeps the note value armed between notes', async () => {
@@ -244,8 +256,13 @@ describe('Melodic Dictation', () => {
   it('will not let a value overflow the bar', async () => {
     await startRound()
 
-    // A whole note cannot fit: the given first note has already taken part of
-    // the bar, whatever it was.
+    // An untouched bar of 4/4 takes a whole note; one quarter in, it does not.
+    expect(screen.getByRole('button', { name: value('1.plain.note') })).toHaveProperty(
+      'disabled',
+      false,
+    )
+
+    press(degree('1'))
     expect(screen.getByRole('button', { name: value('1.plain.note') })).toHaveProperty(
       'disabled',
       true,
@@ -290,6 +307,59 @@ describe('Melodic Dictation', () => {
     expect(await screen.findByText('Range')).toBeTruthy()
     expect(screen.getByText('Subdivisions')).toBeTruthy()
     expect(screen.getByText('Bars')).toBeTruthy()
+    expect(screen.getByText('Melodic shape')).toBeTruthy()
+  })
+
+  it('links from the shape setting to the guide behind it', async () => {
+    // One line of hint cannot explain a probability model, so the corner of
+    // that section carries a way into the page that can.
+    open()
+    fireEvent.click(await screen.findByText('Custom'))
+    await screen.findByText('Melodic shape')
+
+    const link = screen.getByRole('link', { name: 'How this works' })
+    expect(link.getAttribute('href')).toBe('/guide/melodic-shape')
+  })
+
+  it('opens on the settings form when returning from the guide', async () => {
+    // The settings are in Dexie and survive the trip; which screen was showing
+    // is React state and does not, so the return URL says where to land.
+    open('/train/dictation/short-melodies?screen=setup')
+
+    expect(await screen.findByText('Melodic shape')).toBeTruthy()
+    expect(screen.queryByText(level('beats-and-steps'))).toBeNull()
+  })
+
+  it('offers both melodic shapes, and explains the one that is selected', async () => {
+    // Side by side, with one line below that follows the selection: the names
+    // alone do not say which is which, but only one is in force at a time.
+    open()
+    fireEvent.click(await screen.findByText('Custom'))
+    await screen.findByText('Melodic shape')
+
+    const steady = screen.getByRole('button', { name: 'Steady' })
+    const paced = screen.getByRole('button', { name: 'Paced' })
+
+    // Paced is the default, so its explanation is the one on screen.
+    expect(paced.getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByText(/quick notes step/i)).toBeTruthy()
+    expect(screen.queryByText(/same spread of intervals/i)).toBeNull()
+
+    fireEvent.click(steady)
+    expect(steady.getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByText(/same spread of intervals/i)).toBeTruthy()
+    expect(screen.queryByText(/quick notes step/i)).toBeNull()
+  })
+
+  it('announces the explanation when it changes', async () => {
+    // It swaps under the chip that was just pressed with nothing else moving,
+    // so a screen reader has to be told rather than left to notice.
+    open()
+    fireEvent.click(await screen.findByText('Custom'))
+    await screen.findByText('Melodic shape')
+
+    const explanation = screen.getByText(/quick notes step/i)
+    expect(explanation.getAttribute('aria-live')).toBe('polite')
   })
 })
 

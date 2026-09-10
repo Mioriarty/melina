@@ -236,6 +236,10 @@
       "title": "Three Four",
       "blurb": "A different bar to feel, across the whole octave."
     },
+    "leaps": {
+      "title": "Leaps",
+      "blurb": "Wide intervals that no longer wait for a long note to arrive on."
+    },
     "outside-the-key": {
       "title": "Outside the Key",
       "blurb": "Notes raised and lowered out of the scale, once in a while."

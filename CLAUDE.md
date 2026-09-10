@@ -767,10 +767,16 @@ A station carries `titleKey` and `blurbKey`, not a title — the words come from
 
 **The second braid merges.** Rhythmic Dictation and Scale Degrees stand side by
 side — the _when_ and the _what_, learnable in either order — and Melodic
-Dictation sits centred and alone below them with both edges arriving at it,
-because it is the thing that needs both. It is the first station since the top
-of the path with two edges arriving, which is what the graph in `PATH_EDGES`
-exists to express.
+Dictation sits below them with both edges arriving at it, because it is the
+thing that needs both. It is the first station since the top of the path with
+two edges arriving, which is what the graph in `PATH_EDGES` exists to express.
+
+It sits **left of centre rather than on it**, because the room to its right is
+spoken for: the next exercise stands beside it. Placed that way now rather than
+when that arrives, so shipping it is a coordinate and not a re-layout of
+everything below — and if the two do end up standing level, `pathLayout.test.ts`
+will say so, since it checks every such pair for overlapping labels at every
+supported width.
 
 `orderedPathNodes` sorts by `position.y`, **not** by the curriculum. The
 registry lists hearing before reading and the path puts reading first, so
@@ -974,14 +980,85 @@ for writing down something other than what they heard. `melodyDurations` is that
 rule, and `rhythmSchedule.test.ts` holds it — including across a barline, which
 is the case that lets the tie go.
 
-**The first note is given, and locked.** It is the leading symbol of the correct
-answer's own spelling, carrying the first pitch, taken from `notateRhythm`
-rather than worked out again — a hint that disagreed with the answer would be
-worse than no hint. Backspace stops above it. Only as far as the first note,
-though: the rests after it would say how long the gap to the _second_ note is,
-which is a thing to hear rather than a thing to be told. So beat one of bar one
-is always struck, and a phrase always has more than one impact — a phrase whose
-only impact was the one being given away would answer itself on sight.
+**The first note's pitch is given as a placeholder, not as a note.** It is drawn
+greyed on the staff, the way a form field shows what goes in it, and the first
+thing typed replaces it. The draft itself starts empty, so the player writes
+every note including the first.
+
+Only the pitch. An earlier version seeded the draft with the leading symbol of
+the answer's own spelling and locked it against backspace, which gave away the
+note's _length_ as well — and the length is exactly the thing there is to hear.
+A draft entry is a written value, so there was no way to seed one without
+saying how long it was; a placeholder on the staff is not an entry, and can say
+one without the other. It is a plain quarter note whatever the answer is.
+
+Marked by `@type="placeholder"`, which Verovio copies into the rendered
+element's `class`, so how faint it is stays in the styling rather than being a
+colour written into the MEI. **Faded with `opacity`, not coloured** — see
+`placeholderClasses.ts`. Verovio ships its own stylesheet inside every render
+containing `#<id> path { stroke: currentColor }`, an _ID_ selector that beats
+any class rule of ours, and a stem is a `<path>` with no stroke of its own; so
+setting `stroke` on the note group reached the noteheads and left every stem
+full black. Opacity is not a property that rule touches, and it is what "greyed
+out" means here anyway: the ink of a real note, faded.
+
+**Ledger lines need a second rule, because they are a second element.** Verovio
+draws them as `<g class="ledgerLines">` inside the _staff_, a sibling of the
+layer rather than a child of the note that needs them, so nothing scoped to the
+note can reach them. Fading every ledger line on the staff is exact rather than
+approximate only because of when it is applied: while the placeholder is
+showing it is the only note there, so every ledger line drawn belongs to it.
+Once anything is written the rule comes off, or a wrong answer would show its
+own ledger lines — and the correct answer's — faded.
+
+Beat one of bar one is still always struck — the placeholder needs somewhere to
+stand — and a phrase still has more than one impact, now because a one-note
+phrase is not a melody rather than because the hint would have answered it.
+
+### How far a melody leaps — `lib/music/contour.ts`
+
+A generator that draws each note independently of the last produces a line that
+jumps about, which is neither musical nor, for dictation, honest: the difficulty
+would come from the leaps rather than from the degrees or the subdivisions the
+level names. So the next note is drawn against a weight that falls away with
+distance from the last one. **Two shapes**, and a level picks one:
+
+- **`steady`** — one spread of intervals, the same at every note. Steps common,
+  thirds ordinary, wide leaps rare, and the rhythm has no say.
+- **`paced`** — **the time to the next note sets the spread.** A quick note
+  steps; a long one may leap. The weight is an exponential centred on the last
+  note whose _width_ is a power of the gap in beats, so a long gap is the same
+  shape smeared out rather than a different shape.
+
+Paced is how melodies are actually written and actually sung — a run of
+sixteenths that leaps a seventh at every note is unsingable and unhearable,
+while the same leap after a half note is ordinary. Steady is kept because it is
+a _harder_ line to hear rather than a worse one, and Leaps is the level for it.
+
+Measured, the curve is about 2 semitones wide at a sixteenth and 9 at a half
+note; the table in `contour.ts` carries the rest, and the constants are meant to
+be turned. Three properties are not: **every interval keeps a non-zero weight**
+(a `floor`, because an exponential underflows at a small width and a wide leap,
+and a level whose far notes could never be drawn is quietly narrower than it
+says), the curve is **symmetrical** (which way a line goes is decided
+elsewhere), and a **repeated note is notched down** — legal, since the rhythm
+tells two notes on one pitch apart, but a line that keeps sitting still is not
+asking anything. The notch has to be deep because the pool is _notes_ rather
+than intervals: the nearest neighbours in a diatonic range are a semitone or two
+away, and at a short gap the curve has barely fallen by then.
+
+`contour.test.ts` asserts the properties rather than the numbers, and
+`melodic-dictation/generate.test.ts` measures the melodies that actually come
+out — the same reasoning as rhythmic dictation's mixture test, since a weight
+that is right on paper and never reaches a bar is a weight that does nothing.
+
+**It is also explained in the app**, at `/guide/melodic-shape`, reached from the
+question mark in the corner of the Melodic shape setting — one line of hint
+cannot explain a probability model. See below.
+
+**The rhythm is generated before the pitches, and that ordering is load-bearing
+now**: `paced` needs to know how long each note has, which is a fact about the
+bars.
 
 **The vocabulary is a contiguous run of scale steps**, `low` to `high`, and the
 run _is_ the keyboard: one key per step. A range rather than a set because a
@@ -1023,6 +1100,37 @@ The summary is the one place the two halves separate again. Grading is a single
 verdict, but a melody can be right in its rhythm and wrong in its notes or the
 reverse, and "you had the rhythm" is the most useful thing there is to read
 back — which is why `answerName` sees the question as well as the answer.
+
+## Guides — `src/pages/MelodyShapePage.tsx` and `components/explain/`
+
+A setting whose meaning takes a picture gets a page, reached from a question
+mark in the corner of its section — `SetupSection` takes an `action` for it.
+Corner rather than a line under the hint, so it is there the first time you meet
+the setting and invisible every time after.
+
+**The figures are computed from the model, never drawn to match it.**
+`contourSeries.ts` evaluates `contour.ts` itself, and `ContourFigures.tsx` plots
+what comes back, so turning a constant moves the pictures with it and the page
+cannot come to describe something the app no longer does. That is the whole
+reason `contourCurve` is exported: the bare curve is what the drawing needs,
+and a second copy of the formula in a chart is a copy that can go stale.
+`MelodyShapePage.test.ts` asserts the _shape_ of what the figures say — a leap
+grows likelier with the gap, a repeat is damped at every gap — so the page fails
+rather than lies if the model changes underneath it.
+
+The drawings keep their aspect ratio, unlike the path's connectors: a dot has to
+stay a dot, and `preserveAspectRatio="none"` turned every marker into an
+ellipse. Strokes are still non-scaling, so a line is the same thickness on a
+phone and a desktop.
+
+A guide lives on a **headerless route**, like the exercises it is read from, and
+carries its own back link. That link returns to `?screen=setup`, because the
+settings survive the trip in Dexie but _which screen was showing_ is React state
+and does not — without it, reading the explainer costs the player their place
+and drops them on the level list.
+
+Guides have their own `guide` translation namespace rather than living in
+`exercise`: a page is an area of the app, which is what a namespace is for.
 
 ## The attempt log — `src/lib/db/attemptQuestion.ts` and `progress.ts`
 

@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router'
 
 import { LevelsScreen } from '@/exercises/shared/LevelsScreen'
 import { usePlayback } from '@/exercises/shared/usePlayback'
@@ -43,6 +44,21 @@ export default function MelodicDictationExercise() {
   )
 
   const round = useMelodyRound(spec, EXERCISE_ID)
+
+  // **Coming back from the guide lands where it was opened from.** The
+  // settings themselves are in Dexie and survive the trip, but which screen
+  // was showing is React state and does not — so without this, reading the
+  // explainer costs the player their place and they arrive at the level list.
+  // Once only: it says where to *start*, not where to stay.
+  const [params] = useSearchParams()
+  const returning = params.get('screen') === 'setup'
+  const restored = useRef(false)
+  const { toSetup } = round
+  useEffect(() => {
+    if (!returning || restored.current) return
+    restored.current = true
+    toSetup()
+  }, [returning, toSetup])
   const steps = useMemo(() => (spec === undefined ? [] : allowedSteps(spec)), [spec])
 
   // Only the brackets this level can actually produce, so a switch never
