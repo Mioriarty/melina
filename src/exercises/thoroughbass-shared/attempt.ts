@@ -4,6 +4,8 @@ import { figureKey, parseFigureKey, type Figure } from '@/lib/music/figuredBass'
 import { isKeySignatureId } from '@/lib/music/keySignature'
 import { parsePitch, pitchKey } from '@/lib/music/pitch'
 
+import { DEFAULT_REGISTER } from './voicing'
+
 import {
   describeEvent,
   type BassEvent,
@@ -48,6 +50,10 @@ export function thoroughbassQuestion(
   if (basses.length !== columns.length) return undefined
 
   const events: BassEvent[] = []
+  // The same reference the generator threaded when it built the question, or
+  // the chords would come back voiced differently from the ones that were on
+  // the page — a row disagreeing with the notation it produced.
+  let near = DEFAULT_REGISTER
   for (const [index, text] of basses.entries()) {
     const bass = parsePitch(text)
     if (bass === undefined) return undefined
@@ -59,9 +65,10 @@ export function thoroughbassQuestion(
       figures.push(figure)
     }
 
-    const event = describeEvent(bass, attempt.keySignature, figures)
+    const event = describeEvent(bass, attempt.keySignature, figures, near)
     if (event === undefined) return undefined
     events.push(event)
+    near = event.chords[event.chords.length - 1]?.[0] ?? near
   }
 
   return events.length === 0 ? undefined : { keySignature: attempt.keySignature, events }

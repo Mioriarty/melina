@@ -16,13 +16,12 @@ import {
   diatonicValue,
   letterFromDiatonicValue,
   octaveFromDiatonicValue,
-  pitch,
   type Pitch,
 } from '@/lib/music/pitch'
 import type { PitchClass } from '@/lib/music/scale'
 import { dealEvenly, randomPick, type Random } from '@/lib/utils/seededRandom'
 
-import { voiceChord } from './voicing'
+import { DEFAULT_REGISTER, voiceChords } from './voicing'
 
 /** One bass note and everything standing under and over it. */
 export interface BassEvent {
@@ -67,19 +66,6 @@ export interface ThoroughbassRoundSpec {
   events: number
   questionsPerRound: number
 }
-
-/**
- * Where a chord starts: just under middle C, so the lowest note it can take is
- * middle C itself — one ledger line under the treble staff, which is ordinary
- * notation rather than something to avoid.
- *
- * **The floor also decides where the keyboard's row of keys wraps**, because
- * each key draws the note at the place pressing it would put it. With a B the
- * wrap falls between B and C, which is the end of the row and invisible; raised
- * to a D it fell between D and E, and the row read C and D an octave above
- * everything after them. The ceiling is checked separately by `onTrebleStaff`.
- */
-export const CHORD_FLOOR: Pitch = pitch('B', 0, 3)
 
 /** How many bass notes to try before giving this question up as unplaceable. */
 const PLACEMENT_TRIES = 24
@@ -177,6 +163,8 @@ export function describeEvent(
   bass: Pitch,
   keySignature: KeySignatureId,
   figures: readonly Figure[],
+  /** Where the chord before this event began, so its chords follow on. */
+  near: Pitch = DEFAULT_REGISTER,
 ): BassEvent | undefined {
   const notes: (readonly PitchClass[])[] = []
   for (const figure of figures) {
@@ -187,10 +175,13 @@ export function describeEvent(
 
   if (notes.length === 0) return undefined
 
-  // Lowest first, so each chord builds upward from the bass in close position.
-  // Every one is voiced from the same floor, so two chords under one bass can
-  // be read against each other rather than drifting apart.
-  const chords = notes.map((chord) => voiceChord(CHORD_FLOOR, [...chord].reverse()))
+  // Lowest figure first, so each chord builds upward in close position — and
+  // each follows the one before it, so a suspension resolves by a step rather
+  // than leaping an octave.
+  const chords = voiceChords(
+    notes.map((chord) => [...chord].reverse()),
+    near,
+  )
   return { bass, figures, notes, chords }
 }
 
@@ -198,6 +189,7 @@ export function buildEvent(
   random: Random,
   keySignature: KeySignatureId,
   wanted: string,
+  near: Pitch = DEFAULT_REGISTER,
 ): BassEvent | undefined {
   const asked = parseWanted(wanted)
   if (asked === undefined) return undefined
@@ -207,7 +199,7 @@ export function buildEvent(
 
   for (let attempt = 0; attempt < PLACEMENT_TRIES; attempt += 1) {
     const bass = randomPick(random, candidates as [Pitch, ...Pitch[]])
-    const event = placeOn(bass, keySignature, asked)
+    const event = placeOn(bass, keySignature, asked, near)
     if (event !== undefined) return event
   }
 
@@ -219,6 +211,7 @@ function placeOn(
   bass: Pitch,
   keySignature: KeySignatureId,
   asked: readonly Figure[],
+  near: Pitch,
 ): BassEvent | undefined {
   const written: Figure[] = []
   let previous: readonly PitchClass[] | undefined
@@ -252,7 +245,7 @@ function placeOn(
     previous = notes
   }
 
-  const event = describeEvent(bass, keySignature, written)
+  const event = describeEvent(bass, keySignature, written, near)
   return event === undefined || !event.chords.every(onTrebleStaff) ? undefined : event
 }
 
@@ -262,10 +255,14 @@ export function buildQuestion(
   wanted: readonly string[],
 ): ThoroughbassQuestion | undefined {
   const events: BassEvent[] = []
+  // The reference runs the whole length of the question, so a bass line's
+  // chords follow one another the way a suspension's two halves do.
+  let near = DEFAULT_REGISTER
   for (const figure of wanted) {
-    const event = buildEvent(random, keySignature, figure)
+    const event = buildEvent(random, keySignature, figure, near)
     if (event === undefined) return undefined
     events.push(event)
+    near = event.chords[event.chords.length - 1]?.[0] ?? near
   }
   return events.length === 0 ? undefined : { keySignature, events }
 }

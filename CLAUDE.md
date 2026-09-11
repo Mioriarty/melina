@@ -1285,12 +1285,34 @@ quietly narrower than it says. Discovered by the test, not reasoned out first.
 **Correctness in the realising direction is the set of pitch classes above the
 bass, and nothing more** — octave, order and spacing are the player's, because
 the figure genuinely underdetermines them. `voiceChord` is the single place that
-decides where the notes actually sit (lowest place above the one before it,
-building upward from a floor just under middle C), read by both the staff and
-the keyboard so the two cannot disagree about what was written. v1 forbids
-doubling: the answer is the set of _distinct_ notes, which is what makes the
-chord exactly fillable and so what lets the keyboard keep the no-confirm-key
-rule.
+decides where the notes actually sit, read by both the staff and the verdict so
+the two cannot disagree about what was written.
+
+**A close-position chord is positioned entirely by its lowest note**, and that
+one fact is the whole of the voice leading: a chord's first note — which is
+therefore its lowest — goes at the octave nearest to where the chord before it
+began, so moving that note the least moves the chord the least. No matching of
+voices is needed, and it comes out right for every suspension because the third
+comes first in the stack and the third is usually the common tone.
+
+It used to place every chord from one fixed floor, strictly above it, which went
+wrong twice over. A 4–3 leapt an octave **upward** instead of resolving by a
+semitone — the B of the resolution could not sit on a B floor, so it jumped —
+and a lone triad's register depended on which letter happened to be lowest, so a
+chord over G sat a sixth above one over C and two questions in a row were drawn
+in quite different places for no reason a player could see.
+
+**Anchoring on the first note rather than on the chord's centre is deliberate.**
+Centring reads better and would move notes already on the staff, because the
+player builds a chord one key at a time and the app cannot know what is still to
+come. Anchoring settles the octave on the first press and nothing afterwards
+unsettles it.
+
+`voiceChords` threads the reference along a whole succession, and **everything
+that builds a question has to use it** — the generator, and the way back out of
+the attempt log. Reading a row back without it rebuilds the same notes in
+different places, which is a row disagreeing with the notation it produced; the
+round-trip test catches exactly that.
 
 **A wrong chord is not replaced by the right one.** Swapping one for the other
 says you were wrong and says nothing else; what is worth seeing is which note
@@ -1473,10 +1495,22 @@ accidentals. There is no tonic and no mode here — only a key signature and a
 bass — so the seven letters are spelled by `alterationInKey` and the switches
 shift from there, which means it needs no scale-degree machinery at all. Labels
 are note names rather than degree numbers, because a figured bass is read as
-intervals above its bass and not as degrees of a key. Each key draws the note at
-the place pressing it _would_ put it, so the placement rule is visible in the
-thing it governs. It autosubmits when the chord is full and keeps the
-no-confirm-key rule, which is the honest difference from its sibling.
+intervals above its bass and not as degrees of a key. It autosubmits when the
+chord is full and keeps the no-confirm-key rule, which is the honest difference
+from its sibling.
+
+**Each key draws the note, not the octave it will land in.** The row is the same
+seven notes in the same places at every moment of every question, which is what
+a row of keys should be — and it is honest rather than a simplification: the
+player is choosing a _note_, and where it sits is the app's business, since a
+figure says which notes and never where they sit.
+
+The key faces used to show live placement, which stopped being possible once
+the staff started voicing each chord to follow the one before it: the row would
+have re-ordered itself between the two halves of a suspension. What is kept is
+the part that can be kept — `KEY_OCTAVE` is the octave the keys are drawn in,
+and `DEFAULT_REGISTER` is chosen so that an _opening_ chord lands there exactly,
+so pressing a key for a first chord puts the note where the key showed it.
 
 ### The levels, and the ladder they climb
 
@@ -1502,12 +1536,6 @@ keeping straight when this grows: the _vocabulary_ (which figures) and the
 _span_ (how many bass notes, and how many figures under one). Suspensions,
 passing notes and continuation lines are all span, not vocabulary, which is why
 they are not simply "harder figures".
-
-Where a chord starts is `CHORD_FLOOR`, and it **also decides where the
-keyboard's row of keys wraps**, because each key draws the note at the place
-pressing it would put it. At a B the wrap falls between B and C, which is the
-end of the row and invisible; raised to a D it fell between D and E, and the row
-read C and D an octave above everything after them.
 
 **The vocabulary grew a long way before the model had to.** Every altered figure
 — `♯6`, `♭6`, `6/♯4`, `6/♭5`, `♯5`, `♭5`, and the three shapes an augmented

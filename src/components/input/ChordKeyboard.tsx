@@ -7,10 +7,10 @@ import {
   canPlace,
   canRemove,
   isFull,
-  nextPlace,
   place,
   type ChordDraft,
 } from '@/exercises/thoroughbass-realizing/draft'
+import { KEY_OCTAVE } from '@/exercises/thoroughbass-shared/voicing'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { alterationInKey, type KeySignatureId } from '@/lib/music/keySignature'
 import { isAlteration, LETTERS, type Letter } from '@/lib/music/pitch'
@@ -35,9 +35,15 @@ import { Switch } from './Switch'
  * read as intervals above its bass and not as degrees of a key. They go through
  * `useMusicNames`, since the note English calls B is H in German.
  *
- * **Each key draws the note at the place pressing it would put it**, which
- * moves up as the chord fills — the placement rule made visible, so the player
- * can see the chord building in close position without ever choosing an octave.
+ * **Each key draws the note, not the octave it will land in.** The row is the
+ * same seven notes in the same places at every moment of every question, which
+ * is what a row of keys should be.
+ *
+ * That is honest rather than a simplification: the player is choosing a *note*,
+ * and where it sits is the app's business — a figure says which notes and never
+ * where they sit, so octave is never graded and never the player's to pick. The
+ * staff voices each chord to follow the one before it, which a key face cannot
+ * show without re-ordering itself between chords.
  *
  * There is **no confirm key**: the chord is exactly fillable, every key that
  * would overfill is disabled, and the last press left is the one that completes
@@ -191,7 +197,7 @@ export function ChordKeyboard({
         {LETTERS.map((letter) => {
           const note = noteFor(letter)
           const allowed = live && note !== undefined && canPlace(draft, note)
-          const pitch = note === undefined ? undefined : nextPlace(draft, note)
+          const pitch = note === undefined ? undefined : { ...note, octave: KEY_OCTAVE }
 
           return (
             <button

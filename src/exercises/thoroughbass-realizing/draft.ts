@@ -1,5 +1,4 @@
-import { CHORD_FLOOR } from '@/exercises/thoroughbass-shared/generate'
-import { voiceChord } from '@/exercises/thoroughbass-shared/voicing'
+import { voiceChords } from '@/exercises/thoroughbass-shared/voicing'
 import type { Pitch } from '@/lib/music/pitch'
 import { tonicKey, type PitchClass } from '@/lib/music/scale'
 
@@ -83,16 +82,20 @@ export function removeLast(draft: ChordDraft): ChordDraft {
   }
 }
 
-/** Where the notes placed under one bass note actually sit. */
-export function chordPitches(draft: ChordDraft, index: number): readonly Pitch[] {
-  return voiceChord(CHORD_FLOOR, notesAt(draft, index))
+/**
+ * Where every chord of the draft sits.
+ *
+ * Voiced as a succession rather than one at a time, so the player's own line
+ * follows itself — a chord after another opens near where that one began,
+ * which is what keeps a resolution from leaping an octave.
+ */
+export function draftPitches(draft: ChordDraft): readonly (readonly Pitch[])[] {
+  return voiceChords(draft.chords)
 }
 
-/** Where the *next* note would sit, which is what a key draws on its face. */
-export function nextPlace(draft: ChordDraft, note: PitchClass): Pitch {
-  const placed = chordPitches(draft, currentEvent(draft))
-  const below = placed[placed.length - 1] ?? CHORD_FLOOR
-  return voiceChord(below, [note])[0] as Pitch
+/** Where the notes placed under one chord slot actually sit. */
+export function chordPitches(draft: ChordDraft, index: number): readonly Pitch[] {
+  return draftPitches(draft)[index] ?? []
 }
 
 export function draftAnswer(draft: ChordDraft): readonly (readonly PitchClass[])[] {

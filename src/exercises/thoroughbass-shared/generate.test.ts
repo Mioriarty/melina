@@ -313,6 +313,13 @@ describe('a bass line', () => {
       expect(again?.events.map((e) => pitchKey(e.bass))).toEqual(
         question.events.map((e) => pitchKey(e.bass)),
       )
+      // **Including where the chords sit.** They are voiced as a succession,
+      // each following the one before it, so reading a row back has to thread
+      // the same reference along or the notation comes out different from the
+      // notation the row was written from.
+      expect(again?.events.map((e) => e.chords.map((c) => c.map(pitchKey)))).toEqual(
+        question.events.map((e) => e.chords.map((c) => c.map(pitchKey))),
+      )
     }
   })
 
