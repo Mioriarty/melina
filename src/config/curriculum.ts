@@ -23,11 +23,32 @@ export interface ExerciseDef {
   status: Status
 }
 
+/**
+ * An explainer page that belongs to a category without being an exercise.
+ *
+ * A guide is something you **read**, not something you practise, and it earns a
+ * stop on the path because some of what melina teaches cannot be learnt by
+ * being tested on it — the rules of omission in a figured bass are conventions
+ * you have to be told before you can be asked. Hiding that behind a question
+ * mark on a settings screen puts it where nobody meets it first.
+ *
+ * It has no settings, no round and no accuracy, so it is deliberately not an
+ * `ExerciseDef`: everything that walks the exercises — the routes, the feature
+ * flags, the attempt log — keeps working without learning about it.
+ */
+export interface GuideDef {
+  id: string
+  icon: IconName
+  status: Status
+}
+
 export interface CategoryDef {
   id: string
   icon: IconName
   status: Status
   exercises: readonly ExerciseDef[]
+  /** Explainers that stand on the path before the exercises they serve. */
+  guides?: readonly GuideDef[]
 }
 
 export const CATEGORIES: readonly CategoryDef[] = [
@@ -103,6 +124,13 @@ export const CATEGORIES: readonly CategoryDef[] = [
     id: 'thoroughbass',
     icon: 'layers',
     status: 'ready',
+    guides: [
+      {
+        id: 'figured-bass',
+        icon: 'book',
+        status: 'ready',
+      },
+    ],
     exercises: [
       { id: 'figuring', icon: 'create', status: 'ready' },
       { id: 'realizing', icon: 'layers', status: 'ready' },
@@ -249,6 +277,29 @@ export function exerciseShortKey(categoryId: string, exerciseId: string): string
   return `curriculum:categories.${categoryId}.exercises.${exerciseId}.short`
 }
 
+/**
+ * A guide's route, station id and translation keys.
+ *
+ * Guide ids are globally unique rather than unique within a category, because
+ * the route `/guide/<id>` is global — the id in the URL and the id in the
+ * registry are the same string, so there is nothing to keep in step.
+ */
+export function guidePath(guideId: string): string {
+  return `/guide/${guideId}`
+}
+
+export function guideStationId(guideId: string): string {
+  return `guide/${guideId}`
+}
+
+export function guideTitleKey(guideId: string): string {
+  return `curriculum:guides.${guideId}.title`
+}
+
+export function guideBlurbKey(guideId: string): string {
+  return `curriculum:guides.${guideId}.blurb`
+}
+
 /* ------------------------------------------------------------- stations */
 
 /**
@@ -261,8 +312,16 @@ export function exerciseShortKey(categoryId: string, exerciseId: string): string
  * the whole journey stays visible without a station per unwritten exercise.
  */
 export interface Station {
-  /** `intervals/reading` for an exercise, `scales` for a whole category. */
+  /**
+   * `intervals/reading` for an exercise, `scales` for a whole category,
+   * `guide/figured-bass` for an explainer.
+   */
   id: string
+  /**
+   * What tapping it gets you. A guide is read rather than practised, and the
+   * path draws it differently — see `PathNode`.
+   */
+  kind: 'exercise' | 'guide'
   /** Fully qualified translation keys — pass them straight to `t`. */
   titleKey: string
   blurbKey: string
@@ -272,17 +331,20 @@ export interface Station {
   category: CategoryDef
   /** The exercise this station is, when it is one. */
   exercise?: ExerciseDef
+  /** The guide this station is, when it is one. */
+  guide?: GuideDef
   status: Status
 }
 
 export function stations(): readonly Station[] {
-  return CATEGORIES.flatMap((category) => {
+  return CATEGORIES.flatMap((category): Station[] => {
     const built = readyExercises(category)
 
     if (built.length === 0) {
       return [
         {
           id: category.id,
+          kind: 'exercise' as const,
           titleKey: categoryTitleKey(category.id),
           blurbKey: categoryBlurbKey(category.id),
           icon: category.icon,
@@ -293,15 +355,34 @@ export function stations(): readonly Station[] {
       ]
     }
 
-    return built.map((exercise) => ({
-      id: `${category.id}/${exercise.id}`,
-      titleKey: exerciseTitleKey(category.id, exercise.id),
-      blurbKey: exerciseBlurbKey(category.id, exercise.id),
-      icon: exercise.icon ?? category.icon,
-      path: exercisePath(category.id, exercise.id),
+    // Guides come first, because a guide exists to be read before the exercise
+    // it serves. Where they actually sit is `pathLayout.ts`'s business — this
+    // only decides the order `orderedPathNodes` falls back to.
+    const guides: Station[] = (category.guides ?? []).map((guide) => ({
+      id: guideStationId(guide.id),
+      kind: 'guide' as const,
+      titleKey: guideTitleKey(guide.id),
+      blurbKey: guideBlurbKey(guide.id),
+      icon: guide.icon,
+      path: guidePath(guide.id),
       category,
-      exercise,
-      status: exercise.status,
+      guide,
+      status: guide.status,
     }))
+
+    return [
+      ...guides,
+      ...built.map((exercise) => ({
+        id: `${category.id}/${exercise.id}`,
+        kind: 'exercise' as const,
+        titleKey: exerciseTitleKey(category.id, exercise.id),
+        blurbKey: exerciseBlurbKey(category.id, exercise.id),
+        icon: exercise.icon ?? category.icon,
+        path: exercisePath(category.id, exercise.id),
+        category,
+        exercise,
+        status: exercise.status,
+      })),
+    ]
   })
 }

@@ -15,6 +15,9 @@ const open = ALL.filter(
   (station) => station.status === 'ready' && isCategoryEnabled(station.category),
 )
 const closed = ALL.filter((station) => !open.includes(station))
+/** Open stations split by what tapping one gets you: a round, or a read. */
+const openExercises = open.filter((station) => station.kind === 'exercise')
+const openGuides = open.filter((station) => station.kind === 'guide')
 
 /**
  * Render smoke tests.
@@ -73,9 +76,15 @@ describe('App', () => {
     // test rather than breaking it.
     const upNext = closed.filter((station) => station.status === 'ready')
 
-    expect(screen.getAllByText('Open')).toHaveLength(open.length)
+    expect(screen.getAllByText('Open')).toHaveLength(openExercises.length)
     expect(screen.queryAllByText('Up next')).toHaveLength(upNext.length)
     expect(screen.getAllByText('Locked')).toHaveLength(closed.length - upNext.length)
+
+    // A guide says what it *is* rather than whether it is unlocked: there is
+    // nothing to unlock and no progress to make, and a reader has to be able
+    // to tell before tapping that this stop is something to read.
+    expect(screen.queryAllByText('Read first')).toHaveLength(openGuides.length)
+    expect(openGuides.length).toBeGreaterThan(0)
   })
 
   it('links open stations and only those', async () => {
@@ -83,16 +92,24 @@ describe('App', () => {
     await screen.findByRole('heading', { name: 'Your path' })
 
     // (The skip-link and the wordmark are links too, and legitimately so.)
-    const trainingLinks = screen
+    // Matched against the registry's own paths rather than a `/train/` prefix,
+    // because a guide is an open station that leads somewhere else entirely.
+    const wanted = new Set(open.map((station) => station.path))
+    const stationLinks = screen
       .getAllByRole('link')
-      .filter((link) => link.getAttribute('href')?.startsWith('/train/') === true)
+      .filter((link) => wanted.has(link.getAttribute('href') ?? ''))
 
-    expect(trainingLinks).toHaveLength(open.length)
+    expect(stationLinks).toHaveLength(open.length)
     for (const station of open) {
       expect(
-        trainingLinks.some((link) => link.getAttribute('href') === station.path),
-        `${station.id} should link to its own exercise`,
+        stationLinks.some((link) => link.getAttribute('href') === station.path),
+        `${station.id} should link to where it leads`,
       ).toBe(true)
+    }
+
+    // And a guide really does leave the exercises behind.
+    for (const guide of openGuides) {
+      expect(guide.path.startsWith('/guide/'), guide.id).toBe(true)
     }
   })
 

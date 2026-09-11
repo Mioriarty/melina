@@ -4,6 +4,7 @@
   "state": {
     "open": "Open",
     "next": "Up next",
-    "locked": "Locked"
+    "locked": "Locked",
+    "guide": "Read first"
   }
 }

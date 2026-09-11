@@ -19,6 +19,19 @@ function nodeState(station: Station): NodeState {
   return isCategoryEnabled(station.category) ? 'open' : 'next'
 }
 
+/**
+ * What the overline under a station's title says.
+ *
+ * A guide is not open or locked in the way an exercise is — there is nothing to
+ * unlock and no progress to make — so it says what it *is* instead. That is the
+ * whole of why `kind` exists on a `Station`: a reader has to be able to tell,
+ * before tapping, that this stop is something to read rather than something to
+ * be tested on.
+ */
+function overline(station: Station, state: NodeState): string {
+  return station.kind === 'guide' && state !== 'locked' ? 'state.guide' : `state.${state}`
+}
+
 export interface PathNodeProps {
   station: Station
   position: PathNodePosition
@@ -50,12 +63,24 @@ export function PathNode({ station, position, index, reducedMotion }: PathNodePr
   const { t } = useTranslation('path')
   const state = nodeState(station)
 
+  // **A guide is drawn as a different shape, not only a different colour.** It
+  // is a rounded square on paper with a solid accent hairline, against the
+  // filled accent circle an exercise gets — so the difference survives a
+  // colour-blind reader and a greyscale screenshot, which a tint alone would
+  // not. The dashed borders are already spoken for by `next` and `locked`.
+  const isGuide = station.kind === 'guide' && state !== 'locked'
+
   const medallion = cn(
-    'grid shrink-0 place-items-center rounded-full',
+    'grid shrink-0 place-items-center',
     'transition-[transform,background-color,border-color] duration-200 ease-[--ease-out-soft]',
-    state === 'open' &&
+    isGuide ? 'rounded-2xl' : 'rounded-full',
+    isGuide &&
+      'border-2 border-accent bg-paper-raised text-accent shadow-md shadow-accent/15 group-hover:-translate-y-1',
+    !isGuide &&
+      state === 'open' &&
       'bg-accent text-white shadow-lg shadow-accent/30 group-hover:-translate-y-1',
-    state === 'next' &&
+    !isGuide &&
+      state === 'next' &&
       'border-2 border-dashed border-accent bg-paper-raised text-accent shadow-md shadow-accent/15',
     state === 'locked' &&
       'border-2 border-dashed border-rule bg-paper-raised text-ink-faint',
@@ -79,8 +104,13 @@ export function PathNode({ station, position, index, reducedMotion }: PathNodePr
         >
           {t(station.titleKey)}
         </span>
-        <span className="text-[0.75rem] font-medium tracking-wide text-ink-faint uppercase">
-          {t(`state.${state}`)}
+        <span
+          className={cn(
+            'text-[0.75rem] font-medium tracking-wide uppercase',
+            isGuide ? 'text-accent' : 'text-ink-faint',
+          )}
+        >
+          {t(overline(station, state))}
         </span>
       </span>
     </>

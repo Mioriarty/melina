@@ -145,7 +145,9 @@ describe('path layout', () => {
     expect(joins('scales/degrees', 'dictation/short-melodies')).toBe(true)
     expect(joins('dictation/short-melodies', 'harmonic-prediction')).toBe(true)
 
-    // Thoroughbass stands off the path: joined to itself and to nothing else.
+    // Thoroughbass stands off the path: joined to itself and to nothing else,
+    // and its explainer comes before the exercises it serves.
+    expect(joins('guide/figured-bass', 'thoroughbass/figuring')).toBe(true)
     expect(joins('thoroughbass/figuring', 'thoroughbass/realizing')).toBe(true)
     expect(joins('dictation/short-melodies', 'thoroughbass/figuring')).toBe(false)
     expect(joins('thoroughbass/realizing', 'harmonic-prediction')).toBe(false)
@@ -198,7 +200,11 @@ describe('path layout', () => {
       components.push(group.sort())
     }
 
-    const island = ['thoroughbass/figuring', 'thoroughbass/realizing']
+    const island = [
+      'guide/figured-bass',
+      'thoroughbass/figuring',
+      'thoroughbass/realizing',
+    ]
     expect(components).toHaveLength(2)
     expect(components.map((group) => group.join(' '))).toContain(island.join(' '))
 

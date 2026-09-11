@@ -309,6 +309,9 @@ it that way.
   first render waits for it.
 - `--origin` when Vite has picked a different port, which it does whenever 5173
   is already taken.
+- `--scroll` scrolls the page's own scroll container first, for anything read in
+  more than one screenful, and `--scale` drops the pixel ratio for a very tall
+  viewport such as the whole path.
 
 Worth doing after anything that changes what is drawn, and worth doing at a
 phone width rather than a desktop one — the notation and the keyboard compete
@@ -1389,6 +1392,33 @@ mark in the corner of its section — `SetupSection` takes an `action` for it.
 Corner rather than a line under the hint, so it is there the first time you meet
 the setting and invisible every time after.
 
+**A guide that has to be read before the exercise makes sense gets a station of
+its own.** That is a different thing from contextual help: the melodic shape
+page explains one setting to someone already in the exercise, while the figured
+bass page explains a _convention_ that nothing in the exercise can teach you,
+because canonical-required grading marks you wrong for a figure it never told
+you not to write. A question mark on a settings screen is where nobody meets it
+first, so it is also a stop on the path.
+
+Guides are registered in the curriculum — `GuideDef`, on the category they
+serve — and `stations()` emits them **before** that category's exercises. They
+are deliberately not `ExerciseDef`s: there is no round, no settings and no
+accuracy, and everything that walks the exercises (the routes, the feature
+flags, the attempt log) keeps working without learning about them. A `Station`
+carries `kind`, and that is what `PathNode` draws from.
+
+**An explainer node is a different shape, not only a different colour** — a
+rounded square on paper with a solid accent hairline, against the filled accent
+circle an exercise gets, so the difference survives a colour-blind reader and a
+greyscale screenshot. The dashed borders were already spoken for by `next` and
+`locked`. Its overline says what it _is_ ("Read first") rather than whether it
+is unlocked, because there is nothing to unlock and no progress to make.
+
+**Two ways in means two ways back.** `?from=` on the guide's URL says which
+exercise opened it, and with no `?from=` at all it came from the path and
+returns there. An unrecognised value is treated as the path rather than trusted
+into a route.
+
 **The figures are computed from the model, never drawn to match it.**
 `contourSeries.ts` evaluates `contour.ts` itself, and `ContourFigures.tsx` plots
 what comes back, so turning a constant moves the pictures with it and the page
@@ -1405,10 +1435,36 @@ ellipse. Strokes are still non-scaling, so a line is the same thickness on a
 phone and a desktop.
 
 A guide lives on a **headerless route**, like the exercises it is read from, and
-carries its own back link. That link returns to `?screen=setup`, because the
-settings survive the trip in Dexie but _which screen was showing_ is React state
-and does not — without it, reading the explainer costs the player their place
-and drops them on the level list.
+carries its own back link. Reached from a setting, that link returns to
+`?screen=setup`, because the settings survive the trip in Dexie but _which
+screen was showing_ is React state and does not — without it, reading the
+explainer costs the player their place and drops them on the level list.
+
+### The figured bass guide is built around examples, not prose
+
+`FiguredBassPage` runs: what a figured bass _is_ (what is printed beside what is
+played), then counting up from the bass, then the key signature deciding which
+note that lands on, then what the figure leaves out, then the accidentals. Each
+of those is a thing you can only really see, so each has a staff under it, and
+the staves come from `figurePitches` and `voiceChord` — the same two functions
+the exercises grade against.
+
+**Which bass and key each example uses is data, in `figuredBassExamples.ts`, and
+that is not tidiness.** A page that teaches "a figure writes only what is not
+obvious" and then draws `♭5/3` — with a 3 the rule it has just stated says not
+to write — is worse than no page, and nothing about the types would say so. The
+examples are held to `canonicalFigures` by test, so **the guide can never print
+a figure the exercise would mark wrong**. That shipped once and the test now
+names the offending example.
+
+The examples use `THOROUGHBASS_EXAMPLE_PROFILE` rather than the exercise's
+profile: the fixed page exists so a staff cannot move while an answer is typed
+into it, and nothing is typed into an example, so it shrinks to the music
+instead. Their box carries a **definite height** and `items-stretch`, because
+`Score` puts `max-h-full` on the SVG and against an indefinite parent that
+resolves to nothing — the staff then sizes the box that was supposed to size it
+and prints straight over the caption, which is exactly what it did the first
+time.
 
 Guides have their own `guide` translation namespace rather than living in
 `exercise`: a page is an area of the app, which is what a namespace is for.

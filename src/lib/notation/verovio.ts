@@ -395,6 +395,26 @@ const THOROUGHBASS_PAGE_HEIGHT = 448
  */
 const EMBED_FIGURE_ACCIDENTALS = { smuflTextFont: 'embedded' } as const
 
+/**
+ * A figured bass drawn as an **example** rather than as a question.
+ *
+ * The fixed page below exists so a staff cannot move while an answer is typed
+ * into it. Nothing is typed into an example, so there is nothing to reserve and
+ * the page shrinks to the music instead — which on an explainer page is the
+ * difference between a row of staves and a row of staves each sitting in a
+ * third of a box.
+ *
+ * The brace still needs its margin and an accidental in a figure still needs
+ * its font. One shared object, because `Score` compares a profile by identity.
+ */
+export const THOROUGHBASS_EXAMPLE_PROFILE: VerovioOptions = {
+  ...EMBED_FIGURE_ACCIDENTALS,
+  breaks: 'auto',
+  adjustPageWidth: true,
+  adjustPageHeight: true,
+  pageMarginLeft: THOROUGHBASS_MARGIN_LEFT,
+}
+
 const THOROUGHBASS_PROFILES = new Map<string, VerovioOptions>()
 
 export function thoroughbassProfile(

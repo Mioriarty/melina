@@ -76,36 +76,68 @@
   },
   "figures": {
     "title": "Wie eine Bezifferung gelesen wird",
-    "intro": "Eine Bezifferung ist kein Akkordname. Sie ist eine Menge von Intervallen über dem Bass, gelesen gegen die Vorzeichnung.",
+    "intro": "Ein bezifferter Bass ist eine Basslinie mit Zahlen darunter. Die Zahlen sagen, welche Töne darüber gehören — gespielt werden sie vom Spieler. Diese Seite zeigt, wie man sie liest.",
+    "exampleLabel": "Akkolade, Tonart {{key}}: Bass {{bass}}, beziffert {{figure}}",
+    "none": "ohne Ziffer",
+    "printed": "Was gedruckt steht",
+    "played": "Was der Spieler daraus macht",
+    "what": {
+      "title": "Notentext und Ausführung sind nicht dasselbe",
+      "body": "Eine Continuostimme druckt eine Basslinie und sonst nichts. Die Ziffern sind die ganze Anweisung: sie sagen, was über jedem Basston zu bauen ist, und der Spieler baut es vom Blatt.",
+      "after": "Es gibt also keine rechte Hand zum Ablesen. Es gibt einen Basston, eine Ziffer und eine Konvention, die Komponist und Spieler teilen — und um die geht es hier."
+    },
     "reading": {
-      "title": "Vom Bass aus zählen",
-      "body": "Eine 6 meint den Ton eine Sexte über dem Bass. Keinen bestimmten Ton — die Sexte über D ist H, die Sexte über E ist C, und dieselbe Ziffer ist unter jedem Basston ein anderer Ton.",
-      "key": "Welches H oder welches C, entscheidet die Vorzeichnung. In C-Dur ist die Sexte über D ein H; in F-Dur, wo die Vorzeichnung es erniedrigt, ist dieselbe 6 über demselben D ein B. Die Ziffer sagt es nie — die Vorzeichnung hat es schon gesagt."
+      "title": "Die Ziffer zählt vom Bass aufwärts",
+      "body": "Eine 6 meint den Ton eine Sexte über dem Bass. Keinen bestimmten Ton: gezählt wird von dem Basston, unter dem sie gerade steht, und darum ist dieselbe Ziffer ein anderer Ton, sobald der Bass sich bewegt.",
+      "overC": "6 über C ist A",
+      "overE": "6 über E ist C",
+      "after": "Das ist die wichtigste Gewohnheit überhaupt. Man lernt nicht, wie „6“ klingt, sondern sechs Schritte vom Ton vor der Nase aufwärts zu zählen."
+    },
+    "signature": {
+      "title": "Die Vorzeichnung entscheidet, welcher",
+      "body": "Das Zählen liefert einen Buchstaben. Den Rest liefert die Vorzeichnung — genau so wie bei jedem anderen Ton auf dem System.",
+      "inC": "In C-Dur ist die Sexte über D ein H",
+      "inF": "In F-Dur ist dieselbe 6 über demselben D ein B",
+      "after": "Die Ziffer sagt nie Kreuz oder B, solange sie nicht muss. Was die Vorzeichnung ohnehin klärt, lässt sie in Ruhe."
     },
     "omission": {
-      "title": "Was weggelassen wird",
-      "body": "Eine Bezifferung schreibt nur, was sich nicht von selbst versteht, und diese Kurzschrift ist das meiste, was es zu lernen gibt. Deshalb ist ein unbezifferter Basston kein Basston ohne Akkord.",
-      "plain": "Gar keine Ziffer meint den Dreiklang — Terz und Quinte über dem Bass.",
+      "title": "Eine Bezifferung schreibt nur das Unselbstverständliche",
+      "body": "Die meisten Bassnoten tragen gar keine Ziffer — und das heißt nicht: kein Akkord. Es heißt: der gewöhnliche, Terz und Quinte über dem Bass, häufig genug, um die Tinte nicht wert zu sein.",
+      "bare": "Gar keine Ziffer",
+      "triad": "Meint Terz und Quinte",
+      "after": "Dieselbe Sparsamkeit zieht sich durch alle anderen. Jede Ziffer schreibt das Überraschende und lässt dich das Selbstverständliche ergänzen:",
+      "plain": "Keine Ziffer meint den Dreiklang — Terz und Quinte über dem Bass.",
       "sixth": "6 meint Sexte und Terz. Die Terz versteht sich von selbst, also sagt 6/3 etwas, das nicht gesagt werden musste.",
       "seventh": "7 meint Septime, Quinte und Terz: alles unterhalb der Septime wird vorausgesetzt.",
       "second": "2 meint Sexte, Quarte und Sekunde. 4/2 ist dieselbe Bezifferung, etwas länger geschrieben; beides ist gebräuchlich.",
-      "accidental": "Eine Stimme mit Vorzeichen wird immer geschrieben, auch wenn die Kurzschrift sie sonst wegließe — das Vorzeichen ist genau das, was sich nicht von selbst versteht."
+      "accidental": "Eine Stimme mit Vorzeichen wird immer geschrieben, auch wenn die Kurzschrift sie sonst wegließe — das Vorzeichen ist genau das, was sich nicht von selbst versteht.",
+      "sevenWritten": "Eine Ziffer",
+      "sevenPlayed": "Drei Töne über dem Bass"
+    },
+    "accidentals": {
+      "title": "Kreuze, B und Auflösungszeichen",
+      "body": "Ein Vorzeichen vor einer Ziffer rückt diesen Ton einen Halbton von dem weg, was die Tonart ihm gibt. Ein Vorzeichen allein, ohne Ziffer daneben, gehört zur Terz — und das ist nach der 6 die häufigste Bezifferung überhaupt, denn so wird die erhöhte Terz der Dominante in Moll geschrieben.",
+      "plain": "E ohne Ziffer: ein schlichter Dreiklang",
+      "raised": "♯ allein: die Terz wird erhöht",
+      "bare": "Vor einer Ziffer ist es derselbe Gedanke, gezählt von dem, was die Vorzeichnung schon schreibt. In G-Dur ist die Quinte über Es ein H, also verlangt ♭5 ein B — nicht ein Heses, was ein absolutes Lesen des Zeichens ergäbe.",
+      "grove": "In G-Dur, Es mit ♭5: die Quinte geht herunter auf B"
     },
     "table": {
       "title": "Jede Bezifferung dieser Übung",
       "body": "Links wie sie geschrieben wird, in der Mitte wofür sie steht, rechts was daraus über einem Basston wird. Die Tonart gehört zur Zeile: eine erniedrigte Terz sagt nichts in einer Tonart, die sie ohnehin natürlich gibt."
     },
-    "accidentals": {
-      "title": "Kreuze, B und Auflösungszeichen",
-      "body": "Ein Vorzeichen vor einer Ziffer rückt diesen Ton einen Halbton von dem weg, was die Tonart ihm gibt. In G-Dur ist die Quinte über Es ein H, also verlangt ♭5 ein B — nicht ein Heses, was ein absolutes Lesen des Zeichens ergäbe.",
-      "bare": "Ein Vorzeichen allein, ohne Ziffer daneben, gehört zur Terz. Das ist nach der 6 die häufigste Bezifferung überhaupt: so wird die erhöhte Terz der Dominante in Moll geschrieben."
-    },
-    "none": "ohne Ziffer",
+    "over": "{{bass}} in {{key}}",
     "columnWritten": "Geschrieben",
     "columnMeans": "Bedeutet",
     "columnOver": "Über",
     "columnNotes": "Töne",
-    "source": "Die Regeln folgen dem Artikel „Thoroughbass“ aus A Dictionary of Music and Musicians; die Tabelle wird aus demselben Modell berechnet, gegen das die Übung bewertet.",
-    "over": "{{bass}} in {{key}}"
-  }
+    "next": {
+      "title": "Jetzt selbst lesen",
+      "body": "Eine Bezifferung lesen und eine schreiben sind dieselbe Fähigkeit von zwei Seiten; beides ist ein vernünftiger Anfang.",
+      "figuring": "Bass beziffern",
+      "realizing": "Bass aussetzen"
+    },
+    "source": "Die Regeln folgen dem Artikel „Thoroughbass“ aus A Dictionary of Music and Musicians; jedes System auf dieser Seite wird aus demselben Modell gezeichnet, gegen das die Übungen bewerten."
+  },
+  "backToPath": "Zurück zum Pfad"
 }

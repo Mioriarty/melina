@@ -138,5 +138,11 @@
         }
       }
     }
+  },
+  "guides": {
+    "figured-bass": {
+      "title": "Ziffern lesen",
+      "blurb": "Was die Zahlen unter einem Basston bedeuten — und was sie weglassen."
+    }
   }
 }

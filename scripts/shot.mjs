@@ -21,7 +21,9 @@
  * `--wait` the settle time in ms after the last click (the engraver is 7 MB of
  * WebAssembly and the first render waits for it), and `--scale` the pixel
  * ratio — 2 by default, which is what makes notation readable, and worth
- * dropping to 1 for a very tall viewport such as the whole path.
+ * dropping to 1 for a very tall viewport such as the whole path. `--scroll`
+ * scrolls the page's own scroll container before the shot, for anything read
+ * in more than one screenful.
  */
 import { spawn } from 'node:child_process'
 import { existsSync, readdirSync, writeFileSync } from 'node:fs'
@@ -58,6 +60,7 @@ const out = positional[1] ?? 'shot.png'
 const [width, height] = (flag('size', '900x1200') ?? '').split('x').map(Number)
 const settle = Number(flag('wait', '1200'))
 const scale = Number(flag('scale', '2'))
+const scroll = Number(flag('scroll', '0'))
 const origin = flag('origin', 'http://localhost:5173')
 
 const browser = findBrowser()
@@ -171,6 +174,25 @@ async function click(text) {
 for (const text of clicks) {
   await click(text)
   await sleep(settle)
+}
+
+// Long pages — a guide, the whole path — are read in more than one screenful.
+if (scroll > 0) {
+  await send(
+    'Runtime.evaluate',
+    {
+      expression: `(() => {
+        const box = [...document.querySelectorAll('*')].find(
+          (el) => el.scrollHeight > el.clientHeight + 40 && getComputedStyle(el).overflowY !== 'visible',
+        )
+        ;(box || document.scrollingElement).scrollTop = ${scroll}
+        return 'scrolled'
+      })()`,
+      returnByValue: true,
+    },
+    sessionId,
+  )
+  await sleep(400)
 }
 
 const { data } = await send('Page.captureScreenshot', { format: 'png' }, sessionId)

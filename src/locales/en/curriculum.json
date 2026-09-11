@@ -138,5 +138,11 @@
         }
       }
     }
+  },
+  "guides": {
+    "figured-bass": {
+      "title": "Reading Figures",
+      "blurb": "What the numbers under a bass note mean, and what they leave out."
+    }
   }
 }

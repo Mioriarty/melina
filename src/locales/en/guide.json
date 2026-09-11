@@ -76,36 +76,68 @@
   },
   "figures": {
     "title": "How a figure is read",
-    "intro": "A figure is not the name of a chord. It is a set of intervals measured up from the bass, and read against the key signature.",
+    "intro": "A figured bass is a bass line with numbers under it. The numbers say which notes go above — and the player supplies them. This page is how to read them.",
+    "exampleLabel": "Grand staff, key of {{key}}: bass {{bass}}, figured {{figure}}",
+    "none": "no figure",
+    "printed": "What is printed",
+    "played": "What the player makes of it",
+    "what": {
+      "title": "The page and the playing are not the same thing",
+      "body": "A continuo part prints a bass line and nothing above it. The numbers are the whole of the instruction: they say what to build over each bass note, and the player builds it at sight.",
+      "after": "So there is no right-hand part to read. There is a bass note, a figure, and a convention shared between the composer and the player — which is what this page is about."
+    },
     "reading": {
-      "title": "Count up from the bass",
-      "body": "A 6 means the note a sixth above the bass. Not a particular note — the sixth over D is B, the sixth over E is C, and the same figure is a different note under every bass note it stands beneath.",
-      "key": "Which B or which C is the key signature's business. In C major the sixth over D is B natural; in F major, where the signature flattens it, the same 6 over the same D is B flat. The figure never says; the signature already did."
+      "title": "The number counts up from the bass",
+      "body": "A 6 means the note a sixth above the bass. Not a particular note: it is measured from whatever bass note it happens to stand under, so the same figure is a different note every time the bass moves.",
+      "overC": "6 over C is A",
+      "overE": "6 over E is C",
+      "after": "That is the single most important habit to build. You do not learn what “6” sounds like; you learn to count six steps up from the note in front of you."
+    },
+    "signature": {
+      "title": "The key signature decides which one",
+      "body": "Counting gives you a letter. The key signature gives you the rest of it, exactly as it would for any other note on the staff.",
+      "inC": "In C major, the sixth over D is B natural",
+      "inF": "In F major, the same 6 over the same D is B flat",
+      "after": "The figure never says sharp or flat unless it has to. Everything the signature already settles, it leaves alone."
     },
     "omission": {
-      "title": "What is left out",
-      "body": "A figure writes only what is not taken for granted, and the shorthand is most of what there is to learn. It is why an unfigured bass note is not a bass note with no chord on it.",
-      "plain": "No figure at all means the common chord — a third and a fifth over the bass.",
+      "title": "A figure writes only what is not obvious",
+      "body": "Most bass notes carry no figure at all — and that does not mean no chord. It means the ordinary one, the third and fifth above the bass, which is common enough not to be worth the ink.",
+      "bare": "No figure at all",
+      "triad": "Means a third and a fifth",
+      "after": "The same thrift runs through the rest of them. Each figure writes the interval that is surprising and lets you assume the ones that are not:",
+      "plain": "No figure means the common chord — a third and a fifth over the bass.",
       "sixth": "6 means a sixth and a third. The third goes without saying, so writing 6/3 says something that did not need saying.",
       "seventh": "7 means a seventh, a fifth and a third: everything under the seventh is assumed.",
       "second": "2 means a sixth, a fourth and a second. 4/2 is the same figure written a little longer, and both are current.",
-      "accidental": "A line carrying an accidental is always written, whatever the shorthand would drop — the accidental is exactly the thing not taken for granted."
+      "accidental": "A line carrying an accidental is always written, whatever the shorthand would drop — the accidental is exactly the thing not taken for granted.",
+      "sevenWritten": "One number",
+      "sevenPlayed": "Three notes above the bass"
+    },
+    "accidentals": {
+      "title": "Sharps, flats and naturals",
+      "body": "An accidental before a number moves that note a semitone from what the key gives it. An accidental standing alone, with no number beside it, belongs to the third — and that is the commonest figure in the repertoire after 6, because it is how the raised third of a dominant in a minor key is written.",
+      "plain": "E with no figure: a plain triad",
+      "raised": "♯ alone: the third is raised",
+      "bare": "Before a number it is the same idea, counted from what the signature already spells. In G major the fifth over E flat is B natural, so ♭5 asks for B flat — not for B double flat, which reading the sign as absolute would give.",
+      "grove": "In G major, E♭ with ♭5: the fifth comes down to B♭"
     },
     "table": {
       "title": "Every figure this exercise uses",
       "body": "Written on the left, what it stands for in the middle, and what it comes to over one bass note on the right. The key belongs to the row: a flattened third says nothing in a key that gives a natural one."
     },
-    "accidentals": {
-      "title": "Sharps, flats and naturals",
-      "body": "An accidental before a number moves that note a semitone from what the key gives it. In G major the fifth over E flat is B natural, so ♭5 asks for B flat — not for B double flat, which reading the sign as absolute would give.",
-      "bare": "An accidental standing alone, with no number beside it, belongs to the third. That is the commonest figure in the repertoire after 6: it is how the raised third of a dominant in a minor key is written."
-    },
-    "none": "no figure",
+    "over": "{{bass}} in {{key}}",
     "columnWritten": "Written",
     "columnMeans": "Means",
     "columnOver": "Over",
     "columnNotes": "Notes",
-    "source": "The rules here follow the article on Thoroughbass in A Dictionary of Music and Musicians, and the table is computed from the same model the exercise grades against.",
-    "over": "{{bass}} in {{key}}"
-  }
+    "next": {
+      "title": "Now read some",
+      "body": "Reading a figure and writing one are the same skill from opposite ends, and either is a reasonable place to start.",
+      "figuring": "Figuring a Bass",
+      "realizing": "Realising a Bass"
+    },
+    "source": "The rules here follow the article on Thoroughbass in A Dictionary of Music and Musicians, and every staff on this page is drawn from the same model the exercises grade against."
+  },
+  "backToPath": "Back to the path"
 }

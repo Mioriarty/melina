@@ -4,6 +4,7 @@
   "state": {
     "open": "Offen",
     "next": "Als Nächstes",
-    "locked": "Gesperrt"
+    "locked": "Gesperrt",
+    "guide": "Zuerst lesen"
   }
 }

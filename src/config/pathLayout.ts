@@ -106,8 +106,13 @@ export const PATH_NODES: readonly PathNodePosition[] = [
   { stationId: 'dictation/short-melodies', x: 38, y: 990 },
   // **Thoroughbass takes the room Melodic Dictation was placed to leave**, and
   // stands off the path: the main route runs past it down the left of the
-  // column while these two sit to the right, joined to each other and to
+  // column while these three sit to the right, joined to each other and to
   // nothing else. See `PATH_EDGES`.
+  //
+  // The explainer comes first and is drawn as a guide rather than an exercise
+  // — a figure has conventions you have to be told before you can be asked
+  // about them, so it is a stop on the way in rather than a footnote behind a
+  // question mark on a settings screen.
   //
   // They are a chain rather than a braid, and the geometry is why: a braided
   // pair stands level, and two stations that stand level cannot also be joined
@@ -117,12 +122,13 @@ export const PATH_NODES: readonly PathNodePosition[] = [
   // downhill with a connector. Figuring first, because you can only realise a
   // figure you can read, and figuring is where the rules of omission are
   // learnt.
-  { stationId: 'thoroughbass/figuring', x: 70, y: 1245 },
-  { stationId: 'thoroughbass/realizing', x: 62, y: 1520 },
-  { stationId: 'harmonic-prediction', x: 30, y: 1790 },
-  { stationId: 'harmonic-completion', x: 66, y: 2040 },
-  { stationId: 'counterpoint', x: 35, y: 2325 },
-  { stationId: 'daily', x: 62, y: 2565 },
+  { stationId: 'guide/figured-bass', x: 68, y: 1160 },
+  { stationId: 'thoroughbass/figuring', x: 74, y: 1410 },
+  { stationId: 'thoroughbass/realizing', x: 62, y: 1675 },
+  { stationId: 'harmonic-prediction', x: 30, y: 1955 },
+  { stationId: 'harmonic-completion', x: 66, y: 2200 },
+  { stationId: 'counterpoint', x: 35, y: 2490 },
+  { stationId: 'daily', x: 62, y: 2725 },
 ]
 
 /**
@@ -153,6 +159,7 @@ export const PATH_EDGES: readonly PathEdge[] = [
   // the point: it is a subject you can take up beside the journey rather than
   // a stage of it, and drawing it in the line would claim it has to be done
   // before harmony and after melodic dictation, which is true of neither.
+  { from: 'guide/figured-bass', to: 'thoroughbass/figuring' },
   { from: 'thoroughbass/figuring', to: 'thoroughbass/realizing' },
   { from: 'harmonic-prediction', to: 'harmonic-completion' },
   { from: 'harmonic-completion', to: 'counterpoint' },
