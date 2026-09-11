@@ -191,6 +191,23 @@ describe('getting back, and getting on', () => {
     expect(backLink()?.getAttribute('href')).toBe('/')
   })
 
+  it('links the article it takes its rules from', () => {
+    // A citation the reader cannot follow is one they have to take on trust,
+    // and this page asks them to take a good deal on trust already.
+    open()
+    const source = screen
+      .getAllByRole('link')
+      .find((link) => (link.getAttribute('href') ?? '').startsWith('http'))
+
+    expect(source?.getAttribute('href')).toBe(
+      'https://en.wikisource.org/wiki/A_Dictionary_of_Music_and_Musicians/Thoroughbass',
+    )
+    // It leaves the app, so it says so and does not hand the new tab a
+    // reference back to this one.
+    expect(source?.getAttribute('target')).toBe('_blank')
+    expect(source?.getAttribute('rel')).toContain('noopener')
+  })
+
   it('offers both exercises at the end, because reading it is not the point', () => {
     open()
     const hrefs = screen.getAllByRole('link').map((link) => link.getAttribute('href'))

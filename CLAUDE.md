@@ -1596,6 +1596,18 @@ stay a dot, and `preserveAspectRatio="none"` turned every marker into an
 ellipse. Strokes are still non-scaling, so a line is the same thickness on a
 phone and a desktop.
 
+**The figured bass guide links the article it takes its rules from**, which is
+the app's only link out of itself. A citation the reader cannot follow is one
+they have to take on trust, and that page asks a good deal on trust already. It
+carries the icon that says it leaves, opens in a new tab without handing that
+tab a reference back, and will not work offline — the honest cost of citing
+something that lives elsewhere.
+
+It is a **separate translated line** rather than a link inside the sentence.
+`locales.test.ts` checks that the two languages hold the same `{{placeholders}}`
+and cannot check that a `<0>` survived a translation, so a sentence with markup
+in it is a sentence a translator can quietly break.
+
 A guide lives on a **headerless route**, like the exercises it is read from, and
 carries its own back link. Reached from a setting, that link returns to
 `?screen=setup`, because the settings survive the trip in Dexie but _which

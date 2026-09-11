@@ -10,6 +10,18 @@ import { preloadEngraver } from '@/lib/notation/verovio'
 import { GUIDE_EXAMPLES } from './figuredBassExamples'
 
 /**
+ * The article every rule on this page is taken from.
+ *
+ * The first link in the app that leaves it, which is why it carries the icon
+ * that says so: a citation the reader cannot follow is a citation they have to
+ * take on trust, and this page asks them to take a good deal on trust already.
+ * It will not open offline, which is the honest cost of citing something that
+ * lives elsewhere.
+ */
+const SOURCE =
+  'https://en.wikisource.org/wiki/A_Dictionary_of_Music_and_Musicians/Thoroughbass'
+
+/**
  * How a figure is read.
  *
  * A stop on the path in its own right, and also the question mark in the corner
@@ -194,7 +206,16 @@ export default function FiguredBassPage() {
         </Section>
 
         <p className="mt-8 border-t border-rule pt-5 text-sm leading-relaxed text-ink-faint">
-          {t('guide:figures.source')}
+          {t('guide:figures.source')}{' '}
+          <a
+            href={SOURCE}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="inline-flex items-center gap-1 font-medium text-accent underline decoration-accent/40 underline-offset-2 transition-colors hover:decoration-accent"
+          >
+            {t('guide:figures.sourceLink')}
+            <Icon name="open" size={13} />
+          </a>
         </p>
       </div>
     </div>
