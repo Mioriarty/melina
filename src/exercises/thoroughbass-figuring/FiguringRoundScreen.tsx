@@ -9,6 +9,7 @@ import { GrandStaffScore } from '@/exercises/thoroughbass-shared/GrandStaffScore
 import type { ThoroughbassQuestion } from '@/exercises/thoroughbass-shared/generate'
 
 import {
+  currentSlot,
   draftAnswer,
   draftEvents,
   emptyFigureDraft,
@@ -69,6 +70,14 @@ export function FiguringRoundScreen({
     figures: revealed ? event.figures : (written[index] ?? []),
   }))
 
+  // The column the next press goes into, banded behind the music.
+  const cursor = revealed
+    ? undefined
+    : currentSlot(
+        draft,
+        question.events.map((event) => event.chords.length),
+      )
+
   return (
     <RoundScreen
       phase={phase}
@@ -84,6 +93,7 @@ export function FiguringRoundScreen({
           <GrandStaffScore
             keySignature={question.keySignature}
             events={events}
+            {...(cursor === undefined ? {} : { cursor })}
             onPlay={onPlay}
             status={playStatus}
           />

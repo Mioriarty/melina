@@ -168,11 +168,13 @@ function noteElement(
   keySignature: KeySignatureId,
   duration = '',
   hidden = false,
+  id = '',
 ): string {
   const pname = value.letter.toLowerCase()
   const dur = duration === '' ? '' : ` ${duration}`
   const accidental = accidentalAttributes(value, keySignature)
-  return `<note pname="${pname}" oct="${value.octave}"${dur}${accidental}${hidden ? HIDDEN : ''}/>`
+  const named = id === '' ? '' : ` xml:id="${id}"`
+  return `<note${named} pname="${pname}" oct="${value.octave}"${dur}${accidental}${hidden ? HIDDEN : ''}/>`
 }
 
 /**
@@ -866,13 +868,18 @@ export function thoroughbassMei({
       const parts = Math.max(1, event.chords.length)
       const dur = `dur="${parts === 1 ? 1 : 2}"`
 
+      // Named so the cursor band can be placed over the chord being written
+      // into — see `scoreCursor.ts`. An empty slot is a `<space>`, which is
+      // drawn as nothing and so cannot carry the name; the figure over the
+      // same timestamp stands in for it there.
       const chord = Array.from({ length: parts }, (_, at) => {
         const notes = event.chords[at] ?? []
+        const slot = `chord${index + 1}-${at + 1}`
         if (notes.length === 0) return `<space ${dur}/>`
         if (notes.length === 1) {
-          return noteElement(notes[0] as Pitch, keySignature, dur, hideChords)
+          return noteElement(notes[0] as Pitch, keySignature, dur, hideChords, slot)
         }
-        return `<chord ${dur}${hideChords ? HIDDEN : ''}>${notes
+        return `<chord xml:id="${slot}" ${dur}${hideChords ? HIDDEN : ''}>${notes
           .map((note) => noteElement(note, keySignature))
           .join('')}</chord>`
       }).join('')
@@ -891,7 +898,7 @@ export function thoroughbassMei({
               ? `startid="#${id}"`
               : `tstamp="${1 + (position * 4) / event.figures.length}"`
           const stack = lines.map((line) => `<f>${escapeText(line)}</f>`).join('')
-          return `<harm staff="2" ${anchor} place="below"><fb>${stack}</fb></harm>`
+          return `<harm xml:id="figure${index + 1}-${position + 1}" staff="2" ${anchor} place="below"><fb>${stack}</fb></harm>`
         })
         .join('')
 

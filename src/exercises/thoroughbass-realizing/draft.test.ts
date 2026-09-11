@@ -8,6 +8,7 @@ import {
   canRemove,
   chordPitches,
   currentEvent,
+  currentSlot,
   draftAnswer,
   emptyChordDraft,
   isFull,
@@ -93,5 +94,31 @@ describe('backspace', () => {
 
   it('does nothing with nothing to take back', () => {
     expect(canRemove(emptyChordDraft([2]))).toBe(false)
+  })
+})
+
+describe('where the next press goes', () => {
+  // The draft's slots are flat, because a suspension is two chords under one
+  // bass note; the grouping comes back in from the question.
+  const line = [1, 2, 1]
+
+  it('walks the flat slots back into bass notes and columns', () => {
+    let draft = emptyChordDraft([2, 2, 2, 2])
+    expect(currentSlot(draft, line)).toEqual({ event: 0, position: 0 })
+
+    draft = place(place(draft, note('E')), note('G'))
+    expect(currentSlot(draft, line)).toEqual({ event: 1, position: 0 })
+
+    draft = place(place(draft, note('C')), note('F'))
+    expect(currentSlot(draft, line)).toEqual({ event: 1, position: 1 })
+
+    draft = place(place(draft, note('C')), note('E'))
+    expect(currentSlot(draft, line)).toEqual({ event: 2, position: 0 })
+  })
+
+  it('is nowhere once the last chord is full', () => {
+    let draft = emptyChordDraft([1])
+    draft = place(draft, note('E'))
+    expect(currentSlot(draft, [1])).toBeUndefined()
   })
 })

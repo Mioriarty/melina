@@ -10,6 +10,7 @@ import { getKeySignature, type KeySignatureId } from '@/lib/music/keySignature'
 import type { Pitch } from '@/lib/music/pitch'
 import { figureText } from '@/lib/notation/figureNotation'
 import { thoroughbassMei } from '@/lib/notation/mei'
+import { markSlot, type ScoreCursor } from '@/lib/notation/scoreCursor'
 import { thoroughbassProfile } from '@/lib/notation/verovio'
 
 /**
@@ -32,6 +33,14 @@ import { thoroughbassProfile } from '@/lib/notation/verovio'
  * measures of one, so each caption sits under its own staff: the first measure
  * of a system starts after the clef and the signature, so two measures are not
  * evenly split and a caption row under them would not line up.
+ *
+ * **Given `cursor`, the chord being written into is banded.** A question can
+ * carry several chords — two under one bass note for a suspension, one under
+ * each of several for a line — and which of them the next key will go into is
+ * otherwise something the player has to work out from how much of the staff is
+ * already full. See `scoreCursor.ts` for how the band finds its place; it is
+ * drawn into the render itself rather than over it, so it needs no measurement
+ * of a staff the column has already scaled to fit.
  */
 
 export interface GrandStaffEvent {
@@ -50,6 +59,11 @@ export interface GrandStaffScoreProps {
    * is in and was wrong — before that there is nothing to compare it with.
    */
   answer?: readonly GrandStaffEvent[]
+  /**
+   * The chord the next press goes into, banded behind the music. Omitted once
+   * the question is answered, when there is no next press.
+   */
+  cursor?: ScoreCursor | undefined
   onPlay?: (() => void) | undefined
   status?: PlaybackStatus
 }
@@ -59,6 +73,7 @@ export function GrandStaffScore({
   events,
   hideChords = false,
   answer,
+  cursor,
   onPlay,
   status,
 }: GrandStaffScoreProps) {
@@ -103,6 +118,9 @@ export function GrandStaffScore({
     return (
       <PlayableScore
         {...staff(events, hideChords)}
+        {...(cursor === undefined
+          ? {}
+          : { decorate: (svg: string) => markSlot(svg, cursor) })}
         {...(onPlay === undefined ? {} : { onPlay })}
         {...(status === undefined ? {} : { status })}
       />

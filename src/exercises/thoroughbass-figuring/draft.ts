@@ -1,4 +1,5 @@
 import type { Figure, FigureAccidental, FigureSign } from '@/lib/music/figuredBass'
+import type { ScoreCursor } from '@/lib/notation/scoreCursor'
 
 /**
  * The figure being written.
@@ -34,6 +35,26 @@ export function emptyFigureDraft(bassNotes: number): FigureDraft {
 
 export function isComplete(draft: FigureDraft): boolean {
   return draft.done.length >= draft.bassNotes
+}
+
+/**
+ * Which bass note is being figured, and which column under it.
+ *
+ * **The columns belong to the draft and the chords to the question, and the
+ * two need not agree.** A dash pressed under a bass note the question figures
+ * once opens a column there is no chord for, and the page has no room to mark;
+ * the band stays on the last chord there is rather than running off the end of
+ * the bass note it belongs to.
+ */
+export function currentSlot(
+  draft: FigureDraft,
+  chordsPerEvent: readonly number[],
+): ScoreCursor | undefined {
+  if (isComplete(draft)) return undefined
+  const event = draft.done.length
+  const chords = chordsPerEvent[event]
+  if (chords === undefined) return undefined
+  return { event, position: Math.min(draft.pending.length, Math.max(0, chords - 1)) }
 }
 
 /** Whether anything at all has been typed under the bass note in hand. */

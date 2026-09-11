@@ -49,6 +49,11 @@ export interface PlayableScoreProps {
    * genuinely taller than one staff passes `PHRASE_SCORE_BOX` instead.
    */
   box?: string
+  /**
+   * Drawn into the finished render — see `Score`. Passed straight through, so
+   * the notation stays one thing whether or not it is also a button.
+   */
+  decorate?: ((svg: string) => string) | undefined
   /** Sound the notes. Omitted while the answer is still hidden. */
   onPlay?: (() => void) | undefined
   status?: PlaybackStatus
@@ -60,6 +65,7 @@ export function PlayableScore({
   noteSpacing,
   profile,
   box = SCORE_BOX,
+  decorate,
   onPlay,
   status = 'idle',
 }: PlayableScoreProps) {
@@ -68,6 +74,7 @@ export function PlayableScore({
   const paper = {
     ...(noteSpacing === undefined ? {} : { noteSpacing }),
     ...(profile === undefined ? {} : { profile }),
+    ...(decorate === undefined ? {} : { decorate }),
   }
 
   /**

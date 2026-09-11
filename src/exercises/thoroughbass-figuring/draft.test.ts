@@ -3,11 +3,13 @@ import { describe, expect, it } from 'vitest'
 import { figureKey } from '@/lib/music/figuredBass'
 
 import {
+  type FigureDraft,
   advance,
   arm,
   canAdvance,
   canPress,
   canRemove,
+  currentSlot,
   draftAnswer,
   draftEvents,
   emptyFigureDraft,
@@ -15,7 +17,6 @@ import {
   isComplete,
   press,
   removeLast,
-  type FigureDraft,
 } from './draft'
 
 /** The written form of everything under one bass note. */
@@ -113,5 +114,32 @@ describe('backspace', () => {
 
   it('does nothing with nothing to take back', () => {
     expect(canRemove(emptyFigureDraft(1))).toBe(false)
+  })
+})
+
+describe('where the next press goes', () => {
+  // One bass note figured once, one carrying a suspension.
+  const chords = [1, 2]
+
+  it('follows the bass note being figured and the column under it', () => {
+    let draft = emptyFigureDraft(2)
+    expect(currentSlot(draft, chords)).toEqual({ event: 0, position: 0 })
+
+    draft = finish(press(draft, 6))
+    expect(currentSlot(draft, chords)).toEqual({ event: 1, position: 0 })
+
+    draft = advance(press(draft, 4))
+    expect(currentSlot(draft, chords)).toEqual({ event: 1, position: 1 })
+  })
+
+  it('stays on the last chord there is when a column has none', () => {
+    // A dash under a bass note the question figures once opens a column the
+    // page has no room to mark. The band does not run off the bass note.
+    const draft = advance(press(emptyFigureDraft(1), 4))
+    expect(currentSlot(draft, [1])).toEqual({ event: 0, position: 0 })
+  })
+
+  it('is nowhere once every bass note is figured', () => {
+    expect(currentSlot(finish(emptyFigureDraft(1)), [1])).toBeUndefined()
   })
 })

@@ -1458,6 +1458,61 @@ A grand staff is two staves and a row of figures, so it takes `PHRASE_SCORE_BOX`
 rather than `SCORE_BOX`. Under a single staff's share of the screen it left a
 third of its own box empty with the notation shrunk to fit the rest.
 
+### A cursor for the chord being written
+
+A question can carry several chords — two under one bass note for a suspension,
+one under each of several for a line — and both keyboards fill them strictly in
+order. Which one the next press goes into is otherwise something the player has
+to work out by counting how much of the staff is already full, so the chord in
+hand is given a band of its own behind the music: the chord above, the bass
+below and the figure under that, all in one column.
+
+**It is drawn into the render rather than over it.** An HTML overlay would have
+to be positioned against an SVG the column has already scaled down to fit,
+which is a measurement this app deliberately never makes; a `<rect>` in the
+engraver's own coordinate space is placed once and then scales with everything
+else, exactly and for free. `Score` takes a `decorate` hook for it, applied to
+the markup rather than inside the render — so a decoration that changes on
+every keypress does not re-engrave the page each time.
+
+**Where the chords are can only be read back off the render**, because only the
+engraver knows where it put them. Three things make that a reading rather than
+a guess, and `scoreCursor.test.ts` pins all three against the real toolkit: an
+authored `xml:id` survives into the SVG as the element's `id`, so
+`thoroughbassMei` names every sonority `chord<event>-<position>` and every
+figure `figure<event>-<position>`; a measure's own staff lines give its width,
+which is the one piece of geometry that is there whatever has or has not been
+written; and **nothing moves while the answer is typed**, because the page is a
+fixed size and the system is stretched to fill it.
+
+That last one is what lets the anchor be read off different things at different
+moments without the band moving. A bass note carrying several chords anchors
+them by timestamp, and Verovio lays their figures out at the timestamp too, so
+a chord and its figure come out at **exactly** the same x — which is what
+covers the realising direction, where the chords are empty until they are
+written. A bass note carrying one chord is anchored on the bass note instead,
+and not for want of anything better: a lone figure is anchored by `@startid`
+and so is offset from the note rather than aligned to it, and a plain triad is
+figured by writing nothing at all, so there may be no figure there to find.
+
+**Every band is the same width** — the closest two chords on the page ever
+come — so it reads as one thing moving rather than as a highlight that keeps
+changing shape, and it can never reach into its neighbour. **There is no band
+at all when a question has one chord**: a cursor marking the only place there
+is tells the player nothing they did not know. The first band is the one
+exception to the equal width, and it is held off the clef, which it otherwise reaches back over and appears to select: the
+distance from a measure's edge to its first note is the engraver's ordinary
+padding everywhere but the first measure, where it is the clef and the key
+signature as well, so the other measures are measured and the same allowance
+given to the first.
+
+**The band draws a stroke of no width rather than no stroke.** Every render
+carries a stylesheet of Verovio's own containing `#<id> rect { stroke:
+currentColor }` — an _ID_ selector, which beats both a class of ours and a
+presentation attribute — so the band cannot be told to have no outline at all.
+It can be told to draw one no pixels wide, which that rule says nothing about.
+The same trap as the placeholder note's stems, reached by another door.
+
 ### The two keyboards
 
 **`FigureKeyboard` is a telephone pad.** The grid is the point: everyone already

@@ -24,6 +24,17 @@ export interface ScoreProps {
    * identity to decide whether a finished render still belongs to this call.
    */
   profile?: VerovioOptions
+  /**
+   * **Draw into the finished render, in the engraver's own coordinate space.**
+   *
+   * The escape hatch for anything that has to sit exactly where the music is,
+   * since only the engraver knows where that is — the cursor band marking the
+   * chord being written into is the one user (`scoreCursor.ts`). Applied to
+   * the markup rather than inside the render, so a caller whose decoration
+   * changes on every keypress does not re-engrave the page each time; it must
+   * therefore be cheap, and it must be pure.
+   */
+  decorate?: ((svg: string) => string) | undefined
   className?: string
 }
 
@@ -53,6 +64,7 @@ export function Score({
   label,
   noteSpacing = DEFAULT_NOTE_SPACING,
   profile = NO_PROFILE,
+  decorate,
   className,
 }: ScoreProps) {
   const { t } = useTranslation('exercise')
@@ -125,15 +137,22 @@ export function Score({
       // `!important`. It reaches only real `<text>` — staff labels, and later
       // any directive or tempo mark — because notation itself is drawn as
       // glyph outlines, not as type.
+      //
+      // The cursor band is coloured here for the same reason: `decorate`
+      // writes the rectangle into the render's own coordinate space and this
+      // paints it, so no colour is spelled out anywhere but the theme.
       className={cn(
         'flex items-center justify-center',
         '[&_svg]:h-auto [&_svg]:max-h-full [&_svg]:w-auto [&_svg]:max-w-full',
         '[&_svg]:font-serif',
+        '[&_.score-cursor]:fill-accent-tint',
         className,
       )}
       role="img"
       aria-label={label}
-      dangerouslySetInnerHTML={{ __html: state.svg }}
+      dangerouslySetInnerHTML={{
+        __html: decorate === undefined ? state.svg : decorate(state.svg),
+      }}
     />
   )
 }

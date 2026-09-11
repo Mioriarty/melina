@@ -15,10 +15,26 @@ import { GrandStaffScore, type GrandStaffEvent } from './GrandStaffScore'
  * not what Verovio draws. That is covered against the real toolkit in
  * `thoroughbassVerovio.test.ts`.
  */
+/**
+ * Enough of a render for the cursor band to have somewhere to land: a page
+ * margin, two measures with staff lines of their own, and a named bass note in
+ * each. Everything `scoreCursor.ts` reads and nothing else — what the engraver
+ * really emits is checked against the engraver, in `scoreCursor.test.ts`.
+ */
+const SKELETON = [
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 500">',
+  '<g class="page-margin" transform="translate(0, 0)"><g class="system">',
+  '<g id="m1" class="measure"><path d="M0 100 L400 100"/><path d="M0 180 L400 180"/>',
+  '<g id="bass1" class="note"><use transform="translate(150, 140)"/></g></g>',
+  '<g id="m2" class="measure"><path d="M400 100 L800 100"/><path d="M400 180 L800 180"/>',
+  '<g id="bass2" class="note"><use transform="translate(550, 140)"/></g></g>',
+  '</g></g></svg>',
+].join('')
+
 vi.mock('@/lib/notation/verovio', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/notation/verovio')>()),
   preloadEngraver: () => undefined,
-  renderMei: vi.fn(() => Promise.resolve('<svg xmlns="http://www.w3.org/2000/svg"/>')),
+  renderMei: vi.fn(() => Promise.resolve(SKELETON)),
 }))
 
 const fig = (key: string) => parseFigureKey(key) as Figure
@@ -87,5 +103,39 @@ describe('a wrong answer', () => {
 
     const drawn = vi.mocked(renderMei).mock.calls.map(([mei]) => mei)
     expect(new Set(drawn).size).toBe(2)
+  })
+})
+
+describe('the cursor', () => {
+  const two: GrandStaffEvent[] = [
+    { bass, figures: [fig('6')], chords: [[]] },
+    { bass, figures: [fig('6')], chords: [[]] },
+  ]
+
+  it('bands the chord the next press goes into', async () => {
+    const { container } = render(
+      <GrandStaffScore
+        keySignature="0"
+        events={two}
+        cursor={{ event: 1, position: 0 }}
+      />,
+    )
+
+    await waitFor(() => expect(container.querySelector('.score-cursor')).toBeTruthy())
+    // The second bass note is drawn at 550 and the first at 150, so the band
+    // has to cover the one and not the other.
+    const band = container.querySelector('.score-cursor')
+    const left = Number(band?.getAttribute('x'))
+    const right = left + Number(band?.getAttribute('width'))
+    expect(left).toBeLessThan(550)
+    expect(right).toBeGreaterThan(550)
+    expect(left).toBeGreaterThan(150)
+  })
+
+  it('draws nothing when there is no next press', async () => {
+    const { container } = render(<GrandStaffScore keySignature="0" events={two} />)
+
+    await waitFor(() => expect(container.querySelector('svg')).toBeTruthy())
+    expect(container.querySelector('.score-cursor')).toBeNull()
   })
 })

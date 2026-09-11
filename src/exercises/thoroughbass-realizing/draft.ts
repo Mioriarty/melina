@@ -1,5 +1,6 @@
 import { voiceChords } from '@/exercises/thoroughbass-shared/voicing'
 import type { Pitch } from '@/lib/music/pitch'
+import type { ScoreCursor } from '@/lib/notation/scoreCursor'
 import { tonicKey, type PitchClass } from '@/lib/music/scale'
 
 /**
@@ -33,6 +34,29 @@ export function currentEvent(draft: ChordDraft): number {
     (slots, at) => (draft.chords[at]?.length ?? 0) < slots,
   )
   return index === -1 ? draft.slots.length : index
+}
+
+/**
+ * Which chord of which bass note the next press goes into.
+ *
+ * The draft's slots are flat, because a suspension is two chords under one
+ * bass note and they therefore cannot be counted per bass note. This is the
+ * walk back out of that, and the grouping is handed in rather than kept: it is
+ * a fact about the question, and a second copy of it here is a copy that could
+ * come to disagree.
+ */
+export function currentSlot(
+  draft: ChordDraft,
+  chordsPerEvent: readonly number[],
+): ScoreCursor | undefined {
+  const active = currentEvent(draft)
+  let first = 0
+  for (let event = 0; event < chordsPerEvent.length; event += 1) {
+    const count = chordsPerEvent[event] ?? 0
+    if (active < first + count) return { event, position: active - first }
+    first += count
+  }
+  return undefined
 }
 
 export function isFull(draft: ChordDraft): boolean {

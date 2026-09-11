@@ -10,6 +10,7 @@ import type { ThoroughbassQuestion } from '@/exercises/thoroughbass-shared/gener
 
 import {
   chordPitches,
+  currentSlot,
   draftAnswer,
   emptyChordDraft,
   isFull,
@@ -75,6 +76,13 @@ export function RealizingRoundScreen({
     chords: event.figures.map(() => chordPitches(draft, slot++)),
   }))
 
+  // The chord the next press goes into, banded behind the music. One chord is
+  // one figure, which is the same grouping the slots were counted in.
+  const cursor = currentSlot(
+    draft,
+    question.events.map((event) => event.figures.length),
+  )
+
   // **A wrong chord is not replaced by the right one; the two are shown side by
   // side.** Swapping one for the other says you were wrong and nothing else,
   // and what is worth seeing is which note moved.
@@ -99,6 +107,7 @@ export function RealizingRoundScreen({
           keySignature={question.keySignature}
           events={events}
           {...(wrong ? { answer } : {})}
+          {...(revealed || cursor === undefined ? {} : { cursor })}
           {...(revealed ? { onPlay, status: playStatus } : {})}
         />
       }
