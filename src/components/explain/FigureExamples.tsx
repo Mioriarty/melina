@@ -5,6 +5,7 @@ import { describeEvent, parseWanted } from '@/exercises/thoroughbass-shared/gene
 import { useMusicNames } from '@/hooks/useMusicNames'
 import type { KeySignatureId } from '@/lib/music/keySignature'
 import { parsePitch } from '@/lib/music/pitch'
+import { centreFigures } from '@/lib/notation/figureAlignment'
 import { figureText } from '@/lib/notation/figureNotation'
 import { thoroughbassMei } from '@/lib/notation/mei'
 import { THOROUGHBASS_EXAMPLE_PROFILE } from '@/lib/notation/verovio'
@@ -86,6 +87,10 @@ export function FigureExample({
       <div className="flex h-56 w-full items-stretch justify-center sm:h-64">
         <Score
           className="h-full min-h-0 flex-1"
+          // Verovio puts a figure's left edge on its note rather than its
+          // middle — see `centreFigures`. Every figured bass in the app goes
+          // through it, the guide included.
+          decorate={centreFigures}
           mei={thoroughbassMei({
             keySignature,
             events: [{ bass: root, figures, chords }],

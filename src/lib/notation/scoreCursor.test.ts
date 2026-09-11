@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { parseFigureKey, type Figure } from '@/lib/music/figuredBass'
 import { pitch } from '@/lib/music/pitch'
 
+import { centreFigures } from './figureAlignment'
 import { thoroughbassMei, type ThoroughbassEvent } from './mei'
 import { markSlot } from './scoreCursor'
 import { renderMei, thoroughbassProfile } from './verovio'
@@ -206,6 +207,25 @@ describe('the band', () => {
 
     expect(svg).toMatch(/rect\s*\{stroke:currentColor\}/)
     expect(svg).toContain('stroke-width="0"')
+  })
+
+  it('lands in the same place whether or not the figures have been centred', async () => {
+    // The app draws both — `centreFigures` moves every figure's `<text x>`,
+    // and the band reads those same figures to find a chord that has not been
+    // written yet. If the two disagreed about what a slot's x is, placing the
+    // first note of a chord would make the band jump: the anchor would switch
+    // from the figure to the chord halfway through.
+    const svg = await render(line(false))
+
+    for (const cursor of [
+      { event: 0, position: 0 },
+      { event: 1, position: 0 },
+      { event: 1, position: 1 },
+    ]) {
+      const plain = bandOf(markSlot(svg, cursor))
+      const centred = bandOf(markSlot(centreFigures(svg), cursor))
+      expect(centred, `${cursor.event}/${cursor.position}`).toEqual(plain)
+    }
   })
 
   it('gives every chord the same width of band', async () => {

@@ -884,19 +884,26 @@ export function thoroughbassMei({
           .join('')}</chord>`
       }).join('')
 
-      // One figure is anchored to the note itself, which is exact. Several
-      // under one bass note cannot be — they are spread across its length by
-      // timestamp, which is what a suspension looks like on the page.
+      // **Every figure is anchored by timestamp, never by `@startid`.**
+      // Both place a figure under the right bass note and they do not place
+      // it in the same spot: `@startid` puts the figure's *left edge* on the
+      // notehead's centre, which leaves a plain digit sitting half its own
+      // width to the right, while a timestamp puts it on the note's left edge
+      // — and a digit is a little narrower than a notehead, so that comes out
+      // centred to within a pixel. A question mixing the two, which is any
+      // question carrying a suspension beside a plain bass note, drew its
+      // figures visibly out of line with each other.
+      //
+      // Timestamps are also what a suspension needs anyway: two figures under
+      // one bass note are spread across its length, which is what the moving
+      // chord over a held bass looks like on the page.
       const figures = event.figures
         .map((figure, position) => {
           // A figure with another after it under the same bass carries the
           // dash that joins the two — `4 – 3`.
           const lines = figureLines(figure, position < event.figures.length - 1)
           if (lines.length === 0) return ''
-          const anchor =
-            event.figures.length === 1
-              ? `startid="#${id}"`
-              : `tstamp="${1 + (position * 4) / event.figures.length}"`
+          const anchor = `tstamp="${1 + (position * 4) / event.figures.length}"`
           const stack = lines.map((line) => `<f>${escapeText(line)}</f>`).join('')
           return `<harm xml:id="figure${index + 1}-${position + 1}" staff="2" ${anchor} place="below"><fb>${stack}</fb></harm>`
         })

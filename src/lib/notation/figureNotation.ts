@@ -57,7 +57,15 @@ export function signText(sign: FigureSign): string {
  * `thoroughbassVerovio.test.ts` pins that, so the day the engraver grows a real
  * extender this can stop faking it.
  */
-const CONTINUES = ' –'
+/**
+ * The dash that joins a figure to the one after it under the same bass note.
+ *
+ * Exported because the render has to be able to tell a figure that continues
+ * from one that does not: a continuing figure is aligned to the *start* of its
+ * bass note so the dash can run rightward from it, where a figure standing on
+ * its own is centred. See `figureAlignment.ts`.
+ */
+export const CONTINUES = ' –'
 
 /**
  * A whole figure, top line first — the order it is read down the column in.

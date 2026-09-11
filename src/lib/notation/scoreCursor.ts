@@ -46,6 +46,8 @@
  * always in the right place.
  */
 
+import { NOTEHEAD_HALF, staffGap } from './renderGeometry'
+
 /** Which chord of the question is being written into. Both indices 0-based. */
 export interface ScoreCursor {
   /** Which bass note. */
@@ -164,39 +166,35 @@ function measureSpan(
   return top === undefined ? undefined : { left, right, top }
 }
 
-/** The staff-line gap, which is the unit everything on a staff is measured in. */
-function staffGap(chunk: string): number | undefined {
-  const ys = [
-    ...new Set(
-      [...chunk.matchAll(/<path d="M(-?[\d.]+) (-?[\d.]+) L(-?[\d.]+) \2"/g)].map(
-        (found) => Number(found[2]),
-      ),
-    ),
-  ].sort((a, b) => a - b)
-
-  const gaps = ys.slice(1).map((y, at) => y - (ys[at] as number))
-  const smallest = Math.min(...gaps)
-  return Number.isFinite(smallest) && smallest > 0 ? smallest : undefined
-}
-
-/** Where the element with this id was drawn, or `undefined` if it was not. */
-function anchorOf(chunk: string, id: string): number | undefined {
+/**
+ * **The middle of the element with this id**, or `undefined` if it was not
+ * drawn. A middle rather than an edge, because that is the one reading of
+ * "where a chord is" that two different things can agree on.
+ *
+ * A notehead is placed by a transform, at its left edge, so half a notehead is
+ * added. A figure is placed by its text's own x — the same left edge, and
+ * `centreFigures` keeps it in `data-engraved-x` when it moves the text, so
+ * this reads the same number whether or not that has run and neither has to
+ * go first. Reading the figure at all is what keeps the band still: a
+ * realising question's chords are empty until they are written, so the figure
+ * is all there is to go on, and the band must not jump when the notes arrive.
+ */
+function anchorOf(chunk: string, id: string, gap: number): number | undefined {
   const at = chunk.indexOf(`id="${id}"`)
   if (at === -1) return undefined
 
   const rest = chunk.slice(at)
-  // A notehead is placed by a transform and a figure by its text's own x.
   const placed = /transform="translate\((-?[\d.]+),/.exec(rest)
-  const written = /<text x="(-?[\d.]+)"/.exec(rest)
-  const first =
-    placed === null
-      ? written
-      : written === null
-        ? placed
-        : placed.index < written.index
-          ? placed
-          : written
-  return first === null ? undefined : Number(first[1])
+  const written = /<text ([^>]*)>/.exec(rest)
+  if (placed !== null && (written === null || placed.index < written.index)) {
+    return Number(placed[1]) + NOTEHEAD_HALF * gap
+  }
+  if (written === null) return undefined
+
+  const attributes = written[1] ?? ''
+  const engraved =
+    /data-engraved-x="(-?[\d.]+)"/.exec(attributes) ?? /x="(-?[\d.]+)"/.exec(attributes)
+  return engraved === null ? undefined : Number(engraved[1]) + NOTEHEAD_HALF * gap
 }
 
 /**
@@ -209,7 +207,7 @@ function anchorOf(chunk: string, id: string): number | undefined {
  * bass note with neither carries exactly one chord, and is anchored on the
  * bass note.
  */
-function slotsOf(svg: string): readonly Slot[] {
+function slotsOf(svg: string, gap: number): readonly Slot[] {
   const slots: Slot[] = []
 
   measureChunks(svg).forEach((chunk, index) => {
@@ -217,8 +215,8 @@ function slotsOf(svg: string): readonly Slot[] {
     const anchors: number[] = []
     for (let position = 1; ; position += 1) {
       const anchor =
-        anchorOf(chunk, `chord${event}-${position}`) ??
-        anchorOf(chunk, `figure${event}-${position}`)
+        anchorOf(chunk, `chord${event}-${position}`, gap) ??
+        anchorOf(chunk, `figure${event}-${position}`, gap)
       if (anchor === undefined) break
       anchors.push(anchor)
     }
@@ -226,7 +224,7 @@ function slotsOf(svg: string): readonly Slot[] {
     if (anchors.length <= 1) {
       const span = measureSpan(chunk)
       const lone =
-        anchorOf(chunk, `bass${event}`) ??
+        anchorOf(chunk, `bass${event}`, gap) ??
         anchors[0] ??
         (span === undefined ? undefined : (span.left + span.right) / 2)
       if (lone !== undefined) slots.push({ event: index, position: 0, x: lone })
@@ -255,8 +253,11 @@ function slotsOf(svg: string): readonly Slot[] {
  */
 export function markSlot(svg: string, cursor: ScoreCursor): string {
   const page = pageBox(svg)
-  const slots = slotsOf(svg)
-  if (page === undefined || slots.length < 2) return svg
+  const gap = staffGap(svg)
+  if (page === undefined || gap === undefined) return svg
+
+  const slots = slotsOf(svg, gap)
+  if (slots.length < 2) return svg
 
   const at = slots.findIndex(
     (slot) => slot.event === cursor.event && slot.position === cursor.position,
@@ -271,14 +272,13 @@ export function markSlot(svg: string, cursor: ScoreCursor): string {
   const chunks = measureChunks(svg)
   const chunk = chunks[found.event]
   const span = chunk === undefined ? undefined : measureSpan(chunk)
-  const gap = chunk === undefined ? undefined : staffGap(chunk)
 
   // The band stops where the music does. Left to the page's own edge the
   // first one reaches back across the clef and the key signature and reads as
   // though the clef were what was being written into.
-  const left = Math.max(page.left, musicLeft(chunks), found.x - half)
+  const left = Math.max(page.left, musicLeft(chunks, gap), found.x - half)
   const right = Math.min(page.right, found.x + half)
-  const top = span === undefined || gap === undefined ? page.top : span.top - RISE * gap
+  const top = span === undefined ? page.top : span.top - RISE * gap
   const bottom = page.bottom - FOOT
 
   // **`stroke-width` rather than `stroke`.** Every render carries a stylesheet
@@ -304,21 +304,20 @@ export function markSlot(svg: string, cursor: ScoreCursor): string {
  * signature. So the others are measured and the same allowance given to the
  * first, which is exact without anyone having to know how wide a clef is.
  */
-function musicLeft(chunks: readonly string[]): number {
+function musicLeft(chunks: readonly string[], gap: number): number {
   const first = chunks[0]
   if (first === undefined) return Number.NEGATIVE_INFINITY
 
-  const opening = anchorOf(first, 'bass1')
+  const opening = anchorOf(first, 'bass1', gap)
   if (opening === undefined) return Number.NEGATIVE_INFINITY
 
   const leads = chunks.slice(1).flatMap((chunk, index) => {
     const span = measureSpan(chunk)
-    const anchor = anchorOf(chunk, `bass${index + 2}`)
+    const anchor = anchorOf(chunk, `bass${index + 2}`, gap)
     return span === undefined || anchor === undefined ? [] : [anchor - span.left]
   })
 
-  const gap = staffGap(first)
-  const lead = leads.length > 0 ? Math.min(...leads) : gap === undefined ? 0 : LEAD * gap
+  const lead = leads.length > 0 ? Math.min(...leads) : LEAD * gap
   return opening - lead
 }
 

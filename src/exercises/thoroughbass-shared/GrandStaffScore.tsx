@@ -9,6 +9,7 @@ import type { Figure } from '@/lib/music/figuredBass'
 import { getKeySignature, type KeySignatureId } from '@/lib/music/keySignature'
 import type { Pitch } from '@/lib/music/pitch'
 import { figureText } from '@/lib/notation/figureNotation'
+import { centreFigures } from '@/lib/notation/figureAlignment'
 import { thoroughbassMei } from '@/lib/notation/mei'
 import { markSlot, type ScoreCursor } from '@/lib/notation/scoreCursor'
 import { thoroughbassProfile } from '@/lib/notation/verovio'
@@ -112,6 +113,10 @@ export function GrandStaffScore({
       getKeySignature(keySignature).count,
     ),
     box: PHRASE_SCORE_BOX,
+    // Verovio puts a figure's left edge where its note is rather than its
+    // middle, which leaves every figure sitting a third of a notehead left of
+    // where it belongs — see `centreFigures`.
+    decorate: centreFigures,
   })
 
   if (answer === undefined) {
@@ -120,7 +125,9 @@ export function GrandStaffScore({
         {...staff(events, hideChords)}
         {...(cursor === undefined
           ? {}
-          : { decorate: (svg: string) => markSlot(svg, cursor) })}
+          : // Composed, because both are wanted: the figures are centred in
+            // every render and the band is drawn only while a press is to come.
+            { decorate: (svg: string) => markSlot(centreFigures(svg), cursor) })}
         {...(onPlay === undefined ? {} : { onPlay })}
         {...(status === undefined ? {} : { status })}
       />

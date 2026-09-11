@@ -1429,6 +1429,33 @@ on the page.
   reach for the same reason — and that is what blocks continuation lines, rather
   than anything in the model.
 
+**A figure is centred under its bass note by moving the text, because Verovio
+will not do it.** It offers no option for the horizontal placement of a
+`<harm>`, and where it puts one depends on how the harm was anchored: by
+`@startid` it puts the _left edge_ of the text on the notehead's **centre**,
+and by a timestamp it puts that left edge on the note's own left edge. Neither
+is centred, they are 101 units apart, and a question carrying a suspension
+beside a plain bass note used one of each — so its figures were visibly out of
+line with one another.
+
+So **every figure is anchored by timestamp**, which is what a suspension needs
+anyway, and `centreFigures` then re-anchors the text: `text-anchor="middle"` at
+the notehead's middle, which lets the browser do the measuring and comes out
+exact for a figure of any width. Only `<text x>` moves; nothing is re-engraved.
+**What is centred is the figure, not the text** — `4 – 3` writes a dash running
+toward the chord it resolves into, so centring all of that would drag the `4`
+off to the left of its own note, and a continuing line is pushed half a dash
+further right instead.
+
+Both of the numbers that takes are **measured, not derived**: half a notehead is
+0.747 staff gaps and half of what the dash adds is 0.842, read off `getBBox()`
+in a real browser, because the width of a drawn glyph is nowhere in the SVG — a
+notehead is a `<use>` of a symbol and a figure is `<text>`, and neither carries
+one. `figureAlignment.test.ts` therefore cannot check that anything is centred.
+What it holds instead is everything the measurement rested on, so that the day
+the engraver's placement changes the numbers are taken again rather than
+quietly wrong.
+
 **One measure per bass note**, so there is no metre to declare and no bar to
 fill: a figured bass here is a succession of sonorities rather than a piece of
 music, and a time signature would be drawn on the page. Accidentals go through
@@ -1494,7 +1521,18 @@ authored `xml:id` survives into the SVG as the element's `id`, so
 figure `figure<event>-<position>`; a measure's own staff lines give its width,
 which is the one piece of geometry that is there whatever has or has not been
 written; and **nothing moves while the answer is typed**, because the page is a
-fixed size and the system is stretched to fill it.
+fixed size and the system is stretched to fill it. `renderGeometry.ts` holds what
+both this and `centreFigures` need: the staff-line gap, which is the unit
+everything on a staff is measured in, and the half-notehead above.
+
+The two are composed in the app — the figures are centred in every render and
+the band is drawn only while a press is still to come — and **neither has to
+run first.** `centreFigures` keeps the engraver's own x in `data-engraved-x`
+when it moves a text, because the band reads those same figures to find a chord
+that has not been written yet, and the place the text was moved to is not
+recoverable from it: a continuing line was pushed further than a plain one. A
+test pins that the band lands identically either way, since otherwise placing
+the first note of a chord would make it jump.
 
 That last one is what lets the anchor be read off different things at different
 moments without the band moving. A bass note carrying several chords anchors

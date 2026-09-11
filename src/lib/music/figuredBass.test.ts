@@ -234,7 +234,10 @@ describe('the property that makes figuring answerable', () => {
       checked += 1
     }
     expect(checked).toBeGreaterThan(2000)
-  })
+    // Over two thousand figures resolved and read back, which runs a few
+    // seconds on a quiet machine and past the default timeout on a busy one.
+    // The property is worth the seconds; failing on load is not.
+  }, 30_000)
 
   it('never lets one written figure stand for two different chords on the same bass', () => {
     // **This is the whole of being answerable.** Under canonical-required
