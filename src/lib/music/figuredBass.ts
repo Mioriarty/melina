@@ -72,11 +72,19 @@ export const PLAIN_TRIAD: Figure = { signs: [] }
 const STACKS: readonly (readonly number[])[] = [
   [5, 3],
   [6, 3],
+  // **A bare 4 is a suspended fourth, not a six-four.** Grove is explicit:
+  // "4 3 is always understood to mean 5/4 then 5/3 … in contradistinction to
+  // 6/4 then 5/3". So it has to be found before `[6, 4]`, which a written
+  // `6/4` still reaches because this one holds no 6.
+  [5, 4],
   [6, 4],
   [7, 5, 3],
   [6, 5, 3],
   [6, 4, 3],
   [6, 4, 2],
+  // The octave, which a suspended ninth resolves into. The 8 lands on the
+  // bass's own letter, which is exactly what it means.
+  [8, 5, 3],
   // The ninths, last so that nothing above them changes meaning: a bare `9`
   // finds the first stack holding a 9, and `9/7` the first holding both.
   [9, 5, 3],
@@ -100,6 +108,8 @@ const ABBREVIATIONS = new Map<string, readonly (readonly number[])[]>([
   ['6,5,3', [[6, 5]]],
   ['6,4,3', [[4, 3]]],
   ['6,4,2', [[2], [4, 2]]],
+  ['5,4', [[4]]],
+  ['8,5,3', [[8]]],
   ['9,5,3', [[9]]],
   // "The Figures 9/7 … indicate a Chord of the Ninth, taken by direct
   // percussion" — struck, as against the `9` of a 9–8 suspension, which is a
@@ -217,6 +227,16 @@ export interface CanonicalOptions {
    * Bass-note"). Derived from the question rather than set by hand.
    */
   afterAnother?: boolean
+  /**
+   * What stood under the same bass immediately before this figure.
+   *
+   * **A figure following another writes only the lines that moved**, which is
+   * the whole of how a suspension is figured: `4 3` is 5/4 then 5/3, and the
+   * second of those is written `3` because the 5 did not go anywhere. Without
+   * it the resolution of a 4–3 would have to be written as an unfigured bass,
+   * which is not something a dash can be followed by.
+   */
+  previous?: readonly PitchClass[]
 }
 
 /**
@@ -240,7 +260,7 @@ export function canonicalFigures(
   bass: Pitch,
   keySignature: KeySignatureId,
   notes: readonly PitchClass[],
-  { afterAnother = false }: CanonicalOptions = {},
+  { afterAnother = false, previous }: CanonicalOptions = {},
 ): readonly Figure[] {
   const found: Figure[] = []
 
@@ -261,19 +281,35 @@ export function canonicalFigures(
     const altered = new Set(
       signs.filter((sign) => sign.accidental !== 'none').map((sign) => sign.number),
     )
+    // **The lines this figure moved** — the ones whose note was not already
+    // sounding under the same bass a moment ago. First in the list, because
+    // where there is a previous figure that is what actually gets written:
+    // `4 3` is 5/4 then 5/3, and the second of those is a `3` because the 5
+    // did not go anywhere.
+    const standing = new Set((previous ?? []).map(tonicKey))
+    const moved = signs
+      .filter((sign) => {
+        const letter = letterAbove(bass.letter, sign.number)
+        const note = notes.find((candidate) => candidate.letter === letter)
+        return note !== undefined && !standing.has(tonicKey(note))
+      })
+      .map((sign) => sign.number)
+
     // The **full form**, written out, is legitimate only for a figure that
     // follows another on the same bass note — Grove gives that as the one
     // reason to write `5/3` or `6/3` at all. Under one figure per bass note it
     // is not an alternative spelling but a mistake, which is why it is added
     // here rather than sitting in `ABBREVIATIONS` as another accepted form.
     const forms = [
+      ...(previous !== undefined && moved.length > 0 ? [moved] : []),
       ...(ABBREVIATIONS.get(stackKey(stack)) ?? []),
       ...(afterAnother ? [stack] : []),
     ]
 
     for (const form of forms) {
       const shown = new Set([...form, ...altered])
-      found.push({ signs: sorted(signs.filter((sign) => shown.has(sign.number))) })
+      const written = { signs: sorted(signs.filter((sign) => shown.has(sign.number))) }
+      if (!found.some((already) => figuresEqual(already, written))) found.push(written)
     }
   }
 

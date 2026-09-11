@@ -35,8 +35,8 @@ export interface BassEvent {
   figures: readonly Figure[]
   /** What each figure asks for above the bass, as written notes without octaves. */
   notes: readonly (readonly PitchClass[])[]
-  /** Those notes placed on the treble staff — see `voiceChord`. */
-  chord: readonly Pitch[]
+  /** Those notes placed on the treble staff, one chord per figure. */
+  chords: readonly (readonly Pitch[])[]
 }
 
 export interface ThoroughbassQuestion {
@@ -54,14 +54,30 @@ export interface ThoroughbassRoundSpec {
   keySignatures: readonly KeySignatureId[]
   /** The figures this level asks about, as stored keys: `''`, `6`, `6/4`, `#3`. */
   figures: readonly string[]
+  /**
+   * Suspensions, as the pair of figures they are written with: `4-3`.
+   *
+   * A separate axis from `figures` because it is a separate axis: a suspension
+   * is not a harder figure but **two figures under one bass note**, which is
+   * span rather than vocabulary. The dash is the one a suspension is written
+   * with anyway, and the same one the keyboard types it with.
+   */
+  suspensions: readonly string[]
   /** Bass notes per question. One is a single chord. */
   events: number
   questionsPerRound: number
 }
 
 /**
- * Where the chord sits: above middle C, so it is unmistakably the treble
- * staff's and never crowds the bass note under it.
+ * Where a chord starts: just under middle C, so the lowest note it can take is
+ * middle C itself — one ledger line under the treble staff, which is ordinary
+ * notation rather than something to avoid.
+ *
+ * **The floor also decides where the keyboard's row of keys wraps**, because
+ * each key draws the note at the place pressing it would put it. With a B the
+ * wrap falls between B and C, which is the end of the row and invisible; raised
+ * to a D it fell between D and E, and the row read C and D an octave above
+ * everything after them. The ceiling is checked separately by `onTrebleStaff`.
  */
 export const CHORD_FLOOR: Pitch = pitch('B', 0, 3)
 
@@ -76,8 +92,28 @@ export function allowedKeySignatures(
 }
 
 export function allowedFigures(spec: ThoroughbassRoundSpec): readonly string[] {
-  const found = spec.figures.filter((key) => parseFigureKey(key) !== undefined)
+  const found = [...spec.figures, ...spec.suspensions].filter(
+    (key) => parseWanted(key) !== undefined,
+  )
   return found.length === 0 ? [''] : found
+}
+
+/**
+ * A level's vocabulary entry as the figures it stands for.
+ *
+ * One figure, or the two of a suspension split on the dash they are written
+ * with. `undefined` for anything that will not parse, which is what keeps a
+ * stale stored setting from reaching the generator.
+ */
+export function parseWanted(key: string): readonly Figure[] | undefined {
+  const parts = key.split('-')
+  const figures: Figure[] = []
+  for (const part of parts) {
+    const figure = parseFigureKey(part)
+    if (figure === undefined) return undefined
+    figures.push(figure)
+  }
+  return figures.length === 0 ? undefined : figures
 }
 
 /**
@@ -149,11 +185,13 @@ export function describeEvent(
     notes.push(found)
   }
 
-  const first = notes[0]
-  if (first === undefined) return undefined
+  if (notes.length === 0) return undefined
 
-  // Lowest first, so the chord builds upward from the bass in close position.
-  return { bass, figures, notes, chord: voiceChord(CHORD_FLOOR, [...first].reverse()) }
+  // Lowest first, so each chord builds upward from the bass in close position.
+  // Every one is voiced from the same floor, so two chords under one bass can
+  // be read against each other rather than drifting apart.
+  const chords = notes.map((chord) => voiceChord(CHORD_FLOOR, [...chord].reverse()))
+  return { bass, figures, notes, chords }
 }
 
 export function buildEvent(
@@ -161,7 +199,7 @@ export function buildEvent(
   keySignature: KeySignatureId,
   wanted: string,
 ): BassEvent | undefined {
-  const asked = parseFigureKey(wanted)
+  const asked = parseWanted(wanted)
   if (asked === undefined) return undefined
 
   const candidates = bassNotes(keySignature)
@@ -169,32 +207,53 @@ export function buildEvent(
 
   for (let attempt = 0; attempt < PLACEMENT_TRIES; attempt += 1) {
     const bass = randomPick(random, candidates as [Pitch, ...Pitch[]])
-    const notes = figurePitches(bass, keySignature, asked)
-    if (notes === undefined) continue
+    const event = placeOn(bass, keySignature, asked)
+    if (event !== undefined) return event
+  }
+
+  return undefined
+}
+
+/** One bass note tried against the figures a level asked for. */
+function placeOn(
+  bass: Pitch,
+  keySignature: KeySignatureId,
+  asked: readonly Figure[],
+): BassEvent | undefined {
+  const written: Figure[] = []
+  let previous: readonly PitchClass[] | undefined
+
+  for (const [position, figure] of asked.entries()) {
+    const notes = figurePitches(bass, keySignature, figure)
+    if (notes === undefined) return undefined
 
     // A third raised into a double sharp is legal and no one writes it. The
     // same reasoning as `isCleanScale`: work it out from the spelling rather
     // than keeping a list of which bass notes to avoid.
-    if (notes.some((note) => Math.abs(note.alteration) > 1)) continue
+    if (notes.some((note) => Math.abs(note.alteration) > 1)) return undefined
 
-    const figure = preferredFigure(bass, keySignature, notes)
-    if (figure === undefined) continue
+    const preferred = preferredFigure(bass, keySignature, notes, {
+      afterAnother: position > 0,
+      ...(previous === undefined ? {} : { previous }),
+    })
+    if (preferred === undefined) return undefined
 
     // **The canonical form has to come out as the one the level asked for.**
     // A `♮3` in a key that already spells the third natural is not a figure at
     // all — the sign changes nothing, so the conventional way to write those
     // notes is no figure — and a level asking for one would be showing a
-    // question whose answer is something else. Rather than tabulate which
-    // signs suit which keys, try another bass and let the model say.
-    if (figureKey(figure) !== figureKey(asked)) continue
+    // question whose answer is something else. For the second half of a
+    // suspension the same check does a second job: a resolution that moved
+    // nothing has no difference form, so it cannot come out as the figure that
+    // was asked for and the bass is refused.
+    if (figureKey(preferred) !== figureKey(figure)) return undefined
 
-    const event = describeEvent(bass, keySignature, [figure])
-    if (event === undefined || !onTrebleStaff(event.chord)) continue
-
-    return event
+    written.push(preferred)
+    previous = notes
   }
 
-  return undefined
+  const event = describeEvent(bass, keySignature, written)
+  return event === undefined || !event.chords.every(onTrebleStaff) ? undefined : event
 }
 
 export function buildQuestion(
@@ -249,6 +308,18 @@ export function generateRound(
   return questions
 }
 
+/**
+ * Every note a question sounds, bass and chords together.
+ *
+ * A suspension sounds as one chord — the held note and its resolution at once
+ * — rather than as two in succession, because what is being asked about is
+ * which notes the figures name and not how they are played. `playChord` takes
+ * the lot and sounds them together.
+ */
+export function soundingNotes(question: ThoroughbassQuestion): readonly Pitch[] {
+  return question.events.flatMap((event) => [event.bass, ...event.chords.flat()])
+}
+
 /** Whether a written figure is one the question would accept. */
 export function acceptsFigure(
   question: ThoroughbassQuestion,
@@ -260,7 +331,13 @@ export function acceptsFigure(
   const notes = event?.notes[position]
   if (event === undefined || notes === undefined) return false
 
+  // What stood under the same bass a moment ago, which is what lets the
+  // resolution of a suspension be written as the line that moved — `4 3`
+  // rather than `4` and then a figure for the whole triad under it.
+  const previous = position > 0 ? event.notes[position - 1] : undefined
+
   return canonicalFigures(event.bass, question.keySignature, notes, {
     afterAnother: position > 0,
+    ...(previous === undefined ? {} : { previous }),
   }).some((figure) => figureKey(figure) === figureKey(written))
 }

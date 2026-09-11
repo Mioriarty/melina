@@ -48,4 +48,11 @@ export const GUIDE_EXAMPLES = {
    * point the section above it has just made.
    */
   groveFifth: { bass: 'Eb3', figure: 'b5', keySignature: '1s' },
+
+  /**
+   * A suspension, as its two halves. Written separately because the page shows
+   * them side by side and names each: the held chord, and what it resolves to.
+   */
+  suspended: { bass: 'G3', figure: '4', keySignature: '0' },
+  resolved: { bass: 'G3', figure: '', keySignature: '0' },
 } satisfies Record<string, GuideExample>

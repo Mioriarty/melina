@@ -30,6 +30,7 @@ const SEVENTHS = ['7', '6/5', '4/3', '2']
 const ALTERED = ['#6', 'b6', '6/#4', '6/b5', '#5', 'b5']
 const AUGMENTED_SIXTHS = ['#6', '#6/b5', '#6/4/3']
 const NINTHS = ['9', '9/7']
+const SUSPENSIONS = ['4-3', '7-6', '9-8', '6-5']
 
 export const THOROUGHBASS_DIFFICULTIES: readonly Difficulty<ThoroughbassSettings>[] = [
   {
@@ -120,11 +121,25 @@ export const THOROUGHBASS_DIFFICULTIES: readonly Difficulty<ThoroughbassSettings
     settings: { ...DEFAULT_SETTINGS, figures: ['7', ...NINTHS] },
   },
   {
+    // The first level in which a bass note carries more than one chord. Not a
+    // harder figure but a wider question: the bass is held while the chord
+    // over it moves, and the second figure writes only the line that moved.
+    id: 'suspensions',
+    section: FURTHER,
+    settings: { ...DEFAULT_SETTINGS, figures: [], suspensions: ['4-3', '7-6'] },
+  },
+  {
+    id: 'more-suspensions',
+    section: FURTHER,
+    settings: { ...DEFAULT_SETTINGS, figures: [], suspensions: SUSPENSIONS },
+  },
+  {
     id: 'everything-further',
     section: FURTHER,
     settings: {
       ...DEFAULT_SETTINGS,
       figures: [...TRIADS, ...SEVENTHS, ...ALTERED, ...NINTHS],
+      suspensions: SUSPENSIONS,
       keySignatures: ['0', '1s', '2s', '3s', '1f', '2f', '3f'],
     },
   },

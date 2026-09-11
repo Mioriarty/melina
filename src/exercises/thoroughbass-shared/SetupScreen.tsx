@@ -11,6 +11,7 @@ import {
   FIGURE_CHOICES,
   KEY_SIGNATURE_CHOICES,
   ROUND_LENGTHS,
+  SUSPENSION_CHOICES,
   type ThoroughbassSettings,
 } from './settings'
 
@@ -55,6 +56,16 @@ export function SetupScreen({
     onChange({ ...settings, figures: next })
   }
 
+  function toggleSuspension(key: string) {
+    const next = settings.suspensions.includes(key)
+      ? settings.suspensions.filter((item) => item !== key)
+      : [...settings.suspensions, key]
+    // Unlike the figures, this one may be emptied: a level of nothing but
+    // single figures is the ordinary case.
+    if (next.length === 0 && settings.figures.length === 0) return
+    onChange({ ...settings, suspensions: next })
+  }
+
   function toggleKey(id: (typeof KEY_SIGNATURE_CHOICES)[number]) {
     const next = settings.keySignatures.includes(id)
       ? settings.keySignatures.filter((item) => item !== id)
@@ -62,6 +73,16 @@ export function SetupScreen({
     if (next.length === 0) return
     onChange({ ...settings, keySignatures: next })
   }
+
+  /** `4-3` is written `4 – 3`, which is how it appears on a page. */
+  const suspensionLabel = (key: string) =>
+    key
+      .split('-')
+      .map((part) => {
+        const parsed = parseFigureKey(part)
+        return parsed === undefined ? part : figureText(parsed)
+      })
+      .join(' – ')
 
   /** A plain triad is written by writing nothing, so its chip needs words. */
   const figureLabel = (figure: string) => {
@@ -116,6 +137,24 @@ export function SetupScreen({
                 label={figureLabel(figure)}
               >
                 {figureLabel(figure)}
+              </SetupChip>
+            ))}
+          </div>
+        </SetupSection>
+
+        <SetupSection
+          title={t('exercise:setup.suspensions.title')}
+          hint={t('exercise:setup.suspensions.hint')}
+        >
+          <div className="flex flex-wrap gap-2">
+            {SUSPENSION_CHOICES.map((key) => (
+              <SetupChip
+                key={key}
+                selected={settings.suspensions.includes(key)}
+                onClick={() => toggleSuspension(key)}
+                label={suspensionLabel(key)}
+              >
+                {suspensionLabel(key)}
               </SetupChip>
             ))}
           </div>

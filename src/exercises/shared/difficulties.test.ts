@@ -41,9 +41,15 @@ import {
 import { FIGURING_SETTINGS } from '@/exercises/thoroughbass-figuring/settings'
 import { REALIZING_SETTINGS } from '@/exercises/thoroughbass-realizing/settings'
 import { THOROUGHBASS_DIFFICULTIES } from '@/exercises/thoroughbass-shared/difficulties'
-import { generateRound as generateFiguredRound } from '@/exercises/thoroughbass-shared/generate'
-import { FIGURE_CHOICES } from '@/exercises/thoroughbass-shared/settings'
-import { canonicalFigures, figureKey, figurePitches } from '@/lib/music/figuredBass'
+import {
+  acceptsFigure,
+  generateRound as generateFiguredRound,
+} from '@/exercises/thoroughbass-shared/generate'
+import {
+  FIGURE_CHOICES,
+  SUSPENSION_CHOICES,
+} from '@/exercises/thoroughbass-shared/settings'
+import { figureKey, figurePitches } from '@/lib/music/figuredBass'
 import { i18n } from '@/lib/i18n'
 import { LANGUAGES } from '@/lib/i18n/languages'
 import { CATALOG_KEYS, HEARABLE_INTERVAL_KEYS } from '@/lib/music/catalog'
@@ -907,7 +913,13 @@ describe.each([
     for (const figure of level.settings.figures) {
       expect(FIGURE_CHOICES, figure).toContain(figure)
     }
-    expect(level.settings.figures.length).toBeGreaterThan(0)
+    for (const suspension of level.settings.suspensions) {
+      expect(SUSPENSION_CHOICES, suspension).toContain(suspension)
+    }
+    // A level may be nothing but suspensions, but it has to ask *something*.
+    expect(
+      level.settings.figures.length + level.settings.suspensions.length,
+    ).toBeGreaterThan(0)
     expect(level.settings.events).toBeGreaterThanOrEqual(1)
   })
 
@@ -931,27 +943,26 @@ describe.each([
     // whose figure is not one of the conventional ways to write its own chord
     // is a question whose right answer is marked wrong, and nothing about the
     // types would say so.
+    //
+    // Held to `acceptsFigure` rather than to a second reading of the rules:
+    // that is the function the exercise actually grades with, so a question it
+    // would reject is a question that is wrong however the rules are read.
     for (const seed of [1, 2, 3]) {
       for (const question of generateFiguredRound(createRandom(seed), level.settings)) {
-        for (const event of question.events) {
+        question.events.forEach((event, index) => {
+          expect(event.notes).toHaveLength(event.figures.length)
+          expect(event.chords).toHaveLength(event.figures.length)
+
           event.figures.forEach((figure, position) => {
-            const notes = event.notes[position]
-            expect(notes).toBeDefined()
             expect(figurePitches(event.bass, question.keySignature, figure)).toEqual(
-              notes,
+              event.notes[position],
             )
-            const accepted = canonicalFigures(
-              event.bass,
-              question.keySignature,
-              notes ?? [],
-              { afterAnother: position > 0 },
-            ).map(figureKey)
             expect(
-              accepted,
+              acceptsFigure(question, index, position, figure),
               `${figureKey(figure)} on ${question.keySignature}`,
-            ).toContain(figureKey(figure))
+            ).toBe(true)
           })
-        }
+        })
       }
     }
   })
@@ -961,6 +972,13 @@ describe.each([
     for (const figure of ['', '6', '6/4', '7', '6/5', '4/3', '2', '#3']) {
       expect(offered, figure).toContain(figure)
     }
+  })
+
+  it('covers every suspension it offers, somewhere in the list', () => {
+    const offered = new Set(
+      THOROUGHBASS_DIFFICULTIES.flatMap((level) => level.settings.suspensions),
+    )
+    expect([...offered].sort()).toEqual([...SUSPENSION_CHOICES].sort())
   })
 })
 

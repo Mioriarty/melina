@@ -81,7 +81,7 @@ export function FigureExample({
           className="h-full min-h-0 flex-1"
           mei={thoroughbassMei({
             keySignature,
-            events: [{ bass: root, figures: [parsed], chord }],
+            events: [{ bass: root, figures: [parsed], chords: [chord] }],
           })}
           profile={THOROUGHBASS_EXAMPLE_PROFILE}
           label={t('figures.exampleLabel', {

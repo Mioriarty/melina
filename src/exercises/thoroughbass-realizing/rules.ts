@@ -8,7 +8,13 @@ import {
 import { sameNotes } from '@/lib/music/figuredBass'
 import { tonicKey, type PitchClass } from '@/lib/music/scale'
 
-/** The notes placed above each bass note. Octave and order are the player's. */
+/**
+ * The notes placed above the bass, **one chord per figure** and flattened
+ * across the bass notes. A suspension is two chords under one bass, so they
+ * cannot be counted per event.
+ *
+ * Octave and order within a chord are the player's.
+ */
 export type RealizingAnswer = readonly (readonly PitchClass[])[]
 
 export function realizingAnswerKey(answer: RealizingAnswer): string {
@@ -35,12 +41,16 @@ export const REALIZING_RULES: RoundRules<
   RealizingAnswer
 > = {
   generate: generateRound,
-  isCorrect: (chosen, question) =>
-    chosen.length === question.events.length &&
-    chosen.every((chord, index) => {
-      const wanted = question.events[index]?.notes[0]
-      return wanted !== undefined && sameNotes(chord, wanted)
-    }),
+  isCorrect: (chosen, question) => {
+    const wanted = question.events.flatMap((event) => event.notes)
+    return (
+      chosen.length === wanted.length &&
+      chosen.every((chord, index) => {
+        const notes = wanted[index]
+        return notes !== undefined && sameNotes(chord, notes)
+      })
+    )
+  },
   attempt: thoroughbassAttempt,
   answerKey: realizingAnswerKey,
 }

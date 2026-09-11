@@ -88,7 +88,9 @@ export function thoroughbassFilter(
     kind: 'figured-bass',
     keySignature: [...spec.keySignatures],
     bassNotes: String(events),
-    // `figure` is only a facet where there is one bass note to carry it.
-    ...(events === 1 ? { figure: [...spec.figures] } : {}),
+    // `figure` is only a facet where there is one bass note to carry it, and
+    // it spans both vocabularies: a suspension is stored under the same
+    // dash-joined key the level names it with.
+    ...(events === 1 ? { figure: [...spec.figures, ...spec.suspensions] } : {}),
   }
 }

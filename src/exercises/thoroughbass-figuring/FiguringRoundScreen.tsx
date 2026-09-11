@@ -64,7 +64,7 @@ export function FiguringRoundScreen({
   const written = draftEvents(draft)
   const events = question.events.map((event, index) => ({
     bass: event.bass,
-    chord: event.chord,
+    chords: event.chords,
     // Once it is answered, the staff carries the answer rather than the draft.
     figures: revealed ? event.figures : (written[index] ?? []),
   }))

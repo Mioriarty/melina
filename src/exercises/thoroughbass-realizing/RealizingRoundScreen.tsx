@@ -56,18 +56,23 @@ export function RealizingRoundScreen({
   onQuit,
 }: RealizingRoundScreenProps) {
   const { t } = useTranslation('exercise')
+  // One slot per **figure**, flattened across the bass notes: a suspension is
+  // two chords under one bass, so the slots cannot be counted per event.
   const [draft, setDraft] = useState<ChordDraft>(() =>
-    emptyChordDraft(question.events.map((event) => event.notes[0]?.length ?? 0)),
+    emptyChordDraft(question.events.flatMap((event) => event.notes.map((n) => n.length))),
   )
 
   const revealed = phase.name === 'revealed'
   const wrong = revealed && !phase.answer.correct
 
   // What the player wrote, which stays on the page whatever the verdict was.
-  const events = question.events.map((event, index) => ({
+  // The draft's slots are flat, so they are handed back out in the same order
+  // they were counted in.
+  let slot = 0
+  const events = question.events.map((event) => ({
     bass: event.bass,
     figures: event.figures,
-    chord: chordPitches(draft, index),
+    chords: event.figures.map(() => chordPitches(draft, slot++)),
   }))
 
   // **A wrong chord is not replaced by the right one; the two are shown side by
@@ -76,7 +81,7 @@ export function RealizingRoundScreen({
   const answer = question.events.map((event) => ({
     bass: event.bass,
     figures: event.figures,
-    chord: event.chord,
+    chords: event.chords,
   }))
 
   return (
@@ -84,7 +89,7 @@ export function RealizingRoundScreen({
       phase={phase}
       total={total}
       prompt={t('round.prompt.realizing')}
-      correct={question.events.map((event) => event.notes[0] ?? [])}
+      correct={question.events.flatMap((event) => event.notes)}
       reducedMotion={reducedMotion}
       onAnswer={onAnswer}
       onNext={onNext}

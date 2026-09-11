@@ -6,7 +6,10 @@ import { LevelsScreen } from '@/exercises/shared/LevelsScreen'
 import { usePlayback } from '@/exercises/shared/usePlayback'
 import { thoroughbassFilter } from '@/exercises/thoroughbass-shared/attempt'
 import { THOROUGHBASS_DIFFICULTIES } from '@/exercises/thoroughbass-shared/difficulties'
-import type { ThoroughbassRoundSpec } from '@/exercises/thoroughbass-shared/generate'
+import {
+  soundingNotes,
+  type ThoroughbassRoundSpec,
+} from '@/exercises/thoroughbass-shared/generate'
 import { SetupScreen } from '@/exercises/thoroughbass-shared/SetupScreen'
 import type { ThoroughbassSettings } from '@/exercises/thoroughbass-shared/settings'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
@@ -71,10 +74,7 @@ export default function ThoroughbassRealizingExercise() {
       : undefined
 
   const sound = useCallback(
-    () =>
-      current === undefined
-        ? Promise.resolve()
-        : playChord(current.events.flatMap((event) => [event.bass, ...event.chord])),
+    () => (current === undefined ? Promise.resolve() : playChord(soundingNotes(current))),
     [current],
   )
 

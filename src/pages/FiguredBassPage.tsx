@@ -146,6 +146,23 @@ export default function FiguredBassPage() {
           />
         </Section>
 
+        <Section title={t('guide:figures.suspensions.title')}>
+          <p>{t('guide:figures.suspensions.body')}</p>
+          <FigureRow>
+            <FigureExample
+              {...GUIDE_EXAMPLES.suspended}
+              sounding
+              caption={t('guide:figures.suspensions.held')}
+            />
+            <FigureExample
+              {...GUIDE_EXAMPLES.resolved}
+              sounding
+              caption={t('guide:figures.suspensions.resolved')}
+            />
+          </FigureRow>
+          <p>{t('guide:figures.suspensions.after')}</p>
+        </Section>
+
         <Section title={t('guide:figures.table.title')}>
           <p>{t('guide:figures.table.body')}</p>
           <FigureTable />

@@ -285,3 +285,66 @@ describe('the stored form', () => {
     }
   })
 })
+
+describe('a figure that follows another on the same bass', () => {
+  const notesOf = (
+    bass: ReturnType<typeof pitch>,
+    key: KeySignatureId,
+    written: string,
+  ) => figurePitches(bass, key, figure(written)) ?? []
+
+  it('writes only the lines that moved', () => {
+    // **How a suspension is figured.** `4 3` is 5/4 then 5/3, and the second
+    // is written `3` because the 5 did not go anywhere. Without this the
+    // resolution would have to be written as an unfigured bass, which is not
+    // something a dash can be followed by.
+    const bass = pitch('G', 0, 3)
+    const held = notesOf(bass, '0', '4')
+    const resolved = notesOf(bass, '0', '')
+
+    expect(
+      figureKey(preferredFigure(bass, '0', resolved, { previous: held }) as Figure),
+    ).toBe('3')
+  })
+
+  it('does the same for the other suspensions that keep one bass note', () => {
+    const bass = pitch('C', 0, 3)
+    const move = (from: string, to: string) =>
+      figureKey(
+        preferredFigure(bass, '0', notesOf(bass, '0', to), {
+          previous: notesOf(bass, '0', from),
+        }) as Figure,
+      )
+
+    expect(move('7', '6')).toBe('6')
+    expect(move('9', '8')).toBe('8')
+    expect(move('6', '5')).toBe('5')
+  })
+
+  it('still accepts the ordinary spellings alongside it', () => {
+    // Writing the resolution out in full is what Grove allows after another
+    // harmony on the same bass; the short form is only what gets *printed*.
+    const bass = pitch('G', 0, 3)
+    const held = notesOf(bass, '0', '4')
+    const resolved = notesOf(bass, '0', '')
+    const accepted = canonicalFigures(bass, '0', resolved, {
+      previous: held,
+      afterAnother: true,
+    }).map(figureKey)
+
+    expect(accepted).toContain('3')
+    expect(accepted).toContain('5/3')
+    expect(accepted).toContain('')
+  })
+
+  it('reads a bare 4 as a suspended fourth, not as a six-four', () => {
+    // "4 3 is always understood to mean 5/4 then 5/3 … in contradistinction to
+    // 6/4 then 5/3."
+    expect((expandFigure(figure('4')) as Figure).signs.map((s) => s.number)).toEqual([
+      5, 4,
+    ])
+    expect((expandFigure(figure('6/4')) as Figure).signs.map((s) => s.number)).toEqual([
+      6, 4,
+    ])
+  })
+})

@@ -31,7 +31,7 @@ function event(
   figures: readonly string[],
   chord: readonly Pitch[],
 ): ThoroughbassEvent {
-  return { bass, figures: figures.map(fig), chord }
+  return { bass, figures: figures.map(fig), chords: figures.map(() => chord) }
 }
 
 const TRIAD = [pitch('E', 0, 4), pitch('G', 0, 4)]

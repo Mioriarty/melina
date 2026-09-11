@@ -1,14 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { figureKey } from '@/lib/music/figuredBass'
+import { figureKey, sameNotes } from '@/lib/music/figuredBass'
 import { getClef } from '@/lib/music/clef'
 import { KEY_SIGNATURES, type KeySignatureId } from '@/lib/music/keySignature'
 import { diatonicValue, pitchKey } from '@/lib/music/pitch'
 import { tonicKey } from '@/lib/music/scale'
 import { createRandom } from '@/lib/utils/seededRandom'
 
-import { thoroughbassAttempt, thoroughbassQuestion } from './attempt'
+import { thoroughbassAttempt, thoroughbassFilter, thoroughbassQuestion } from './attempt'
 import { THOROUGHBASS_DIFFICULTIES } from './difficulties'
+import { SUSPENSION_CHOICES } from './settings'
 import {
   acceptsFigure,
   bassNotes,
@@ -21,6 +22,7 @@ const V1_FIGURES = ['', '6', '6/4', '7', '6/5', '4/3', '2', '#3', 'b3']
 const spec = (over: Partial<ThoroughbassRoundSpec> = {}): ThoroughbassRoundSpec => ({
   keySignatures: ['0', '2s', '3f'],
   figures: V1_FIGURES,
+  suspensions: [],
   events: 1,
   questionsPerRound: 10,
   ...over,
@@ -73,7 +75,7 @@ describe('what the generator produces', () => {
         expect(diatonicValue(event.bass)).toBeLessThanOrEqual(
           diatonicValue(bass.staffHighest),
         )
-        for (const note of event.chord) {
+        for (const note of event.chords.flat()) {
           expect(diatonicValue(note)).toBeGreaterThanOrEqual(diatonicValue(treble.lowest))
           expect(diatonicValue(note)).toBeLessThanOrEqual(diatonicValue(treble.highest))
         }
@@ -84,7 +86,7 @@ describe('what the generator produces', () => {
   it('stacks the chord upward with nothing sharing a staff position', () => {
     for (const question of rounds()) {
       for (const event of question.events) {
-        const places = event.chord.map(diatonicValue)
+        const places = (event.chords[0] ?? []).map(diatonicValue)
         expect([...places].sort((a, b) => a - b)).toEqual(places)
         expect(new Set(places).size).toBe(places.length)
       }
@@ -133,9 +135,9 @@ describe('the attempt log round trip', () => {
       ).toEqual(question.events.map((event) => event.figures.map(figureKey).join('-')))
       // Derived on the way back out rather than stored, so a row cannot
       // disagree with the notation it produces.
-      expect(again?.events.map((event) => event.chord.map(pitchKey))).toEqual(
-        question.events.map((event) => event.chord.map(pitchKey)),
-      )
+      expect(
+        again?.events.map((event) => event.chords.map((c) => c.map(pitchKey))),
+      ).toEqual(question.events.map((event) => event.chords.map((c) => c.map(pitchKey))))
     }
   })
 
@@ -163,12 +165,11 @@ describe('every shipped level', () => {
         expect(round, `${level.id} seed ${seed}`).toHaveLength(
           level.settings.questionsPerRound,
         )
+        const vocabulary = [...level.settings.figures, ...level.settings.suspensions]
         for (const question of round) {
           expect(level.settings.keySignatures).toContain(question.keySignature)
           for (const event of question.events) {
-            expect(level.settings.figures).toContain(
-              event.figures.map(figureKey).join('-'),
-            )
+            expect(vocabulary).toContain(event.figures.map(figureKey).join('-'))
           }
         }
       }
@@ -189,7 +190,92 @@ describe('every shipped level', () => {
             seen.add(event.figures.map(figureKey).join('-'))
         }
       }
-      expect([...seen].sort(), level.id).toEqual([...level.settings.figures].sort())
+      expect([...seen].sort(), level.id).toEqual(
+        [...level.settings.figures, ...level.settings.suspensions].sort(),
+      )
+    }
+  })
+})
+
+describe('suspensions', () => {
+  const held = (over: Partial<ThoroughbassRoundSpec> = {}) =>
+    [1, 2, 3].flatMap((seed) =>
+      generateRound(
+        createRandom(seed),
+        spec({ figures: [], suspensions: SUSPENSION_CHOICES, ...over }),
+      ),
+    )
+
+  it('builds every suspension the app offers', () => {
+    const seen = new Set(
+      held({ questionsPerRound: 40 }).flatMap((question) =>
+        question.events.map((event) => event.figures.map(figureKey).join('-')),
+      ),
+    )
+    expect([...seen].sort()).toEqual([...SUSPENSION_CHOICES].sort())
+  })
+
+  it('puts two figures under one bass note, and two chords over it', () => {
+    for (const question of held()) {
+      for (const event of question.events) {
+        expect(event.figures).toHaveLength(2)
+        expect(event.notes).toHaveLength(2)
+        expect(event.chords).toHaveLength(2)
+      }
+    }
+  })
+
+  it('moves something between the two, which is what a suspension is', () => {
+    // A resolution that moved nothing has no difference form, so it could not
+    // have come out as the figure that was asked for — but a suspension whose
+    // chord stands still would be a question with nothing in it, so it is
+    // worth saying out loud rather than relying on that.
+    for (const question of held()) {
+      for (const event of question.events) {
+        const [before, after] = event.notes
+        expect(before).toBeDefined()
+        expect(after).toBeDefined()
+        expect(sameNotes(before ?? [], after ?? [])).toBe(false)
+      }
+    }
+  })
+
+  it('accepts the resolution written as the line that moved', () => {
+    for (const question of held()) {
+      question.events.forEach((event, index) => {
+        event.figures.forEach((figure, position) => {
+          expect(
+            acceptsFigure(question, index, position, figure),
+            `${event.figures.map(figureKey).join('-')}`,
+          ).toBe(true)
+        })
+      })
+    }
+  })
+
+  it('lets a level claim the suspensions it asks for', () => {
+    // The accuracy filter pins the figure a level bounds, and a suspension is
+    // stored under the same dash-joined key the level names it with — so a
+    // level of nothing but suspensions would otherwise measure itself over no
+    // rows at all.
+    const level = spec({ figures: [], suspensions: ['4-3', '7-6'] })
+    const filter = thoroughbassFilter(level, 'thoroughbass/figuring')
+    expect(filter.figure).toEqual(['4-3', '7-6'])
+
+    for (const question of held({ suspensions: ['4-3', '7-6'] })) {
+      const row = thoroughbassAttempt(question)
+      expect(filter.figure).toContain(row.figures)
+    }
+  })
+
+  it('reads a suspension back out of the attempt log', () => {
+    for (const question of held()) {
+      const row = thoroughbassAttempt(question)
+      expect(row.figures).toMatch(/-/)
+      const again = thoroughbassQuestion(row)
+      expect(again?.events.map((e) => e.figures.map(figureKey).join('-'))).toEqual(
+        question.events.map((e) => e.figures.map(figureKey).join('-')),
+      )
     }
   })
 })

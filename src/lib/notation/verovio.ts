@@ -342,7 +342,9 @@ export function melodicPhraseProfile(
  * the point.
  *
  * Width grows with the key signature, drawn once at the head of the system, and
- * with the number of bass notes, each an event of its own.
+ * with the number of **chords**, not of bass notes. A suspension is two chords
+ * under one held bass, and sized for one of them the measure came out so tight
+ * that the first chord was drawn over the clef.
  *
  * **These are page units, which are a tenth of the viewBox units a render
  * reports.** Reading a natural size off the viewBox and feeding it back in as
@@ -418,10 +420,10 @@ export const THOROUGHBASS_EXAMPLE_PROFILE: VerovioOptions = {
 const THOROUGHBASS_PROFILES = new Map<string, VerovioOptions>()
 
 export function thoroughbassProfile(
-  events: number,
+  slots: number,
   signatureAccidentals: number,
 ): VerovioOptions {
-  const key = `${events}:${signatureAccidentals}`
+  const key = `${slots}:${signatureAccidentals}`
   const cached = THOROUGHBASS_PROFILES.get(key)
   if (cached !== undefined) return cached
 
@@ -435,7 +437,7 @@ export function thoroughbassProfile(
     pageWidth:
       THOROUGHBASS_PAGE_LEAD +
       THOROUGHBASS_PER_ACCIDENTAL * signatureAccidentals +
-      THOROUGHBASS_PER_EVENT * Math.max(1, events),
+      THOROUGHBASS_PER_EVENT * Math.max(1, slots),
     pageHeight: THOROUGHBASS_PAGE_HEIGHT,
   }
   THOROUGHBASS_PROFILES.set(key, profile)

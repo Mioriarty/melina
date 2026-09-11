@@ -123,7 +123,11 @@
       "hint": "Which figures may come up. A plain chord is written by writing nothing at all, which is a figure like any other.",
       "guide": "How a figure is read"
     },
-    "figureKeysHint": "A figure is read against the signature: the same 6 is a different note in every key."
+    "figureKeysHint": "A figure is read against the signature: the same 6 is a different note in every key.",
+    "suspensions": {
+      "title": "Suspensions",
+      "hint": "A bass note held while the chord over it moves. The second figure writes only the line that moved."
+    }
   },
   "round": {
     "end": "End this round",

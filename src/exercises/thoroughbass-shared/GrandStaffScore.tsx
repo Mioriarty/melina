@@ -37,7 +37,7 @@ import { thoroughbassProfile } from '@/lib/notation/verovio'
 export interface GrandStaffEvent {
   bass: Pitch
   figures: readonly Figure[]
-  chord: readonly Pitch[]
+  chords: readonly (readonly Pitch[])[]
 }
 
 export interface GrandStaffScoreProps {
@@ -90,7 +90,12 @@ export function GrandStaffScore({
     // Two staves and a row of figures under them: taller than one staff, and
     // capped at a single staff's share of the screen it left a third of its
     // own box empty with the notation shrunk to fit the rest.
-    profile: thoroughbassProfile(shown.length, getKeySignature(keySignature).count),
+    // Sized by how many chords are drawn rather than by how many bass notes:
+    // a suspension is two chords under one held bass.
+    profile: thoroughbassProfile(
+      shown.reduce((total, event) => total + Math.max(1, event.figures.length), 0),
+      getKeySignature(keySignature).count,
+    ),
     box: PHRASE_SCORE_BOX,
   })
 

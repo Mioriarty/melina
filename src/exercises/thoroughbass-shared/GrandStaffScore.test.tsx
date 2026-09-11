@@ -25,13 +25,13 @@ const fig = (key: string) => parseFigureKey(key) as Figure
 
 const bass = pitch('G', 0, 3)
 const wrote: GrandStaffEvent[] = [
-  { bass, figures: [fig('7')], chord: [pitch('B', 0, 4), pitch('D', 0, 5)] },
+  { bass, figures: [fig('7')], chords: [[pitch('B', 0, 4), pitch('D', 0, 5)]] },
 ]
 const wanted: GrandStaffEvent[] = [
   {
     bass,
     figures: [fig('7')],
-    chord: [pitch('B', 0, 4), pitch('D', 0, 5), pitch('F', 0, 5)],
+    chords: [[pitch('B', 0, 4), pitch('D', 0, 5), pitch('F', 0, 5)]],
   },
 ]
 

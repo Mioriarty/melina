@@ -309,6 +309,14 @@
     "everything-further": {
       "title": "The Whole Vocabulary",
       "blurb": "Every figure the app teaches, in seven keys, mixed."
+    },
+    "suspensions": {
+      "title": "Suspensions",
+      "blurb": "One bass note carrying two figures: a note held over, and the line it moves to."
+    },
+    "more-suspensions": {
+      "title": "Every Suspension",
+      "blurb": "All four that a held bass can carry, including the ninth resolving to its octave."
     }
   },
   "thoroughbass-realizing": {
@@ -371,6 +379,14 @@
     "everything-further": {
       "title": "The Whole Vocabulary",
       "blurb": "Every figure the app teaches, in seven keys, mixed."
+    },
+    "suspensions": {
+      "title": "Suspensions",
+      "blurb": "One bass note carrying two figures: write both chords, the held one and its resolution."
+    },
+    "more-suspensions": {
+      "title": "Every Suspension",
+      "blurb": "All four that a held bass can carry, including the ninth resolving to its octave."
     }
   }
 }

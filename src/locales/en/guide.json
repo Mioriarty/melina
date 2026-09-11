@@ -137,7 +137,14 @@
       "figuring": "Figuring a Bass",
       "realizing": "Realising a Bass"
     },
-    "source": "The rules here follow the article on Thoroughbass in A Dictionary of Music and Musicians, and every staff on this page is drawn from the same model the exercises grade against."
+    "source": "The rules here follow the article on Thoroughbass in A Dictionary of Music and Musicians, and every staff on this page is drawn from the same model the exercises grade against.",
+    "suspensions": {
+      "title": "Two figures under one bass note",
+      "body": "A bass note can be held while the chord over it moves. That is written as two figures side by side — and the second writes only the line that moved, because the rest of the chord did not.",
+      "held": "The held chord: a fourth over the bass",
+      "resolved": "It resolves: the fourth falls to the third",
+      "after": "So `4 3` means a fifth and a fourth, then a fifth and a third. The 5 is never written at all: it was taken for granted in the first chord and it did not move for the second."
+    }
   },
   "backToPath": "Back to the path"
 }

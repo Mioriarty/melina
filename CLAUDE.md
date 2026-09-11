@@ -1294,6 +1294,44 @@ the question is up, since the chord _is_ the answer, so after a wrong one the
 thing the player has not yet heard is the chord that was wanted; two play
 buttons side by side would be two ways of asking which.
 
+### A suspension is two figures under one bass note
+
+Span rather than vocabulary, and the model was built for it: a `BassEvent`
+holds a _list_ of figures, so the shape did not change. Three things did.
+
+**A figure following another writes only the line that moved.** `4 3` is 5/4
+then 5/3, and the second is written `3` because the 5 did not go anywhere.
+Without that rule the resolution would have to be written as an unfigured bass,
+which is not something a dash can be followed by. `canonicalFigures` takes a
+`previous` and puts that difference form first; the ordinary spellings stay
+accepted, so writing the resolution out in full is right but not what gets
+printed. It is also what refuses a suspension that does not suspend: a chord
+that moved nothing has no difference form, so it cannot come out as the figure
+that was asked for and the generator tries another bass.
+
+**A bare `4` is a suspended fourth, not a six-four.** Grove is explicit — "4 3
+is always understood to mean 5/4 then 5/3 … in contradistinction to 6/4 then
+5/3" — so `[5, 4]` has to be found before `[6, 4]`, which a written `6/4` still
+reaches because the first of them holds no 6. `[8, 5, 3]` is there for the same
+reason: a ninth resolves into its octave, and the 8 lands on the bass's own
+letter, which is exactly what it means.
+
+**A chord per figure, not per bass note.** `chords` is parallel to `figures` and
+`notes`, one whole note or two halves in the measure, and the realising draft
+counts its slots per _figure_ and flattens them across the bass notes. The page
+is sized by how many chords are drawn rather than how many bass notes there
+are — sized for one, the measure came out so tight that the first chord of a
+suspension was drawn over the clef.
+
+**2–3 is deliberately absent.** It is the one suspension in which the _bass_ is
+the dissonance and resolves downward, so it cannot be written under a single
+held bass note: it needs a bass that moves, which is a bass line and not a
+suspension. Faking it with a stationary bass would teach the wrong thing.
+
+The verdict line has to check **every** figure under the bass. Checking the
+first alone calls a suspension whose resolution went wrong a spelling slip,
+when the player has written a different second chord.
+
 **A row keeps the bass line and the figures and nothing else.** The chord is
 what the figure resolves to, so storing it would be a second copy that could
 disagree. There is no clef either — a grand staff is not in one — and `root`
@@ -1423,6 +1461,12 @@ keeping straight when this grows: the _vocabulary_ (which figures) and the
 _span_ (how many bass notes, and how many figures under one). Suspensions,
 passing notes and continuation lines are all span, not vocabulary, which is why
 they are not simply "harder figures".
+
+Where a chord starts is `CHORD_FLOOR`, and it **also decides where the
+keyboard's row of keys wraps**, because each key draws the note at the place
+pressing it would put it. At a B the wrap falls between B and C, which is the
+end of the row and invisible; raised to a D it fell between D and E, and the row
+read C and D an octave above everything after them.
 
 **The vocabulary grew a long way before the model had to.** Every altered figure
 — `♯6`, `♭6`, `6/♯4`, `6/♭5`, `♯5`, `♭5`, and the three shapes an augmented

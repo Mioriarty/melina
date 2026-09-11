@@ -309,6 +309,14 @@
     "everything-further": {
       "title": "Das ganze Vokabular",
       "blurb": "Jede Bezifferung der App, in sieben Tonarten, gemischt."
+    },
+    "suspensions": {
+      "title": "Vorhalte",
+      "blurb": "Ein Basston mit zwei Ziffern: ein gehaltener Ton und die Stimme, in die er sich auflöst."
+    },
+    "more-suspensions": {
+      "title": "Alle Vorhalte",
+      "blurb": "Alle vier, die ein liegender Bass tragen kann, samt der None, die in ihre Oktave fällt."
     }
   },
   "thoroughbass-realizing": {
@@ -371,6 +379,14 @@
     "everything-further": {
       "title": "Das ganze Vokabular",
       "blurb": "Jede Bezifferung der App, in sieben Tonarten, gemischt."
+    },
+    "suspensions": {
+      "title": "Vorhalte",
+      "blurb": "Ein Basston mit zwei Ziffern: setze beide Akkorde, den gehaltenen und seine Auflösung."
+    },
+    "more-suspensions": {
+      "title": "Alle Vorhalte",
+      "blurb": "Alle vier, die ein liegender Bass tragen kann, samt der None, die in ihre Oktave fällt."
     }
   }
 }

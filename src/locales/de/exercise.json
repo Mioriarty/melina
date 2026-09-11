@@ -123,7 +123,11 @@
       "hint": "Welche Ziffern vorkommen dürfen. Der schlichte Dreiklang wird geschrieben, indem man nichts schreibt — auch das ist eine Bezifferung.",
       "guide": "Wie eine Bezifferung gelesen wird"
     },
-    "figureKeysHint": "Eine Ziffer wird gegen die Vorzeichnung gelesen: dieselbe 6 ist in jeder Tonart ein anderer Ton."
+    "figureKeysHint": "Eine Ziffer wird gegen die Vorzeichnung gelesen: dieselbe 6 ist in jeder Tonart ein anderer Ton.",
+    "suspensions": {
+      "title": "Vorhalte",
+      "hint": "Ein liegender Basston, über dem sich der Akkord bewegt. Die zweite Ziffer schreibt nur die Stimme, die sich bewegt hat."
+    }
   },
   "round": {
     "end": "Runde beenden",

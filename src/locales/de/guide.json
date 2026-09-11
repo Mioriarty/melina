@@ -137,7 +137,14 @@
       "figuring": "Bass beziffern",
       "realizing": "Bass aussetzen"
     },
-    "source": "Die Regeln folgen dem Artikel „Thoroughbass“ aus A Dictionary of Music and Musicians; jedes System auf dieser Seite wird aus demselben Modell gezeichnet, gegen das die Übungen bewerten."
+    "source": "Die Regeln folgen dem Artikel „Thoroughbass“ aus A Dictionary of Music and Musicians; jedes System auf dieser Seite wird aus demselben Modell gezeichnet, gegen das die Übungen bewerten.",
+    "suspensions": {
+      "title": "Zwei Ziffern unter einem Basston",
+      "body": "Ein Basston kann liegen bleiben, während der Akkord darüber sich bewegt. Geschrieben wird das als zwei Ziffern nebeneinander — und die zweite schreibt nur die Stimme, die sich bewegt hat, denn der Rest des Akkords tat es nicht.",
+      "held": "Der gehaltene Akkord: eine Quarte über dem Bass",
+      "resolved": "Die Auflösung: die Quarte fällt in die Terz",
+      "after": "„4 3“ meint also Quinte und Quarte, dann Quinte und Terz. Die 5 wird nie geschrieben: im ersten Akkord verstand sie sich von selbst, und für den zweiten hat sie sich nicht bewegt."
+    }
   },
   "backToPath": "Zurück zum Pfad"
 }

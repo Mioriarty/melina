@@ -40,14 +40,21 @@ export function FigureVerdict({ question, chosen }: FigureVerdictProps) {
   const wrote = printed(written)
   const correct = printed(event.figures)
 
-  // Right chord, wrong spelling: the abbreviation is the thing being taught.
-  const notes = event.notes[0]
-  const resolved = written?.[0]
+  // **Right chord, wrong spelling** — the abbreviation is the thing being
+  // taught, and it is the commonest way to be wrong here. Every figure under
+  // the bass has to resolve to the right notes for that to be the verdict: a
+  // suspension whose held chord was right and whose resolution was not is a
+  // wrong chord, not a wrong spelling.
   const sameChord =
-    notes !== undefined &&
-    resolved !== undefined &&
-    written?.length === event.figures.length &&
-    sameNotes(figurePitches(event.bass, question.keySignature, resolved) ?? [], notes)
+    written !== undefined &&
+    written.length === event.figures.length &&
+    written.every((figure, position) => {
+      const notes = event.notes[position]
+      return (
+        notes !== undefined &&
+        sameNotes(figurePitches(event.bass, question.keySignature, figure) ?? [], notes)
+      )
+    })
 
   // A figure of no figure at all reads as a phrase mid-sentence, not as the
   // chip label the setup screen and the summary use.

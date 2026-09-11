@@ -809,8 +809,13 @@ export interface ThoroughbassEvent {
    * suspension, which is why this is a list and not a figure.
    */
   figures: readonly Figure[]
-  /** The chord above, as written pitches. Empty leaves the treble staff blank. */
-  chord: readonly Pitch[]
+  /**
+   * The chords above, **one per figure**. Empty entries leave the treble staff
+   * blank, which is what a realising question looks like before it is answered.
+   * Two of them is a suspension: the bass is held while the chord over it
+   * moves, so they share the bass note's length between them.
+   */
+  chords: readonly (readonly Pitch[])[]
 }
 
 export interface ThoroughbassMeiOptions {
@@ -855,14 +860,22 @@ export function thoroughbassMei({
       const id = `bass${index + 1}`
       const bass = `<note xml:id="${id}" pname="${event.bass.letter.toLowerCase()}" oct="${event.bass.octave}" dur="1"${accidentalAttributes(event.bass, keySignature)}/>`
 
-      const chord =
-        event.chord.length === 0
-          ? '<space dur="1"/>'
-          : event.chord.length === 1
-            ? noteElement(event.chord[0] as Pitch, keySignature, 'dur="1"', hideChords)
-            : `<chord dur="1"${hideChords ? HIDDEN : ''}>${event.chord
-                .map((note) => noteElement(note, keySignature))
-                .join('')}</chord>`
+      // One whole note, or two halves when the chord over the bass moves.
+      // `notatedTicks` is not involved: a figured bass has no metre, so the
+      // only thing being divided is the measure itself.
+      const parts = Math.max(1, event.chords.length)
+      const dur = `dur="${parts === 1 ? 1 : 2}"`
+
+      const chord = Array.from({ length: parts }, (_, at) => {
+        const notes = event.chords[at] ?? []
+        if (notes.length === 0) return `<space ${dur}/>`
+        if (notes.length === 1) {
+          return noteElement(notes[0] as Pitch, keySignature, dur, hideChords)
+        }
+        return `<chord ${dur}${hideChords ? HIDDEN : ''}>${notes
+          .map((note) => noteElement(note, keySignature))
+          .join('')}</chord>`
+      }).join('')
 
       // One figure is anchored to the note itself, which is exact. Several
       // under one bass note cannot be — they are spread across its length by
