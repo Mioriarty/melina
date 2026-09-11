@@ -302,6 +302,10 @@
     },
     "summary": {
       "subject": "{{figure}} · over {{bass}}"
+    },
+    "staff": {
+      "yours": "What you wrote",
+      "correct": "What was wanted"
     }
   }
 }

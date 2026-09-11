@@ -970,6 +970,19 @@ Reading exercises fetch their samples on that first press rather than up
 front. The piano is tens of megabytes and most reading rounds never ask for
 it; a hearing exercise preloads, because it plays by itself.
 
+**The frame around the notation is the same whether or not it is pressable**,
+and that is load-bearing rather than tidiness. It used not to be: a plain score
+was a direct child of the stretching row, so a box capped below the room
+available sat at the _top_ of it, while the button branch centred its contents
+and took a little width for its own padding. Since a reading question's play
+button appears only when the answer does, the notation **shifted and resized at
+the exact moment the answer arrived**. Nothing showed it up while one staff was
+ever on screen at a time; two staves side by side made it obvious, one drawn
+higher and larger than the other. jsdom has no layout engine, so what
+`PlayableScore.test.tsx` holds instead is the thing that decided it: both
+branches wrap the score in one shared frame, and the button may only add hover
+and press feedback on top.
+
 `PlayDirection` (`harmonic | ascending | descending`) decides three things at
 once: how the interval is played, how it is engraved, and **which note is on
 screen before the answer**. The note heard first is the note shown first, so a
@@ -1259,6 +1272,19 @@ the keyboard so the two cannot disagree about what was written. v1 forbids
 doubling: the answer is the set of _distinct_ notes, which is what makes the
 chord exactly fillable and so what lets the keyboard keep the no-confirm-key
 rule.
+
+**A wrong chord is not replaced by the right one.** Swapping one for the other
+says you were wrong and says nothing else; what is worth seeing is which note
+moved, and that needs both on the page at once. `GrandStaffScore` takes an
+`answer` and draws the two side by side, each named under its own staff. They
+are separate renders rather than two measures of one, because the first measure
+of a system starts after the clef and the signature — two measures are not
+evenly split, so a caption row under them would not line up with what it names.
+
+The play button goes on the right-hand one only. Realising sounds nothing while
+the question is up, since the chord _is_ the answer, so after a wrong one the
+thing the player has not yet heard is the chord that was wanted; two play
+buttons side by side would be two ways of asking which.
 
 **A row keeps the bass line and the figures and nothing else.** The chord is
 what the figure resolves to, so storing it would be a second copy that could

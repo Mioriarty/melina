@@ -63,11 +63,20 @@ export function RealizingRoundScreen({
   const revealed = phase.name === 'revealed'
   const wrong = revealed && !phase.answer.correct
 
+  // What the player wrote, which stays on the page whatever the verdict was.
   const events = question.events.map((event, index) => ({
     bass: event.bass,
     figures: event.figures,
-    // Once it is answered and wrong, the staff shows the chord that was wanted.
-    chord: wrong ? event.chord : chordPitches(draft, index),
+    chord: chordPitches(draft, index),
+  }))
+
+  // **A wrong chord is not replaced by the right one; the two are shown side by
+  // side.** Swapping one for the other says you were wrong and nothing else,
+  // and what is worth seeing is which note moved.
+  const answer = question.events.map((event) => ({
+    bass: event.bass,
+    figures: event.figures,
+    chord: event.chord,
   }))
 
   return (
@@ -84,6 +93,7 @@ export function RealizingRoundScreen({
         <GrandStaffScore
           keySignature={question.keySignature}
           events={events}
+          {...(wrong ? { answer } : {})}
           {...(revealed ? { onPlay, status: playStatus } : {})}
         />
       }

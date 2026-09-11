@@ -302,6 +302,10 @@
     },
     "summary": {
       "subject": "{{figure}} · über {{bass}}"
+    },
+    "staff": {
+      "yours": "Deine Eingabe",
+      "correct": "Richtig wäre"
     }
   }
 }

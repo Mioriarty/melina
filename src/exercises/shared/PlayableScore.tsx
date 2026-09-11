@@ -70,10 +70,29 @@ export function PlayableScore({
     ...(profile === undefined ? {} : { profile }),
   }
 
+  /**
+   * **The frame is the same whether or not it is pressable.**
+   *
+   * It used not to be: a plain score was a direct child of the stretching row,
+   * so a box capped below the room available sat at the *top* of it, while the
+   * button branch centred its contents — and the button's own padding left it
+   * a little narrower besides. Nothing showed that up while only one staff was
+   * ever on screen, but it meant a reading question's notation shifted and
+   * resized the moment its answer arrived and the play button appeared with
+   * it. The comparison of two staves side by side is what finally made it
+   * visible: one drawn higher and larger than the other.
+   */
+  const frame = cn(
+    'relative flex h-full min-h-0 max-w-full flex-1 items-center justify-center',
+    'rounded-2xl px-2 py-1',
+  )
+
   return (
     <div className="flex min-h-0 w-full max-w-full flex-1 items-stretch justify-center">
       {onPlay === undefined ? (
-        <Score className={box} mei={mei} label={label} {...paper} />
+        <div className={frame}>
+          <Score className={box} mei={mei} label={label} {...paper} />
+        </div>
       ) : (
         <button
           type="button"
@@ -84,8 +103,8 @@ export function PlayableScore({
           // image inside it, so the description has to be here or it is lost.
           aria-label={t('play.scoreLabel', { notes: label })}
           className={cn(
-            'relative flex h-full min-h-0 max-w-full flex-1 items-center justify-center',
-            'rounded-2xl px-2 py-1 transition-[background-color,transform] duration-150',
+            frame,
+            'transition-[background-color,transform] duration-150',
             // The press has to be felt on a touch screen, where there is no
             // hover to say a thing is pressable and nothing else answers a
             // tap: the notes are the button, and a button that does not move
