@@ -117,6 +117,41 @@ export function draftPitches(draft: ChordDraft): readonly (readonly Pitch[])[] {
   return voiceChords(draft.chords)
 }
 
+/**
+ * Where a note is, or would be if it were pressed now.
+ *
+ * **What you see is what you get**: the realising keyboard draws each key as
+ * the note that pressing it would actually put on the staff, octave and all,
+ * so the row is a preview of the chord rather than a row of names. That can
+ * only be answered by the thing that decides where notes go, and it has to be
+ * answered by *the same* one the staff reads or the two would disagree — so it
+ * is `voiceChords` here as everywhere else, run over the draft the press would
+ * produce.
+ *
+ * A note already in the chord cannot be pressed again, and there the honest
+ * answer is where it already sits: the key is showing the note it stands for,
+ * which is on the staff.
+ *
+ * Once every chord is written there is no next press, and the key shows where
+ * the note would open a chord after the last one — which is what it will mean
+ * again the moment there is somewhere to press.
+ */
+export function placedPitch(draft: ChordDraft, note: PitchClass): Pitch | undefined {
+  const index = currentEvent(draft)
+  if (index >= draft.chords.length) {
+    const after = [...draft.chords, [note]]
+    return voiceChords(after)[after.length - 1]?.[0]
+  }
+
+  const key = tonicKey(note)
+  const at = notesAt(draft, index).findIndex((placed) => tonicKey(placed) === key)
+  const chords = draft.chords.map((chord, on) =>
+    on === index && at === -1 ? [...chord, note] : chord,
+  )
+  const voiced = voiceChords(chords)[index] ?? []
+  return voiced[at === -1 ? voiced.length - 1 : at]
+}
+
 /** Where the notes placed under one chord slot actually sit. */
 export function chordPitches(draft: ChordDraft, index: number): readonly Pitch[] {
   return draftPitches(draft)[index] ?? []

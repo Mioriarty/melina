@@ -3,6 +3,11 @@ import { describe, expect, it } from 'vitest'
 import { diatonicValue, pitchKey } from '@/lib/music/pitch'
 import type { PitchClass } from '@/lib/music/scale'
 
+import { OPENING_OCTAVE } from '@/exercises/thoroughbass-shared/voicing'
+import { LETTERS } from '@/lib/music/pitch'
+
+import type { ChordDraft } from './draft'
+
 import {
   canPlace,
   canRemove,
@@ -13,6 +18,7 @@ import {
   emptyChordDraft,
   isFull,
   place,
+  placedPitch,
   removeLast,
 } from './draft'
 
@@ -120,5 +126,73 @@ describe('where the next press goes', () => {
     let draft = emptyChordDraft([1])
     draft = place(draft, note('E'))
     expect(currentSlot(draft, [1])).toBeUndefined()
+  })
+})
+
+describe('what the keyboard shows', () => {
+  // **What you see is what you get.** Each key of the realising keyboard draws
+  // the note that pressing it would put on the staff, octave and all, so the
+  // row is a preview of the chord rather than a row of names.
+  const everyLetter = LETTERS.map((letter) => note(letter))
+
+  /** What a key would draw, as a name — `undefined` if it would draw nothing. */
+  const shows = (draft: ChordDraft, wanted: PitchClass) => {
+    const placed = placedPitch(draft, wanted)
+    return placed === undefined ? undefined : pitchKey(placed)
+  }
+
+  it('is exactly what the staff would get, for every key', () => {
+    // The property the whole thing rests on. Two answers to where a note sits
+    // — one for the key and one for the staff — is two answers that can
+    // disagree, and the player would be the one to find out.
+    const drafts = [
+      emptyChordDraft([3, 2]),
+      place(emptyChordDraft([3, 2]), note('B')),
+      place(place(emptyChordDraft([3, 2]), note('B')), note('D')),
+    ]
+
+    for (const draft of drafts) {
+      for (const wanted of everyLetter) {
+        if (!canPlace(draft, wanted)) continue
+        const landed = chordPitches(place(draft, wanted), currentEvent(draft))
+        const top = landed[landed.length - 1]
+        expect(shows(draft, wanted), wanted.letter).toBe(
+          top === undefined ? undefined : pitchKey(top),
+        )
+      }
+    }
+  })
+
+  it('opens the row where an opening chord opens', () => {
+    const draft = emptyChordDraft([3])
+    for (const wanted of everyLetter) {
+      expect(placedPitch(draft, wanted)?.octave, wanted.letter).toBe(OPENING_OCTAVE)
+    }
+  })
+
+  it('climbs as the chord fills, because the notes stack upward', () => {
+    const draft = place(emptyChordDraft([3]), note('E'))
+    // Close position: the next note goes at the lowest place above the last.
+    expect(shows(draft, note('F'))).toBe('F4')
+    expect(shows(draft, note('D'))).toBe('D5')
+  })
+
+  it('shows a note already placed where it already sits', () => {
+    // Such a key cannot be pressed, and where the note it names is standing is
+    // the only true thing left for it to say.
+    const draft = place(place(emptyChordDraft([3]), note('B')), note('D'))
+    expect(canPlace(draft, note('B'))).toBe(false)
+    expect(shows(draft, note('B'))).toBe('B4')
+    expect(shows(draft, note('D'))).toBe('D5')
+  })
+
+  it('still answers once every chord is written', () => {
+    // The keyboard fades rather than emptying: a key that loses its picture at
+    // the moment of answering resizes under the hand that just pressed it.
+    const draft = place(emptyChordDraft([1]), note('E'))
+    expect(isFull(draft)).toBe(true)
+    for (const wanted of everyLetter) {
+      expect(placedPitch(draft, wanted), wanted.letter).toBeDefined()
+    }
   })
 })

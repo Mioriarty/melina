@@ -149,8 +149,17 @@ async function click(text) {
         const wanted = ${JSON.stringify(text)}.toLowerCase()
         // The accessible name may sit on a descendant: an icon-only button
         // carries it on the <svg> inside it, and that is all such a button says.
+        // Engraved notation is text to the DOM: a Verovio render carries its
+        // own stylesheet and a "engraved by verovio" credit inside the <svg>,
+        // so a keyboard key drawing a note answers to almost any letter you
+        // ask for. Only what a person can read counts as the name.
+        const visible = (el) => {
+          const copy = el.cloneNode(true)
+          for (const drawing of copy.querySelectorAll('svg')) drawing.remove()
+          return copy.textContent || ''
+        }
         const name = (el) => {
-          const parts = [el.textContent || '', el.getAttribute('aria-label') || '',
+          const parts = [visible(el), el.getAttribute('aria-label') || '',
                          el.getAttribute('title') || '']
           for (const inner of el.querySelectorAll('[aria-label], [title]')) {
             parts.push(inner.getAttribute('aria-label') || '', inner.getAttribute('title') || '')

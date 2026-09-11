@@ -10,7 +10,7 @@ import {
 } from '@/lib/music/pitch'
 import type { PitchClass } from '@/lib/music/scale'
 
-import { DEFAULT_REGISTER, KEY_OCTAVE, voiceChord, voiceChords } from './voicing'
+import { DEFAULT_REGISTER, OPENING_OCTAVE, voiceChord, voiceChords } from './voicing'
 
 /**
  * Where a chord sits.
@@ -36,8 +36,8 @@ describe('a chord on its own', () => {
     // triad over G sat a sixth above one over C, so two questions in a row
     // could be drawn in quite different places for no reason a player could
     // see.
-    const low = diatonicValue(pitch('C', 0, KEY_OCTAVE))
-    const high = diatonicValue(pitch('B', 0, KEY_OCTAVE))
+    const low = diatonicValue(pitch('C', 0, OPENING_OCTAVE))
+    const high = diatonicValue(pitch('B', 0, OPENING_OCTAVE))
 
     for (const letter of ['C', 'D', 'E', 'F', 'G', 'A', 'B']) {
       const first = opensOn([pc(letter), pc('D')])
@@ -49,9 +49,9 @@ describe('a chord on its own', () => {
 
   it('opens exactly where the keyboard drew the key', () => {
     // Which is what makes a fixed row of keys honest for an opening chord: the
-    // key shows the note in `KEY_OCTAVE`, and that is where it lands.
+    // key shows the note in `OPENING_OCTAVE`, and that is where it lands.
     for (const letter of ['C', 'D', 'E', 'F', 'G', 'A', 'B']) {
-      expect(opensOn([pc(letter)])?.octave, letter).toBe(KEY_OCTAVE)
+      expect(opensOn([pc(letter)])?.octave, letter).toBe(OPENING_OCTAVE)
     }
   })
 

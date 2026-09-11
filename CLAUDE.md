@@ -311,7 +311,11 @@ it that way.
   gets past the level list and into a round, since a level starts one in the
   same tap. It matches an **accessible name on a descendant** as well as
   text, because an icon-only button — the ✓ on the figure keyboard, backspace —
-  says nothing in its text at all.
+  says nothing in its text at all. **Engraved notation is not part of the
+  name**: a Verovio render is `<text>` and a stylesheet to the DOM, so a
+  keyboard key drawing a note answered to almost any letter asked of it, and
+  `--click "F"` pressed the C.
+
 - `--size WxH` is the viewport and `--wait` the settle time after each click.
   The default of 1200ms is for the engraver: it is 7 MB of WebAssembly and the
   first render waits for it.
@@ -1554,18 +1558,33 @@ intervals above its bass and not as degrees of a key. It autosubmits when the
 chord is full and keeps the no-confirm-key rule, which is the honest difference
 from its sibling.
 
-**Each key draws the note, not the octave it will land in.** The row is the same
-seven notes in the same places at every moment of every question, which is what
-a row of keys should be — and it is honest rather than a simplification: the
-player is choosing a _note_, and where it sits is the app's business, since a
-figure says which notes and never where they sit.
+**Each key draws the note that pressing it would write, octave and all.** What
+you see is what you get: the row is a preview of the chord being built, so the
+second note of a close-position chord is drawn above the first and a
+suspension's resolution is drawn where the resolution goes.
 
-The key faces used to show live placement, which stopped being possible once
-the staff started voicing each chord to follow the one before it: the row would
-have re-ordered itself between the two halves of a suspension. What is kept is
-the part that can be kept — `KEY_OCTAVE` is the octave the keys are drawn in,
-and `DEFAULT_REGISTER` is chosen so that an _opening_ chord lands there exactly,
-so pressing a key for a first chord puts the note where the key showed it.
+`placedPitch` answers it, and it answers by running the **same** `voiceChords`
+the staff runs, over the draft the press would produce. That is the whole of
+why it can be trusted: two answers to where a note sits — one for the key and
+one for the staff — is two answers that can disagree, and the player is who
+would find out.
+
+So the faces climb as a chord fills, and a chord that has to be moved bodily to
+fit the staff takes the row with it. That is the cost of the principle and it
+is worth paying: a key saying `C` when what arrives is a `C` an octave higher
+is a key that has to be learnt rather than read. The keys themselves never move
+— seven letters in seven places — and only what is drawn on them changes.
+
+Two kinds of key cannot be pressed and still have to say something. A note
+already in the chord shows **where it already sits**, which is the only true
+thing left for it to say; and once every chord is written, a key shows where
+its note would open a chord after the last one, so the row fades rather than
+emptying at the moment of answering — a key that loses its picture there
+resizes under the hand that just pressed it.
+
+The row before anything is pressed is still `OPENING_OCTAVE`, because
+`DEFAULT_REGISTER` is chosen so an opening chord lands there whatever its
+lowest letter is. That is now a consequence rather than a rule.
 
 ### The levels, and the ladder they climb
 

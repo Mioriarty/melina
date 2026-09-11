@@ -41,13 +41,13 @@ import type { PitchClass } from '@/lib/music/scale'
  * Where a chord sits when there is nothing before it to follow.
  *
  * Chosen so the first note of a first chord lands in `C4`–`B4` whatever its
- * letter — the same octave the keyboard draws its keys in, so pressing a key
- * for an opening chord puts the note exactly where the key showed it.
+ * letter, which is the octave a question opens in and therefore the one the
+ * realising keyboard's keys are drawn in before anything has been pressed.
  */
 export const DEFAULT_REGISTER: Pitch = pitch('F', 0, 4)
 
-/** Which octave a note is written in on a keyboard key. */
-export const KEY_OCTAVE = 4
+/** The octave an opening chord begins in, whatever its lowest letter is. */
+export const OPENING_OCTAVE = 4
 
 /**
  * The octave of `note` that lies closest to `reference`.

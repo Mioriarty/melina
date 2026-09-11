@@ -8,9 +8,9 @@ import {
   canRemove,
   isFull,
   place,
+  placedPitch,
   type ChordDraft,
 } from '@/exercises/thoroughbass-realizing/draft'
-import { KEY_OCTAVE } from '@/exercises/thoroughbass-shared/voicing'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { alterationInKey, type KeySignatureId } from '@/lib/music/keySignature'
 import { isAlteration, LETTERS, type Letter } from '@/lib/music/pitch'
@@ -35,15 +35,22 @@ import { Switch } from './Switch'
  * read as intervals above its bass and not as degrees of a key. They go through
  * `useMusicNames`, since the note English calls B is H in German.
  *
- * **Each key draws the note, not the octave it will land in.** The row is the
- * same seven notes in the same places at every moment of every question, which
- * is what a row of keys should be.
+ * **Each key draws the note that pressing it would write, octave and all.**
+ * What you see is what you get: the row is a preview of the chord being built,
+ * so the second note of a close-position chord is drawn above the first and
+ * the resolution of a suspension is drawn where the resolution goes. It comes
+ * from `placedPitch`, which runs the same `voiceChords` the staff does over
+ * the draft the press would produce — one answer to where a note sits, never
+ * two that could disagree.
  *
- * That is honest rather than a simplification: the player is choosing a *note*,
- * and where it sits is the app's business — a figure says which notes and never
- * where they sit, so octave is never graded and never the player's to pick. The
- * staff voices each chord to follow the one before it, which a key face cannot
- * show without re-ordering itself between chords.
+ * So the faces climb as a chord fills, and a chord that has to be moved bodily
+ * to fit the staff takes the row with it. That is the cost of the principle
+ * and it is worth paying: a key that says `C` when what arrives is a `C` an
+ * octave higher is a key that has to be learnt rather than read.
+ *
+ * The keys themselves never move — seven letters in seven places — and only
+ * what is drawn on them changes. A note already in the chord shows where it
+ * already sits, which is the only true thing such a key can say.
  *
  * There is **no confirm key**: the chord is exactly fillable, every key that
  * would overfill is disabled, and the last press left is the one that completes
@@ -197,7 +204,7 @@ export function ChordKeyboard({
         {LETTERS.map((letter) => {
           const note = noteFor(letter)
           const allowed = live && note !== undefined && canPlace(draft, note)
-          const pitch = note === undefined ? undefined : { ...note, octave: KEY_OCTAVE }
+          const pitch = note === undefined ? undefined : placedPitch(draft, note)
 
           return (
             <button
