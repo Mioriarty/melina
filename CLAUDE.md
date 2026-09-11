@@ -1373,10 +1373,17 @@ on the page.
   attribute form is accepted and draws nothing.
 - **An accidental inside a figure must be the character**, `♯`, not
   `<accid accid="s"/>`, which is accepted and then dropped.
-- **`@extender` draws no line.** The Verlängerungszeichen therefore cannot come
-  from the engraver today, which is what blocks continuation lines rather than
-  anything in the model. The test asserts its absence so it starts failing on
-  the day Verovio grows it.
+- **`@extender` draws no line**, in context or alone. MEI has it on an `<f>`
+  for exactly this and Verovio accepts it; nothing comes out. So the dash that
+  joins a suspension's two figures — `4 – 3`, which is what the keyboard's dash
+  key types and therefore has to be visible — is **part of the figure's text**,
+  appended by `figureLines` when another figure follows under the same bass.
+  The test asserts the engraver's silence, so it starts failing on the day
+  Verovio grows a real extender and this can stop faking it.
+
+  A true Verlängerungszeichen, held across a _moving_ bass, is still out of
+  reach for the same reason — and that is what blocks continuation lines, rather
+  than anything in the model.
 
 **One measure per bass note**, so there is no metre to declare and no bar to
 fill: a figured bass here is a succession of sonorities rather than a piece of

@@ -63,7 +63,13 @@ const pixels = (svg: string) => {
 /** The text of every figure line, in the order they were drawn. */
 const figureText = (svg: string) =>
   [...svg.matchAll(/class="f"[^>]*>([\s\S]*?)<\/tspan>\s*<\/tspan>/g)].map((match) =>
-    (match[1] ?? '').replace(/<[^>]+>/g, '').replace(/\s+/g, ''),
+    // Whitespace is collapsed rather than stripped: the dash that joins a
+    // suspension's two figures is `4 –`, and removing the space would hide
+    // whether it was drawn with one.
+    (match[1] ?? '')
+      .replace(/<[^>]+>/g, '')
+      .replace(/\s+/g, ' ')
+      .trim(),
   )
 
 describe('the grand staff', () => {
@@ -154,13 +160,32 @@ describe('the figures', () => {
     expect(altered.length).toBeGreaterThan(plain.length * 5)
   })
 
-  it('puts two figures under one bass note', async () => {
-    // A suspension is two figures under one bass, and it has to be expressible
-    // before it is worth building the rest of one. Anchored by timestamp rather
-    // than to the note, because both cannot be on the same note.
+  it('puts two figures under one bass note, joined by a dash', async () => {
+    // A suspension is two figures under one bass. Anchored by timestamp rather
+    // than to the note, because both cannot be on the same note — and joined
+    // by the dash it is printed with, which is also the key that types it.
     const svg = await render([event(pitch('C', 0, 3), ['4', '3'], TRIAD)])
     expect(countOf(svg, 'harm')).toBe(2)
-    expect(figureText(svg)).toEqual(['4', '3'])
+    expect(figureText(svg)).toEqual(['4 –', '3'])
+  })
+
+  it('draws the dash as text, because the engraver will not draw it', async () => {
+    // MEI has `@extender` on an `<f>` for exactly this and Verovio accepts it,
+    // but nothing comes out — in context or alone. So the dash is part of the
+    // figure's text instead. This is the test that says when that stops being
+    // necessary.
+    const withExtender = thoroughbassMei({
+      keySignature: '0',
+      events: [event(pitch('C', 0, 3), ['4', '3'], TRIAD)],
+    }).replace('<f>', '<f extender="true">')
+
+    const svg = await renderMei(withExtender, undefined, thoroughbassProfile(2, 0))
+    expect(countOf(svg, 'extender')).toBe(0)
+  })
+
+  it('leaves a lone figure undashed', async () => {
+    const svg = await render([event(pitch('E', 0, 3), ['6'], TRIAD)])
+    expect(figureText(svg)).toEqual(['6'])
   })
 
   it('leaves the digits as text the app can restyle', async () => {

@@ -44,8 +44,34 @@ export function signText(sign: FigureSign): string {
 }
 
 /** A whole figure, top line first — the order it is read down the column in. */
-export function figureLines(figure: Figure): readonly string[] {
-  return [...figure.signs].sort((a, b) => b.number - a.number).map(signText)
+/**
+ * The dash that joins a figure to the one after it under the same bass note.
+ *
+ * `4 – 3` is how a suspension is printed, and it is what the keyboard's dash
+ * key types — so it has to be drawn, or pressing that key changes nothing a
+ * player can see.
+ *
+ * **It has to be part of the text.** MEI has `@extender` on an `<f>` for
+ * exactly this, Verovio accepts it, and it draws nothing: the figures come out
+ * as two bare numbers with a gap between them, in context and out of it.
+ * `thoroughbassVerovio.test.ts` pins that, so the day the engraver grows a real
+ * extender this can stop faking it.
+ */
+const CONTINUES = ' –'
+
+/**
+ * A whole figure, top line first — the order it is read down the column in.
+ *
+ * `followed` appends the dash to **every** line rather than to the column as a
+ * whole, which is the only thing a stacked `<fb>` can express. For the
+ * suspensions the app teaches that is exactly right, because both halves are a
+ * single line; on a taller column it reads as "each of these moves", which is
+ * at worst more emphatic than an engraver would be.
+ */
+export function figureLines(figure: Figure, followed = false): readonly string[] {
+  return [...figure.signs]
+    .sort((a, b) => b.number - a.number)
+    .map((sign) => `${signText(sign)}${followed ? CONTINUES : ''}`)
 }
 
 /** The same thing on one line, for a label or a summary chip: `6/5`, `♯`. */

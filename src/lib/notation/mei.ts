@@ -882,7 +882,9 @@ export function thoroughbassMei({
       // timestamp, which is what a suspension looks like on the page.
       const figures = event.figures
         .map((figure, position) => {
-          const lines = figureLines(figure)
+          // A figure with another after it under the same bass carries the
+          // dash that joins the two — `4 – 3`.
+          const lines = figureLines(figure, position < event.figures.length - 1)
           if (lines.length === 0) return ''
           const anchor =
             event.figures.length === 1
