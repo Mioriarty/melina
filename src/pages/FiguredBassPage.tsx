@@ -148,18 +148,11 @@ export default function FiguredBassPage() {
 
         <Section title={t('guide:figures.suspensions.title')}>
           <p>{t('guide:figures.suspensions.body')}</p>
-          <FigureRow>
-            <FigureExample
-              {...GUIDE_EXAMPLES.suspended}
-              sounding
-              caption={t('guide:figures.suspensions.held')}
-            />
-            <FigureExample
-              {...GUIDE_EXAMPLES.resolved}
-              sounding
-              caption={t('guide:figures.suspensions.resolved')}
-            />
-          </FigureRow>
+          <FigurePair
+            {...GUIDE_EXAMPLES.suspension}
+            writtenCaption={t('guide:figures.suspensions.held')}
+            playedCaption={t('guide:figures.suspensions.resolved')}
+          />
           <p>{t('guide:figures.suspensions.after')}</p>
         </Section>
 

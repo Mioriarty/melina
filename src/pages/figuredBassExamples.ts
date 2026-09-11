@@ -17,7 +17,7 @@ import type { KeySignatureId } from '@/lib/music/keySignature'
 export interface GuideExample {
   /** A pitch key, `E3`. */
   bass: string
-  /** A figure key, `6/5`. Empty is an unfigured bass. */
+  /** A figure key, `6/5`. Empty is an unfigured bass; a dash is a suspension. */
   figure: string
   keySignature: KeySignatureId
 }
@@ -50,9 +50,10 @@ export const GUIDE_EXAMPLES = {
   groveFifth: { bass: 'Eb3', figure: 'b5', keySignature: '1s' },
 
   /**
-   * A suspension, as its two halves. Written separately because the page shows
-   * them side by side and names each: the held chord, and what it resolves to.
+   * A suspension: two figures under **one** held bass note, which is the whole
+   * of what makes it a suspension. Drawn as one staff with the chord moving
+   * over a bass that stays put — two separate staves would be two questions,
+   * not a suspension.
    */
-  suspended: { bass: 'G3', figure: '4', keySignature: '0' },
-  resolved: { bass: 'G3', figure: '', keySignature: '0' },
+  suspension: { bass: 'G3', figure: '4-3', keySignature: '0' },
 } satisfies Record<string, GuideExample>

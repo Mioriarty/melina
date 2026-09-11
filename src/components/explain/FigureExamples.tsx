@@ -1,11 +1,10 @@
 import { useTranslation } from 'react-i18next'
 
 import { Score } from '@/components/notation/Score'
-import { voiceChord } from '@/exercises/thoroughbass-shared/voicing'
+import { describeEvent, parseWanted } from '@/exercises/thoroughbass-shared/generate'
 import { useMusicNames } from '@/hooks/useMusicNames'
-import { figurePitches, parseFigureKey } from '@/lib/music/figuredBass'
 import type { KeySignatureId } from '@/lib/music/keySignature'
-import { parsePitch, pitch, type Pitch } from '@/lib/music/pitch'
+import { parsePitch } from '@/lib/music/pitch'
 import { figureText } from '@/lib/notation/figureNotation'
 import { thoroughbassMei } from '@/lib/notation/mei'
 import { THOROUGHBASS_EXAMPLE_PROFILE } from '@/lib/notation/verovio'
@@ -22,15 +21,21 @@ import { cn } from '@/lib/utils/cn'
  *
  * The one thing written by hand is which bass and key each figure is *shown*
  * over, which is an illustration rather than a rule.
+ *
+ * The event itself comes from `describeEvent`, the same function the generator
+ * assembles a question with — so where the notes sit, and how many chords a
+ * bass note carries, are the exercise's own answers rather than a second set
+ * kept in step by hand.
  */
-
-/** Where an example chord sits: high enough to be unmistakably the treble staff. */
-const FLOOR: Pitch = pitch('B', 0, 3)
 
 export interface FigureExampleProps {
   /** A pitch key, `G3`. */
   bass: string
-  /** A figure key, `6/5`. Empty is an unfigured bass. */
+  /**
+   * A figure key, `6/5`. Empty is an unfigured bass, and a dash makes it a
+   * suspension — `4-3` is two figures under the one held bass note, drawn as
+   * one staff with the chord moving over it, exactly as a question is.
+   */
   figure: string
   keySignature?: KeySignatureId
   /**
@@ -55,16 +60,18 @@ export function FigureExample({
   const names = useMusicNames()
 
   const root = parsePitch(bass)
-  const parsed = parseFigureKey(figure)
-  const notes =
-    root === undefined || parsed === undefined
+  const figures = parseWanted(figure)
+  const event =
+    root === undefined || figures === undefined
       ? undefined
-      : figurePitches(root, keySignature, parsed)
+      : describeEvent(root, keySignature, figures)
 
-  if (root === undefined || parsed === undefined || notes === undefined) return null
+  if (root === undefined || figures === undefined || event === undefined) return null
 
-  const chord = sounding ? voiceChord(FLOOR, [...notes].reverse()) : []
-  const printed = figureText(parsed)
+  // Off is what the page actually prints: the bass and its figures, with the
+  // staff above still empty.
+  const chords = sounding ? event.chords : event.chords.map(() => [])
+  const printed = figures.map(figureText).join(' – ')
 
   return (
     <figure className={cn('m-0 grid justify-items-center gap-2', className)}>
@@ -81,7 +88,7 @@ export function FigureExample({
           className="h-full min-h-0 flex-1"
           mei={thoroughbassMei({
             keySignature,
-            events: [{ bass: root, figures: [parsed], chords: [chord] }],
+            events: [{ bass: root, figures, chords }],
           })}
           profile={THOROUGHBASS_EXAMPLE_PROFILE}
           label={t('figures.exampleLabel', {

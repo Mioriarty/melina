@@ -1600,6 +1600,14 @@ of those is a thing you can only really see, so each has a staff under it, and
 the staves come from `figurePitches` and `voiceChord` — the same two functions
 the exercises grade against.
 
+The examples are built by `describeEvent` — the same function the generator
+assembles a question with — so where the notes sit and how many chords a bass
+note carries are the exercise's own answers rather than a second set kept in
+step by hand. It is also what lets an example be a **suspension**: `4-3` is two
+figures under one held bass note, drawn as one staff with the chord moving over
+a bass that stays put. Two staves side by side would be two questions, which is
+what it was at first and what made the section say nothing.
+
 **Which bass and key each example uses is data, in `figuredBassExamples.ts`, and
 that is not tidiness.** A page that teaches "a figure writes only what is not
 obvious" and then draws `♭5/3` — with a 3 the rule it has just stated says not

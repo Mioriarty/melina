@@ -2,15 +2,11 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
 
-import {
-  canonicalFigures,
-  figureKey,
-  figurePitches,
-  parseFigureKey,
-  type Figure,
-} from '@/lib/music/figuredBass'
+import { parseWanted } from '@/exercises/thoroughbass-shared/generate'
+import { canonicalFigures, figureKey, figurePitches } from '@/lib/music/figuredBass'
 import { i18n } from '@/lib/i18n'
 import { parsePitch, type Pitch } from '@/lib/music/pitch'
+import type { PitchClass } from '@/lib/music/scale'
 
 import FiguredBassPage from './FiguredBassPage'
 import { GUIDE_EXAMPLES } from './figuredBassExamples'
@@ -127,34 +123,51 @@ describe('what the examples are allowed to print', () => {
     // **The guide may not contradict itself.** A page that teaches "a figure
     // writes only what is not obvious" and then draws `♭5/3` — with a 3 the
     // rule it has just stated says not to write — is worse than no page, and
-    // nothing about the types would catch it. Held to the same
-    // `canonicalFigures` the figuring exercise grades against.
+    // nothing about the types would catch it.
+    //
+    // Held to the same `canonicalFigures` the figuring exercise grades
+    // against, position by position, so a suspension's resolution is checked
+    // against the chord it actually follows rather than in isolation.
     for (const [name, example] of Object.entries(GUIDE_EXAMPLES)) {
       const bass = parsePitch(example.bass) as Pitch
-      const figure = parseFigureKey(example.figure) as Figure
+      const figures = parseWanted(example.figure)
       expect(bass, name).toBeDefined()
-      expect(figure, name).toBeDefined()
+      expect(figures, name).toBeDefined()
 
-      const notes = figurePitches(bass, example.keySignature, figure)
-      expect(notes, name).toBeDefined()
+      let previous: readonly PitchClass[] | undefined
+      ;(figures ?? []).forEach((figure, position) => {
+        const notes = figurePitches(bass, example.keySignature, figure)
+        expect(notes, `${name} at ${position}`).toBeDefined()
 
-      const accepted = canonicalFigures(bass, example.keySignature, notes ?? []).map(
-        figureKey,
-      )
-      expect(accepted, `${name} prints a figure that is not conventional`).toContain(
-        figureKey(figure),
-      )
+        const accepted = canonicalFigures(bass, example.keySignature, notes ?? [], {
+          afterAnother: position > 0,
+          ...(previous === undefined ? {} : { previous }),
+        }).map(figureKey)
+
+        expect(accepted, `${name} prints a figure that is not conventional`).toContain(
+          figureKey(figure),
+        )
+        previous = notes
+      })
     }
   })
 
   it('spells every example as a note that can be written', () => {
     for (const [name, example] of Object.entries(GUIDE_EXAMPLES)) {
       const bass = parsePitch(example.bass) as Pitch
-      const figure = parseFigureKey(example.figure) as Figure
-      for (const note of figurePitches(bass, example.keySignature, figure) ?? []) {
-        expect(Math.abs(note.alteration), name).toBeLessThanOrEqual(2)
+      for (const figure of parseWanted(example.figure) ?? []) {
+        for (const note of figurePitches(bass, example.keySignature, figure) ?? []) {
+          expect(Math.abs(note.alteration), name).toBeLessThanOrEqual(2)
+        }
       }
     }
+  })
+
+  it('draws a suspension as one staff, not as two', () => {
+    // Two separate staves would be two questions. What makes a suspension a
+    // suspension is that the bass note does not move.
+    const suspension = parseWanted(GUIDE_EXAMPLES.suspension.figure)
+    expect(suspension).toHaveLength(2)
   })
 })
 
