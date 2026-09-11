@@ -143,9 +143,16 @@ whole curriculum as a single journey. There is no map, no zoom, no drag and no
 list toggle; scrolling is the browser's own, which is what keeps it usable with
 a keyboard, a screen reader and a thumb without special cases.
 
-**The path opens braided and then merges.** Intervals run down the left, scales
-down the right, reading above hearing on both, and the two tracks join at the
-station below. Read across and it is the two subjects; read down and it is the
+**The path opens with an explainer, and then braids.** The Seven Modes stands
+alone at the top of the scales column and is joined to scale reading and to
+nothing else — not over the middle, which would read as the way in to the whole
+path and claim it comes before intervals too. It cannot go _into_ the right
+column instead: the two columns would no longer have their rows level, which is
+the thing the braid exists for. `GUIDE_DROP` is the room it takes, and
+`BRAID_TOP` is where the braid starts under it.
+
+Below that, intervals run down the left, scales down the right, reading above
+hearing on both, and the two tracks join at the station below. Read across and it is the two subjects; read down and it is the
 two ways of knowing one. Single file would have had to claim that scale reading
 comes after interval hearing, which is true of neither the music nor the player.
 
@@ -1657,12 +1664,20 @@ Corner rather than a line under the hint, so it is there the first time you meet
 the setting and invisible every time after.
 
 **A guide that has to be read before the exercise makes sense gets a station of
-its own.** That is a different thing from contextual help: the melodic shape
-page explains one setting to someone already in the exercise, while the figured
-bass page explains a _convention_ that nothing in the exercise can teach you,
-because canonical-required grading marks you wrong for a figure it never told
-you not to write. A question mark on a settings screen is where nobody meets it
-first, so it is also a stop on the path.
+its own.** That is a different thing from contextual help, and the melodic shape
+page is the one that is not: it explains a single setting to somebody already in
+the exercise, and there a question mark in the corner is exactly where it should
+be. The other two are stations. The figured bass page explains a _convention_
+that nothing in the exercise can teach you, because canonical-required grading
+marks you wrong for a figure it never told you not to write; the modes page
+carries the vocabulary all three scale exercises are built on, and the shortcut
+for it is the kind of thing you are told once and then have.
+
+**A question mark on a settings screen is where nobody meets it first**, and on
+a levels-first exercise that screen is behind Custom — so a guide that matters
+before the first round is a stop on the path as well. Both of them keep their
+question mark too: `?from=` says which exercise opened it, and with no `?from=`
+at all it came from the path and returns there.
 
 Guides are registered in the curriculum — `GuideDef`, on the category they
 serve — and `stations()` emits them **before** that category's exercises. They
@@ -1756,14 +1771,10 @@ Guides have their own `guide` translation namespace rather than living in
 ### The modes guide is the model read against major and minor
 
 `/guide/scales` writes the seven modes out and gives the shortcut for
-remembering them. It is **contextual help rather than a stop on the path**, and
-the line between the two is the one already drawn above: the figured bass guide
-exists because canonical-required grading marks a player wrong for a convention
-nothing in the exercise ever states, while the scale exercises teach their own
-vocabulary by asking about it. Nothing here is owed before a player may start,
-so it is the question mark in the corner of the **Modes** setting — on all
-three screens that have one, scale reading, scale hearing and scale degrees,
-with `?from=` saying which to return to.
+remembering them. It is **a stop on the path**, at the head of the scales
+column, because the modes are the vocabulary all three scale exercises are
+built on — and it is also the question mark in the corner of the **Modes**
+setting on all three of them, with `?from=` saying which to return to.
 
 **All seven are drawn on C.** It is the one thing that makes them comparable:
 the tonic never moves, so the only difference from one staff to the next is the

@@ -143,6 +143,10 @@
     "figured-bass": {
       "title": "Reading Figures",
       "blurb": "What the numbers under a bass note mean, and what they leave out."
+    },
+    "scales": {
+      "title": "The Seven Modes",
+      "blurb": "What each mode is, and the shortcut: major or minor with a note moved."
     }
   }
 }

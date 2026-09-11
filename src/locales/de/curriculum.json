@@ -143,6 +143,10 @@
     "figured-bass": {
       "title": "Ziffern lesen",
       "blurb": "Was die Zahlen unter einem Basston bedeuten — und was sie weglassen."
+    },
+    "scales": {
+      "title": "Die sieben Modi",
+      "blurb": "Was jeder Modus ist — und die Eselsbrücke: Dur oder Moll mit einem verschobenen Ton."
     }
   }
 }

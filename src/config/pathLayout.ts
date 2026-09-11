@@ -80,21 +80,45 @@ const BRAID_DROP = 225
 const INTERVAL_X = 26
 const SCALE_X = 74
 
+/**
+ * **The path opens with an explainer, and the braid starts below it.**
+ *
+ * The seven modes are the vocabulary of all three scale exercises, and the
+ * shortcut for remembering them is the kind of thing you are told once. So it
+ * stands at the head of the scales track rather than behind a question mark on
+ * a settings screen — which is behind Custom, where nobody meets it first.
+ *
+ * It sits **in the scales column rather than over the middle**, and it is
+ * joined only to scale reading. Centred it would read as the way in to the
+ * whole path, which would claim it comes before intervals too; it does not,
+ * and nothing leads into intervals at all.
+ *
+ * The braid itself is untouched below it. A guide inserted *into* the right
+ * column would have cost the thing the braid exists for — read across and it
+ * is the two subjects, read down and it is the two ways of knowing one — since
+ * the two columns would no longer have their rows level.
+ */
+const GUIDE_DROP = 170
+
+/** Where the braid begins, once the explainer above it has had its room. */
+const BRAID_TOP = PATH_TOP + 10 + GUIDE_DROP
+
 export const PATH_NODES: readonly PathNodePosition[] = [
-  { stationId: 'intervals/reading', x: INTERVAL_X + 2, y: PATH_TOP + 10 },
-  { stationId: 'scales/reading', x: SCALE_X - 2, y: PATH_TOP + 10 + BRAID_STAGGER },
-  { stationId: 'intervals/hearing', x: INTERVAL_X - 2, y: PATH_TOP + 10 + BRAID_DROP },
+  { stationId: 'guide/scales', x: SCALE_X - 4, y: PATH_TOP + 10 },
+  { stationId: 'intervals/reading', x: INTERVAL_X + 2, y: BRAID_TOP },
+  { stationId: 'scales/reading', x: SCALE_X - 2, y: BRAID_TOP + BRAID_STAGGER },
+  { stationId: 'intervals/hearing', x: INTERVAL_X - 2, y: BRAID_TOP + BRAID_DROP },
   {
     stationId: 'scales/hearing',
     x: SCALE_X + 2,
-    y: PATH_TOP + 10 + BRAID_DROP + BRAID_STAGGER,
+    y: BRAID_TOP + BRAID_DROP + BRAID_STAGGER,
   },
   // **The second braid.** Rhythmic Dictation and Scale Degrees stand side by
   // side: the *when* and the *what*, which melodic dictation needs both of and
   // which can be learned in either order. Staggered like the first braid, so
   // the pair still runs downhill and does not read as one wide row.
-  { stationId: 'dictation/rhythm', x: INTERVAL_X + 1, y: 580 },
-  { stationId: 'scales/degrees', x: SCALE_X - 1, y: 580 + BRAID_STAGGER },
+  { stationId: 'dictation/rhythm', x: INTERVAL_X + 1, y: 750 },
+  { stationId: 'scales/degrees', x: SCALE_X - 1, y: 750 + BRAID_STAGGER },
   // **Where the second braid merges.** Melodic dictation needs both of the
   // stations above it — the *when* and the *what* — and both of them join it.
   // It is the first station since the top of the path with two edges arriving.
@@ -103,7 +127,7 @@ export const PATH_NODES: readonly PathNodePosition[] = [
   // for: the next exercise stands beside it. Placed now rather than when that
   // arrives, so shipping it is a coordinate and not a re-layout of everything
   // below.
-  { stationId: 'dictation/short-melodies', x: 38, y: 860 },
+  { stationId: 'dictation/short-melodies', x: 38, y: 1030 },
   // **Thoroughbass takes the room Melodic Dictation was placed to leave**, and
   // stands off the path: the main route runs past it down the left of the
   // column while these three sit to the right, joined to each other and to
@@ -122,13 +146,13 @@ export const PATH_NODES: readonly PathNodePosition[] = [
   // downhill with a connector. Figuring first, because you can only realise a
   // figure you can read, and figuring is where the rules of omission are
   // learnt.
-  { stationId: 'guide/figured-bass', x: 68, y: 1015 },
-  { stationId: 'thoroughbass/figuring', x: 74, y: 1220 },
-  { stationId: 'thoroughbass/realizing', x: 62, y: 1445 },
-  { stationId: 'harmonic-prediction', x: 30, y: 1680 },
-  { stationId: 'harmonic-completion', x: 66, y: 1900 },
-  { stationId: 'counterpoint', x: 35, y: 2140 },
-  { stationId: 'daily', x: 62, y: 2350 },
+  { stationId: 'guide/figured-bass', x: 68, y: 1185 },
+  { stationId: 'thoroughbass/figuring', x: 74, y: 1390 },
+  { stationId: 'thoroughbass/realizing', x: 62, y: 1615 },
+  { stationId: 'harmonic-prediction', x: 30, y: 1850 },
+  { stationId: 'harmonic-completion', x: 66, y: 2070 },
+  { stationId: 'counterpoint', x: 35, y: 2310 },
+  { stationId: 'daily', x: 62, y: 2520 },
 ]
 
 /**
@@ -146,6 +170,9 @@ export interface PathEdge {
 }
 
 export const PATH_EDGES: readonly PathEdge[] = [
+  // The explainer at the head of the scales track, joined to it and to
+  // nothing else: it is not the way in to the path, only to the modes.
+  { from: 'guide/scales', to: 'scales/reading' },
   { from: 'intervals/reading', to: 'intervals/hearing' },
   { from: 'scales/reading', to: 'scales/hearing' },
   { from: 'intervals/hearing', to: 'dictation/rhythm' },

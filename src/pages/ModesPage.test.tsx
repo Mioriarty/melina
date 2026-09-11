@@ -7,6 +7,7 @@ import {
   modeSummary,
   degreeShorthand,
 } from '@/components/explain/modeSeries'
+import { orderedPathNodes } from '@/config/pathLayout'
 import { i18n } from '@/lib/i18n'
 import { intervalSemitones } from '@/lib/music/interval'
 import { getMode, MODE_IDS, type ModeId } from '@/lib/music/scale'
@@ -68,10 +69,36 @@ describe('the modes guide', () => {
   })
 
   it('goes back to the settings it was opened from, not to the level list', () => {
+    // The settings themselves survive in Dexie; which screen was showing does
+    // not, so the return trip has to say where to land.
     open()
 
     const back = screen.getByRole('link', { name: guide('back') })
     expect(back.getAttribute('href')).toBe('/train/scales/reading?screen=setup')
+  })
+
+  it('goes back to the path when that is where it was opened from', () => {
+    // Two ways in means two ways back, and no `?from=` at all is the station.
+    render(
+      <MemoryRouter initialEntries={['/guide/scales']}>
+        <ModesPage />
+      </MemoryRouter>,
+    )
+
+    const back = screen.getByRole('link', { name: guide('backToPath') })
+    expect(back.getAttribute('href')).toBe('/')
+  })
+
+  it('stands on the path before the scale exercises it serves', () => {
+    // A guide exists to be read first, so it cannot sit below the exercises
+    // that assume it. `orderedPathNodes` walks by position, not by registry.
+    const walked = orderedPathNodes().map((node) => node.station.id)
+    const guideAt = walked.indexOf('guide/scales')
+
+    expect(guideAt, 'the modes guide is not on the path').toBeGreaterThan(-1)
+    for (const id of ['scales/reading', 'scales/hearing', 'scales/degrees']) {
+      expect(walked.indexOf(id), id).toBeGreaterThan(guideAt)
+    }
   })
 })
 

@@ -77,6 +77,18 @@ export const CATEGORIES: readonly CategoryDef[] = [
     id: 'scales',
     icon: 'trendingUp',
     status: 'ready',
+    guides: [
+      {
+        // **The modes are the vocabulary of all three scale exercises**, and
+        // the shortcut for remembering them — lydian is major with a raised
+        // fourth — is the kind of thing you are told once and then have. A
+        // question mark on a settings screen is where nobody meets it first,
+        // and the settings screen itself is behind Custom.
+        id: 'scales',
+        icon: 'book',
+        status: 'ready',
+      },
+    ],
     exercises: [
       {
         id: 'hearing',
