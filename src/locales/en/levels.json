@@ -412,5 +412,122 @@
       "title": "Compound Figures",
       "blurb": "What Grove figures an eleventh and a thirteenth with, written out in full over a bass that does not move."
     }
+  },
+  "chord-reading": {
+    "sections": {
+      "triads": "Triads",
+      "sevenths": "Seventh chords",
+      "positions": "Positions"
+    },
+    "major-minor": {
+      "title": "Major & Minor",
+      "blurb": "The two everything else is heard against, on the white notes."
+    },
+    "all-triads": {
+      "title": "All Four Triads",
+      "blurb": "Diminished and augmented join them. Two small thirds, or two large ones."
+    },
+    "triad-inversions": {
+      "title": "Triads Inverted",
+      "blurb": "The same four, now with the third or the fifth in the bass."
+    },
+    "dominant-seventh": {
+      "title": "The Dominant Seventh",
+      "blurb": "One seventh chord among the triads it lives between."
+    },
+    "all-sevenths": {
+      "title": "All Five Sevenths",
+      "blurb": "Major, minor, dominant, half-diminished and diminished, side by side."
+    },
+    "seventh-inversions": {
+      "title": "Sevenths Inverted",
+      "blurb": "Four positions each, played as block chords."
+    },
+    "lagen": {
+      "title": "Top Voice",
+      "blurb": "Triads again, and now which note is on top is part of the answer."
+    },
+    "everything": {
+      "title": "Everything",
+      "blurb": "All nine, every position, every Lage — and the C-clefs."
+    }
+  },
+  "chord-hearing": {
+    "sections": {
+      "triads": "Triads",
+      "sevenths": "Seventh chords",
+      "positions": "Positions"
+    },
+    "major-minor": {
+      "title": "Major & Minor",
+      "blurb": "The two everything else is heard against, on the white notes."
+    },
+    "all-triads": {
+      "title": "All Four Triads",
+      "blurb": "Diminished and augmented join them. Two small thirds, or two large ones."
+    },
+    "triad-inversions": {
+      "title": "Triads Inverted",
+      "blurb": "The same four, now with the third or the fifth in the bass."
+    },
+    "dominant-seventh": {
+      "title": "The Dominant Seventh",
+      "blurb": "One seventh chord among the triads it lives between."
+    },
+    "all-sevenths": {
+      "title": "All Five Sevenths",
+      "blurb": "Major, minor, dominant, half-diminished and diminished, side by side."
+    },
+    "seventh-inversions": {
+      "title": "Sevenths Inverted",
+      "blurb": "Four positions each, played as block chords."
+    },
+    "lagen": {
+      "title": "Top Voice",
+      "blurb": "Triads again, and now which note is on top is part of the answer."
+    },
+    "everything": {
+      "title": "Everything",
+      "blurb": "All nine, every position, every Lage — and the C-clefs."
+    }
+  },
+  "chord-writing": {
+    "sections": {
+      "triads": "Triads",
+      "sevenths": "Seventh chords",
+      "positions": "Positions"
+    },
+    "major-minor": {
+      "title": "Major & Minor",
+      "blurb": "The two everything else is heard against, on the white notes."
+    },
+    "all-triads": {
+      "title": "All Four Triads",
+      "blurb": "Diminished and augmented join them. Two small thirds, or two large ones."
+    },
+    "triad-inversions": {
+      "title": "Triads Inverted",
+      "blurb": "The same four, now with the third or the fifth in the bass."
+    },
+    "dominant-seventh": {
+      "title": "The Dominant Seventh",
+      "blurb": "One seventh chord among the triads it lives between."
+    },
+    "all-sevenths": {
+      "title": "All Five Sevenths",
+      "blurb": "Major, minor, dominant, half-diminished and diminished, side by side."
+    },
+    "seventh-inversions": {
+      "title": "Sevenths Inverted",
+      "blurb": "Four positions each, played as block chords."
+    },
+    "lagen": {
+      "title": "Top Voice",
+      "blurb": "Triads again, and now which note is on top is part of the answer."
+    },
+    "everything": {
+      "title": "Everything",
+      "blurb": "All nine, every position, every Lage — and the C-clefs."
+    }
   }
 }

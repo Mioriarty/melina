@@ -195,5 +195,71 @@
       "hearing": "Scale Hearing"
     },
     "source": "Every scale and every row on this page is the app's own model evaluated, not a copy of it — so this page cannot come to describe something melina no longer does."
+  },
+  "chords": {
+    "title": "Chords",
+    "intro": "Nine sonorities: four triads and five seventh chords. Every one of them is a stack of thirds above a root, and everything you will be asked about them — what kind it is, which of its notes lies at the bottom, which one at the top — is a fact about that stack.",
+    "staff": "{{chord}}: {{pitches}}",
+    "plus": " + ",
+    "what": {
+      "title": "What a chord is here",
+      "body": "Take a note, put a third above it, then another third above that. Three notes is a triad; a fourth third on top makes a seventh chord. Which thirds you choose — major or minor — is the whole of what makes one chord sound different from another.",
+      "after": "And a chord here is a spelling, not a set of keys on a piano. C–E–G♯ and C–E–A♭ are the same three sounds and two different chords: the first is an augmented triad, the second an F minor triad in first inversion. What is written is what says which one is meant, and it is why every chord in melina is built by stacking intervals rather than by adding semitones."
+    },
+    "triads": {
+      "title": "The four triads",
+      "body": "All four are drawn on C, so the only thing that changes from one staff to the next is the accidentals. Under each one: its notes measured against the major scale, and the two thirds it is built from.",
+      "after": "Read the thirds and the four fall into place at once — major is a large third under a small one, minor is the other way round, diminished is two small ones and augmented is two large ones. That is the definition to carry into the hearing exercise, because it is the one you can hear."
+    },
+    "sevenths": {
+      "title": "The five seventh chords",
+      "body": "One more third on top of a triad. The dominant seventh is the one that is everywhere; the other four are the remaining stacks worth a name of their own.",
+      "after": "All five stand on C, and the last of them needs a double flat to do it. A diminished seventh above C is B double flat: count the thirds and there is nowhere else for it to go, because the seventh of the chord has to be a B of some kind. It is the one chord on this list that a reader regularly meets a double accidental in, and it is worth getting used to rather than around."
+    },
+    "table": {
+      "title": "All nine at a glance",
+      "body": "The same two readings side by side. Nothing in this table is written down anywhere in melina: it is the chord model measured, so if the model changed the table would change with it.",
+      "chord": "Chord",
+      "members": "Against the major scale",
+      "thirds": "Stacked from",
+      "inversions": "Positions",
+      "count": "{{count}} positions",
+      "symmetric": "Root position only, by ear",
+      "summary": "A table of all {{count}} chord qualities, each with its notes against the major scale and the thirds it is stacked from."
+    },
+    "inversion": {
+      "title": "Inversion — which note lies at the bottom",
+      "body": "Move the root up an octave and the third is left at the bottom; move the third up as well and the fifth is. The chord has not changed — the same notes are sounding — but it stands differently, and its name says so. Under each staff is the thoroughbass figure the position is known by.",
+      "sevenths": "A seventh chord has four notes and therefore one position more.",
+      "after": "Those figures are no coincidence. A first inversion is called a Sextakkord because a figured bass writes it 6: naming a chord and figuring a bass are one fact read from two ends, which is why melina teaches both."
+    },
+    "lage": {
+      "title": "Lage — which note lies on top",
+      "body": "The bass is only half of where a chord stands. The note in the top voice has a name of its own, and the inversion does not decide it: both chords below are in root position with C in the bass, and they are neither the same to look at nor the same to hear.",
+      "after": "The top note is the one an ear picks out first, which is what makes it worth asking about. In four-part writing it is the soprano and these same three names are used for it; here each voice has one note of the chord, and whatever is left simply fills in between the two ends."
+    },
+    "ear": {
+      "title": "The two chords with no audible inversion",
+      "body": "An augmented triad divides the octave into three equal parts and a diminished seventh into four. Turn either one upside down and it sounds exactly like itself: E–G♯–C is E augmented in root position quite as truthfully as it is C augmented in first inversion, and nothing in the sound chooses between them.",
+      "after": "So the hearing exercise never asks for the inversion of one — the keyboard stops asking the moment you name the quality. On the page they invert like anything else, because there you can see which note is the root."
+    },
+    "spelling": {
+      "title": "Double accidentals, and where they stop",
+      "body": "Every note here is spelled by counting thirds up from the root, and that sometimes lands on a double accidental. C diminished seventh is C–E♭–G♭–B𝄫, and an augmented triad on B is B–D♯–F𝄪. Those are the spellings themselves, not something to be worked around, and melina writes them out and expects them back.",
+      "after": "What it will not ask for is a chord needing two of them at once. A diminished seventh on E♭ would want B𝄫 and D𝄫 together — legal on paper, and nobody writes it, because a chord like that is always respelled instead. The line is drawn by counting the double accidentals a spelling actually produces, so nobody has to keep a list of the exceptions."
+    },
+    "absent": {
+      "title": "What is deliberately not here",
+      "body": "The augmented sixth chords — Italian, French and German — the Neapolitan sixth and the added sixth are not on this list, and not by oversight. None of them is a stack of thirds with a root: an augmented sixth is defined by the interval it makes and by where it resolves, and a Neapolitan is an ordinary major triad that is Neapolitan only because of the key it stands in.",
+      "after": "They are facts about harmony rather than about chords, and they belong to analysis. The augmented sixths already appear in melina where they can be written down honestly — as figures, in the thoroughbass exercises."
+    },
+    "next": {
+      "title": "Now try it",
+      "body": "Reading names a chord you can see, hearing names one you cannot, and writing puts one on the staff from its name alone. The same knowledge from three sides.",
+      "reading": "Reading chords",
+      "hearing": "Hearing chords",
+      "writing": "Writing chords"
+    },
+    "source": "Every staff and every row on this page is drawn by evaluating the chord model itself rather than by redrawing it, so it cannot come to describe something the app no longer does."
   }
 }

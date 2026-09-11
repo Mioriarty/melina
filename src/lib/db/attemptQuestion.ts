@@ -1,3 +1,12 @@
+import {
+  chordPitches,
+  chordSize,
+  closePosition,
+  isChordQuality,
+  needsDoubleAccidental,
+  type Chord,
+  type ChordQuality,
+} from '@/lib/music/chord'
 import { getClef, type ClefId } from '@/lib/music/clef'
 import type { PlayDirection } from '@/lib/music/direction'
 import { parseIntervalKey, transpose } from '@/lib/music/interval'
@@ -7,7 +16,13 @@ import { degreePitch, parseDegreesKey, type Degree } from '@/lib/music/degree'
 import { isMeterKey, parseMeter, type TimeSignature } from '@/lib/music/meter'
 import { parsePhraseBars, phraseOnsets, phraseRhythms } from '@/lib/music/phrase'
 import { DIVISION_IDS, isOffBeat, parseOnsets, rhythmDivision } from '@/lib/music/rhythm'
-import { isModeId, scalePitches, tonicKey, type ModeId } from '@/lib/music/scale'
+import {
+  isModeId,
+  parseTonicKey,
+  scalePitches,
+  tonicKey,
+  type ModeId,
+} from '@/lib/music/scale'
 
 /**
  * A question, in the smallest form it can be rebuilt from.
@@ -29,7 +44,7 @@ import { isModeId, scalePitches, tonicKey, type ModeId } from '@/lib/music/scale
  */
 
 export type AttemptKind =
-  'interval' | 'scale' | 'rhythm' | 'degree' | 'melody' | 'figured-bass'
+  'interval' | 'scale' | 'rhythm' | 'degree' | 'melody' | 'figured-bass' | 'chord'
 
 export interface IntervalAttempt {
   kind: 'interval'
@@ -144,6 +159,30 @@ export interface FiguredBassAttempt {
   figures: string
 }
 
+/**
+ * A chord — its root, its quality, and where its members stand.
+ *
+ * Four small facts, and everything they imply is worked out again on the way
+ * back out: the notes, where they sit on the staff, and the answer that would
+ * have been right are all `chord.ts` applied to these, so a row cannot disagree
+ * with the notation it produces. There is no key signature because a chord here
+ * is drawn keyless, and nothing about the *level* is stored — whether the Lage
+ * was asked shaped the question, and whether this chord is in close position is
+ * a fact about the chord, worked out again by `attemptFacets`.
+ */
+export interface ChordAttempt {
+  kind: 'chord'
+  /** The root without its octave, as a `tonicKey`: `Eb`. */
+  root: string
+  quality: ChordQuality
+  /** The member in the bass: 0 root, 1 third, 2 fifth, 3 seventh. */
+  inversion: number
+  /** The member on top — the Lage. */
+  top: number
+  clef: ClefId
+  direction: PlayDirection
+}
+
 export type AttemptQuestion =
   | IntervalAttempt
   | ScaleAttempt
@@ -151,6 +190,7 @@ export type AttemptQuestion =
   | DegreeAttempt
   | MelodyAttempt
   | FiguredBassAttempt
+  | ChordAttempt
 
 /** The answer the question was asking for. Derived, never stored twice. */
 export function correctAnswer(question: AttemptQuestion): string {
@@ -167,7 +207,21 @@ export function correctAnswer(question: AttemptQuestion): string {
       return question.degrees
     case 'figured-bass':
       return question.figures
+    case 'chord':
+      return chordAnswerKey(question)
   }
+}
+
+/**
+ * The whole of what a chord question was asking, as one string.
+ *
+ * Every axis, whether or not this particular round asked for it — which is
+ * right for a *question's* answer, as against what a player wrote down. Which
+ * rows were on the keyboard is a fact about the level, and the log deliberately
+ * keeps nothing about levels.
+ */
+export function chordAnswerKey(question: ChordAttempt): string {
+  return `${question.root}:${question.quality}:${question.inversion}:${question.top}`
 }
 
 export type FacetValue = string | boolean
@@ -410,6 +464,55 @@ function figuredBassFacets(question: FiguredBassAttempt): Facets {
   return { ...base, root: tonicKey(only), figure: question.figures }
 }
 
+/**
+ * A chord question's dimensions.
+ *
+ * **Nothing new had to be invented**, which was the design being tested a
+ * fourth time: `root`, `clef` and `direction` already mean what they mean, so
+ * `{ root: 'Eb' }` reached chords without being told they exist. What is added
+ * is the chord's own vocabulary — its quality, where its members stand, and how
+ * many of them there are.
+ *
+ * `close` is derived rather than stored, exactly as `staffOnly` is for an
+ * interval: the level decided whether a Lage could be asked for, and whether
+ * *this* chord ended up stacked straight up from its bass is a fact about this
+ * chord. `altered` and `doubled` are the reading weight — how much accidental
+ * there is to get past on a keyless staff.
+ */
+function chordFacets(question: ChordAttempt): Facets {
+  const base: Facets = {
+    kind: 'chord',
+    quality: question.quality,
+    inversion: String(question.inversion),
+    top: String(question.top),
+    clef: question.clef,
+    direction: question.direction,
+    root: question.root,
+  }
+
+  const root = parseTonicKey(question.root)
+  // A row can only fail to spell if it was hand-edited or written by a version
+  // that spelled differently. It then matches no filter that asks about the
+  // notes, rather than throwing inside a statistics query.
+  if (root === undefined || !isChordQuality(question.quality)) return base
+
+  const chord: Chord = {
+    root,
+    quality: question.quality,
+    inversion: question.inversion,
+    top: question.top,
+  }
+  const pitches = chordPitches(chord, question.clef) ?? []
+
+  return {
+    ...base,
+    size: String(chordSize(question.quality)),
+    close: question.top === closePosition(question.quality, question.inversion),
+    altered: pitches.some((note) => note.alteration !== 0),
+    doubled: needsDoubleAccidental(root, question.quality),
+  }
+}
+
 export function attemptFacets(question: AttemptQuestion): Facets {
   switch (question.kind) {
     case 'interval':
@@ -424,5 +527,7 @@ export function attemptFacets(question: AttemptQuestion): Facets {
       return melodyFacets(question)
     case 'figured-bass':
       return figuredBassFacets(question)
+    case 'chord':
+      return chordFacets(question)
   }
 }

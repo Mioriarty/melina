@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next'
 
 import type { ThoroughbassQuestion } from '@/exercises/thoroughbass-shared/generate'
-import { figurePitches, sameNotes, type Figure } from '@/lib/music/figuredBass'
+import { figurePitches, type Figure } from '@/lib/music/figuredBass'
+import { sameNotes } from '@/lib/music/scale'
 import { figureText } from '@/lib/notation/figureNotation'
 
 import type { FiguringAnswer } from './rules'

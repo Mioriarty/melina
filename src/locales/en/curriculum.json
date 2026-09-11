@@ -82,6 +82,27 @@
         }
       }
     },
+    "chords": {
+      "title": "Chords",
+      "blurb": "Triads and seventh chords: what kind, which note at the bottom, which on top.",
+      "exercises": {
+        "reading": {
+          "title": "Reading Chords",
+          "short": "Reading",
+          "blurb": "Name the chord on the staff — its root, its kind and how it stands."
+        },
+        "hearing": {
+          "title": "Hearing Chords",
+          "short": "Hearing",
+          "blurb": "Name the chord you hear. The staff stays empty until the answer is in."
+        },
+        "writing": {
+          "title": "Writing Chords",
+          "short": "Writing",
+          "blurb": "Put a named chord on the staff, one note at a time."
+        }
+      }
+    },
     "harmonic-prediction": {
       "title": "Harmonic Prediction",
       "blurb": "Guess where the progression wants to go.",
@@ -147,6 +168,10 @@
     "scales": {
       "title": "The Seven Modes",
       "blurb": "What each mode is, and the shortcut: major or minor with a note moved."
+    },
+    "chords": {
+      "title": "Chord Types",
+      "blurb": "The nine chords melina asks about, and what their names say."
     }
   }
 }

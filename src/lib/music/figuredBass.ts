@@ -227,13 +227,6 @@ export function figurePitches(
   return notes
 }
 
-/** Whether two sets of notes are the same notes, however they are ordered. */
-export function sameNotes(a: readonly PitchClass[], b: readonly PitchClass[]): boolean {
-  if (a.length !== b.length) return false
-  const keys = new Set(a.map(tonicKey))
-  return keys.size === a.length && b.every((note) => keys.has(tonicKey(note)))
-}
-
 export interface CanonicalOptions {
   /**
    * Whether this figure follows another on the same bass note — the one case

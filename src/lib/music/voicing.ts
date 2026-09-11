@@ -1,22 +1,30 @@
-import { getClef } from '@/lib/music/clef'
-import { chromaticValue, diatonicValue, pitch, type Pitch } from '@/lib/music/pitch'
-import type { PitchClass } from '@/lib/music/scale'
+import { getClef, type ClefId } from './clef'
+import {
+  chromaticValue,
+  diatonicValue,
+  octaveFromDiatonicValue,
+  pitch,
+  type Pitch,
+} from './pitch'
+import type { PitchClass } from './scale'
 
 /**
  * Where the notes of a chord actually sit.
  *
- * **A figure says which notes, never where they sit** — a realisation an octave
- * up, or with the notes in another order, is the same answer. But something has
- * to put them on a staff, and if the staff and the verdict worked it out
- * separately they could disagree about what the player had written. So this is
- * the one place that decides, and everything reads it.
+ * **A chord is a set of notes; where they sit is a separate question** — a
+ * figure says which notes and never where, and a chord symbol says no more. But
+ * something has to put them on a staff, and if the staff and the verdict worked
+ * it out separately they could disagree about what the player had written. So
+ * this is the one place that decides, and everything reads it.
  *
  * Two rules, and the second is what makes a succession of chords readable:
  *
  * - **Close position.** Each note goes at the lowest place above the one
  *   before it, which is the texture a continuo player's right hand makes. The
  *   order they are given in is the order they are stacked in, so the player
- *   controls the shape by which key they press first.
+ *   controls the shape by which key they press first — and it is also what lets
+ *   a chord be voiced to a named *Lage*, by handing the member that belongs on
+ *   top last.
  * - **The chord as a whole sits nearest to the one before it.** Its first note
  *   — which is therefore its lowest — is placed at the octave closest to where
  *   the previous chord began.
@@ -35,16 +43,46 @@ import type { PitchClass } from '@/lib/music/scale'
  * it means **a note already on the staff never moves when the next one
  * arrives**, which matters because the player builds a chord one key at a time
  * and the app cannot know what is still to come.
+ *
+ * This lives in `lib/music` rather than beside an exercise because it is not
+ * one exercise's idea: thoroughbass realises a figure into it and chord writing
+ * writes a named chord into it, and two answers to where a note sits is two
+ * answers that can disagree.
  */
+
+/**
+ * Where a chord opens on a given clef, when there is nothing before it to
+ * follow.
+ *
+ * **Computed from the clef's own staff rather than tabulated**, the same move
+ * `isCleanScale` makes: the reference is the F nearest the middle line, which
+ * puts the first note of a first chord in the octave that clef reads most
+ * comfortably — whatever its letter, since `nearest` then has at most a
+ * diminished fifth to travel.
+ */
+export function defaultRegister(clef: ClefId = 'treble'): Pitch {
+  const { staffLowest, staffHighest } = getClef(clef)
+  const middle = Math.round(
+    (diatonicValue(staffLowest) + diatonicValue(staffHighest)) / 2,
+  )
+
+  // The two F's either side of the middle line; the nearer one is the anchor.
+  const anchor = diatonicValue(pitch('F', 0, 0))
+  const below = middle - ((((middle - anchor) % 7) + 7) % 7)
+  const above = below + 7
+  const step = middle - below <= above - middle ? below : above
+
+  return pitch('F', 0, octaveFromDiatonicValue(step))
+}
 
 /**
  * Where a chord sits when there is nothing before it to follow.
  *
- * Chosen so the first note of a first chord lands in `C4`–`B4` whatever its
- * letter, which is the octave a question opens in and therefore the one the
- * realising keyboard's keys are drawn in before anything has been pressed.
+ * The treble one, which is the staff a realised figure goes on. Kept as a
+ * constant because it is also what the realising keyboard draws its keys in
+ * before anything has been pressed.
  */
-export const DEFAULT_REGISTER: Pitch = pitch('F', 0, 4)
+export const DEFAULT_REGISTER: Pitch = defaultRegister('treble')
 
 /** The octave an opening chord begins in, whatever its lowest letter is. */
 export const OPENING_OCTAVE = 4
@@ -88,13 +126,14 @@ function above(below: Pitch, note: PitchClass): Pitch {
  * Move the whole chord by octaves until the staff can show it.
  *
  * Only ever fires for a tall chord anchored high — a ninth is four notes
- * spanning a seventh — and it moves the chord as one, so its shape is kept.
- * Generated questions are checked against the same range afterwards and a
- * bass that will not fit is simply not used; this is what keeps a player's
- * own chord from running off the page, where there is no such second chance.
+ * spanning a seventh, and so is a seventh chord voiced to a low Lage — and it
+ * moves the chord as one, so its shape is kept. Generated questions are checked
+ * against the same range afterwards and a root that will not fit is simply not
+ * used; this is what keeps a player's own chord from running off the page,
+ * where there is no such second chance.
  */
-function ontoTheStaff(chord: readonly Pitch[]): readonly Pitch[] {
-  const { lowest, highest } = getClef('treble')
+function ontoTheStaff(chord: readonly Pitch[], clef: ClefId): readonly Pitch[] {
+  const { lowest, highest } = getClef(clef)
   const shift = (by: number) =>
     chord.map((note) => ({ ...note, octave: note.octave + by }))
 
@@ -127,11 +166,14 @@ function ontoTheStaff(chord: readonly Pitch[]): readonly Pitch[] {
  * A chord, placed.
  *
  * `near` is where the chord before it began. Without one the chord opens in
- * the default register, which is what a first chord does.
+ * the default register, which is what a first chord does. `clef` is only the
+ * staff it has to fit on — it never changes the shape, only whether the whole
+ * chord is moved bodily by an octave to be showable.
  */
 export function voiceChord(
   notes: readonly PitchClass[],
   near: Pitch = DEFAULT_REGISTER,
+  clef: ClefId = 'treble',
 ): readonly Pitch[] {
   const first = notes[0]
   if (first === undefined) return []
@@ -141,7 +183,7 @@ export function voiceChord(
     placed.push(above(placed[placed.length - 1] as Pitch, note))
   }
 
-  return ontoTheStaff(placed)
+  return ontoTheStaff(placed, clef)
 }
 
 /**
@@ -155,12 +197,13 @@ export function voiceChord(
 export function voiceChords(
   chords: readonly (readonly PitchClass[])[],
   near: Pitch = DEFAULT_REGISTER,
+  clef: ClefId = 'treble',
 ): readonly (readonly Pitch[])[] {
   const voiced: (readonly Pitch[])[] = []
   let previous = near
 
   for (const chord of chords) {
-    const placed = voiceChord(chord, previous)
+    const placed = voiceChord(chord, previous, clef)
     voiced.push(placed)
     previous = placed[0] ?? previous
   }

@@ -145,6 +145,20 @@ export interface PitchClass {
   alteration: Alteration
 }
 
+/**
+ * Whether two sets of notes are the same notes, however they are ordered.
+ *
+ * Lives here beside `PitchClass` rather than with either of the things that
+ * needs it: a figured bass grades a realisation this way and chord writing
+ * grades a written chord the same way, and two copies of "the same notes" is
+ * two answers that could disagree.
+ */
+export function sameNotes(a: readonly PitchClass[], b: readonly PitchClass[]): boolean {
+  if (a.length !== b.length) return false
+  const keys = new Set(a.map(tonicKey))
+  return keys.size === a.length && b.every((note) => keys.has(tonicKey(note)))
+}
+
 /** Machine form, matching `pitchKey` without the octave: `Bb`, `F#`, `C`. */
 export function tonicKey({ letter, alteration }: PitchClass): string {
   const symbol = alteration < 0 ? 'b'.repeat(-alteration) : '#'.repeat(alteration)

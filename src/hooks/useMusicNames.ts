@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import type { ChordMember, ChordQuality } from '@/lib/music/chord'
 import type { ClefId } from '@/lib/music/clef'
 import type { PlayDirection } from '@/lib/music/direction'
 import type { Interval, IntervalQuality } from '@/lib/music/interval'
@@ -96,6 +97,41 @@ export interface MusicNames {
   degreeShort: (degree: Degree) => string
   /** The key a melody is in: `E major`, `E dorian`, `E-Dur`. */
   scaleName: (tonic: string, mode: ModeId) => string
+  /** A chord quality on its own: `Dominant seventh`, `Dominantseptakkord`. */
+  chordQuality: (quality: ChordQuality) => string
+  /** Compact enough for a key face: `D7`, `ø7`, `Dur`. */
+  chordQualityShort: (quality: ChordQuality) => string
+  /**
+   * The whole chord: `E♭ major triad`, `Dur-Dreiklang über Es`.
+   *
+   * A lookup and a template rather than a root and a quality glued together:
+   * German builds the name as a compound and puts the root after it, so there
+   * is no order of English parts that comes out right.
+   */
+  chordName: (root: string, quality: ChordQuality) => string
+  /**
+   * Which member is in the bass: `First inversion`, `Sextakkord`.
+   *
+   * Keyed by the chord's size as well as the inversion, because German names
+   * these by the intervals they make and a seventh chord makes different ones:
+   * a triad's first inversion is the Sextakkord and a seventh chord's is the
+   * Quintsextakkord.
+   */
+  inversionName: (inversion: number, size: number) => string
+  /**
+   * The same where there is no room for it: `1st`, `1. Umk.`.
+   *
+   * **Size-independent, unlike the full name**, and that is load-bearing: on
+   * the naming keyboard the position row is pressable before a quality has
+   * been chosen, so a label that depended on whether the chord is a triad or a
+   * seventh would have to relabel itself under the player's hand. The full
+   * name and the figure arrive once the quality says which they are.
+   */
+  inversionShort: (inversion: number) => string
+  /** Which member is on top — the Lage: `Third position`, `Terzlage`. */
+  lage: (member: ChordMember) => string
+  /** The same on a key: `3rd`, `Terz`. */
+  lageShort: (member: ChordMember) => string
 }
 
 export function useMusicNames(): MusicNames {
@@ -184,6 +220,17 @@ export function useMusicNames(): MusicNames {
             mode: t(`modes.${mode}.label`),
           }),
         }),
+      chordQuality: (quality) => t(`chordQualities.${quality}`),
+      chordQualityShort: (quality) => t(`chordQualitiesShort.${quality}`),
+      chordName: (root, quality) =>
+        t('chordName', {
+          root: t(`tonics.${root}`, { defaultValue: root }),
+          quality: t(`chordQualitiesInName.${quality}`),
+        }),
+      inversionName: (inversion, size) => t(`inversions.${size}.${inversion}`),
+      inversionShort: (inversion) => t(`inversionsShort.${inversion}`),
+      lage: (member) => t(`lagen.${member}`),
+      lageShort: (member) => t(`lagenShort.${member}`),
     }
   }, [t])
 }

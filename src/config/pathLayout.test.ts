@@ -80,7 +80,16 @@ describe('path layout', () => {
     )
     expect(merge, 'the merge station is not on the path').toBeGreaterThan(0)
     const single = PATH_NODES.slice(merge)
-    const gaps = single.slice(1).map((node, i) => node.y - single[i]!.y)
+    // Below the merge is *mostly* single file, and the exception is a braid:
+    // two stations standing side by side are one step down the column, not
+    // two, and the stagger between them is not a gap the eye ever reads as
+    // one. Measuring it as though it were would fail the floor every time —
+    // which is the case this test's own note anticipated when it refused to
+    // find the merge by index.
+    const gaps = single.slice(1).flatMap((node, i) => {
+      const previous = single[i] as (typeof single)[number]
+      return standLevel(previous, node) ? [] : [node.y - previous.y]
+    })
 
     expect(gaps.length).toBeGreaterThan(2)
     expect(new Set(gaps).size).toBe(gaps.length)
@@ -154,7 +163,16 @@ describe('path layout', () => {
     // dictation needs both, so both arrive at the same station.
     expect(joins('dictation/rhythm', 'dictation/short-melodies')).toBe(true)
     expect(joins('scales/degrees', 'dictation/short-melodies')).toBe(true)
-    expect(joins('dictation/short-melodies', 'harmonic-prediction')).toBe(true)
+    // Chords are the way into harmony, so the main line runs through them —
+    // and they braid the same way: the guide into both halves, both halves
+    // into the writing that needs them.
+    expect(joins('dictation/short-melodies', 'guide/chords')).toBe(true)
+    expect(joins('guide/chords', 'chords/reading')).toBe(true)
+    expect(joins('guide/chords', 'chords/hearing')).toBe(true)
+    expect(joins('chords/reading', 'chords/writing')).toBe(true)
+    expect(joins('chords/hearing', 'chords/writing')).toBe(true)
+    expect(joins('chords/writing', 'harmonic-prediction')).toBe(true)
+    expect(joins('dictation/short-melodies', 'harmonic-prediction')).toBe(false)
 
     // Thoroughbass stands off the path: joined to itself and to nothing else,
     // and its explainer comes before the exercises it serves.
@@ -170,6 +188,24 @@ describe('path layout', () => {
     expect(joins('dictation/rhythm', 'scales/degrees')).toBe(false)
     expect(joins('intervals/hearing', 'scales/degrees')).toBe(false)
     expect(joins('scales/hearing', 'dictation/rhythm')).toBe(false)
+    expect(joins('chords/reading', 'chords/hearing')).toBe(false)
+    expect(joins('chords/hearing', 'chords/reading')).toBe(false)
+  })
+
+  it('never joins two stations that stand side by side', () => {
+    // The geometric rule the whole braid rests on. Below about 150px of drop a
+    // connector has no room between the label it leaves and the medallion it
+    // arrives at, so it draws as a stub or inverts entirely — which means a
+    // pair either stands level with nothing between them, or runs downhill
+    // with a connector, and never both.
+    const at = (id: string) => PATH_NODES.find((node) => node.stationId === id)!
+
+    for (const edge of PATH_EDGES) {
+      expect(
+        standLevel(at(edge.from), at(edge.to)),
+        `${edge.from} and ${edge.to} are joined and stand level`,
+      ).toBe(false)
+    }
   })
 
   it('joins nothing that is missing, and strands nothing by accident', () => {

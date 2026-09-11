@@ -195,5 +195,71 @@
       "hearing": "Tonleitern hören"
     },
     "source": "Jede Tonleiter und jede Zeile dieser Seite ist das Modell der App selbst, ausgewertet — keine Kopie davon. Diese Seite kann also nicht beschreiben, was melina längst nicht mehr tut."
+  },
+  "chords": {
+    "title": "Akkorde",
+    "intro": "Neun Klänge: vier Dreiklänge und fünf Septakkorde. Jeder von ihnen ist ein Terzenturm über einem Grundton, und alles, wonach gefragt wird — welche Art, welcher Ton unten liegt, welcher oben — ist eine Aussage über diesen Turm.",
+    "staff": "{{chord}}: {{pitches}}",
+    "plus": " + ",
+    "what": {
+      "title": "Was hier ein Akkord ist",
+      "body": "Man nehme einen Ton, setze eine Terz darüber und darüber noch eine. Drei Töne ergeben einen Dreiklang; eine vierte Terz obenauf macht einen Septakkord. Welche Terzen man wählt — große oder kleine — ist alles, was einen Akkord von einem anderen unterscheidet.",
+      "after": "Und ein Akkord ist hier eine Schreibweise, keine Menge von Klaviertasten. C–E–Gis und C–E–As sind dieselben drei Klänge und zwei verschiedene Akkorde: der erste ein übermäßiger Dreiklang, der zweite ein f-Moll-Dreiklang in erster Umkehrung. Was notiert ist, sagt, was gemeint ist — und darum wird in melina jeder Akkord aus Intervallen aufgebaut und nicht aus Halbtonschritten."
+    },
+    "triads": {
+      "title": "Die vier Dreiklänge",
+      "body": "Alle vier stehen auf C, damit sich von einer Zeile zur nächsten nur die Vorzeichen ändern. Unter jedem: seine Töne, gemessen an der Durtonleiter, und die beiden Terzen, aus denen er gebaut ist.",
+      "after": "An den Terzen sieht man alle vier auf einmal — Dur ist eine große Terz unter einer kleinen, Moll umgekehrt, vermindert sind zwei kleine und übermäßig zwei große. Das ist die Definition, die man ins Hören mitnimmt, denn sie ist die hörbare."
+    },
+    "sevenths": {
+      "title": "Die fünf Septakkorde",
+      "body": "Eine Terz mehr auf einem Dreiklang. Der Dominantseptakkord ist der allgegenwärtige; die übrigen vier sind die restlichen Türme, die einen eigenen Namen verdienen.",
+      "after": "Alle fünf stehen auf C, und der letzte braucht dafür ein Doppel-b. Die verminderte Septime über C ist Heses: zählt man die Terzen, kann sie nirgendwo anders hin, denn die Septime des Akkords muss irgendein H sein. Es ist der eine Akkord dieser Liste, in dem ein Leser regelmäßig einem Doppelvorzeichen begegnet — daran gewöhnt man sich besser, als man es umgeht."
+    },
+    "table": {
+      "title": "Alle neun auf einen Blick",
+      "body": "Dieselben zwei Lesarten nebeneinander. Nichts in dieser Tabelle steht irgendwo in melina geschrieben: sie ist das ausgemessene Akkordmodell, und änderte sich das Modell, änderte sich die Tabelle mit.",
+      "chord": "Akkord",
+      "members": "Gegen die Durtonleiter",
+      "thirds": "Aufgebaut aus",
+      "inversions": "Stellungen",
+      "count": "{{count}} Stellungen",
+      "symmetric": "Nach Gehör nur Grundstellung",
+      "summary": "Eine Tabelle aller {{count}} Akkordarten, jeweils mit ihren Tönen gegen die Durtonleiter und den Terzen, aus denen sie aufgebaut sind."
+    },
+    "inversion": {
+      "title": "Umkehrung — welcher Ton unten liegt",
+      "body": "Setzt man den Grundton eine Oktave höher, bleibt die Terz unten liegen; setzt man auch die Terz hinauf, ist es die Quinte. Der Akkord hat sich nicht geändert — es klingen dieselben Töne —, aber er steht anders, und sein Name sagt es. Unter jeder Zeile steht die Generalbassbezifferung, unter der die Stellung bekannt ist.",
+      "sevenths": "Ein Septakkord hat vier Töne und darum eine Stellung mehr.",
+      "after": "Diese Ziffern sind kein Zufall. Die erste Umkehrung heißt Sextakkord, weil ein bezifferter Bass sie 6 schreibt: einen Akkord benennen und einen Bass beziffern ist ein und dieselbe Sache von zwei Seiten gelesen — darum lehrt melina beides."
+    },
+    "lage": {
+      "title": "Lage — welcher Ton oben liegt",
+      "body": "Der Bass ist nur die Hälfte davon, wie ein Akkord steht. Auch der oberste Ton hat einen eigenen Namen, und die Umkehrung entscheidet ihn nicht: beide Akkorde unten stehen in Grundstellung mit C im Bass, und sie sehen weder gleich aus noch klingen sie gleich.",
+      "after": "Der oberste Ton ist der, den ein Ohr zuerst heraushört — deshalb lohnt die Frage. Im vierstimmigen Satz ist er der Sopran, und es sind dieselben drei Namen; hier hat jede Stimme einen Ton des Akkords, und was übrig bleibt, füllt einfach zwischen den beiden Enden auf."
+    },
+    "ear": {
+      "title": "Die zwei Akkorde ohne hörbare Umkehrung",
+      "body": "Ein übermäßiger Dreiklang teilt die Oktave in drei gleiche Teile, ein verminderter Septakkord in vier. Stellt man einen von beiden um, klingt er genau wie er selbst: E–Gis–C ist ebenso wahrhaftig E-übermäßig in Grundstellung wie C-übermäßig in erster Umkehrung, und nichts am Klang entscheidet zwischen beidem.",
+      "after": "Deshalb fragt das Hören nie nach der Umkehrung eines solchen Akkords — die Tastatur hört damit auf, sobald die Art benannt ist. Auf dem Papier kehren sie sich um wie alles andere, denn dort sieht man, welcher Ton der Grundton ist."
+    },
+    "spelling": {
+      "title": "Doppelvorzeichen, und wo sie aufhören",
+      "body": "Jeder Ton wird hier durch Terzen über dem Grundton buchstabiert, und das landet mitunter auf einem Doppelvorzeichen. Der verminderte Septakkord auf C ist C–Es–Ges–Heses, der übermäßige Dreiklang auf H ist H–Dis–Fisis. Das sind die Schreibweisen selbst und nichts, was zu umgehen wäre: melina schreibt sie aus und erwartet sie zurück.",
+      "after": "Wonach nicht gefragt wird, ist ein Akkord, der zwei davon zugleich braucht. Ein verminderter Septakkord auf Es wollte Heses und Deses auf einmal — auf dem Papier zulässig, und niemand schreibt es, weil ein solcher Akkord immer umgedeutet wird. Die Grenze zieht sich, indem die Doppelvorzeichen gezählt werden, die eine Schreibweise tatsächlich hervorbringt; niemand muss eine Liste der Ausnahmen führen."
+    },
+    "absent": {
+      "title": "Was hier bewusst fehlt",
+      "body": "Die übermäßigen Sextakkorde — der italienische, der französische und der deutsche —, der neapolitanische Sextakkord und der Sixte ajoutée stehen nicht auf dieser Liste, und das ist kein Versehen. Keiner von ihnen ist ein Terzenturm mit einem Grundton: ein übermäßiger Sextakkord ist durch das Intervall bestimmt, das er bildet, und durch seine Auflösung, und ein neapolitanischer ist ein gewöhnlicher Dur-Dreiklang, der nur wegen seiner Tonart neapolitanisch heißt.",
+      "after": "Sie sind Aussagen über Harmonik, nicht über Akkorde, und gehören zur Analyse. Die übermäßigen Sextakkorde kommen in melina bereits dort vor, wo sie sich ehrlich aufschreiben lassen — als Bezifferung, in den Generalbassübungen."
+    },
+    "next": {
+      "title": "Jetzt ausprobieren",
+      "body": "Lesen benennt einen Akkord, den man sieht, Hören einen, den man nicht sieht, und Schreiben setzt einen allein aus seinem Namen auf das System. Dasselbe Wissen von drei Seiten.",
+      "reading": "Akkorde lesen",
+      "hearing": "Akkorde hören",
+      "writing": "Akkorde schreiben"
+    },
+    "source": "Jede Zeile und jede Tabellenzeile auf dieser Seite entsteht, indem das Akkordmodell selbst ausgewertet wird, nicht indem es nachgezeichnet würde — sie kann also nicht etwas beschreiben, was die App nicht mehr tut."
   }
 }

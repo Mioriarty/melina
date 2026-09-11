@@ -21,7 +21,7 @@ import {
 import type { PitchClass } from '@/lib/music/scale'
 import { dealEvenly, randomPick, type Random } from '@/lib/utils/seededRandom'
 
-import { DEFAULT_REGISTER, voiceChords } from './voicing'
+import { DEFAULT_REGISTER, voiceChords } from '@/lib/music/voicing'
 
 /** One bass note and everything standing under and over it. */
 export interface BassEvent {

@@ -445,6 +445,44 @@ export function thoroughbassProfile(
 }
 
 /**
+ * **A chord being written into, on a page that cannot move.**
+ *
+ * The same reserve a rhythm and a melody get, for the same reason: the column
+ * scales an engraved SVG down to fit, so a render that grows as the answer is
+ * typed shrinks the staff under the player's hands. A chord grows sideways
+ * every time a note arrives carrying an accidental — the widest chord in the
+ * vocabulary engraves 41% wider than an empty bar — and downwards every time
+ * one needs a ledger line.
+ *
+ * Measured rather than guessed, across every quality, root, inversion and Lage
+ * on all four clefs: the widest is 3620 viewBox units and the tallest 2450, and
+ * `pageWidth`/`pageHeight` are **a tenth of those** — feeding the viewBox units
+ * straight back in makes a page ten times too big, draws the music in one
+ * corner and scales the staff to a tenth of its size. Nothing that compares one
+ * render against another can see that, because every render is equally wrong,
+ * which is why `chordVerovio.test.ts` checks this against a bar of rhythm.
+ *
+ * `FILL_THE_PAGE` because a chord is one event and has nothing to spread:
+ * unjustified, its staff lines stop at the notehead and a short staff floats in
+ * a wide box, which reads as a fault rather than as a reserve.
+ *
+ * Reading and hearing need none of this. Nothing is typed into them, and a
+ * hidden chord is *engraved* rather than left out, so the render is the same
+ * size asked and revealed — which is the whole reason `@visible` is used there.
+ */
+const CHORD_PAGE_WIDTH = 362
+const CHORD_PAGE_HEIGHT = 245
+
+export const CHORD_ANSWER_PROFILE: VerovioOptions = {
+  ...FILL_THE_PAGE,
+  breaks: 'auto',
+  adjustPageWidth: false,
+  adjustPageHeight: false,
+  pageWidth: CHORD_PAGE_WIDTH,
+  pageHeight: CHORD_PAGE_HEIGHT,
+}
+
+/**
  * One note on a bare staff, for a key on the degree keyboard.
  *
  * Fixed so that seven keys standing in a row are the same size and their staves

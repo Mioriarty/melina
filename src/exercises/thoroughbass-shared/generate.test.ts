@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { figureKey, sameNotes } from '@/lib/music/figuredBass'
+import { figureKey } from '@/lib/music/figuredBass'
+import { sameNotes } from '@/lib/music/scale'
 import { getClef } from '@/lib/music/clef'
 import { KEY_SIGNATURES, type KeySignatureId } from '@/lib/music/keySignature'
 import { diatonicValue, pitchKey } from '@/lib/music/pitch'

@@ -3,10 +3,10 @@ import { describe, expect, it } from 'vitest'
 import { diatonicValue, pitchKey } from '@/lib/music/pitch'
 import type { PitchClass } from '@/lib/music/scale'
 
-import { OPENING_OCTAVE } from '@/exercises/thoroughbass-shared/voicing'
+import { OPENING_OCTAVE } from '@/lib/music/voicing'
 import { LETTERS } from '@/lib/music/pitch'
 
-import type { ChordDraft } from './draft'
+import type { ChordDraft } from '@/exercises/chord-entry/draft'
 
 import {
   canPlace,
@@ -20,7 +20,7 @@ import {
   place,
   placedPitch,
   removeLast,
-} from './draft'
+} from '@/exercises/chord-entry/draft'
 
 const note = (letter: string, alteration = 0): PitchClass => ({
   letter: letter as PitchClass['letter'],

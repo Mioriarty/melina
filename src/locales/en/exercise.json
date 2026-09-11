@@ -133,7 +133,34 @@
       "hint": "How many figured bass notes a question carries. Each one takes width from the others, so four is comfortable on a desk and tight on a phone.",
       "label": "{{count}} bass notes"
     },
-    "modesGuide": "What the modes are"
+    "modesGuide": "What the modes are",
+    "qualities": {
+      "title": "Chords",
+      "hint": "Four triads and five seventh chords. Which of them may come up.",
+      "guide": "What the nine chords are"
+    },
+    "inversions": {
+      "title": "Positions",
+      "hint": "Which member of the chord may stand in the bass. A triad has no third inversion."
+    },
+    "lage": {
+      "title": "Top voice",
+      "hint": "The Lage: which member stands on top. With it off, every chord is stacked straight up from its bass and you are not asked about it.",
+      "asked": "Asked",
+      "stacked": "Stacked up",
+      "members": "Named as: {{members}}"
+    },
+    "roots": {
+      "title": "Roots",
+      "hint": "Which notes a chord may be built on. A chord that would need two double accidentals is never asked for, whatever is chosen here."
+    },
+    "chordPlayback": {
+      "title": "How it is played",
+      "hint": "A block chord is harder to take apart than the same notes one after another.",
+      "harmonic": "All at once",
+      "ascending": "Upwards",
+      "descending": "Downwards"
+    }
   },
   "round": {
     "end": "End this round",
@@ -147,7 +174,8 @@
       "degree": "Scale degree keys",
       "melody": "Melody keys",
       "figure": "Figure keys",
-      "chord": "Chord notes"
+      "chord": "Chord notes",
+      "chordName": "Chord name"
     },
     "prompt": {
       "interval": "What interval is this?",
@@ -308,7 +336,9 @@
     "keyboard": {
       "sharp": "Raise the next note",
       "flat": "Lower the next note",
-      "delete": "Delete the last one"
+      "delete": "Delete the last one",
+      "doubleSharp": "Raise the next note twice",
+      "doubleFlat": "Lower the next note twice"
     },
     "summary": {
       "subject": "{{figure}} · over {{bass}}"
@@ -316,6 +346,44 @@
     "staff": {
       "yours": "What you wrote",
       "correct": "What was wanted"
+    }
+  },
+  "chord": {
+    "prompt": {
+      "reading": "What chord is this?",
+      "hearing": "What chord do you hear?",
+      "writing": "Write the {{chord}}"
+    },
+    "keyboard": {
+      "root": "Root",
+      "quality": "Chord",
+      "position": "Position",
+      "lage": "Top voice"
+    },
+    "score": {
+      "hidden": "An empty {{clef}} staff. The chord appears with the answer.",
+      "shown": "On a {{clef}}: {{pitches}}",
+      "empty": "An empty {{clef}} staff, waiting for the chord."
+    },
+    "staff": {
+      "yours": "You wrote",
+      "correct": "The chord asked for"
+    },
+    "summary": {
+      "join": ", ",
+      "allCorrect": "Every chord named. Widen the vocabulary, or turn the positions on."
+    },
+    "reading": {
+      "levelsBlurb": "A chord on the staff. Name its root, its kind and how it stands.",
+      "setupBlurb": "Choose which chords come up, on which roots, and in which positions."
+    },
+    "hearing": {
+      "levelsBlurb": "A chord sounds. Name what kind it is, and where its notes stand.",
+      "setupBlurb": "Choose which chords come up and how they are played to you."
+    },
+    "writing": {
+      "levelsBlurb": "A chord is named. Put it on the staff, one note at a time.",
+      "setupBlurb": "Choose which chords you will be asked to write, and on which roots."
     }
   }
 }

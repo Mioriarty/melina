@@ -412,5 +412,122 @@
       "title": "Zusammengesetzte Ziffern",
       "blurb": "Womit Grove Undezime und Tredezime beziffert, ausgeschrieben über einem Bass, der liegen bleibt."
     }
+  },
+  "chord-reading": {
+    "sections": {
+      "triads": "Dreiklänge",
+      "sevenths": "Septakkorde",
+      "positions": "Lagen"
+    },
+    "major-minor": {
+      "title": "Dur & Moll",
+      "blurb": "Die beiden, an denen alles andere gehört wird — auf den Stammtönen."
+    },
+    "all-triads": {
+      "title": "Alle vier Dreiklänge",
+      "blurb": "Vermindert und übermäßig kommen dazu: zwei kleine oder zwei große Terzen."
+    },
+    "triad-inversions": {
+      "title": "Dreiklänge umgekehrt",
+      "blurb": "Dieselben vier, nun mit Terz oder Quinte im Bass."
+    },
+    "dominant-seventh": {
+      "title": "Der Dominantseptakkord",
+      "blurb": "Ein Septakkord zwischen den Dreiklängen, in denen er lebt."
+    },
+    "all-sevenths": {
+      "title": "Alle fünf Septakkorde",
+      "blurb": "Dur, Moll, dominantisch, halbvermindert und vermindert nebeneinander."
+    },
+    "seventh-inversions": {
+      "title": "Septakkorde umgekehrt",
+      "blurb": "Je vier Stellungen, als Blockakkorde gespielt."
+    },
+    "lagen": {
+      "title": "Oberstimme",
+      "blurb": "Wieder Dreiklänge — und jetzt gehört dazu, welcher Ton oben liegt."
+    },
+    "everything": {
+      "title": "Alles",
+      "blurb": "Alle neun, jede Stellung, jede Lage — und die C-Schlüssel."
+    }
+  },
+  "chord-hearing": {
+    "sections": {
+      "triads": "Dreiklänge",
+      "sevenths": "Septakkorde",
+      "positions": "Lagen"
+    },
+    "major-minor": {
+      "title": "Dur & Moll",
+      "blurb": "Die beiden, an denen alles andere gehört wird — auf den Stammtönen."
+    },
+    "all-triads": {
+      "title": "Alle vier Dreiklänge",
+      "blurb": "Vermindert und übermäßig kommen dazu: zwei kleine oder zwei große Terzen."
+    },
+    "triad-inversions": {
+      "title": "Dreiklänge umgekehrt",
+      "blurb": "Dieselben vier, nun mit Terz oder Quinte im Bass."
+    },
+    "dominant-seventh": {
+      "title": "Der Dominantseptakkord",
+      "blurb": "Ein Septakkord zwischen den Dreiklängen, in denen er lebt."
+    },
+    "all-sevenths": {
+      "title": "Alle fünf Septakkorde",
+      "blurb": "Dur, Moll, dominantisch, halbvermindert und vermindert nebeneinander."
+    },
+    "seventh-inversions": {
+      "title": "Septakkorde umgekehrt",
+      "blurb": "Je vier Stellungen, als Blockakkorde gespielt."
+    },
+    "lagen": {
+      "title": "Oberstimme",
+      "blurb": "Wieder Dreiklänge — und jetzt gehört dazu, welcher Ton oben liegt."
+    },
+    "everything": {
+      "title": "Alles",
+      "blurb": "Alle neun, jede Stellung, jede Lage — und die C-Schlüssel."
+    }
+  },
+  "chord-writing": {
+    "sections": {
+      "triads": "Dreiklänge",
+      "sevenths": "Septakkorde",
+      "positions": "Lagen"
+    },
+    "major-minor": {
+      "title": "Dur & Moll",
+      "blurb": "Die beiden, an denen alles andere gehört wird — auf den Stammtönen."
+    },
+    "all-triads": {
+      "title": "Alle vier Dreiklänge",
+      "blurb": "Vermindert und übermäßig kommen dazu: zwei kleine oder zwei große Terzen."
+    },
+    "triad-inversions": {
+      "title": "Dreiklänge umgekehrt",
+      "blurb": "Dieselben vier, nun mit Terz oder Quinte im Bass."
+    },
+    "dominant-seventh": {
+      "title": "Der Dominantseptakkord",
+      "blurb": "Ein Septakkord zwischen den Dreiklängen, in denen er lebt."
+    },
+    "all-sevenths": {
+      "title": "Alle fünf Septakkorde",
+      "blurb": "Dur, Moll, dominantisch, halbvermindert und vermindert nebeneinander."
+    },
+    "seventh-inversions": {
+      "title": "Septakkorde umgekehrt",
+      "blurb": "Je vier Stellungen, als Blockakkorde gespielt."
+    },
+    "lagen": {
+      "title": "Oberstimme",
+      "blurb": "Wieder Dreiklänge — und jetzt gehört dazu, welcher Ton oben liegt."
+    },
+    "everything": {
+      "title": "Alles",
+      "blurb": "Alle neun, jede Stellung, jede Lage — und die C-Schlüssel."
+    }
   }
 }

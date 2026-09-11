@@ -328,6 +328,49 @@ export function scaleMei({ pitches, clef, hideFrom }: ScaleOptions): string {
   return document(clef, KEYLESS, notes)
 }
 
+export interface ChordMeiOptions {
+  /** From the bass up. Empty draws an empty bar, which is a chord not yet written. */
+  pitches: readonly Pitch[]
+  clef: ClefId
+  /**
+   * Engraved in place but not drawn, which is what a hearing question shows
+   * before its answer is in. Leaving the notes out instead would re-engrave a
+   * different piece of music, and the staff would resize the moment the chord
+   * appeared — the same reason `scaleMei` hides rather than omits.
+   */
+  hidden?: boolean
+}
+
+/**
+ * A chord, as one stack of noteheads.
+ *
+ * **Always keyless**, for the same reason a scale is: the quality of a chord is
+ * read off the accidentals in front of its notes, and a key signature would
+ * answer half the question before it is asked — a diminished triad under two
+ * flats looks exactly like a minor one under none.
+ *
+ * Notes a second apart inside a `<chord>` are Verovio's own business; it offsets
+ * the second notehead, which is what a reader expects. That is why this is a
+ * chord where a harmonic *interval* is sometimes not — a unison is two notes
+ * wanting one spot on the staff, and no chord here has one, because a chord is
+ * its distinct members.
+ */
+export function chordMei({ pitches, clef, hidden = false }: ChordMeiOptions): string {
+  if (pitches.length === 0) return document(clef, KEYLESS, '<space dur="1"/>')
+
+  const notes = pitches
+    .map((pitch) => noteElement(pitch, KEYLESS, '', hidden))
+    .join('\n                    ')
+
+  return document(
+    clef,
+    KEYLESS,
+    `<chord dur="1"${hidden ? HIDDEN : ''}>
+                    ${notes}
+                  </chord>`,
+  )
+}
+
 /* ------------------------------------------------------------------ rhythm
 
    A rhythm is drawn on a single line with a percussion clef: there is no pitch

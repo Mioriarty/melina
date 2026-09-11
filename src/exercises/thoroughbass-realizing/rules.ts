@@ -5,7 +5,7 @@ import {
   type ThoroughbassQuestion,
   type ThoroughbassRoundSpec,
 } from '@/exercises/thoroughbass-shared/generate'
-import { sameNotes } from '@/lib/music/figuredBass'
+import { sameNotes } from '@/lib/music/scale'
 import { tonicKey, type PitchClass } from '@/lib/music/scale'
 
 /**

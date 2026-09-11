@@ -150,6 +150,32 @@ export const CATEGORIES: readonly CategoryDef[] = [
     ],
   },
   {
+    // **Chords — a braid of two, and then the writing.** Reading a chord and
+    // hearing one are the two ways of knowing the same thing and neither comes
+    // first; writing one needs both, which is why it stands below them with
+    // both edges arriving. See `pathLayout.ts`.
+    id: 'chords',
+    icon: 'albums',
+    status: 'ready',
+    guides: [
+      {
+        // **The names are a convention, and a convention has to be told.** A
+        // first inversion is a Sextakkord because that is what it has always
+        // been called, and a player who has not been told it is not being
+        // asked a hard question but an unfair one — the same reason the
+        // figured bass guide is a stop on the path rather than a footnote.
+        id: 'chords',
+        icon: 'book',
+        status: 'ready',
+      },
+    ],
+    exercises: [
+      { id: 'reading', icon: 'albums', status: 'ready' },
+      { id: 'hearing', icon: 'ear', status: 'ready' },
+      { id: 'writing', icon: 'create', status: 'ready' },
+    ],
+  },
+  {
     id: 'harmonic-prediction',
     icon: 'sparkles',
     status: 'planned',

@@ -357,5 +357,70 @@
     "mixolydian": "{{tonic}} mixolydian",
     "locrian": "{{tonic}} locrian"
   },
-  "scaleNameFallback": "{{tonic}} {{mode}}"
+  "scaleNameFallback": "{{tonic}} {{mode}}",
+  "chordQualities": {
+    "major": "Major triad",
+    "minor": "Minor triad",
+    "diminished": "Diminished triad",
+    "augmented": "Augmented triad",
+    "dominant-seventh": "Dominant seventh",
+    "major-seventh": "Major seventh",
+    "minor-seventh": "Minor seventh",
+    "half-diminished-seventh": "Half-diminished seventh",
+    "diminished-seventh": "Diminished seventh"
+  },
+  "chordQualitiesShort": {
+    "major": "Maj",
+    "minor": "Min",
+    "diminished": "Dim",
+    "augmented": "Aug",
+    "dominant-seventh": "D7",
+    "major-seventh": "maj7",
+    "minor-seventh": "m7",
+    "half-diminished-seventh": "ø7",
+    "diminished-seventh": "°7"
+  },
+  "chordQualitiesInName": {
+    "major": "major triad",
+    "minor": "minor triad",
+    "diminished": "diminished triad",
+    "augmented": "augmented triad",
+    "dominant-seventh": "dominant seventh",
+    "major-seventh": "major seventh",
+    "minor-seventh": "minor seventh",
+    "half-diminished-seventh": "half-diminished seventh",
+    "diminished-seventh": "diminished seventh"
+  },
+  "chordName": "{{root}} {{quality}}",
+  "inversions": {
+    "3": {
+      "0": "Root position",
+      "1": "First inversion",
+      "2": "Second inversion"
+    },
+    "4": {
+      "0": "Root position",
+      "1": "First inversion",
+      "2": "Second inversion",
+      "3": "Third inversion"
+    }
+  },
+  "inversionsShort": {
+    "0": "Root",
+    "1": "1st",
+    "2": "2nd",
+    "3": "3rd"
+  },
+  "lagen": {
+    "root": "Octave position",
+    "third": "Third position",
+    "fifth": "Fifth position",
+    "seventh": "Seventh position"
+  },
+  "lagenShort": {
+    "root": "8ve",
+    "third": "3rd",
+    "fifth": "5th",
+    "seventh": "7th"
+  }
 }

@@ -46,6 +46,9 @@ export type DifficultyGroup =
   | 'thoroughbass-realizing'
   | 'scale-degrees'
   | 'melodic-dictation'
+  | 'chord-reading'
+  | 'chord-hearing'
+  | 'chord-writing'
 
 export function difficultyTitleKey(group: DifficultyGroup, id: string): string {
   return `levels:${group}.${id}.title`

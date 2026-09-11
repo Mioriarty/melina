@@ -357,5 +357,70 @@
     "mixolydian": "{{tonic}} mixolydisch",
     "locrian": "{{tonic}} lokrisch"
   },
-  "scaleNameFallback": "{{tonic}} {{mode}}"
+  "scaleNameFallback": "{{tonic}} {{mode}}",
+  "chordQualities": {
+    "major": "Dur-Dreiklang",
+    "minor": "Moll-Dreiklang",
+    "diminished": "verminderter Dreiklang",
+    "augmented": "übermäßiger Dreiklang",
+    "dominant-seventh": "Dominantseptakkord",
+    "major-seventh": "großer Dur-Septakkord",
+    "minor-seventh": "kleiner Moll-Septakkord",
+    "half-diminished-seventh": "halbverminderter Septakkord",
+    "diminished-seventh": "verminderter Septakkord"
+  },
+  "chordQualitiesShort": {
+    "major": "Dur",
+    "minor": "Moll",
+    "diminished": "verm",
+    "augmented": "übm",
+    "dominant-seventh": "D7",
+    "major-seventh": "maj7",
+    "minor-seventh": "m7",
+    "half-diminished-seventh": "ø7",
+    "diminished-seventh": "°7"
+  },
+  "chordQualitiesInName": {
+    "major": "Dur-Dreiklang",
+    "minor": "Moll-Dreiklang",
+    "diminished": "verminderter Dreiklang",
+    "augmented": "übermäßiger Dreiklang",
+    "dominant-seventh": "Dominantseptakkord",
+    "major-seventh": "großer Dur-Septakkord",
+    "minor-seventh": "kleiner Moll-Septakkord",
+    "half-diminished-seventh": "halbverminderter Septakkord",
+    "diminished-seventh": "verminderter Septakkord"
+  },
+  "chordName": "{{quality}} über {{root}}",
+  "inversions": {
+    "3": {
+      "0": "Grundstellung",
+      "1": "Sextakkord",
+      "2": "Quartsextakkord"
+    },
+    "4": {
+      "0": "Grundstellung",
+      "1": "Quintsextakkord",
+      "2": "Terzquartakkord",
+      "3": "Sekundakkord"
+    }
+  },
+  "inversionsShort": {
+    "0": "Grundst.",
+    "1": "1. Umk.",
+    "2": "2. Umk.",
+    "3": "3. Umk."
+  },
+  "lagen": {
+    "root": "Oktavlage",
+    "third": "Terzlage",
+    "fifth": "Quintlage",
+    "seventh": "Septlage"
+  },
+  "lagenShort": {
+    "root": "Oktav",
+    "third": "Terz",
+    "fifth": "Quint",
+    "seventh": "Sept"
+  }
 }

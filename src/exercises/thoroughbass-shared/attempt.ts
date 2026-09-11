@@ -4,7 +4,7 @@ import { figureKey, parseFigureKey, type Figure } from '@/lib/music/figuredBass'
 import { isKeySignatureId } from '@/lib/music/keySignature'
 import { parsePitch, pitchKey } from '@/lib/music/pitch'
 
-import { DEFAULT_REGISTER } from './voicing'
+import { DEFAULT_REGISTER } from '@/lib/music/voicing'
 
 import {
   describeEvent,

@@ -8,13 +8,12 @@ import {
   isCanonical,
   parseFigureKey,
   preferredFigure,
-  sameNotes,
   type Figure,
   type FigureAccidental,
 } from './figuredBass'
 import { KEY_SIGNATURES, type KeySignatureId } from './keySignature'
 import { LETTERS, pitch, type Alteration, type Letter } from './pitch'
-import { tonicKey, type PitchClass } from './scale'
+import { sameNotes, tonicKey, type PitchClass } from './scale'
 
 const KEYS: readonly KeySignatureId[] = KEY_SIGNATURES.map((signature) => signature.id)
 

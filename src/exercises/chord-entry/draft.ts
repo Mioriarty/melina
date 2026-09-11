@@ -1,4 +1,5 @@
-import { voiceChords } from '@/exercises/thoroughbass-shared/voicing'
+import type { ClefId } from '@/lib/music/clef'
+import { voiceChords } from '@/lib/music/voicing'
 import type { Pitch } from '@/lib/music/pitch'
 import type { ScoreCursor } from '@/lib/notation/scoreCursor'
 import { tonicKey, type PitchClass } from '@/lib/music/scale'
@@ -113,8 +114,11 @@ export function removeLast(draft: ChordDraft): ChordDraft {
  * follows itself — a chord after another opens near where that one began,
  * which is what keeps a resolution from leaping an octave.
  */
-export function draftPitches(draft: ChordDraft): readonly (readonly Pitch[])[] {
-  return voiceChords(draft.chords)
+export function draftPitches(
+  draft: ChordDraft,
+  clef: ClefId = 'treble',
+): readonly (readonly Pitch[])[] {
+  return voiceChords(draft.chords, undefined, clef)
 }
 
 /**
@@ -136,11 +140,15 @@ export function draftPitches(draft: ChordDraft): readonly (readonly Pitch[])[] {
  * the note would open a chord after the last one — which is what it will mean
  * again the moment there is somewhere to press.
  */
-export function placedPitch(draft: ChordDraft, note: PitchClass): Pitch | undefined {
+export function placedPitch(
+  draft: ChordDraft,
+  note: PitchClass,
+  clef: ClefId = 'treble',
+): Pitch | undefined {
   const index = currentEvent(draft)
   if (index >= draft.chords.length) {
     const after = [...draft.chords, [note]]
-    return voiceChords(after)[after.length - 1]?.[0]
+    return voiceChords(after, undefined, clef)[after.length - 1]?.[0]
   }
 
   const key = tonicKey(note)
@@ -148,13 +156,17 @@ export function placedPitch(draft: ChordDraft, note: PitchClass): Pitch | undefi
   const chords = draft.chords.map((chord, on) =>
     on === index && at === -1 ? [...chord, note] : chord,
   )
-  const voiced = voiceChords(chords)[index] ?? []
+  const voiced = voiceChords(chords, undefined, clef)[index] ?? []
   return voiced[at === -1 ? voiced.length - 1 : at]
 }
 
 /** Where the notes placed under one chord slot actually sit. */
-export function chordPitches(draft: ChordDraft, index: number): readonly Pitch[] {
-  return draftPitches(draft)[index] ?? []
+export function chordPitches(
+  draft: ChordDraft,
+  index: number,
+  clef: ClefId = 'treble',
+): readonly Pitch[] {
+  return draftPitches(draft, clef)[index] ?? []
 }
 
 export function draftAnswer(draft: ChordDraft): readonly (readonly PitchClass[])[] {

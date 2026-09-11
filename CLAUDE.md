@@ -518,6 +518,62 @@ shortest note: a bar with one triplet in it is a triplet bar even where a
 sixteenth elsewhere is shorter, because "you keep missing triplets" is the
 finding the label exists to make possible.
 
+### Chords — `chord.ts`
+
+**A chord is a stack of thirds above a root, spelled.** Nine of them: four
+triads and five sevenths, which is exactly the list every German Hochschule
+surveyed asks for — UdK's own paper names Dur, Moll, übermäßig, D7 and the
+ganz- and halbverminderte Septakkorde.
+
+Each quality is stored as **the interval from the root to each member**, never
+as semitones, which is the same shape `DEGREE_QUALITIES` has in `scale.ts` and
+is there for the same reason: it makes B♭ half-diminished come out B♭ D♭ F♭ A♭
+rather than B♭ C♯ E G♯. `chordNotes` walks `transpose`, so a spelling needing a
+triple accidental comes back `undefined` instead of being invented.
+
+This is a **sibling** of `figuredBass.ts`, not a replacement. That file is right
+to need no chord model — a figure is interval arithmetic above a bass — and
+root, quality and inversion are none of what a figure says. They are what
+_naming_ a chord says, which is the same subject read from the other end.
+
+**Inversion is which member is lowest; Lage is which is highest.** Everything
+between them fills in cyclically, and that is what makes Lage an answer axis of
+its own without four voices and without doubling a note: root-position C–E–G is
+Quintlage and root-position C–G–E′ is Terzlage, both with the root in the bass.
+`closePosition` is the Lage that stacking straight up would give, which is what
+a level with the row switched off always asks for.
+
+**A chord may need one double accidental and never two.** A diminished seventh
+above C _is_ B𝄫 — count the thirds and the seventh has to be a B of some kind —
+so refusing doubles outright would refuse the chord on half the roots it
+actually lives on. What is refused is a chord wanting two at once, which is
+always respelled instead. `isCleanChord` computes that from the spelling rather
+than tabulating it, exactly as `isCleanScale` does, and the writing keyboard's
+accidental switches stack to a double for precisely this chord.
+
+**Two chords have no audible inversion, and it is computed rather than known.**
+`isSymmetric` asks whether the chord's semitone pattern maps onto itself under
+rotation, which is true of the augmented triad and the fully diminished seventh
+and nothing else. `hearableInversions` therefore returns root position alone for
+them, and a hearing round neither generates nor asks for any other — the same
+rule `HEARABLE_INTERVAL_KEYS` states for intervals, and for the same reason: a
+question whose answer cannot be heard is not a hard question but an unanswerable
+one. Reading is untouched, because there the root can be seen.
+
+`readChord` reads a written stack back to the chord that spelled it, which is
+the round trip `modeOf` plays on the scale generator and `onsetsOf` on the
+rhythm one: the generator is checked against the model rather than trusted.
+`chord.test.ts` also holds the **property** that every answer a hearing round
+can ask for has a sound of its own, so a well-meant addition fails loudly
+instead of quietly making a question unanswerable.
+
+`inversionFigure` is the one table there is — `5/3`, `6`, `6/4`, `7`, `6/5`,
+`4/3`, `2` — because the abbreviation is a convention rather than arithmetic,
+the same reason `STACKS` is a table. It deliberately carries **no accidentals**:
+the first inversion of a C augmented triad is figured `6/♯3` over its E and is
+still a first inversion, and asking `figuredBass.ts` would have produced the
+second thing while looking like the first.
+
 ## Notation — `src/lib/notation/` and `src/components/notation/`
 
 **Print an accidental only when it differs from the key signature.** `@accid` is
@@ -530,7 +586,7 @@ counting drawn glyphs.
 Verovio is **~7 MB of WebAssembly embedded in JavaScript**, not a separate `.wasm`
 file. It must stay lazy: dynamic `import()` only, from a `React.lazy` route, in its
 own named Rollup chunk, excluded from the Workbox precache by `globIgnores` and
-cached at runtime instead. If precache jumps from its usual ~750 KiB to ~8 MB,
+cached at runtime instead. If precache jumps from its usual ~990 KiB to ~8 MB,
 that wiring has been broken. Leland ships inside the wasm; `setResourcePath` is a no-op on web.
 
 The question generator anchors a note's accidental to the key signature ~78% of the
@@ -593,6 +649,16 @@ Spacing is applied per render rather than once at startup, since one toolkit is
 shared by the whole app. `renderMei` sets the options immediately before the
 render they belong to, and everything from there to `renderToSVG` is
 synchronous, so no other render can interleave and pick up the wrong spacing.
+
+**A chord is one stack of noteheads on a keyless staff.** Keyless for the reason
+a scale is: the quality is read off the accidentals in front of the notes, and a
+key signature would answer half the question before it is asked. The hearing
+question engraves the chord and hides it with `@visible="false"` rather than
+leaving it out, so the staff is the same size before and after the answer.
+`CHORD_ANSWER_PROFILE` is the fixed page the _writing_ direction needs — the
+widest chord in the vocabulary engraves 41% wider than an empty bar, so without
+it the staff would shrink under the player's hands as accidentals arrived.
+Reading and hearing need no profile at all.
 
 ### A phrase on the page — `melodicPhraseMei`, `melodicPhraseProfile`
 
@@ -836,6 +902,24 @@ rather than one that has to guess which you meant.
 A station carries `titleKey` and `blurbKey`, not a title — the words come from
 `curriculum.json`.
 
+**The third braid merges too, and it is on the main line.** Chord Reading and
+Chord Hearing stand side by side — the two ways of knowing one chord, neither
+of them first — and Chord Writing sits below with both edges arriving at it,
+because writing one down needs both. Its guide stands at the head of the braid,
+since the names are a convention and a convention has to be told.
+
+Reading sits **right** and hearing **left**, which is forced rather than chosen:
+the route comes off the thoroughbass island on the right and every consecutive
+pair down the column has to cross the middle, or the path starts drifting one
+way. `pathLayout.test.ts` holds that, and it has no slack left.
+
+Adding a braid _below_ the merge is also what made the uneven-spacing guard
+measure the stagger between two level stations as though it were a gap — which
+is the case its own comment anticipated when it refused to find the merge by
+index. It now skips pairs that `standLevel` says stand side by side, and a
+second guard says that no two joined stations may stand level at all, which is
+the geometric rule the braid has always rested on.
+
 **The second braid merges.** Rhythmic Dictation and Scale Degrees stand side by
 side — the _when_ and the _what_, learnable in either order — and Melodic
 Dictation sits below them with both edges arriving at it, because it is the
@@ -904,6 +988,14 @@ that is neither — and the folders say which is which:
 - `thoroughbass-shared/`, `thoroughbass-figuring/` and `thoroughbass-realizing/`
   are the third pair, and the first where the pair is reading and _writing_
   rather than reading and hearing. See **Thoroughbass** below.
+- `chord-shared/`, `chord-reading/`, `chord-hearing/` and `chord-writing/` are
+  the first **three**: the same fact read, heard and written. See **Chords**
+  below.
+- `chord-entry/` is what thoroughbass realising and chord writing genuinely
+  share — the draft a chord is pressed into — the way `dictation-shared/` is
+  what the two dictations share. `ChordKeyboard` reads it, and `voicing.ts`
+  moved to `lib/music/` when a second exercise needed it, because where a note
+  sits is a fact about music rather than about either exercise.
 
 Within a pair, reading and hearing differ only in what notation they show and
 whether there is a play button beside it, so anything else belongs one level up.
@@ -1694,6 +1786,73 @@ Grove is ambiguous in exactly one place that matters, and it should not be
 guessed at: its augmented-sixth example ("signature of G major, E♭ bass — the
 Italian by `6`") only works if that `6` is raised.
 
+### Chords — one fact from three sides
+
+Three exercises rather than a pair, and the third is what makes it worth
+saying: **Reading** names a chord you can see, **Hearing** names one you
+cannot, and **Writing** puts one on the staff from its name alone. Reading and
+hearing braid; writing needs both and merges below them.
+
+**One question type serves all three.** `ChordQuestion` carries the chord, the
+clef, the direction and the placed notes, and `ChordRoundSpec` adds the two
+things the _exercise_ fixes rather than the level — `byEar` and `namesRoot`.
+Everything else is settings, which is what lets one level list serve all three,
+the way thoroughbass's serves its two directions.
+
+**Only reading asks for the root.** A chord sounding on its own says nothing
+about which absolute note it is built on, so hearing asking would be asking
+something there is nothing to hear. Writing is told the root, because the name
+is the question.
+
+**`asks` is carried on the question, not worked out beside it.** It says which
+rows the verdict reads, and it is per-quality, because a symmetric chord has no
+audible inversion. `keyboardRows` is the separate, round-level answer to which
+rows the _keyboard_ draws — and the two have to be separate: a row that appeared
+for some questions and not others would tell the player it was an augmented
+triad before they had named it. So the row stays on the screen and stops being
+required the moment the quality is chosen, which is a thing to learn rather than
+a tell.
+
+**The naming keyboard has no confirm key**, and it earns that the way rhythmic
+dictation does rather than by copying it: each row admits one choice, so the
+answer is exactly fillable and the press that fills the last row is the press
+that answers. Its short position labels are **size-independent** (`1st`,
+`1. Umk.`) because the row is pressable before a quality has been chosen — a
+triad's first inversion is the Sextakkord and a seventh chord's the
+Quintsextakkord, so a face that knew which would relabel itself under the hand.
+The full name and the figure arrive underneath once the quality says which.
+
+**Writing reuses thoroughbass's answer surface whole** — `ChordKeyboard`,
+`ChordDraft`, `voiceChord`, autosubmit when the chord is full. What it needed
+was one thing: a **double accidental**, because C°7 is B𝄫 and a chord that could
+be read and not written back would be half an exercise. That is one more press
+on a switch that already existed, off by default so a figured bass keeps its
+±1.
+
+**Writing grades the notes, the bass, and the top only where a Lage was named.**
+Where it was not, the prompt never said what belongs on top, and failing someone
+for C–G–E′ when it asked for "root position" would be failing them for something
+that was never asked — the same principle as grading a melody by sound. The
+middle notes are free in every case, because nothing in the prompt fixes them.
+
+**A wrong chord is not replaced by the right one**: the two are drawn side by
+side, and the play button goes on the right-hand one only, which is the rule
+realising a figured bass already follows.
+
+**Playback is a level axis, not a control.** Whether a chord arrives as a block
+or as an arpeggio is a real difficulty — a block chord is the harder thing to
+take apart — so it is `PlayDirection`, reused whole with its translations:
+`harmonic` is the block and `ascending`/`descending` the arpeggios. An arpeggio
+**accumulates**, every note ringing until the last arrives, so what stands at
+the end is the chord; damping each note as the next came would make it a melody
+of the members rather than an easier way to hear the chord. `schedule.ts` is
+pure arithmetic over the question, kept out of `engine.ts` for the reason
+`rhythmSchedule.ts` is.
+
+The levels run in **three sections** — triads, sevenths, positions — and move
+one axis at a time. Clefs widen with them and the C-clefs arrive only at the
+top, which is the level meant to be uncomfortable.
+
 ## Guides — `src/pages/MelodyShapePage.tsx` and `components/explain/`
 
 A setting whose meaning takes a picture gets a page, reached from a question
@@ -1702,7 +1861,15 @@ Corner rather than a line under the hint, so it is there the first time you meet
 the setting and invisible every time after.
 
 **A guide that has to be read before the exercise makes sense gets a station of
-its own.** That is a different thing from contextual help, and the melodic shape
+its own.** There are three of them now — figured bass, the modes, and the
+chords, whose names are a convention nothing in the exercise can teach you: a
+first inversion is a Sextakkord because that is what it has always been called.
+Everything on that page is `chord.ts` evaluated, so it cannot come to describe
+something the app no longer does, and `ChordsPage.test.ts` holds the examples to
+`isCleanChord` — the same bar a question has to clear — so the guide can never
+print a chord the exercise would refuse to ask for.
+
+That is a different thing from contextual help, and the melodic shape
 page is the one that is not: it explains a single setting to somebody already in
 the exercise, and there a question mark in the corner is exactly where it should
 be. The other two are stations. The figured bass page explains a _convention_
@@ -1886,6 +2053,16 @@ at once plus `bars` and `span`, so every query that already existed reaches it:
 `{ root: 'Eb' }` meant "every question built on an E♭" before melodies existed
 and did not have to learn that they now do.
 
+A chord row is four small facts — root, quality, inversion and Lage — plus the
+clef and how it was played, and **nothing had to be invented for it**, which was
+the design being tested a fourth time: `root`, `clef` and `direction` already
+meant what they mean, so `{ root: 'Eb' }` reached chords without being told they
+exist. The notes, where they sit and the answer that would have been right are
+all `chord.ts` applied to the row. `close` — whether the chord stands straight
+up from its bass — is derived exactly as `staffOnly` is, which is what lets a
+level with the Lage switched off count only the chords it could actually have
+drawn.
+
 A rhythm level filters on metre and tempo, the dimensions it actually pins, and
 **not** on its cell weights: weights shape what comes up rather than bounding it,
 so a level cannot claim the bars it happened not to draw.
@@ -1969,7 +2146,7 @@ practise next, and the strengths are still there at the other end.
 
 ## Not yet built
 
-Everything after Thoroughbass — harmonic prediction, harmonic completion,
+Everything after Chords — harmonic prediction, harmonic completion,
 counterpoint, the daily round — is still a placeholder page. Figured bass used
 to be a planned exercise under harmonic completion; it is its own category now,
 because reading a figure and writing one are two exercises rather than one.

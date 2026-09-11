@@ -82,6 +82,27 @@
         }
       }
     },
+    "chords": {
+      "title": "Akkorde",
+      "blurb": "Drei- und Vierklänge: welche Art, welcher Ton unten, welcher oben.",
+      "exercises": {
+        "reading": {
+          "title": "Akkorde lesen",
+          "short": "Lesen",
+          "blurb": "Benenne den Akkord im System — Grundton, Art und Stellung."
+        },
+        "hearing": {
+          "title": "Akkorde hören",
+          "short": "Hören",
+          "blurb": "Benenne den Akkord, den du hörst. Das System bleibt leer bis zur Antwort."
+        },
+        "writing": {
+          "title": "Akkorde schreiben",
+          "short": "Schreiben",
+          "blurb": "Setze einen benannten Akkord Ton für Ton ins System."
+        }
+      }
+    },
     "harmonic-prediction": {
       "title": "Harmonische Vorhersage",
       "blurb": "Erraten, wohin die Verbindung strebt.",
@@ -147,6 +168,10 @@
     "scales": {
       "title": "Die sieben Modi",
       "blurb": "Was jeder Modus ist — und die Eselsbrücke: Dur oder Moll mit einem verschobenen Ton."
+    },
+    "chords": {
+      "title": "Akkordarten",
+      "blurb": "Die neun Akkorde, nach denen melina fragt, und was ihre Namen sagen."
     }
   }
 }

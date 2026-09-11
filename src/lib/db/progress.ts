@@ -96,6 +96,19 @@ export interface AttemptFilter {
   bars?: OneOrMany<string>
   /** How far the melody ranged, in semitones, as a string. Derived. */
   span?: OneOrMany<string>
+
+  /** Chord questions only. */
+  quality?: OneOrMany<string>
+  /** Which member stands in the bass, as a string: `0` is root position. */
+  inversion?: OneOrMany<string>
+  /** Which member stands on top — the Lage — as a string. */
+  top?: OneOrMany<string>
+  /** Three for a triad, four for a seventh chord, as a string. Derived. */
+  size?: OneOrMany<string>
+  /** True to count only chords stacked straight up from the bass. Derived. */
+  close?: boolean
+  /** True to count only chords needing a double accidental. Derived. */
+  doubled?: boolean
 }
 
 /** How many recent matching answers an accuracy is measured over. */

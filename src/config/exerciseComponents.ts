@@ -29,6 +29,9 @@ const EXERCISE_COMPONENTS: Record<string, ExerciseComponent> = {
   'thoroughbass/realizing': lazy(
     () => import('@/exercises/thoroughbass-realizing/ThoroughbassRealizingExercise'),
   ),
+  'chords/reading': lazy(() => import('@/exercises/chord-reading/ChordReadingExercise')),
+  'chords/hearing': lazy(() => import('@/exercises/chord-hearing/ChordHearingExercise')),
+  'chords/writing': lazy(() => import('@/exercises/chord-writing/ChordWritingExercise')),
   'scales/hearing': lazy(() => import('@/exercises/scale-hearing/ScaleHearingExercise')),
   'scales/reading': lazy(() => import('@/exercises/scale-reading/ScaleReadingExercise')),
   'scales/degrees': lazy(() => import('@/exercises/scale-degrees/ScaleDegreesExercise')),

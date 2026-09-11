@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import ExercisePage from '@/pages/ExercisePage'
 import HomePage from '@/pages/HomePage'
+import ChordsPage from '@/pages/ChordsPage'
 import FiguredBassPage from '@/pages/FiguredBassPage'
 import ModesPage from '@/pages/ModesPage'
 import MelodyShapePage from '@/pages/MelodyShapePage'
@@ -35,6 +36,7 @@ export function App() {
           <Route path="guide/melodic-shape" element={<MelodyShapePage />} />
           <Route path="guide/figured-bass" element={<FiguredBassPage />} />
           <Route path="guide/scales" element={<ModesPage />} />
+          <Route path="guide/chords" element={<ChordsPage />} />
           <Route path="train/:categoryId/:exerciseId" element={<ExercisePage />} />
           <Route path="*" element={<ExercisePage />} />
         </Route>

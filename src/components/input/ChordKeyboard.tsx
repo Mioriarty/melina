@@ -10,8 +10,9 @@ import {
   place,
   placedPitch,
   type ChordDraft,
-} from '@/exercises/thoroughbass-realizing/draft'
+} from '@/exercises/chord-entry/draft'
 import { useMusicNames } from '@/hooks/useMusicNames'
+import type { ClefId } from '@/lib/music/clef'
 import { alterationInKey, type KeySignatureId } from '@/lib/music/keySignature'
 import { isAlteration, LETTERS, type Letter } from '@/lib/music/pitch'
 import { tonicKey, type PitchClass } from '@/lib/music/scale'
@@ -63,6 +64,18 @@ export interface ChordKeyboardProps {
   keySignature: KeySignatureId
   /** Whether a note may be raised or lowered out of the key. */
   alterations: boolean
+  /**
+   * Whether the switches reach a *double* accidental on a second press.
+   *
+   * Off for a figured bass, where an accidental shifts a line by one semitone
+   * from what the key gives and a double is not a thing a figure can ask for.
+   * On for chord writing, where it is: a diminished seventh above C is B double
+   * flat, and a chord that could be read and not written back would be half an
+   * exercise.
+   */
+  doubles?: boolean
+  /** Which staff the notes are drawn on, and placed for. */
+  clef?: ClefId
   state?: KeyboardState
   onChange: (draft: ChordDraft) => void
   onRemove: () => void
@@ -72,6 +85,8 @@ export function ChordKeyboard({
   draft,
   keySignature,
   alterations,
+  doubles = false,
+  clef = 'treble',
   state = 'answering',
   onChange,
   onRemove,
@@ -79,16 +94,28 @@ export function ChordKeyboard({
   const { t } = useTranslation('exercise')
   const names = useMusicNames()
 
-  const [shift, setShift] = useState<-1 | 0 | 1>(0)
+  const [shift, setShift] = useState<-2 | -1 | 0 | 1 | 2>(0)
 
   const revealed = state === 'revealed'
   const full = isFull(draft)
   const live = !revealed && !full
   const canAlter = alterations && live
 
+  /**
+   * A switch that stacks rather than simply toggling.
+   *
+   * One press is a sharp or a flat; a second, where the exercise allows one, is
+   * a double; a third clears it. Pressing the opposite sign always starts over
+   * from one, which is what somebody who overshot actually wants.
+   */
   const toggle = useCallback(
-    (next: -1 | 1) => setShift((current) => (current === next ? 0 : next)),
-    [],
+    (next: -1 | 1) =>
+      setShift((current) => {
+        if (current === 0 || Math.sign(current) !== next) return next
+        if (doubles && current === next) return (next * 2) as -2 | 2
+        return 0
+      }),
+    [doubles],
   )
 
   /** The note a key stands for, once the armed accidental is taken into account. */
@@ -165,22 +192,30 @@ export function ChordKeyboard({
         {alterations && (
           <>
             <Switch
-              pressed={shift === 1}
+              pressed={shift > 0}
               disabled={!canAlter}
-              label={t('realizing.keyboard.sharp')}
+              label={
+                shift === 2
+                  ? t('realizing.keyboard.doubleSharp')
+                  : t('realizing.keyboard.sharp')
+              }
               hint="+"
               onClick={() => toggle(1)}
             >
-              ♯
+              {shift === 2 ? '𝄪' : '♯'}
             </Switch>
             <Switch
-              pressed={shift === -1}
+              pressed={shift < 0}
               disabled={!canAlter}
-              label={t('realizing.keyboard.flat')}
+              label={
+                shift === -2
+                  ? t('realizing.keyboard.doubleFlat')
+                  : t('realizing.keyboard.flat')
+              }
               hint="−"
               onClick={() => toggle(-1)}
             >
-              ♭
+              {shift === -2 ? '𝄫' : '♭'}
             </Switch>
           </>
         )}
@@ -204,7 +239,7 @@ export function ChordKeyboard({
         {LETTERS.map((letter) => {
           const note = noteFor(letter)
           const allowed = live && note !== undefined && canPlace(draft, note)
-          const pitch = note === undefined ? undefined : placedPitch(draft, note)
+          const pitch = note === undefined ? undefined : placedPitch(draft, note, clef)
 
           return (
             <button
@@ -221,7 +256,7 @@ export function ChordKeyboard({
               {pitch !== undefined && (
                 <MiniStaff
                   pitch={pitch}
-                  clef="treble"
+                  clef={clef}
                   keySignature={keySignature}
                   className="h-14 sm:h-16"
                 />

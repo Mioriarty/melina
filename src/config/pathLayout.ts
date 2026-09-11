@@ -149,10 +149,24 @@ export const PATH_NODES: readonly PathNodePosition[] = [
   { stationId: 'guide/figured-bass', x: 68, y: 1185 },
   { stationId: 'thoroughbass/figuring', x: 74, y: 1390 },
   { stationId: 'thoroughbass/realizing', x: 62, y: 1615 },
-  { stationId: 'harmonic-prediction', x: 30, y: 1850 },
-  { stationId: 'harmonic-completion', x: 66, y: 2070 },
-  { stationId: 'counterpoint', x: 35, y: 2310 },
-  { stationId: 'daily', x: 62, y: 2520 },
+  // **The third braid**, and the first one below the merge. Reading a chord
+  // and hearing one are the two ways of knowing the same thing, neither of
+  // them first; writing one needs both, so both join it. Its explainer stands
+  // at the head, because the names are a convention and a convention has to be
+  // told before it can be asked about.
+  //
+  // Reading sits right and hearing left rather than the other way round, and
+  // that is forced rather than chosen: the route comes off thoroughbass on the
+  // right, and every consecutive pair down the column has to cross the middle
+  // or the path starts drifting one way. `pathLayout.test.ts` holds it.
+  { stationId: 'guide/chords', x: 30, y: 1885 },
+  { stationId: 'chords/reading', x: 74, y: 2130 },
+  { stationId: 'chords/hearing', x: 26, y: 2200 },
+  { stationId: 'chords/writing', x: 56, y: 2455 },
+  { stationId: 'harmonic-prediction', x: 30, y: 2745 },
+  { stationId: 'harmonic-completion', x: 66, y: 2960 },
+  { stationId: 'counterpoint', x: 35, y: 3190 },
+  { stationId: 'daily', x: 62, y: 3390 },
 ]
 
 /**
@@ -179,7 +193,17 @@ export const PATH_EDGES: readonly PathEdge[] = [
   { from: 'scales/hearing', to: 'scales/degrees' },
   { from: 'dictation/rhythm', to: 'dictation/short-melodies' },
   { from: 'scales/degrees', to: 'dictation/short-melodies' },
-  { from: 'dictation/short-melodies', to: 'harmonic-prediction' },
+  // Chords are the way into harmony, so the main line runs through them. The
+  // guide leads into both halves of the braid and the two of them into the
+  // writing below, which is the same shape the second braid has: read across
+  // and it is the two ways of knowing a chord, read down and it is what needs
+  // both of them.
+  { from: 'dictation/short-melodies', to: 'guide/chords' },
+  { from: 'guide/chords', to: 'chords/reading' },
+  { from: 'guide/chords', to: 'chords/hearing' },
+  { from: 'chords/reading', to: 'chords/writing' },
+  { from: 'chords/hearing', to: 'chords/writing' },
+  { from: 'chords/writing', to: 'harmonic-prediction' },
   // **Thoroughbass is off the path, joined only to itself.** Nothing leads
   // into it and nothing leads out, so `PATH_EDGES` has exactly two components
   // and the walk from the top of the column does not reach this one. That is

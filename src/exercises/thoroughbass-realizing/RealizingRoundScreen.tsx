@@ -16,7 +16,7 @@ import {
   isFull,
   removeLast,
   type ChordDraft,
-} from './draft'
+} from '@/exercises/chord-entry/draft'
 import type { RealizingAnswer } from './rules'
 
 export interface RealizingRoundScreenProps {

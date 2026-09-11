@@ -1,5 +1,18 @@
 import { describe, expect, it } from 'vitest'
 
+import { CHORD_DIFFICULTIES } from '@/exercises/chord-shared/difficulties'
+import {
+  generateRound as generateChordRound,
+  type ChordRoundSpec,
+} from '@/exercises/chord-shared/generate'
+import {
+  INVERSION_CHOICES,
+  QUALITY_CHOICES,
+  ROOT_CHOICES,
+  parseChordSettings,
+} from '@/exercises/chord-shared/settings'
+import { CHORD_READING_SETTINGS } from '@/exercises/chord-reading/settings'
+import { isChordQuality } from '@/lib/music/chord'
 import { HEARING_DIFFICULTIES } from '@/exercises/interval-hearing/difficulties'
 import { INTERVAL_HEARING_SETTINGS } from '@/exercises/interval-hearing/settings'
 import { READING_DIFFICULTIES } from '@/exercises/interval-reading/difficulties'
@@ -107,6 +120,9 @@ const ALL_GROUPS: readonly NamedLevels[] = [
   { group: 'melodic-dictation', levels: MELODY_DIFFICULTIES },
   { group: 'thoroughbass-figuring', levels: THOROUGHBASS_DIFFICULTIES },
   { group: 'thoroughbass-realizing', levels: THOROUGHBASS_DIFFICULTIES },
+  { group: 'chord-reading', levels: CHORD_DIFFICULTIES },
+  { group: 'chord-hearing', levels: CHORD_DIFFICULTIES },
+  { group: 'chord-writing', levels: CHORD_DIFFICULTIES },
 ]
 
 describe.each(ALL_GROUPS)('$group levels', ({ group, levels }) => {
@@ -1007,5 +1023,98 @@ describe('level runs', () => {
     const runs = levelRuns(plain?.levels ?? [])
     expect(runs).toHaveLength(1)
     expect(runs[0]?.section).toBeUndefined()
+  })
+})
+
+/* ----------------------------------------------------------------- chords */
+
+describe('chord settings', () => {
+  it('only names qualities, inversions, roots and clefs that exist', () => {
+    for (const { id, settings } of CHORD_DIFFICULTIES) {
+      expect(settings.qualities.length, id).toBeGreaterThan(0)
+      expect(settings.inversions.length, id).toBeGreaterThan(0)
+      expect(settings.roots.length, id).toBeGreaterThan(0)
+      expect(settings.clefs.length, id).toBeGreaterThan(0)
+      expect(settings.directions.length, id).toBeGreaterThan(0)
+
+      for (const quality of settings.qualities) {
+        expect(isChordQuality(quality), `${id}: ${quality}`).toBe(true)
+        expect(QUALITY_CHOICES, id).toContain(quality)
+      }
+      for (const inversion of settings.inversions) {
+        expect(INVERSION_CHOICES, `${id}: ${inversion}`).toContain(inversion)
+      }
+      for (const root of settings.roots) {
+        expect(ROOT_CHOICES, `${id}: ${root}`).toContain(root)
+      }
+      for (const clef of settings.clefs) expect(isClefId(clef), id).toBe(true)
+    }
+  })
+
+  it('survives being stored and read back unchanged', () => {
+    // A level is settings, and settings go through Dexie. A preset the
+    // defensive parser would quietly rewrite is a level that means one thing
+    // on the list and another in the round.
+    for (const level of CHORD_DIFFICULTIES) {
+      expect(parseChordSettings(level.settings), level.id).toEqual(level.settings)
+      expect(CHORD_READING_SETTINGS.parse(level.settings), level.id).toEqual(
+        level.settings,
+      )
+    }
+  })
+
+  it('actually generates a full round, read and heard alike', () => {
+    for (const level of CHORD_DIFFICULTIES) {
+      for (const byEar of [false, true]) {
+        const spec: ChordRoundSpec = {
+          ...level.settings,
+          byEar,
+          namesRoot: !byEar,
+        }
+        const round = generateChordRound(createRandom(4242), spec)
+        expect(round.length, `${level.id} byEar=${byEar}`).toBe(
+          level.settings.questionsPerRound,
+        )
+      }
+    }
+  })
+
+  it('asks only what the level allows', () => {
+    for (const level of CHORD_DIFFICULTIES) {
+      const spec: ChordRoundSpec = {
+        ...level.settings,
+        byEar: false,
+        namesRoot: true,
+      }
+      for (const question of generateChordRound(createRandom(99), spec)) {
+        expect(level.settings.qualities, level.id).toContain(question.chord.quality)
+        expect(level.settings.clefs, level.id).toContain(question.clef)
+        expect(level.settings.directions, level.id).toContain(question.direction)
+        // The inversion may fall back to root position where the level names
+        // one no quality of its has, which is the only widening there is.
+        expect(
+          level.settings.inversions.includes(question.chord.inversion) ||
+            question.chord.inversion === 0,
+          level.id,
+        ).toBe(true)
+      }
+    }
+  })
+
+  it('covers every quality, every inversion and both kinds of playback somewhere', () => {
+    const qualities = new Set(CHORD_DIFFICULTIES.flatMap((l) => l.settings.qualities))
+    const inversions = new Set(CHORD_DIFFICULTIES.flatMap((l) => l.settings.inversions))
+    const directions = new Set(CHORD_DIFFICULTIES.flatMap((l) => l.settings.directions))
+    const clefs = new Set(CHORD_DIFFICULTIES.flatMap((l) => l.settings.clefs))
+
+    for (const quality of QUALITY_CHOICES) expect(qualities).toContain(quality)
+    for (const inversion of INVERSION_CHOICES) expect(inversions).toContain(inversion)
+    // A block chord is the hard one and an arpeggio the way in, so both have
+    // to be somewhere on the ladder.
+    expect(directions).toContain('harmonic')
+    expect(directions).toContain('ascending')
+    expect(clefs.size).toBe(4)
+    // And the Lage is asked somewhere, or the row would never be seen.
+    expect(CHORD_DIFFICULTIES.some((level) => level.settings.lage)).toBe(true)
   })
 })

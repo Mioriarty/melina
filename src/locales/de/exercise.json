@@ -133,7 +133,34 @@
       "hint": "Wie viele bezifferte Basstöne eine Frage trägt. Jeder nimmt den anderen Breite weg — vier ist am Schreibtisch bequem und auf dem Handy eng.",
       "label": "{{count}} Basstöne"
     },
-    "modesGuide": "Was die Modi sind"
+    "modesGuide": "Was die Modi sind",
+    "qualities": {
+      "title": "Akkorde",
+      "hint": "Vier Dreiklänge und fünf Septakkorde. Welche davon vorkommen dürfen.",
+      "guide": "Was die neun Akkorde sind"
+    },
+    "inversions": {
+      "title": "Stellungen",
+      "hint": "Welcher Akkordton im Bass stehen darf. Ein Dreiklang hat keine dritte Umkehrung."
+    },
+    "lage": {
+      "title": "Oberstimme",
+      "hint": "Die Lage: welcher Akkordton oben steht. Ausgeschaltet wird jeder Akkord vom Bass aus gerade aufgeschichtet und nicht danach gefragt.",
+      "asked": "Wird gefragt",
+      "stacked": "Aufgeschichtet",
+      "members": "Benannt als: {{members}}"
+    },
+    "roots": {
+      "title": "Grundtöne",
+      "hint": "Auf welchen Tönen ein Akkord gebaut sein darf. Ein Akkord, der zwei Doppelvorzeichen bräuchte, kommt nie vor, was hier auch gewählt ist."
+    },
+    "chordPlayback": {
+      "title": "Art des Vorspielens",
+      "hint": "Ein Blockakkord ist schwerer zu zerlegen als dieselben Töne nacheinander.",
+      "harmonic": "Gleichzeitig",
+      "ascending": "Aufwärts",
+      "descending": "Abwärts"
+    }
   },
   "round": {
     "end": "Runde beenden",
@@ -147,7 +174,8 @@
       "degree": "Stufentasten",
       "melody": "Melodietasten",
       "figure": "Zifferntasten",
-      "chord": "Akkordtöne"
+      "chord": "Akkordtöne",
+      "chordName": "Akkordname"
     },
     "prompt": {
       "interval": "Welches Intervall ist das?",
@@ -308,7 +336,9 @@
     "keyboard": {
       "sharp": "Nächsten Ton erhöhen",
       "flat": "Nächsten Ton erniedrigen",
-      "delete": "Letzte Eingabe löschen"
+      "delete": "Letzte Eingabe löschen",
+      "doubleSharp": "Den nächsten Ton doppelt erhöhen",
+      "doubleFlat": "Den nächsten Ton doppelt erniedrigen"
     },
     "summary": {
       "subject": "{{figure}} · über {{bass}}"
@@ -316,6 +346,44 @@
     "staff": {
       "yours": "Deine Eingabe",
       "correct": "Richtig wäre"
+    }
+  },
+  "chord": {
+    "prompt": {
+      "reading": "Welcher Akkord ist das?",
+      "hearing": "Welchen Akkord hörst du?",
+      "writing": "Schreibe den {{chord}}"
+    },
+    "keyboard": {
+      "root": "Grundton",
+      "quality": "Akkord",
+      "position": "Stellung",
+      "lage": "Oberstimme"
+    },
+    "score": {
+      "hidden": "Ein leeres System im {{clef}}. Der Akkord erscheint mit der Antwort.",
+      "shown": "Im {{clef}}: {{pitches}}",
+      "empty": "Ein leeres System im {{clef}}, das auf den Akkord wartet."
+    },
+    "staff": {
+      "yours": "Deine Lösung",
+      "correct": "Der gefragte Akkord"
+    },
+    "summary": {
+      "join": ", ",
+      "allCorrect": "Alle Akkorde benannt. Erweitere den Vorrat oder schalte die Lagen dazu."
+    },
+    "reading": {
+      "levelsBlurb": "Ein Akkord im System. Benenne Grundton, Art und Stellung.",
+      "setupBlurb": "Wähle, welche Akkorde vorkommen, auf welchen Grundtönen und in welchen Stellungen."
+    },
+    "hearing": {
+      "levelsBlurb": "Ein Akkord erklingt. Benenne seine Art und wie seine Töne stehen.",
+      "setupBlurb": "Wähle, welche Akkorde vorkommen und wie sie dir vorgespielt werden."
+    },
+    "writing": {
+      "levelsBlurb": "Ein Akkord wird genannt. Setze ihn Ton für Ton ins System.",
+      "setupBlurb": "Wähle, welche Akkorde du schreiben sollst und auf welchen Grundtönen."
     }
   }
 }
