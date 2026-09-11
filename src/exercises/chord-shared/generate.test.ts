@@ -17,7 +17,9 @@ import {
   asksFor,
   availableInversions,
   buildQuestion,
+  chordSpec,
   generateRound,
+  type ChordMode,
   type ChordRoundSpec,
 } from './generate'
 import { DEFAULT_SETTINGS, type ChordSettings } from './settings'
@@ -32,27 +34,21 @@ import { DEFAULT_SETTINGS, type ChordSettings } from './settings'
  */
 
 /** The three ways the exercises ask the generator for the same thing. */
-const WAYS: readonly { name: string; byEar: boolean; namesRoot: boolean }[] = [
-  { name: 'reading', byEar: false, namesRoot: true },
-  { name: 'hearing', byEar: true, namesRoot: false },
-  { name: 'writing', byEar: false, namesRoot: false },
-]
+const WAYS: readonly ChordMode[] = ['reading', 'hearing', 'writing']
 
 const spec = (
   settings: ChordSettings,
   byEar: boolean,
   namesRoot: boolean,
-): ChordRoundSpec => ({ ...settings, byEar, namesRoot })
+): ChordRoundSpec =>
+  chordSpec(settings, byEar ? 'hearing' : namesRoot ? 'reading' : 'writing')
 
 describe('generating a chord round', () => {
   it('fills a full round for every level, in all three directions', () => {
     for (const level of CHORD_DIFFICULTIES) {
-      for (const way of WAYS) {
-        const round = generateRound(
-          createRandom(12345),
-          spec(level.settings, way.byEar, way.namesRoot),
-        )
-        expect(round, `${level.id} / ${way.name}`).toHaveLength(
+      for (const mode of WAYS) {
+        const round = generateRound(createRandom(12345), chordSpec(level.settings, mode))
+        expect(round, `${level.id} / ${mode}`).toHaveLength(
           level.settings.questionsPerRound,
         )
       }
@@ -61,11 +57,8 @@ describe('generating a chord round', () => {
 
   it('reads every question it generates back to the chord that made it', () => {
     for (const level of CHORD_DIFFICULTIES) {
-      for (const way of WAYS) {
-        const round = generateRound(
-          createRandom(777),
-          spec(level.settings, way.byEar, way.namesRoot),
-        )
+      for (const mode of WAYS) {
+        const round = generateRound(createRandom(777), chordSpec(level.settings, mode))
         for (const question of round) {
           const read = readChord(question.pitches)
           expect(read, `${level.id}: ${JSON.stringify(question.chord)}`).toBeDefined()
@@ -74,6 +67,27 @@ describe('generating a chord round', () => {
         }
       }
     }
+  })
+
+  it('plays a block chord in every round but the one that is heard', () => {
+    // A replay you press after answering is confirming a chord you already
+    // know, and the block is what you confirm it against — so reading and
+    // writing never arpeggiate, whatever the shared level list says. Forced in
+    // the spec rather than at the playback call, because the direction is also
+    // what the attempt log records.
+    const level = CHORD_DIFFICULTIES.find((entry) => entry.id === 'lagen')!
+    expect(level.settings.directions).not.toEqual(['harmonic'])
+
+    for (const mode of ['reading', 'writing'] as const) {
+      const round = generateRound(createRandom(606), chordSpec(level.settings, mode))
+      expect(round.length, mode).toBeGreaterThan(0)
+      for (const question of round) expect(question.direction, mode).toBe('harmonic')
+    }
+
+    // Hearing keeps what the level asked for, because there how the chord
+    // arrives *is* the question.
+    const heard = generateRound(createRandom(606), chordSpec(level.settings, 'hearing'))
+    expect(heard.some((question) => question.direction !== 'harmonic')).toBe(true)
   })
 
   it('places every chord where its clef can show it', () => {

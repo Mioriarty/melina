@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import { CHORD_DIFFICULTIES } from '@/exercises/chord-shared/difficulties'
 import {
+  chordSpec,
   generateRound as generateChordRound,
-  type ChordRoundSpec,
 } from '@/exercises/chord-shared/generate'
 import {
   INVERSION_CHOICES,
@@ -1065,14 +1065,12 @@ describe('chord settings', () => {
 
   it('actually generates a full round, read and heard alike', () => {
     for (const level of CHORD_DIFFICULTIES) {
-      for (const byEar of [false, true]) {
-        const spec: ChordRoundSpec = {
-          ...level.settings,
-          byEar,
-          namesRoot: !byEar,
-        }
-        const round = generateChordRound(createRandom(4242), spec)
-        expect(round.length, `${level.id} byEar=${byEar}`).toBe(
+      for (const mode of ['reading', 'hearing', 'writing'] as const) {
+        const round = generateChordRound(
+          createRandom(4242),
+          chordSpec(level.settings, mode),
+        )
+        expect(round.length, `${level.id} / ${mode}`).toBe(
           level.settings.questionsPerRound,
         )
       }
@@ -1081,11 +1079,8 @@ describe('chord settings', () => {
 
   it('asks only what the level allows', () => {
     for (const level of CHORD_DIFFICULTIES) {
-      const spec: ChordRoundSpec = {
-        ...level.settings,
-        byEar: false,
-        namesRoot: true,
-      }
+      // Heard, because that is the one round whose playback the level decides.
+      const spec = chordSpec(level.settings, 'hearing')
       for (const question of generateChordRound(createRandom(99), spec)) {
         expect(level.settings.qualities, level.id).toContain(question.chord.quality)
         expect(level.settings.clefs, level.id).toContain(question.clef)

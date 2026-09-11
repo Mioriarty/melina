@@ -1839,10 +1839,23 @@ middle notes are free in every case, because nothing in the prompt fixes them.
 side, and the play button goes on the right-hand one only, which is the rule
 realising a figured bass already follows.
 
-**Playback is a level axis, not a control.** Whether a chord arrives as a block
-or as an arpeggio is a real difficulty — a block chord is the harder thing to
-take apart — so it is `PlayDirection`, reused whole with its translations:
-`harmonic` is the block and `ascending`/`descending` the arpeggios. An arpeggio
+**Playback is a level axis, not a control** — and **only hearing has it**.
+Whether a chord arrives as a block or as an arpeggio is a real difficulty where
+the chord _is_ the question, and nothing at all where it has already been
+identified on the page or written down: there, pressing the staff confirms a
+chord you already know, and the block is what you confirm it against. So
+`chordSpec` forces `harmonic` for reading and writing, and their setup screens
+do not offer the choice.
+
+Forced in the spec rather than at the playback call, because the direction is
+also what the attempt log records — overriding it at the last moment would have
+left every reading row claiming an arpeggio nobody heard, and a level's own
+accuracy filter looking for it. `chordSpec` is the single place a level's
+settings and an exercise's fixed facts meet, which is what keeps the generator,
+the filter and the tests from disagreeing about what a round is.
+
+It is `PlayDirection`, reused whole with its translations: `harmonic` is the
+block and `ascending`/`descending` the arpeggios. An arpeggio
 **accumulates**, every note ringing until the last arrives, so what stands at
 the end is the chord; damping each note as the next came would make it a melody
 of the members rather than an easier way to hear the chord. `schedule.ts` is

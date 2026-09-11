@@ -6,7 +6,7 @@ import { exerciseTitleKey } from '@/config/curriculum'
 import { chordFilter } from '@/exercises/chord-shared/attempt'
 import { ChordSummary } from '@/exercises/chord-shared/ChordSummary'
 import { CHORD_DIFFICULTIES } from '@/exercises/chord-shared/difficulties'
-import type { ChordRoundSpec } from '@/exercises/chord-shared/generate'
+import { chordSpec, type ChordRoundSpec } from '@/exercises/chord-shared/generate'
 import { NamingRoundScreen } from '@/exercises/chord-shared/NamingRoundScreen'
 import { chordSchedule } from '@/exercises/chord-shared/schedule'
 import { SetupScreen } from '@/exercises/chord-shared/SetupScreen'
@@ -49,8 +49,7 @@ export default function ChordHearingExercise() {
   const settings = draft ?? stored
 
   const spec = useMemo<ChordRoundSpec | undefined>(
-    () =>
-      settings === undefined ? undefined : { ...settings, byEar: true, namesRoot: false },
+    () => (settings === undefined ? undefined : chordSpec(settings, 'hearing')),
     [settings],
   )
 
@@ -113,13 +112,13 @@ export default function ChordHearingExercise() {
         group="chord-hearing"
         levels={CHORD_DIFFICULTIES}
         accuracyFilter={(level) =>
-          chordFilter({ ...level.settings, byEar: true, namesRoot: false }, EXERCISE_ID)
+          chordFilter(chordSpec(level.settings, 'hearing'), EXERCISE_ID)
         }
         onPick={(level) => {
           void unlockAudio()
           setDraft(level.settings)
           writeSettings(level.settings)
-          round.start({ ...level.settings, byEar: true, namesRoot: false })
+          round.start(chordSpec(level.settings, 'hearing'))
         }}
         onCustom={round.toSetup}
       />

@@ -10,7 +10,7 @@ import type { AttemptRow } from '@/lib/db/schema'
 
 import { chordAttempt, chordFilter, chordQuestion } from './attempt'
 import { CHORD_DIFFICULTIES } from './difficulties'
-import { generateRound, type ChordRoundSpec } from './generate'
+import { chordSpec, generateRound } from './generate'
 
 /**
  * A chord question, into the attempt log and out again.
@@ -24,7 +24,7 @@ import { generateRound, type ChordRoundSpec } from './generate'
 const C = parseTonicKey('C') as PitchClass
 
 const spec = (settings: (typeof CHORD_DIFFICULTIES)[number]['settings']) =>
-  ({ ...settings, byEar: false, namesRoot: true }) as ChordRoundSpec
+  chordSpec(settings, 'reading')
 
 /** A logged answer, as the filter sees one. */
 const row = (question: ReturnType<typeof chordAttempt>): AttemptRow => ({

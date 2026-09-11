@@ -199,26 +199,35 @@ export function SetupScreen({
           </div>
         </SetupSection>
 
-        <SetupSection
-          title={t('exercise:setup.chordPlayback.title')}
-          hint={t('exercise:setup.chordPlayback.hint')}
-        >
-          <div className="flex flex-wrap gap-2">
-            {PLAY_DIRECTIONS.map((id) => (
-              <SetupChip
-                key={id}
-                selected={settings.directions.includes(id)}
-                onClick={() => {
-                  const next = toggle(settings.directions, id)
-                  if (next !== undefined) onChange({ ...settings, directions: next })
-                }}
-                label={t(`exercise:setup.chordPlayback.${id}`)}
-              >
-                {t(`exercise:setup.chordPlayback.${id}`)}
-              </SetupChip>
-            ))}
-          </div>
-        </SetupSection>
+        {/*
+          **Only hearing offers this.** How a chord arrives is a difficulty
+          where the chord is the question, and nothing at all where it has
+          already been identified on the page or written down — there the staff
+          is pressed to confirm a chord you already know, and that is always the
+          block sound. See `chordSpec`.
+        */}
+        {direction === 'hearing' && (
+          <SetupSection
+            title={t('exercise:setup.chordPlayback.title')}
+            hint={t('exercise:setup.chordPlayback.hint')}
+          >
+            <div className="flex flex-wrap gap-2">
+              {PLAY_DIRECTIONS.map((id) => (
+                <SetupChip
+                  key={id}
+                  selected={settings.directions.includes(id)}
+                  onClick={() => {
+                    const next = toggle(settings.directions, id)
+                    if (next !== undefined) onChange({ ...settings, directions: next })
+                  }}
+                  label={t(`exercise:setup.chordPlayback.${id}`)}
+                >
+                  {t(`exercise:setup.chordPlayback.${id}`)}
+                </SetupChip>
+              ))}
+            </div>
+          </SetupSection>
+        )}
 
         <SetupSection title={t('exercise:setup.questionsPerRound')}>
           <div className="flex flex-wrap gap-2">

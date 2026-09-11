@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router'
 import { exerciseTitleKey } from '@/config/curriculum'
 import { chordFilter } from '@/exercises/chord-shared/attempt'
 import { CHORD_DIFFICULTIES } from '@/exercises/chord-shared/difficulties'
-import type { ChordRoundSpec } from '@/exercises/chord-shared/generate'
+import { chordSpec, type ChordRoundSpec } from '@/exercises/chord-shared/generate'
 import { chordSchedule } from '@/exercises/chord-shared/schedule'
 import { SetupScreen } from '@/exercises/chord-shared/SetupScreen'
 import type { ChordSettings } from '@/exercises/chord-shared/settings'
@@ -47,10 +47,7 @@ export default function ChordWritingExercise() {
   const settings = draft ?? stored
 
   const spec = useMemo<ChordRoundSpec | undefined>(
-    () =>
-      settings === undefined
-        ? undefined
-        : { ...settings, byEar: false, namesRoot: false },
+    () => (settings === undefined ? undefined : chordSpec(settings, 'writing')),
     [settings],
   )
 
@@ -100,13 +97,13 @@ export default function ChordWritingExercise() {
         group="chord-writing"
         levels={CHORD_DIFFICULTIES}
         accuracyFilter={(level) =>
-          chordFilter({ ...level.settings, byEar: false, namesRoot: false }, EXERCISE_ID)
+          chordFilter(chordSpec(level.settings, 'writing'), EXERCISE_ID)
         }
         onPick={(level) => {
           void unlockAudio()
           setDraft(level.settings)
           writeSettings(level.settings)
-          round.start({ ...level.settings, byEar: false, namesRoot: false })
+          round.start(chordSpec(level.settings, 'writing'))
         }}
         onCustom={round.toSetup}
       />

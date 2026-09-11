@@ -70,6 +70,37 @@ export interface ChordRoundSpec extends ChordSettings {
   namesRoot: boolean
 }
 
+/** Which of the three exercises a round belongs to. */
+export type ChordMode = 'reading' | 'hearing' | 'writing'
+
+/**
+ * A level's settings, plus the things the **exercise** fixes rather than the
+ * level.
+ *
+ * The single place those two meet, so the generator, the accuracy filter and
+ * the tests cannot come to disagree about what a round actually is.
+ *
+ * **Only hearing plays an arpeggio.** How a chord arrives is a real difficulty
+ * where the chord *is* the question — a block is harder to take apart than the
+ * same notes one after another — and it is nothing at all where the chord has
+ * already been identified on the page or written down. There, pressing the
+ * staff is confirming a chord you already know, and the block is the sound to
+ * confirm it against: an arpeggio would be answering a question nobody asked.
+ *
+ * Forced here rather than in the playback call, because the direction is also
+ * what the attempt log records. Overriding it at the last moment would have
+ * left every reading row claiming an arpeggio nobody heard, and a level's own
+ * accuracy filter looking for it.
+ */
+export function chordSpec(settings: ChordSettings, mode: ChordMode): ChordRoundSpec {
+  return {
+    ...settings,
+    byEar: mode === 'hearing',
+    namesRoot: mode === 'reading',
+    directions: mode === 'hearing' ? settings.directions : ['harmonic'],
+  }
+}
+
 const PLACEMENT_TRIES = 40
 
 /** The roots a level offers that this quality can actually be spelled on. */
