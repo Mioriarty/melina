@@ -144,6 +144,13 @@
       "held": "The held chord: a fourth over the bass",
       "resolved": "It resolves: the fourth falls to the third",
       "after": "So `4 3` means a fifth and a fourth, then a fifth and a third. The 5 is never written at all: it was taken for granted in the first chord and it did not move for the second."
+    },
+    "historical": {
+      "title": "What you will meet in older prints",
+      "body": "Two conventions this app does not ask you to write, but that you will run into as soon as you open a real continuo part.",
+      "stroke": "A stroke through a figure — 6 or 4 with a line drawn across it — raises that note a semitone. It means exactly what ♯6 and ♯4 mean; it is only another way of writing them.",
+      "numerals": "The numbers 10 to 14 appear constantly in the earliest figured basses — Peri's Euridice, Cavalieri's Rappresentazione. They mean the third, fourth, fifth, sixth and seventh **in the octave above**. A 13 is a 6 played higher, and a 10 is a 3.",
+      "why": "Which is why they are read here and never asked for: a figure says which notes and never where they sit, so a 13 and a 6 are the same answer to this app. Grading one against the other would be marking you wrong for an octave nobody wrote down."
     }
   },
   "backToPath": "Back to the path"

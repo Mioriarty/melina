@@ -97,6 +97,10 @@ describe('the lines a figure leaves out', () => {
     // "taken by direct percussion".
     expect(expanded('9')).toBe('9/5/3')
     expect(expanded('9/7')).toBe('9/7/5/3')
+    // The compound figures are written out in full: there is nothing in them
+    // the convention takes for granted.
+    expect(expanded('7/4/2')).toBe('7/4/2')
+    expect(expanded('7/6/4')).toBe('7/6/4')
   })
 
   it('keeps the accidental that was written on a line it fills in around', () => {
@@ -346,5 +350,45 @@ describe('a figure that follows another on the same bass', () => {
     expect((expandFigure(figure('6/4')) as Figure).signs.map((s) => s.number)).toEqual([
       6, 4,
     ])
+  })
+})
+
+describe('the compound figures, and the ones that cannot be told apart', () => {
+  const notesOf = (written: string, key: KeySignatureId = '0') =>
+    figurePitches(pitch('C', 0, 3), key, figure(written)) ?? []
+
+  it('resolves an eleventh and a thirteenth as Grove figures them', () => {
+    // "7/4/2 and 9/7/4" for the eleventh; "7/6/4 … " for the thirteenth.
+    expect(spell(notesOf('7/4/2'))).toBe('B F D')
+    expect(spell(notesOf('7/6/4'))).toBe('B A F')
+  })
+
+  it('offers one spelling of each, because a number names a letter', () => {
+    // **9 and 2 name the same letter**, so `7/4/2` and `9/7/4` are the same
+    // three notes differing only in which octave the second is written in —
+    // and register is exactly what a figure does not say. Offering both would
+    // make a chord that two canonical figures answer, which is a question with
+    // two right answers and one of them marked wrong.
+    //
+    // The way that is enforced is simply that no stack holds the second
+    // spelling, so it cannot be expanded and therefore cannot be asked for.
+    const ninth = notesOf('9').find((note) => note.letter === 'D')
+    const second = notesOf('2').find((note) => note.letter === 'D')
+    expect(ninth).toBeDefined()
+    expect(second).toEqual(ninth)
+
+    expect(expandFigure(figure('9/7/4'))).toBeUndefined()
+    expect(expandFigure(figure('7/6/4/2'))).toBeUndefined()
+  })
+
+  it('can read a historical numeral and has no chord to give for it', () => {
+    // `10`–`14` mean reduplication in the octave above, so a `13` names the
+    // same letter as a `6` and a `10` the same letter as a `3`. They are a
+    // reading convention rather than something that can be graded: the guide
+    // says so, and the model refuses them rather than inventing a sonority.
+    for (const key of ['10', '11', '12', '13', '14']) {
+      expect(parseFigureKey(key), key).toBeDefined()
+      expect(expandFigure(figure(key)), key).toBeUndefined()
+    }
   })
 })

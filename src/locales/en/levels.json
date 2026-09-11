@@ -325,6 +325,10 @@
     "three-in-a-row": {
       "title": "Three in a Row",
       "blurb": "Three of them, which is a line rather than a chord."
+    },
+    "compound-figures": {
+      "title": "Compound Figures",
+      "blurb": "What Grove figures an eleventh and a thirteenth with, written out in full over a bass that does not move."
     }
   },
   "thoroughbass-realizing": {
@@ -403,6 +407,10 @@
     "three-in-a-row": {
       "title": "Three in a Row",
       "blurb": "Three of them, which is a line rather than a chord."
+    },
+    "compound-figures": {
+      "title": "Compound Figures",
+      "blurb": "What Grove figures an eleventh and a thirteenth with, written out in full over a bass that does not move."
     }
   }
 }

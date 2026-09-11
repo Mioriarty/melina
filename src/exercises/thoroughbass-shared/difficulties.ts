@@ -31,6 +31,7 @@ const ALTERED = ['#6', 'b6', '6/#4', '6/b5', '#5', 'b5']
 const AUGMENTED_SIXTHS = ['#6', '#6/b5', '#6/4/3']
 const NINTHS = ['9', '9/7']
 const SUSPENSIONS = ['4-3', '7-6', '9-8', '6-5']
+const COMPOUND = ['7/4/2', '7/6/4']
 
 export const THOROUGHBASS_DIFFICULTIES: readonly Difficulty<ThoroughbassSettings>[] = [
   {
@@ -134,6 +135,13 @@ export const THOROUGHBASS_DIFFICULTIES: readonly Difficulty<ThoroughbassSettings
     settings: { ...DEFAULT_SETTINGS, figures: [], suspensions: SUSPENSIONS },
   },
   {
+    // What Grove figures an eleventh and a thirteenth with. Written out in
+    // full, because there is nothing here the convention takes for granted.
+    id: 'compound-figures',
+    section: FURTHER,
+    settings: { ...DEFAULT_SETTINGS, figures: ['7', ...COMPOUND] },
+  },
+  {
     // The first question with more than one bass note in it. Not a harder
     // figure either — a second reading of the same vocabulary, which is what
     // a continuo part actually is.
@@ -151,7 +159,7 @@ export const THOROUGHBASS_DIFFICULTIES: readonly Difficulty<ThoroughbassSettings
     section: FURTHER,
     settings: {
       ...DEFAULT_SETTINGS,
-      figures: [...TRIADS, ...SEVENTHS, ...ALTERED, ...NINTHS],
+      figures: [...TRIADS, ...SEVENTHS, ...ALTERED, ...NINTHS, ...COMPOUND],
       suspensions: SUSPENSIONS,
       keySignatures: ['0', '1s', '2s', '3s', '1f', '2f', '3f'],
     },

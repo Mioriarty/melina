@@ -325,6 +325,10 @@
     "three-in-a-row": {
       "title": "Drei nacheinander",
       "blurb": "Drei davon, was eher eine Linie ist als ein Akkord."
+    },
+    "compound-figures": {
+      "title": "Zusammengesetzte Ziffern",
+      "blurb": "Womit Grove Undezime und Tredezime beziffert, ausgeschrieben über einem Bass, der liegen bleibt."
     }
   },
   "thoroughbass-realizing": {
@@ -403,6 +407,10 @@
     "three-in-a-row": {
       "title": "Drei nacheinander",
       "blurb": "Drei davon, was eher eine Linie ist als ein Akkord."
+    },
+    "compound-figures": {
+      "title": "Zusammengesetzte Ziffern",
+      "blurb": "Womit Grove Undezime und Tredezime beziffert, ausgeschrieben über einem Bass, der liegen bleibt."
     }
   }
 }

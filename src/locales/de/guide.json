@@ -144,6 +144,13 @@
       "held": "Der gehaltene Akkord: eine Quarte über dem Bass",
       "resolved": "Die Auflösung: die Quarte fällt in die Terz",
       "after": "„4 3“ meint also Quinte und Quarte, dann Quinte und Terz. Die 5 wird nie geschrieben: im ersten Akkord verstand sie sich von selbst, und für den zweiten hat sie sich nicht bewegt."
+    },
+    "historical": {
+      "title": "Was dir in älteren Drucken begegnet",
+      "body": "Zwei Konventionen, die diese App nicht abfragt, die dir aber begegnen, sobald du eine echte Continuostimme aufschlägst.",
+      "stroke": "Ein Strich durch eine Ziffer — eine 6 oder 4 mit einem Querstrich — erhöht diesen Ton um einen Halbton. Er bedeutet genau dasselbe wie ♯6 und ♯4; es ist nur eine andere Schreibweise.",
+      "numerals": "Die Zahlen 10 bis 14 stehen ständig in den frühesten bezifferten Bässen — Peris Euridice, Cavalieris Rappresentazione. Sie meinen Terz, Quarte, Quinte, Sexte und Septime **in der Oktave darüber**. Eine 13 ist eine höher gespielte 6, eine 10 eine 3.",
+      "why": "Darum werden sie hier gelesen und nie verlangt: eine Bezifferung sagt welche Töne und nie, wo sie liegen — 13 und 6 sind für diese App dieselbe Antwort. Die eine gegen die andere zu bewerten hieße, dich für eine Oktave falsch zu zählen, die niemand aufgeschrieben hat."
     }
   },
   "backToPath": "Zurück zum Pfad"

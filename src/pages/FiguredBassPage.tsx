@@ -168,6 +168,24 @@ export default function FiguredBassPage() {
           <FigureTable />
         </Section>
 
+        <Section title={t('guide:figures.historical.title')}>
+          <p>{t('guide:figures.historical.body')}</p>
+          <ul className="mt-1 grid gap-2.5">
+            {['stroke', 'numerals'].map((item) => (
+              <li key={item} className="flex gap-2.5">
+                <span
+                  aria-hidden="true"
+                  className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent"
+                />
+                <span className="leading-relaxed text-ink-muted">
+                  {t(`guide:figures.historical.${item}`)}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p>{t('guide:figures.historical.why')}</p>
+        </Section>
+
         <Section title={t('guide:figures.next.title')}>
           <p>{t('guide:figures.next.body')}</p>
           <div className="mt-2 grid gap-2 sm:grid-cols-2">

@@ -1505,8 +1505,25 @@ filter on a figure no row ever stores.
 
 And there is **no figure `11` or `13`** — Grove figures an eleventh `7/4/2` and a
 thirteenth `7/6/4`; those are chord names from functional harmony rather than
-thoroughbass signs. `10`–`14` are real, but historical, and mean reduplication in
-the octave above.
+thoroughbass signs.
+
+**Each compound figure ships in one spelling only, and the model is the reason.**
+A number names a letter, so 9 and 2 name the same one: `7/4/2` and `9/7/4` are
+the same three notes, differing only in which octave the second is written in —
+and register is exactly what a figure does not say. Offering both would make a
+chord that two canonical figures answer, which is a question with two right
+answers and one of them marked wrong. The same goes for the thirteenth's
+`9/7/6/4` against `7/6/4/2`. What enforces it is simply that no stack holds the
+second spelling, so it cannot be expanded and therefore cannot be asked for.
+
+**The historical numerals are read and never asked for, for the same reason.**
+`10`–`14` mean the third, fourth, fifth, sixth and seventh _in the octave
+above_, so a `13` names the same letter as a `6` and a `10` the same letter as a
+`3` — a `10/5/3` is not even three notes, since the 10 and the 3 are one note
+written twice. Grading one against the other would mark a player wrong for an
+octave nobody wrote down. They belong to the guide, along with the stroke
+through a figure, which is another way of writing `♯6` and `♯4` and not another
+meaning.
 
 Grove is ambiguous in exactly one place that matters, and it should not be
 guessed at: its augmented-sixth example ("signature of G major, E♭ bass — the

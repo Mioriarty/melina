@@ -89,6 +89,19 @@ const STACKS: readonly (readonly number[])[] = [
   // finds the first stack holding a 9, and `9/7` the first holding both.
   [9, 5, 3],
   [9, 7, 5, 3],
+  // Grove's eleventh and thirteenth "upon the Tonic Bass". Compound figures
+  // over a bass that does not move, which is what makes them vocabulary rather
+  // than span.
+  //
+  // **Each is shipped in one spelling only, and the reason is the model.** A
+  // number names a letter, so 9 and 2 name the same one: `7/4/2` and `9/7/4`
+  // are the same three notes, differing only in which octave the second is
+  // written in — and register is exactly what a figure does not say. Offering
+  // both would make a chord that two canonical figures answer, which is a
+  // question with two right answers and one of them marked wrong. The same
+  // goes for the thirteenth's `9/7/6/4` against `7/6/4/2`.
+  [7, 4, 2],
+  [7, 6, 4],
 ]
 
 /**
@@ -115,6 +128,8 @@ const ABBREVIATIONS = new Map<string, readonly (readonly number[])[]>([
   // percussion" — struck, as against the `9` of a 9–8 suspension, which is a
   // ninth over a plain triad and resolves.
   ['9,7,5,3', [[9, 7]]],
+  ['7,4,2', [[7, 4, 2]]],
+  ['7,6,4', [[7, 6, 4]]],
 ])
 
 const stackKey = (stack: readonly number[]) => stack.join(',')

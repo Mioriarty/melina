@@ -82,6 +82,8 @@ export const FIGURE_CHOICES: readonly string[] = [
   '#6/4/3',
   '9',
   '9/7',
+  '7/4/2',
+  '7/6/4',
 ]
 
 /**
