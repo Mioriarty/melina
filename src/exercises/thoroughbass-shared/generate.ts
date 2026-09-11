@@ -308,18 +308,6 @@ export function generateRound(
   return questions
 }
 
-/**
- * Every note a question sounds, bass and chords together.
- *
- * A suspension sounds as one chord — the held note and its resolution at once
- * — rather than as two in succession, because what is being asked about is
- * which notes the figures name and not how they are played. `playChord` takes
- * the lot and sounds them together.
- */
-export function soundingNotes(question: ThoroughbassQuestion): readonly Pitch[] {
-  return question.events.flatMap((event) => [event.bass, ...event.chords.flat()])
-}
-
 /** Whether a written figure is one the question would accept. */
 export function acceptsFigure(
   question: ThoroughbassQuestion,

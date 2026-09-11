@@ -767,6 +767,17 @@ schedules a run of notes; a gap of zero is what makes an interval harmonic. A
 scale is played faster and shorter than an interval — eight notes at interval pace
 is a series of separate notes rather than a scale.
 
+`playStruck` sounds a figured bass, and **when each note sounds is not decided
+in `engine.ts`**: `chordSchedule` is pure arithmetic over the question, the same
+split `playRhythm` makes with `rhythmSchedule`, so playback is checkable without
+a network or an AudioContext. It is not a small thing to get right — a question
+can carry several chords, and striking them all at once is a cluster rather than
+a reading, which is what it did at first. Two rules live there: **chords follow
+one another**, because a bass line is a succession and a suspension is a held
+chord and its resolution; and **a held bass is struck once**, ringing under both
+of its chords, because re-striking it would say the bass had moved, which is the
+one thing a suspension is defined by not doing.
+
 `playRhythm` counts a bar and then plays one. When everything sounds is pure
 arithmetic in `rhythmSchedule.ts`, deliberately kept out of `engine.ts` so it can
 be checked without a network or an AudioContext — otherwise the scheduling would

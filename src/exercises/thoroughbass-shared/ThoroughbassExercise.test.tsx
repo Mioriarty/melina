@@ -24,11 +24,11 @@ vi.mock('@/lib/notation/verovio', async (importOriginal) => ({
   renderMei: vi.fn(() => Promise.resolve('<svg xmlns="http://www.w3.org/2000/svg"/>')),
 }))
 
-const playChord = vi.fn(() => Promise.resolve())
+const playStruck = vi.fn(() => Promise.resolve())
 
 vi.mock('@/lib/audio/engine', () => ({
   loadInstrument: vi.fn(() => Promise.resolve({})),
-  playChord: (...args: unknown[]) => playChord(...(args as [])),
+  playStruck: (...args: unknown[]) => playStruck(...(args as [])),
   stopPlayback: vi.fn(),
   unlockAudio: vi.fn(() => Promise.resolve()),
 }))
@@ -165,7 +165,7 @@ describe('realising a bass', () => {
     expect(labels(container)).not.toContain(
       tv('exercise:play.scoreLabel', { notes: '' }).trim(),
     )
-    expect(playChord).not.toHaveBeenCalled()
+    expect(playStruck).not.toHaveBeenCalled()
   })
 })
 

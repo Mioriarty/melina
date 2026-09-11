@@ -6,14 +6,12 @@ import { LevelsScreen } from '@/exercises/shared/LevelsScreen'
 import { usePlayback } from '@/exercises/shared/usePlayback'
 import { thoroughbassFilter } from '@/exercises/thoroughbass-shared/attempt'
 import { THOROUGHBASS_DIFFICULTIES } from '@/exercises/thoroughbass-shared/difficulties'
-import {
-  soundingNotes,
-  type ThoroughbassRoundSpec,
-} from '@/exercises/thoroughbass-shared/generate'
+import { chordSchedule } from '@/exercises/thoroughbass-shared/chordSchedule'
+import type { ThoroughbassRoundSpec } from '@/exercises/thoroughbass-shared/generate'
 import { SetupScreen } from '@/exercises/thoroughbass-shared/SetupScreen'
 import type { ThoroughbassSettings } from '@/exercises/thoroughbass-shared/settings'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
-import { playChord, unlockAudio } from '@/lib/audio/engine'
+import { playStruck, unlockAudio } from '@/lib/audio/engine'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
 
 import { FiguringRoundScreen } from './FiguringRoundScreen'
@@ -75,7 +73,8 @@ export default function ThoroughbassFiguringExercise() {
   // The bass under everything standing over it, all at once — which is what a
   // figure describes, and the only way to hear whether it is what you think.
   const sound = useCallback(
-    () => (current === undefined ? Promise.resolve() : playChord(soundingNotes(current))),
+    () =>
+      current === undefined ? Promise.resolve() : playStruck(chordSchedule(current)),
     [current],
   )
 

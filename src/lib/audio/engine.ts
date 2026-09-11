@@ -77,14 +77,6 @@ const MELODIC_GAP = 0.62
  */
 const SCALE_GAP = 0.4
 const SCALE_NOTE_DURATION = 0.6
-/**
- * How long a figured-bass chord rings.
- *
- * Longer than an interval, because more notes take longer to pick apart, and
- * distinct from the tonic chord scale degrees plays: that one is context set
- * before a question, this one *is* the question.
- */
-const SONORITY_DURATION = 2.4
 /** Lead-in, so the first note is never clipped by scheduling jitter. */
 const LEAD_IN = 0.06
 
@@ -164,15 +156,50 @@ export async function playScale(pitches: readonly Pitch[]): Promise<void> {
 }
 
 /**
- * Sound a chord — a bass note and everything standing over it, all at once.
+ * One note, struck at a time somebody else worked out.
  *
- * A gap of zero is what makes a run of notes simultaneous, which is the same
- * call a harmonic interval already makes; there is no new mechanism here. It
- * rings a little longer than an interval does, because four notes take longer
- * to separate out by ear than two.
+ * Declared here rather than beside the thing that builds it, so that nothing
+ * in `lib/` has to import from `exercises/`: this is the shape `playStruck`
+ * takes, and the schedule is written to fit it.
  */
-export async function playChord(pitches: readonly Pitch[]): Promise<void> {
-  await playSequence(pitches, { gap: 0, duration: SONORITY_DURATION })
+export interface StruckNote {
+  pitch: Pitch
+  /** Seconds from the start of playback. */
+  at: number
+  /** Seconds it rings for. */
+  duration: number
+}
+
+/**
+ * Sound a figured bass: notes struck at the times something else worked out.
+ *
+ * **When each one sounds is not decided here.** `chordSchedule` is pure
+ * arithmetic over the question, so it can be checked without a network or an
+ * AudioContext — the same split `playRhythm` already makes with
+ * `rhythmSchedule`. This end only turns times into voices.
+ */
+export async function playStruck(notes: readonly StruckNote[]): Promise<void> {
+  const instrument = await loadInstrument()
+  const context = getAudioContext()
+
+  // A context can be suspended by the browser at any point after creation.
+  if (context.state === 'suspended') await context.resume()
+
+  const start = context.currentTime + LEAD_IN
+
+  // Cut off anything still ringing or still queued, so a quick replay does
+  // not stack up. After the awaits and immediately before scheduling, so a
+  // second call cannot silence the notes this one is about to lay down.
+  stopPlayback()
+
+  sounding = notes.map((note) =>
+    instrument.start({
+      note: midiNumber(note.pitch),
+      time: start + note.at,
+      duration: note.duration,
+      velocity: 92,
+    }),
+  )
 }
 
 /**
