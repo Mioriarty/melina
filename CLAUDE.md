@@ -170,6 +170,14 @@ Two stations standing side by side is new, and it is what sets `INTERVAL_X` and
 them. `pathLayout.test.ts` checks every pair of stations close enough in y to
 stand level, at every supported width.
 
+**Spacing is uneven but bounded.** A constant rhythm reads as a list rather
+than as a journey, which is why no two single-file gaps are the same; but the
+column is read by thumb and grows every time a module ships, so the gaps are
+also held between `CONNECTOR_LEAVE + CONNECTOR_ARRIVE` — below which a join has
+no room between the label it leaves and the medallion it arrives at — and a
+ceiling. The ceiling is what stops the path sprawling one coordinate at a time,
+which is exactly how it grew the first time.
+
 `position.y` is the centre of a station's **medallion**, not of its whole node
 box. The label hangs below and is excluded from the anchor, because connectors
 are drawn from `position.y` — centring the whole box instead pushed every

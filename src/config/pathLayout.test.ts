@@ -84,6 +84,17 @@ describe('path layout', () => {
 
     expect(gaps.length).toBeGreaterThan(2)
     expect(new Set(gaps).size).toBe(gaps.length)
+
+    // Uneven, but within a band. Below `CONNECTOR_LEAVE + CONNECTOR_ARRIVE` a
+    // join has no room left between the label it leaves and the medallion it
+    // arrives at; far above it the path stops reading as a journey and becomes
+    // scrolling between stations. The whole column is read by thumb, and it
+    // grows every time a module ships, so the ceiling is the thing that stops
+    // it sprawling one coordinate at a time.
+    for (const gap of gaps) {
+      expect(gap).toBeGreaterThan(CONNECTOR_LEAVE + CONNECTOR_ARRIVE)
+      expect(gap).toBeLessThanOrEqual(320)
+    }
   })
 
   it('braids intervals down the left and scales down the right', () => {

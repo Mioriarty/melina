@@ -19,7 +19,7 @@ const REFERENCE_WIDTH = 480
 
 /** Vertical space above the first node and below the last. */
 export const PATH_TOP = 120
-export const PATH_BOTTOM = 200
+export const PATH_BOTTOM = 170
 
 /**
  * Diameter of a station's medallion, in px.
@@ -67,7 +67,7 @@ export interface PathNodePosition {
 /** How far the scale column sits below the interval column beside it. */
 const BRAID_STAGGER = 70
 /** Reading to hearing: the drop that the braid's own connectors span. */
-const BRAID_DROP = 260
+const BRAID_DROP = 225
 
 /**
  * Left for intervals, right for scales, held for the whole braid.
@@ -93,8 +93,8 @@ export const PATH_NODES: readonly PathNodePosition[] = [
   // side: the *when* and the *what*, which melodic dictation needs both of and
   // which can be learned in either order. Staggered like the first braid, so
   // the pair still runs downhill and does not read as one wide row.
-  { stationId: 'dictation/rhythm', x: INTERVAL_X + 1, y: 660 },
-  { stationId: 'scales/degrees', x: SCALE_X - 1, y: 660 + BRAID_STAGGER },
+  { stationId: 'dictation/rhythm', x: INTERVAL_X + 1, y: 580 },
+  { stationId: 'scales/degrees', x: SCALE_X - 1, y: 580 + BRAID_STAGGER },
   // **Where the second braid merges.** Melodic dictation needs both of the
   // stations above it — the *when* and the *what* — and both of them join it.
   // It is the first station since the top of the path with two edges arriving.
@@ -103,7 +103,7 @@ export const PATH_NODES: readonly PathNodePosition[] = [
   // for: the next exercise stands beside it. Placed now rather than when that
   // arrives, so shipping it is a coordinate and not a re-layout of everything
   // below.
-  { stationId: 'dictation/short-melodies', x: 38, y: 990 },
+  { stationId: 'dictation/short-melodies', x: 38, y: 860 },
   // **Thoroughbass takes the room Melodic Dictation was placed to leave**, and
   // stands off the path: the main route runs past it down the left of the
   // column while these three sit to the right, joined to each other and to
@@ -122,13 +122,13 @@ export const PATH_NODES: readonly PathNodePosition[] = [
   // downhill with a connector. Figuring first, because you can only realise a
   // figure you can read, and figuring is where the rules of omission are
   // learnt.
-  { stationId: 'guide/figured-bass', x: 68, y: 1160 },
-  { stationId: 'thoroughbass/figuring', x: 74, y: 1410 },
-  { stationId: 'thoroughbass/realizing', x: 62, y: 1675 },
-  { stationId: 'harmonic-prediction', x: 30, y: 1955 },
-  { stationId: 'harmonic-completion', x: 66, y: 2200 },
-  { stationId: 'counterpoint', x: 35, y: 2490 },
-  { stationId: 'daily', x: 62, y: 2725 },
+  { stationId: 'guide/figured-bass', x: 68, y: 1015 },
+  { stationId: 'thoroughbass/figuring', x: 74, y: 1220 },
+  { stationId: 'thoroughbass/realizing', x: 62, y: 1445 },
+  { stationId: 'harmonic-prediction', x: 30, y: 1680 },
+  { stationId: 'harmonic-completion', x: 66, y: 1900 },
+  { stationId: 'counterpoint', x: 35, y: 2140 },
+  { stationId: 'daily', x: 62, y: 2350 },
 ]
 
 /**
