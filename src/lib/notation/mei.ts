@@ -14,6 +14,9 @@ import {
   type KeySignatureId,
 } from '@/lib/music/keySignature'
 import { diatonicValue, type Alteration, type Pitch } from '@/lib/music/pitch'
+import type { Figure } from '@/lib/music/figuredBass'
+
+import { figureLines } from './figureNotation'
 
 /**
  * Minimal MEI for a single engraved example.
@@ -791,5 +794,108 @@ export function degreeKeyMei({
                 <layer n="1">${noteElement(pitch, keySignature, keyNote(dur, dots))}</layer>
               </staff>
             </measure>`,
+  )
+}
+
+/* ------------------------------------------------------- thoroughbass
+
+   A grand staff: the bass part below with its figures under it, and whatever
+   stands above it on the treble staff. */
+
+export interface ThoroughbassEvent {
+  bass: Pitch
+  /**
+   * Successive figures under this one bass note. One today; two is a
+   * suspension, which is why this is a list and not a figure.
+   */
+  figures: readonly Figure[]
+  /** The chord above, as written pitches. Empty leaves the treble staff blank. */
+  chord: readonly Pitch[]
+}
+
+export interface ThoroughbassMeiOptions {
+  keySignature: KeySignatureId
+  events: readonly ThoroughbassEvent[]
+  /** Engraved in place but not drawn, until the answer reveals them. */
+  hideChords?: boolean
+}
+
+/**
+ * A figured bass on a grand staff.
+ *
+ * Three things here are not obvious, and `thoroughbassVerovio.test.ts` pins
+ * all three against the real engraver:
+ *
+ * - **The brace is a `<grpSym>`, not an attribute.** `<staffGrp symbol="brace">`
+ *   is silently ignored; the child element is what draws it.
+ * - **The figures are `<harm><fb><f>`,** which Verovio does render — stacked,
+ *   under the right bass note, and reserving room per line.
+ * - **An accidental inside a figure must be the character**, `♯`, not
+ *   `<accid accid="s"/>`. The element is accepted and then dropped in silence,
+ *   which is the worst way for it to fail: the MEI validates and the sharp is
+ *   simply not there. See `thoroughbassProfile` for what the character costs.
+ *
+ * **One measure per bass note**, so there is no metre to declare and no bar to
+ * fill: a figured bass here is a succession of sonorities rather than a piece
+ * of music, and giving it a time signature would draw one on the page.
+ *
+ * Accidentals go through `accidentalAttributes` rather than
+ * `measureAccidentals`, and that is right rather than a shortcut. The rule
+ * about an accidental holding until the barline is about successive notes on
+ * one staff; here every measure holds exactly one sonority per staff, so there
+ * is nothing for an accidental to carry into.
+ */
+export function thoroughbassMei({
+  keySignature,
+  events,
+  hideChords = false,
+}: ThoroughbassMeiOptions): string {
+  const measures = events
+    .map((event, index) => {
+      const id = `bass${index + 1}`
+      const bass = `<note xml:id="${id}" pname="${event.bass.letter.toLowerCase()}" oct="${event.bass.octave}" dur="1"${accidentalAttributes(event.bass, keySignature)}/>`
+
+      const chord =
+        event.chord.length === 0
+          ? '<space dur="1"/>'
+          : event.chord.length === 1
+            ? noteElement(event.chord[0] as Pitch, keySignature, 'dur="1"', hideChords)
+            : `<chord dur="1"${hideChords ? HIDDEN : ''}>${event.chord
+                .map((note) => noteElement(note, keySignature))
+                .join('')}</chord>`
+
+      // One figure is anchored to the note itself, which is exact. Several
+      // under one bass note cannot be — they are spread across its length by
+      // timestamp, which is what a suspension looks like on the page.
+      const figures = event.figures
+        .map((figure, position) => {
+          const lines = figureLines(figure)
+          if (lines.length === 0) return ''
+          const anchor =
+            event.figures.length === 1
+              ? `startid="#${id}"`
+              : `tstamp="${1 + (position * 4) / event.figures.length}"`
+          const stack = lines.map((line) => `<f>${escapeText(line)}</f>`).join('')
+          return `<harm staff="2" ${anchor} place="below"><fb>${stack}</fb></harm>`
+        })
+        .join('')
+
+      return `<measure n="${index + 1}" right="invis">
+              <staff n="1"><layer n="1">${chord}</layer></staff>
+              <staff n="2"><layer n="1">${bass}</layer></staff>
+              ${figures}
+            </measure>`
+    })
+    .join('\n            ')
+
+  return envelope(
+    `<scoreDef keysig="${meiKeySignature(keySignature)}">
+            <staffGrp>
+              <grpSym symbol="brace"/>
+              <staffDef n="1" lines="5" clef.shape="G" clef.line="2"/>
+              <staffDef n="2" lines="5" clef.shape="F" clef.line="4"/>
+            </staffGrp>
+          </scoreDef>`,
+    measures,
   )
 }

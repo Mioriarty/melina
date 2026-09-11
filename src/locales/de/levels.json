@@ -248,5 +248,73 @@
       "title": "Alles",
       "blurb": "Sechs Modi, zwei Taktarten, zwei Takte und jede Unterteilung. Zwanzig Fragen."
     }
+  },
+  "thoroughbass-figuring": {
+    "triads": {
+      "title": "Dreiklänge",
+      "blurb": "Der schlichte Dreiklang und die Sexte — die beiden Ziffern, an denen alles andere gemessen wird."
+    },
+    "six-four": {
+      "title": "Quartsextakkord",
+      "blurb": "Dazu die zweite Umkehrung, der einzige Dreiklang, der sich nicht mit einer Ziffer schreiben lässt."
+    },
+    "accidentals": {
+      "title": "Vorzeichen",
+      "blurb": "Ein Kreuz oder ein B allein unter dem Bass: es verändert die Terz und sonst nichts."
+    },
+    "sevenths": {
+      "title": "Septakkorde",
+      "blurb": "Der Septakkord in Grundstellung, wo Terz und Quinte selbstverständlich sind."
+    },
+    "inverted-sevenths": {
+      "title": "Umkehrungen",
+      "blurb": "Die drei Umkehrungen, wo geschrieben wird, was nicht selbstverständlich ist."
+    },
+    "flat-keys": {
+      "title": "B-Tonarten",
+      "blurb": "Dieselben Ziffern, gelesen gegen bis zu vier B."
+    },
+    "sharp-keys": {
+      "title": "Kreuz-Tonarten",
+      "blurb": "Dieselben Ziffern, gelesen gegen bis zu vier Kreuze."
+    },
+    "everything": {
+      "title": "Alles",
+      "blurb": "Jede Bezifferung und jede Tonart der App, gemischt."
+    }
+  },
+  "thoroughbass-realizing": {
+    "triads": {
+      "title": "Dreiklänge",
+      "blurb": "Der schlichte Dreiklang und die Sexte — die beiden Ziffern, an denen alles andere gemessen wird."
+    },
+    "six-four": {
+      "title": "Quartsextakkord",
+      "blurb": "Dazu die zweite Umkehrung: Sexte und Quarte über dem Bass."
+    },
+    "accidentals": {
+      "title": "Vorzeichen",
+      "blurb": "Ein Kreuz oder ein B allein, das die Terz erhöht oder erniedrigt."
+    },
+    "sevenths": {
+      "title": "Septakkorde",
+      "blurb": "Der Septakkord in Grundstellung: vier Töne, drei davon ungeschrieben."
+    },
+    "inverted-sevenths": {
+      "title": "Umkehrungen",
+      "blurb": "Die drei Umkehrungen, jede mit Tönen, die die Ziffer verschweigt."
+    },
+    "flat-keys": {
+      "title": "B-Tonarten",
+      "blurb": "Dieselben Ziffern, gelesen gegen bis zu vier B."
+    },
+    "sharp-keys": {
+      "title": "Kreuz-Tonarten",
+      "blurb": "Dieselben Ziffern, gelesen gegen bis zu vier Kreuze."
+    },
+    "everything": {
+      "title": "Alles",
+      "blurb": "Jede Bezifferung und jede Tonart der App, gemischt."
+    }
   }
 }

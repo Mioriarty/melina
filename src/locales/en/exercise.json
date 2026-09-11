@@ -117,7 +117,13 @@
       "paced": "Paced",
       "pacedHint": "The time before a note decides how far the line may move to it: quick notes step, long ones may leap.",
       "guide": "How this works"
-    }
+    },
+    "figures": {
+      "title": "Figures",
+      "hint": "Which figures may come up. A plain chord is written by writing nothing at all, which is a figure like any other.",
+      "guide": "How a figure is read"
+    },
+    "figureKeysHint": "A figure is read against the signature: the same 6 is a different note in every key."
   },
   "round": {
     "end": "End this round",
@@ -129,14 +135,18 @@
       "scale": "Scale answers",
       "rhythm": "Rhythm keys",
       "degree": "Scale degree keys",
-      "melody": "Melody keys"
+      "melody": "Melody keys",
+      "figure": "Figure keys",
+      "chord": "Chord notes"
     },
     "prompt": {
       "interval": "What interval is this?",
       "scale": "What scale is this?",
       "rhythm": "Write the rhythm you hear",
       "degree": "Which degrees do you hear?",
-      "melody": "Write the melody you hear"
+      "melody": "Write the melody you hear",
+      "figuring": "How is this chord figured?",
+      "realizing": "Write the chord the figure asks for"
     }
   },
   "score": {
@@ -162,7 +172,9 @@
       "scales": "Every one correct. Try adding a mode, a tonic further round the circle, or the C clefs.",
       "rhythm": "Every one correct. Try a finer subdivision, another metre, or letting the click stop after the count-in.",
       "degrees": "Every one correct. Try a longer melody, the whole scale, or letting notes step outside the key.",
-      "melody": "Every one correct. Try a wider range, a finer subdivision, or a second bar."
+      "melody": "Every one correct. Try a wider range, a finer subdivision, or a second bar.",
+      "figuring": "Every one correct. Try the sevenths, a key further round the circle, or the accidentals.",
+      "realizing": "Every one correct. Try the inversions, more flats or sharps, or the accidentals."
     },
     "thisRound": "This round",
     "questionLabel": "{{subject}} · {{clef}}",
@@ -249,6 +261,47 @@
       "notesWrong": "the rhythm, but not the notes",
       "rhythmWrong": "the notes, but not the rhythm",
       "bothWrong": "neither the rhythm nor the notes"
+    }
+  },
+  "thoroughbass": {
+    "plain": "Plain chord",
+    "scoreLabel": {
+      "staff": "Grand staff, key signature of {{key}}: {{events}}",
+      "plain": "bass {{bass}}, unfigured",
+      "figured": "bass {{bass}}, figured {{figure}}"
+    },
+    "nothing": "nothing at all"
+  },
+  "figuring": {
+    "levelsBlurb": "See a chord over a bass and write its figure. Pick a level, or set it up yourself.",
+    "setupBlurb": "The chord is on the staff; write the figure it is written with. Only the conventional form counts — a line the convention leaves out is a line not to write.",
+    "keyboard": {
+      "sharp": "Sharpen the next number",
+      "flat": "Flatten the next number",
+      "natural": "Naturalise the next number",
+      "digit": "Figure {{number}}",
+      "next": "Another figure under the same bass",
+      "done": "That is the figure",
+      "delete": "Delete the last one"
+    },
+    "verdict": {
+      "spelling": "Right chord. It is written {{correct}}, not {{wrote}} — a figure leaves out everything that goes without saying.",
+      "chord": "You wrote {{wrote}}; this chord is figured {{correct}}."
+    },
+    "summary": {
+      "subject": "{{figure}} · {{key}}"
+    }
+  },
+  "realizing": {
+    "levelsBlurb": "See a figured bass and put the chord on the staff. Pick a level, or set it up yourself.",
+    "setupBlurb": "The bass and its figure are given; place the notes they ask for. Any octave and any order — a figure says which notes, never where they sit.",
+    "keyboard": {
+      "sharp": "Raise the next note",
+      "flat": "Lower the next note",
+      "delete": "Delete the last one"
+    },
+    "summary": {
+      "subject": "{{figure}} · over {{bass}}"
     }
   }
 }

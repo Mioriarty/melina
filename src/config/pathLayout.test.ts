@@ -145,6 +145,11 @@ describe('path layout', () => {
     expect(joins('scales/degrees', 'dictation/short-melodies')).toBe(true)
     expect(joins('dictation/short-melodies', 'harmonic-prediction')).toBe(true)
 
+    // Thoroughbass stands off the path: joined to itself and to nothing else.
+    expect(joins('thoroughbass/figuring', 'thoroughbass/realizing')).toBe(true)
+    expect(joins('dictation/short-melodies', 'thoroughbass/figuring')).toBe(false)
+    expect(joins('thoroughbass/realizing', 'harmonic-prediction')).toBe(false)
+
     // Nothing crosses between the columns before that.
     expect(joins('intervals/reading', 'scales/reading')).toBe(false)
     expect(joins('scales/reading', 'intervals/hearing')).toBe(false)
@@ -154,27 +159,51 @@ describe('path layout', () => {
     expect(joins('scales/hearing', 'dictation/rhythm')).toBe(false)
   })
 
-  it('reaches every station from the first, and joins nothing that is missing', () => {
+  it('joins nothing that is missing, and strands nothing by accident', () => {
     const ids = new Set(PATH_NODES.map((node) => node.stationId))
     for (const edge of PATH_EDGES) {
       expect(ids, `${edge.from} is joined but not placed`).toContain(edge.from)
       expect(ids, `${edge.to} is joined but not placed`).toContain(edge.to)
     }
 
-    // Walk the graph from the top of each column: a station nothing leads to
-    // is a station that looks stranded on the page.
-    const reached = new Set(['intervals/reading', 'scales/reading'])
-    let grew = true
-    while (grew) {
-      grew = false
-      for (const edge of PATH_EDGES) {
-        if (reached.has(edge.from) && !reached.has(edge.to)) {
-          reached.add(edge.to)
-          grew = true
+    // The path is deliberately in **two pieces**: the journey itself, and
+    // thoroughbass standing beside it. So reaching every station from the top
+    // is no longer the property — what is, is that there are exactly those two
+    // pieces and nothing else, which still catches the thing the walk was for:
+    // a station left joined to nothing at all.
+    const joined = new Map<string, Set<string>>(
+      [...ids].map((id) => [id, new Set<string>()]),
+    )
+    for (const edge of PATH_EDGES) {
+      joined.get(edge.from)?.add(edge.to)
+      joined.get(edge.to)?.add(edge.from)
+    }
+
+    const components: string[][] = []
+    const seen = new Set<string>()
+    for (const id of ids) {
+      if (seen.has(id)) continue
+      const group: string[] = []
+      const queue = [id]
+      seen.add(id)
+      while (queue.length > 0) {
+        const next = queue.pop() as string
+        group.push(next)
+        for (const other of joined.get(next) ?? []) {
+          if (seen.has(other)) continue
+          seen.add(other)
+          queue.push(other)
         }
       }
+      components.push(group.sort())
     }
-    expect(reached.size).toBe(ids.size)
+
+    const island = ['thoroughbass/figuring', 'thoroughbass/realizing']
+    expect(components).toHaveLength(2)
+    expect(components.map((group) => group.join(' '))).toContain(island.join(' '))
+
+    const journey = components.find((group) => !group.includes(island[0] as string))
+    expect(journey).toHaveLength(ids.size - island.length)
   })
 
   it('keeps every station inside the column', () => {

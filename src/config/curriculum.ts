@@ -96,6 +96,20 @@ export const CATEGORIES: readonly CategoryDef[] = [
     ],
   },
   {
+    // **Thoroughbass — a braid of two.** A figure and the chord it stands for
+    // are one fact read from either end, and neither end comes first: you can
+    // learn to write the figure from the notes or the notes from the figure,
+    // and each teaches the other.
+    id: 'thoroughbass',
+    icon: 'layers',
+    status: 'ready',
+    exercises: [
+      { id: 'figuring', icon: 'create', status: 'ready' },
+      { id: 'realizing', icon: 'layers', status: 'ready' },
+      { id: 'unfigured', status: 'planned' },
+    ],
+  },
+  {
     id: 'harmonic-prediction',
     icon: 'sparkles',
     status: 'planned',
@@ -114,11 +128,10 @@ export const CATEGORIES: readonly CategoryDef[] = [
     id: 'harmonic-completion',
     icon: 'puzzle',
     status: 'planned',
+    // Figured bass used to be planned here. It is its own category now —
+    // reading one and writing one are two exercises rather than one — so what
+    // is left of harmonic completion is the chorale.
     exercises: [
-      {
-        id: 'figured-bass',
-        status: 'planned',
-      },
       {
         id: 'chorale',
         status: 'planned',

@@ -33,6 +33,16 @@ declare module 'verovio/esm' {
     svgHtml5?: boolean
     svgRemoveXlink?: boolean
     spacingStaff?: number
+    /**
+     * Where the font comes from for a SMuFL glyph that Verovio emits as *text*
+     * rather than as a `<use>` — which today means the accidentals inside a
+     * figured bass. `embedded` inlines the font as an `@font-face` in the SVG;
+     * the other two emit `font-family="Leipzig"` with nothing to resolve it
+     * with, so the sign renders as a blank. Declared rather than left to the
+     * index signature below because it is load-bearing: see
+     * `thoroughbassProfile`.
+     */
+    smuflTextFont?: 'embedded' | 'linked' | 'none'
     [option: string]: unknown
   }
 

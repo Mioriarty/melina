@@ -62,6 +62,26 @@
         }
       }
     },
+    "thoroughbass": {
+      "title": "Thoroughbass",
+      "blurb": "A bass note, a figure under it, and the chord the two stand for.",
+      "exercises": {
+        "figuring": {
+          "title": "Figuring a Bass",
+          "short": "Figuring",
+          "blurb": "Read the chord over a bass and write the figure it is written with."
+        },
+        "realizing": {
+          "title": "Realising a Bass",
+          "short": "Realising",
+          "blurb": "Read a figure and put the chord it asks for on the staff."
+        },
+        "unfigured": {
+          "title": "Unfigured Bass",
+          "blurb": "A bass line with no figures at all, realised by convention."
+        }
+      }
+    },
     "harmonic-prediction": {
       "title": "Harmonic Prediction",
       "blurb": "Guess where the progression wants to go.",
@@ -80,10 +100,6 @@
       "title": "Harmonic Completion",
       "blurb": "Fill the gap in a progression that already works.",
       "exercises": {
-        "figured-bass": {
-          "title": "Figured Bass",
-          "blurb": "Realise a bass line from its figures."
-        },
         "chorale": {
           "title": "Chorale Harmonisation",
           "blurb": "Harmonise a given soprano in four parts."

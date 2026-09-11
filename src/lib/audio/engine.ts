@@ -77,6 +77,14 @@ const MELODIC_GAP = 0.62
  */
 const SCALE_GAP = 0.4
 const SCALE_NOTE_DURATION = 0.6
+/**
+ * How long a figured-bass chord rings.
+ *
+ * Longer than an interval, because more notes take longer to pick apart, and
+ * distinct from the tonic chord scale degrees plays: that one is context set
+ * before a question, this one *is* the question.
+ */
+const SONORITY_DURATION = 2.4
 /** Lead-in, so the first note is never clipped by scheduling jitter. */
 const LEAD_IN = 0.06
 
@@ -153,6 +161,18 @@ export async function playInterval(
  */
 export async function playScale(pitches: readonly Pitch[]): Promise<void> {
   await playSequence(pitches, { gap: SCALE_GAP, duration: SCALE_NOTE_DURATION })
+}
+
+/**
+ * Sound a chord — a bass note and everything standing over it, all at once.
+ *
+ * A gap of zero is what makes a run of notes simultaneous, which is the same
+ * call a harmonic interval already makes; there is no new mechanism here. It
+ * rings a little longer than an interval does, because four notes take longer
+ * to separate out by ear than two.
+ */
+export async function playChord(pitches: readonly Pitch[]): Promise<void> {
+  await playSequence(pitches, { gap: 0, duration: SONORITY_DURATION })
 }
 
 /**

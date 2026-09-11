@@ -23,6 +23,12 @@ const EXERCISE_COMPONENTS: Record<string, ExerciseComponent> = {
   'dictation/short-melodies': lazy(
     () => import('@/exercises/melodic-dictation/MelodicDictationExercise'),
   ),
+  'thoroughbass/figuring': lazy(
+    () => import('@/exercises/thoroughbass-figuring/ThoroughbassFiguringExercise'),
+  ),
+  'thoroughbass/realizing': lazy(
+    () => import('@/exercises/thoroughbass-realizing/ThoroughbassRealizingExercise'),
+  ),
   'scales/hearing': lazy(() => import('@/exercises/scale-hearing/ScaleHearingExercise')),
   'scales/reading': lazy(() => import('@/exercises/scale-reading/ScaleReadingExercise')),
   'scales/degrees': lazy(() => import('@/exercises/scale-degrees/ScaleDegreesExercise')),

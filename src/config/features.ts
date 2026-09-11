@@ -11,6 +11,7 @@ export const FEATURES = {
   intervals: true,
   scales: true,
   dictation: true,
+  thoroughbass: true,
   'harmonic-prediction': false,
   'harmonic-completion': false,
   counterpoint: false,

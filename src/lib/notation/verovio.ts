@@ -328,6 +328,101 @@ export function melodicPhraseProfile(
 }
 
 /**
+ * **How a figured bass is rendered.**
+ *
+ * The same fixed page as the two dictation profiles, for the same reason: the
+ * figure is typed under the staff in one exercise and the chord onto it in the
+ * other, so the box and the staff size must not move while an answer is being
+ * written.
+ *
+ * The reserve is what a player might still write rather than what the question
+ * asked — **three figure lines, each carrying an accidental**, which is both
+ * taller and wider than the plain `6` most questions want. Reserving that means
+ * a bare `6` is drawn in a page with room for two more lines, which is exactly
+ * the point.
+ *
+ * Width grows with the key signature, drawn once at the head of the system, and
+ * with the number of bass notes, each an event of its own.
+ *
+ * **These are page units, which are a tenth of the viewBox units a render
+ * reports.** Reading a natural size off the viewBox and feeding it back in as
+ * `pageWidth` makes a page ten times too big: the music is then drawn in one
+ * corner of it, the column scales the whole sheet down to fit, and the staff
+ * comes out a tenth of the size it should be. That is not a subtle wrongness on
+ * the page — it is illegible — and nothing that compares one render against
+ * another can see it, because every render is equally wrong. Hence
+ * `thoroughbassVerovio.test.ts` measuring the size against the staff the app
+ * actually gets, and not only against itself.
+ */
+/**
+ * **Room on the left for the brace.**
+ *
+ * A `<grpSym>` brace is drawn *outside* the system it joins — at x = -432 in a
+ * render's own units, against a page margin of 12 (which is 120 of those
+ * units), so with the app's usual margin it lands at -312 and the inner `<svg>`
+ * clips it away. What survives is three short strokes at the very left edge,
+ * which reads as a rendering fault rather than as a brace.
+ *
+ * No other example in the app has anything drawn outside its system, which is
+ * why this is the only profile that moves the margin. The width below carries
+ * the same amount again, so widening the margin does not narrow the music.
+ */
+const THOROUGHBASS_MARGIN_LEFT = 50
+
+const THOROUGHBASS_PAGE_LEAD = 170
+const THOROUGHBASS_PER_ACCIDENTAL = 24
+const THOROUGHBASS_PER_EVENT = 177
+const THOROUGHBASS_PAGE_HEIGHT = 448
+
+/**
+ * **Verovio draws an accidental inside a figure as a character, not a glyph.**
+ *
+ * `<f>♯6</f>` comes out as `<tspan font-family="Leipzig">U+EA66</tspan>` — the
+ * SMuFL *figured-bass* sharp, which is the right character, in a font the
+ * browser does not have. Only `embedded` inlines that font into the SVG;
+ * `linked` and `none` emit the same `font-family` and nothing to resolve it
+ * with, so the sign renders as a blank.
+ *
+ * It is not free and it is worth knowing exactly what it costs, because the
+ * number is surprising: a render with no figures is 6.2 KB and one with plain
+ * digits 6.7 KB, but **the first accidental takes it to 65 KB** — the whole
+ * text font, not a subset (one accidental and three cost the same). So the
+ * price is paid per render, and only by a figure that carries an accidental.
+ *
+ * The fix, when it is worth doing, is the one `npm run glyphs` already uses for
+ * Leland: lift the font out of Verovio once at build time, self-host it, and
+ * switch this to `linked` — 58 KB cached once instead of per render.
+ */
+const EMBED_FIGURE_ACCIDENTALS = { smuflTextFont: 'embedded' } as const
+
+const THOROUGHBASS_PROFILES = new Map<string, VerovioOptions>()
+
+export function thoroughbassProfile(
+  events: number,
+  signatureAccidentals: number,
+): VerovioOptions {
+  const key = `${events}:${signatureAccidentals}`
+  const cached = THOROUGHBASS_PROFILES.get(key)
+  if (cached !== undefined) return cached
+
+  const profile: VerovioOptions = {
+    ...FILL_THE_PAGE,
+    ...EMBED_FIGURE_ACCIDENTALS,
+    breaks: 'auto',
+    adjustPageWidth: false,
+    adjustPageHeight: false,
+    pageMarginLeft: THOROUGHBASS_MARGIN_LEFT,
+    pageWidth:
+      THOROUGHBASS_PAGE_LEAD +
+      THOROUGHBASS_PER_ACCIDENTAL * signatureAccidentals +
+      THOROUGHBASS_PER_EVENT * Math.max(1, events),
+    pageHeight: THOROUGHBASS_PAGE_HEIGHT,
+  }
+  THOROUGHBASS_PROFILES.set(key, profile)
+  return profile
+}
+
+/**
  * One note on a bare staff, for a key on the degree keyboard.
  *
  * Fixed so that seven keys standing in a row are the same size and their staves

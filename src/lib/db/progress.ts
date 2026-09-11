@@ -89,6 +89,10 @@ export interface AttemptFilter {
 
   /** Melodic dictation only. */
   /** How many bars the phrase ran to, as a string. Derived. */
+  /** A figured bass: the figure written under a single bass note, `6/5`. */
+  figure?: OneOrMany<string>
+  /** How many bass notes a figured bass carries. */
+  bassNotes?: OneOrMany<string>
   bars?: OneOrMany<string>
   /** How far the melody ranged, in semitones, as a string. Derived. */
   span?: OneOrMany<string>

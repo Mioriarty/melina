@@ -73,5 +73,39 @@
     "nothing": "Kein Intervall innerhalb des Umfangs ist unmöglich. Die Kurve wird sehr klein, aber nie null — auch ein weiter Sprung nach einer Sechzehntel kommt irgendwann vor.",
     "unison": "Eine Note zu wiederholen ist immer möglich und immer gedämpft: Der Rhythmus unterscheidet zwei Noten auf derselben Tonhöhe, aber eine Linie, die stehen bleibt, fragt nichts.",
     "rhythm": "Die Führung ändert die Tonhöhen und nie den Rhythmus. Derselbe Zufallswert ergibt unter beiden Einstellungen dieselben Takte."
+  },
+  "figures": {
+    "title": "Wie eine Bezifferung gelesen wird",
+    "intro": "Eine Bezifferung ist kein Akkordname. Sie ist eine Menge von Intervallen über dem Bass, gelesen gegen die Vorzeichnung.",
+    "reading": {
+      "title": "Vom Bass aus zählen",
+      "body": "Eine 6 meint den Ton eine Sexte über dem Bass. Keinen bestimmten Ton — die Sexte über D ist H, die Sexte über E ist C, und dieselbe Ziffer ist unter jedem Basston ein anderer Ton.",
+      "key": "Welches H oder welches C, entscheidet die Vorzeichnung. In C-Dur ist die Sexte über D ein H; in F-Dur, wo die Vorzeichnung es erniedrigt, ist dieselbe 6 über demselben D ein B. Die Ziffer sagt es nie — die Vorzeichnung hat es schon gesagt."
+    },
+    "omission": {
+      "title": "Was weggelassen wird",
+      "body": "Eine Bezifferung schreibt nur, was sich nicht von selbst versteht, und diese Kurzschrift ist das meiste, was es zu lernen gibt. Deshalb ist ein unbezifferter Basston kein Basston ohne Akkord.",
+      "plain": "Gar keine Ziffer meint den Dreiklang — Terz und Quinte über dem Bass.",
+      "sixth": "6 meint Sexte und Terz. Die Terz versteht sich von selbst, also sagt 6/3 etwas, das nicht gesagt werden musste.",
+      "seventh": "7 meint Septime, Quinte und Terz: alles unterhalb der Septime wird vorausgesetzt.",
+      "second": "2 meint Sexte, Quarte und Sekunde. 4/2 ist dieselbe Bezifferung, etwas länger geschrieben; beides ist gebräuchlich.",
+      "accidental": "Eine Stimme mit Vorzeichen wird immer geschrieben, auch wenn die Kurzschrift sie sonst wegließe — das Vorzeichen ist genau das, was sich nicht von selbst versteht."
+    },
+    "table": {
+      "title": "Jede Bezifferung dieser Übung",
+      "body": "Links wie sie geschrieben wird, in der Mitte wofür sie steht, rechts was daraus über einem Basston wird. Die Tonart gehört zur Zeile: eine erniedrigte Terz sagt nichts in einer Tonart, die sie ohnehin natürlich gibt."
+    },
+    "accidentals": {
+      "title": "Kreuze, B und Auflösungszeichen",
+      "body": "Ein Vorzeichen vor einer Ziffer rückt diesen Ton einen Halbton von dem weg, was die Tonart ihm gibt. In G-Dur ist die Quinte über Es ein H, also verlangt ♭5 ein B — nicht ein Heses, was ein absolutes Lesen des Zeichens ergäbe.",
+      "bare": "Ein Vorzeichen allein, ohne Ziffer daneben, gehört zur Terz. Das ist nach der 6 die häufigste Bezifferung überhaupt: so wird die erhöhte Terz der Dominante in Moll geschrieben."
+    },
+    "none": "ohne Ziffer",
+    "columnWritten": "Geschrieben",
+    "columnMeans": "Bedeutet",
+    "columnOver": "Über",
+    "columnNotes": "Töne",
+    "source": "Die Regeln folgen dem Artikel „Thoroughbass“ aus A Dictionary of Music and Musicians; die Tabelle wird aus demselben Modell berechnet, gegen das die Übung bewertet.",
+    "over": "{{bass}} in {{key}}"
   }
 }

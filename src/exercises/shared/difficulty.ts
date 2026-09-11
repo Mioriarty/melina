@@ -28,6 +28,8 @@ export type DifficultyGroup =
   | 'scale-reading'
   | 'scale-hearing'
   | 'rhythm-dictation'
+  | 'thoroughbass-figuring'
+  | 'thoroughbass-realizing'
   | 'scale-degrees'
   | 'melodic-dictation'
 

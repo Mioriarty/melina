@@ -73,5 +73,39 @@
     "nothing": "No interval inside the range is ever impossible. The curve gets very small, never zero, so even a wide leap after a sixteenth will happen eventually.",
     "unison": "Repeating a note is always possible and always damped — the rhythm tells two notes on one pitch apart, but a line that sits still is not asking you anything.",
     "rhythm": "The shape changes the pitches and never the rhythm. The same seed gives the same bars under either setting."
+  },
+  "figures": {
+    "title": "How a figure is read",
+    "intro": "A figure is not the name of a chord. It is a set of intervals measured up from the bass, and read against the key signature.",
+    "reading": {
+      "title": "Count up from the bass",
+      "body": "A 6 means the note a sixth above the bass. Not a particular note — the sixth over D is B, the sixth over E is C, and the same figure is a different note under every bass note it stands beneath.",
+      "key": "Which B or which C is the key signature's business. In C major the sixth over D is B natural; in F major, where the signature flattens it, the same 6 over the same D is B flat. The figure never says; the signature already did."
+    },
+    "omission": {
+      "title": "What is left out",
+      "body": "A figure writes only what is not taken for granted, and the shorthand is most of what there is to learn. It is why an unfigured bass note is not a bass note with no chord on it.",
+      "plain": "No figure at all means the common chord — a third and a fifth over the bass.",
+      "sixth": "6 means a sixth and a third. The third goes without saying, so writing 6/3 says something that did not need saying.",
+      "seventh": "7 means a seventh, a fifth and a third: everything under the seventh is assumed.",
+      "second": "2 means a sixth, a fourth and a second. 4/2 is the same figure written a little longer, and both are current.",
+      "accidental": "A line carrying an accidental is always written, whatever the shorthand would drop — the accidental is exactly the thing not taken for granted."
+    },
+    "table": {
+      "title": "Every figure this exercise uses",
+      "body": "Written on the left, what it stands for in the middle, and what it comes to over one bass note on the right. The key belongs to the row: a flattened third says nothing in a key that gives a natural one."
+    },
+    "accidentals": {
+      "title": "Sharps, flats and naturals",
+      "body": "An accidental before a number moves that note a semitone from what the key gives it. In G major the fifth over E flat is B natural, so ♭5 asks for B flat — not for B double flat, which reading the sign as absolute would give.",
+      "bare": "An accidental standing alone, with no number beside it, belongs to the third. That is the commonest figure in the repertoire after 6: it is how the raised third of a dominant in a minor key is written."
+    },
+    "none": "no figure",
+    "columnWritten": "Written",
+    "columnMeans": "Means",
+    "columnOver": "Over",
+    "columnNotes": "Notes",
+    "source": "The rules here follow the article on Thoroughbass in A Dictionary of Music and Musicians, and the table is computed from the same model the exercise grades against.",
+    "over": "{{bass}} in {{key}}"
   }
 }

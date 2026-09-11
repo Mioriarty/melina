@@ -28,7 +28,8 @@ import { isModeId, scalePitches, tonicKey, type ModeId } from '@/lib/music/scale
  * `interval-shared/attempt.ts` and `scale-shared/attempt.ts`.
  */
 
-export type AttemptKind = 'interval' | 'scale' | 'rhythm' | 'degree' | 'melody'
+export type AttemptKind =
+  'interval' | 'scale' | 'rhythm' | 'degree' | 'melody' | 'figured-bass'
 
 export interface IntervalAttempt {
   kind: 'interval'
@@ -122,8 +123,34 @@ export interface MelodyAttempt {
   tempo: number
 }
 
+/**
+ * A figured bass — the bass line and what stands under it, and nothing else.
+ *
+ * The chord is **not** stored: it is what the figure resolves to, so keeping it
+ * would be a second copy of the same fact that could disagree with the first.
+ * Nor is a clef, because a grand staff is not in one.
+ */
+export interface FiguredBassAttempt {
+  kind: 'figured-bass'
+  keySignature: KeySignatureId
+  /** The bass line, comma-separated: `C3` or `C3,A2,D3`. */
+  bass: string
+  /**
+   * The figure under each bass note. `/` joins the lines of one figure, `-`
+   * successive figures under one bass note — the dash a suspension is written
+   * with anyway — and `,` the bass notes. An empty entry is a plain triad,
+   * which is the commonest figure there is.
+   */
+  figures: string
+}
+
 export type AttemptQuestion =
-  IntervalAttempt | ScaleAttempt | RhythmAttempt | DegreeAttempt | MelodyAttempt
+  | IntervalAttempt
+  | ScaleAttempt
+  | RhythmAttempt
+  | DegreeAttempt
+  | MelodyAttempt
+  | FiguredBassAttempt
 
 /** The answer the question was asking for. Derived, never stored twice. */
 export function correctAnswer(question: AttemptQuestion): string {
@@ -138,6 +165,8 @@ export function correctAnswer(question: AttemptQuestion): string {
       return question.degrees
     case 'melody':
       return question.degrees
+    case 'figured-bass':
+      return question.figures
   }
 }
 
@@ -354,6 +383,33 @@ function phraseDivision(phrase: {
   }, 'quarter')
 }
 
+/**
+ * A figured bass's dimensions.
+ *
+ * `root` and `figure` are given **only where there is one bass note**. A line
+ * of several is built on no single note and carries no single figure, so it
+ * drops out of every filter naming either — which is exactly the documented
+ * behaviour of a filter asking about a dimension an attempt does not have, and
+ * the same way a rhythm drops out of every filter that asks about pitch.
+ */
+function figuredBassFacets(question: FiguredBassAttempt): Facets {
+  const basses = question.bass.split(',')
+  const base: Facets = {
+    kind: 'figured-bass',
+    keySignature: question.keySignature,
+    bassNotes: String(basses.length),
+    altered: /[#bn]/.test(question.figures),
+  }
+
+  const only = basses.length === 1 ? parsePitch(basses[0] ?? '') : undefined
+  // A row can only fail to spell if it was hand-edited or written by a version
+  // that spelled differently; it then matches no filter that asks about the
+  // notes rather than throwing inside a statistics query.
+  if (only === undefined) return base
+
+  return { ...base, root: tonicKey(only), figure: question.figures }
+}
+
 export function attemptFacets(question: AttemptQuestion): Facets {
   switch (question.kind) {
     case 'interval':
@@ -366,5 +422,7 @@ export function attemptFacets(question: AttemptQuestion): Facets {
       return degreeFacets(question)
     case 'melody':
       return melodyFacets(question)
+    case 'figured-bass':
+      return figuredBassFacets(question)
   }
 }

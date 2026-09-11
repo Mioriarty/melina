@@ -117,7 +117,13 @@
       "paced": "Zeitbemessen",
       "pacedHint": "Die Zeit vor einer Note entscheidet, wie weit die Linie zu ihr springen darf: kurze Noten gehen schrittweise, lange dürfen springen.",
       "guide": "Wie das funktioniert"
-    }
+    },
+    "figures": {
+      "title": "Bezifferungen",
+      "hint": "Welche Ziffern vorkommen dürfen. Der schlichte Dreiklang wird geschrieben, indem man nichts schreibt — auch das ist eine Bezifferung.",
+      "guide": "Wie eine Bezifferung gelesen wird"
+    },
+    "figureKeysHint": "Eine Ziffer wird gegen die Vorzeichnung gelesen: dieselbe 6 ist in jeder Tonart ein anderer Ton."
   },
   "round": {
     "end": "Runde beenden",
@@ -129,14 +135,18 @@
       "scale": "Tonleiter-Antworten",
       "rhythm": "Rhythmustasten",
       "degree": "Stufentasten",
-      "melody": "Melodietasten"
+      "melody": "Melodietasten",
+      "figure": "Zifferntasten",
+      "chord": "Akkordtöne"
     },
     "prompt": {
       "interval": "Welches Intervall ist das?",
       "scale": "Welche Tonleiter ist das?",
       "rhythm": "Schreibe den Rhythmus auf, den du hörst",
       "degree": "Welche Stufen hörst du?",
-      "melody": "Schreibe die Melodie auf, die du hörst"
+      "melody": "Schreibe die Melodie auf, die du hörst",
+      "figuring": "Wie wird dieser Akkord beziffert?",
+      "realizing": "Schreibe den Akkord zur Bezifferung"
     }
   },
   "score": {
@@ -162,7 +172,9 @@
       "scales": "Alles richtig. Nimm einen Modus, einen entfernteren Grundton oder die C-Schlüssel dazu.",
       "rhythm": "Alles richtig. Versuch eine feinere Unterteilung, eine andere Taktart, oder lass das Klicken nach dem Vorzähler aufhören.",
       "degrees": "Alles richtig. Versuch eine längere Melodie, die ganze Tonleiter, oder lass Töne aus der Tonart heraustreten.",
-      "melody": "Alles richtig. Versuch einen größeren Tonumfang, eine feinere Unterteilung oder einen zweiten Takt."
+      "melody": "Alles richtig. Versuch einen größeren Tonumfang, eine feinere Unterteilung oder einen zweiten Takt.",
+      "figuring": "Alles richtig. Versuch die Septakkorde, eine Tonart weiter im Quintenzirkel oder die Vorzeichen.",
+      "realizing": "Alles richtig. Versuch die Umkehrungen, mehr B oder Kreuze oder die Vorzeichen."
     },
     "thisRound": "Diese Runde",
     "questionLabel": "{{subject}} · {{clef}}",
@@ -249,6 +261,47 @@
       "notesWrong": "den Rhythmus, aber nicht die Noten",
       "rhythmWrong": "die Noten, aber nicht den Rhythmus",
       "bothWrong": "weder den Rhythmus noch die Noten"
+    }
+  },
+  "thoroughbass": {
+    "plain": "Dreiklang",
+    "scoreLabel": {
+      "staff": "Akkolade, Vorzeichnung {{key}}: {{events}}",
+      "plain": "Bass {{bass}}, unbeziffert",
+      "figured": "Bass {{bass}}, beziffert {{figure}}"
+    },
+    "nothing": "gar nichts"
+  },
+  "figuring": {
+    "levelsBlurb": "Sieh einen Akkord über einem Bass und schreibe seine Bezifferung. Wähle ein Level oder stell es dir selbst ein.",
+    "setupBlurb": "Der Akkord steht auf dem System; schreibe die Bezifferung dazu. Es zählt nur die übliche Form — was die Konvention weglässt, wird nicht geschrieben.",
+    "keyboard": {
+      "sharp": "Nächste Ziffer erhöhen",
+      "flat": "Nächste Ziffer erniedrigen",
+      "natural": "Nächste Ziffer auflösen",
+      "digit": "Ziffer {{number}}",
+      "next": "Weitere Ziffer über demselben Bass",
+      "done": "Das ist die Bezifferung",
+      "delete": "Letzte Eingabe löschen"
+    },
+    "verdict": {
+      "spelling": "Richtiger Akkord. Er wird {{correct}} geschrieben, nicht {{wrote}} — eine Bezifferung lässt alles weg, was sich von selbst versteht.",
+      "chord": "Du hast {{wrote}} geschrieben; dieser Akkord wird {{correct}} beziffert."
+    },
+    "summary": {
+      "subject": "{{figure}} · {{key}}"
+    }
+  },
+  "realizing": {
+    "levelsBlurb": "Sieh einen bezifferten Bass und setze den Akkord aus. Wähle ein Level oder stell es dir selbst ein.",
+    "setupBlurb": "Bass und Bezifferung sind gegeben; setze die Töne, die sie verlangen. Jede Oktave und jede Reihenfolge — eine Bezifferung sagt welche Töne, nie wo sie liegen.",
+    "keyboard": {
+      "sharp": "Nächsten Ton erhöhen",
+      "flat": "Nächsten Ton erniedrigen",
+      "delete": "Letzte Eingabe löschen"
+    },
+    "summary": {
+      "subject": "{{figure}} · über {{bass}}"
     }
   }
 }

@@ -38,6 +38,12 @@ import {
   generateRound as generateScaleRound,
   type ScaleRoundSpec,
 } from '@/exercises/scale-shared/generate'
+import { FIGURING_SETTINGS } from '@/exercises/thoroughbass-figuring/settings'
+import { REALIZING_SETTINGS } from '@/exercises/thoroughbass-realizing/settings'
+import { THOROUGHBASS_DIFFICULTIES } from '@/exercises/thoroughbass-shared/difficulties'
+import { generateRound as generateFiguredRound } from '@/exercises/thoroughbass-shared/generate'
+import { FIGURE_CHOICES } from '@/exercises/thoroughbass-shared/settings'
+import { canonicalFigures, figureKey, figurePitches } from '@/lib/music/figuredBass'
 import { i18n } from '@/lib/i18n'
 import { LANGUAGES } from '@/lib/i18n/languages'
 import { CATALOG_KEYS, HEARABLE_INTERVAL_KEYS } from '@/lib/music/catalog'
@@ -91,6 +97,8 @@ const ALL_GROUPS: readonly NamedLevels[] = [
   { group: 'rhythm-dictation', levels: RHYTHM_DIFFICULTIES },
   { group: 'scale-degrees', levels: DEGREE_DIFFICULTIES },
   { group: 'melodic-dictation', levels: MELODY_DIFFICULTIES },
+  { group: 'thoroughbass-figuring', levels: THOROUGHBASS_DIFFICULTIES },
+  { group: 'thoroughbass-realizing', levels: THOROUGHBASS_DIFFICULTIES },
 ]
 
 describe.each(ALL_GROUPS)('$group levels', ({ group, levels }) => {
@@ -851,5 +859,81 @@ describe('melodic dictation levels', () => {
     const shapes = MELODY_DIFFICULTIES.map((level) => level.settings.shape)
     expect(new Set(shapes)).toEqual(new Set(['paced', 'steady']))
     expect(shapes.filter((shape) => shape === 'steady')).toHaveLength(1)
+  })
+})
+
+/**
+ * Thoroughbass levels.
+ *
+ * Both directions share one list, because reading a figure and writing one are
+ * the same ladder climbed from opposite ends. They are checked twice all the
+ * same — once under each exercise's own settings parser, since that is the
+ * thing that could quietly differ.
+ */
+describe.each([
+  { direction: 'figuring', spec: FIGURING_SETTINGS },
+  { direction: 'realizing', spec: REALIZING_SETTINGS },
+] as const)('thoroughbass $direction levels', ({ spec }) => {
+  it.each(THOROUGHBASS_DIFFICULTIES)('$id names real figures and keys', (level) => {
+    for (const key of level.settings.keySignatures) {
+      expect(isKeySignatureId(key), key).toBe(true)
+    }
+    for (const figure of level.settings.figures) {
+      expect(FIGURE_CHOICES, figure).toContain(figure)
+    }
+    expect(level.settings.figures.length).toBeGreaterThan(0)
+    expect(level.settings.events).toBeGreaterThanOrEqual(1)
+  })
+
+  it.each(THOROUGHBASS_DIFFICULTIES)('$id survives its own settings parser', (level) => {
+    // A level is written by hand and then read back through the parser that
+    // guards against a stale stored value. If the two disagree, picking the
+    // level and reloading the page give different rounds.
+    const raw = JSON.parse(JSON.stringify(level.settings)) as unknown
+    expect(spec.parse(raw)).toEqual(level.settings)
+  })
+
+  it.each(THOROUGHBASS_DIFFICULTIES)('$id generates a full round', (level) => {
+    for (const seed of [1, 2, 3]) {
+      const round = generateFiguredRound(createRandom(seed), level.settings)
+      expect(round.length, `seed ${seed}`).toBe(level.settings.questionsPerRound)
+    }
+  })
+
+  it.each(THOROUGHBASS_DIFFICULTIES)('$id only asks answerable questions', (level) => {
+    // **The one that matters under canonical-required grading.** A question
+    // whose figure is not one of the conventional ways to write its own chord
+    // is a question whose right answer is marked wrong, and nothing about the
+    // types would say so.
+    for (const seed of [1, 2, 3]) {
+      for (const question of generateFiguredRound(createRandom(seed), level.settings)) {
+        for (const event of question.events) {
+          event.figures.forEach((figure, position) => {
+            const notes = event.notes[position]
+            expect(notes).toBeDefined()
+            expect(figurePitches(event.bass, question.keySignature, figure)).toEqual(
+              notes,
+            )
+            const accepted = canonicalFigures(
+              event.bass,
+              question.keySignature,
+              notes ?? [],
+              { afterAnother: position > 0 },
+            ).map(figureKey)
+            expect(
+              accepted,
+              `${figureKey(figure)} on ${question.keySignature}`,
+            ).toContain(figureKey(figure))
+          })
+        }
+      }
+    }
+  })
+
+  it('covers the triads, the sevenths and an accidental across the level list', () => {
+    const offered = new Set(THOROUGHBASS_DIFFICULTIES.flatMap((l) => l.settings.figures))
+    for (const figure of ['', '6', '6/4', '7', '6/5', '4/3', '2', '#3']) {
+      expect(offered, figure).toContain(figure)
+    }
   })
 })

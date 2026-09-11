@@ -62,6 +62,26 @@
         }
       }
     },
+    "thoroughbass": {
+      "title": "Generalbass",
+      "blurb": "Ein Basston, eine Bezifferung darunter und der Akkord, für den beide stehen.",
+      "exercises": {
+        "figuring": {
+          "title": "Bass beziffern",
+          "short": "Beziffern",
+          "blurb": "Lies den Akkord über einem Bass und schreibe die Bezifferung dazu."
+        },
+        "realizing": {
+          "title": "Bass aussetzen",
+          "short": "Aussetzen",
+          "blurb": "Lies eine Bezifferung und setze den Akkord auf dem System aus."
+        },
+        "unfigured": {
+          "title": "Unbezifferter Bass",
+          "blurb": "Eine Basslinie ganz ohne Ziffern, nach der Konvention ausgesetzt."
+        }
+      }
+    },
     "harmonic-prediction": {
       "title": "Harmonische Vorhersage",
       "blurb": "Erraten, wohin die Verbindung strebt.",
@@ -80,10 +100,6 @@
       "title": "Harmonische Ergänzung",
       "blurb": "Die Lücke in einer funktionierenden Verbindung füllen.",
       "exercises": {
-        "figured-bass": {
-          "title": "Generalbass",
-          "blurb": "Eine Bassstimme aus ihrer Bezifferung aussetzen."
-        },
         "chorale": {
           "title": "Choralsatz",
           "blurb": "Einen vorgegebenen Sopran vierstimmig harmonisieren."

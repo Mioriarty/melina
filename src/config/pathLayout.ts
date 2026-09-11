@@ -104,10 +104,25 @@ export const PATH_NODES: readonly PathNodePosition[] = [
   // arrives, so shipping it is a coordinate and not a re-layout of everything
   // below.
   { stationId: 'dictation/short-melodies', x: 38, y: 990 },
-  { stationId: 'harmonic-prediction', x: 30, y: 1250 },
-  { stationId: 'harmonic-completion', x: 66, y: 1500 },
-  { stationId: 'counterpoint', x: 35, y: 1785 },
-  { stationId: 'daily', x: 62, y: 2025 },
+  // **Thoroughbass takes the room Melodic Dictation was placed to leave**, and
+  // stands off the path: the main route runs past it down the left of the
+  // column while these two sit to the right, joined to each other and to
+  // nothing else. See `PATH_EDGES`.
+  //
+  // They are a chain rather than a braid, and the geometry is why: a braided
+  // pair stands level, and two stations that stand level cannot also be joined
+  // — below about 150px of drop a connector has no room between the label it
+  // leaves and the medallion it arrives at, and it draws as a stub or inverts.
+  // So the pair either stands side by side with nothing between them, or runs
+  // downhill with a connector. Figuring first, because you can only realise a
+  // figure you can read, and figuring is where the rules of omission are
+  // learnt.
+  { stationId: 'thoroughbass/figuring', x: 70, y: 1245 },
+  { stationId: 'thoroughbass/realizing', x: 62, y: 1520 },
+  { stationId: 'harmonic-prediction', x: 30, y: 1790 },
+  { stationId: 'harmonic-completion', x: 66, y: 2040 },
+  { stationId: 'counterpoint', x: 35, y: 2325 },
+  { stationId: 'daily', x: 62, y: 2565 },
 ]
 
 /**
@@ -132,6 +147,13 @@ export const PATH_EDGES: readonly PathEdge[] = [
   { from: 'dictation/rhythm', to: 'dictation/short-melodies' },
   { from: 'scales/degrees', to: 'dictation/short-melodies' },
   { from: 'dictation/short-melodies', to: 'harmonic-prediction' },
+  // **Thoroughbass is off the path, joined only to itself.** Nothing leads
+  // into it and nothing leads out, so `PATH_EDGES` has exactly two components
+  // and the walk from the top of the column does not reach this one. That is
+  // the point: it is a subject you can take up beside the journey rather than
+  // a stage of it, and drawing it in the line would claim it has to be done
+  // before harmony and after melodic dictation, which is true of neither.
+  { from: 'thoroughbass/figuring', to: 'thoroughbass/realizing' },
   { from: 'harmonic-prediction', to: 'harmonic-completion' },
   { from: 'harmonic-completion', to: 'counterpoint' },
   { from: 'counterpoint', to: 'daily' },

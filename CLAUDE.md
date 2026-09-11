@@ -6,17 +6,18 @@ The name comes from the toki pona word for melody.
 
 ## Commands
 
-|                     |                                              |
-| ------------------- | -------------------------------------------- |
-| `npm run dev`       | dev server                                   |
-| `npm run build`     | typecheck + production build                 |
-| `npm run preview`   | serve the production build                   |
-| `npm run typecheck` | `tsc -b`                                     |
-| `npm run lint`      | oxlint                                       |
-| `npm run format`    | Prettier (also sorts Tailwind classes)       |
-| `npm test`          | Vitest                                       |
-| `npm run icons`     | regenerate PWA icons from `scripts/mark.mjs` |
-| `npm run glyphs`    | re-extract Leland note glyphs from Verovio   |
+|                     |                                                    |
+| ------------------- | -------------------------------------------------- |
+| `npm run dev`       | dev server                                         |
+| `npm run build`     | typecheck + production build                       |
+| `npm run preview`   | serve the production build                         |
+| `npm run typecheck` | `tsc -b`                                           |
+| `npm run lint`      | oxlint                                             |
+| `npm run format`    | Prettier (also sorts Tailwind classes)             |
+| `npm test`          | Vitest                                             |
+| `npm run shot`      | screenshot the running app (see **Looking at it**) |
+| `npm run icons`     | regenerate PWA icons from `scripts/mark.mjs`       |
+| `npm run glyphs`    | re-extract Leland note glyphs from Verovio         |
 
 ## Architecture
 
@@ -275,6 +276,43 @@ Two suites run in the **node environment** (`// @vitest-environment node`):
 carry the assertions nothing structural can make — that an accidental is drawn
 or not drawn, that asking and revealing a question engrave to the same size, and
 that a bar being typed into does not move.
+
+## Looking at it — `npm run shot`
+
+**jsdom draws nothing, and that is a real hole.** A change to the notation can
+typecheck, pass every test and still be illegible on the page: a page in the
+wrong units renders every example equally wrong, so asked still matches
+revealed, nothing overflows, and every stage of typing is identical. The
+thoroughbass page shipped at a tenth of its proper size with fifteen green
+assertions over it. Some things have to be looked at.
+
+```
+npm run dev
+npm run shot -- /train/thoroughbass/realizing out.png --click "Triads"
+```
+
+`scripts/shot.mjs` drives **Playwright's cached `chrome-headless-shell`** over
+the DevTools protocol, using node's own `WebSocket`. There is nothing to
+install and nothing added to `package.json`'s dependencies: the browser is
+already on disk under `~/Library/Caches/ms-playwright`, and
+`npx playwright install chromium --only-shell` puts it there if it is not.
+Driving CDP directly rather than depending on Playwright itself is what keeps
+it that way.
+
+- `--click` takes the visible text of a button and may be repeated. It is what
+  gets past the level list and into a round, since a level starts one in the
+  same tap. It matches an **accessible name on a descendant** as well as
+  text, because an icon-only button — the ✓ on the figure keyboard, backspace —
+  says nothing in its text at all.
+- `--size WxH` is the viewport and `--wait` the settle time after each click.
+  The default of 1200ms is for the engraver: it is 7 MB of WebAssembly and the
+  first render waits for it.
+- `--origin` when Vite has picked a different port, which it does whenever 5173
+  is already taken.
+
+Worth doing after anything that changes what is drawn, and worth doing at a
+phone width rather than a desktop one — the notation and the keyboard compete
+for the same few hundred pixels, and that is where a layout gives out.
 
 ## Music theory — `src/lib/music/`
 
@@ -771,12 +809,30 @@ Dictation sits below them with both edges arriving at it, because it is the
 thing that needs both. It is the first station since the top of the path with
 two edges arriving, which is what the graph in `PATH_EDGES` exists to express.
 
-It sits **left of centre rather than on it**, because the room to its right is
-spoken for: the next exercise stands beside it. Placed that way now rather than
-when that arrives, so shipping it is a coordinate and not a re-layout of
-everything below — and if the two do end up standing level, `pathLayout.test.ts`
-will say so, since it checks every such pair for overlapping labels at every
-supported width.
+It sits **left of centre rather than on it**, to leave the right of the column
+free — which is where thoroughbass now stands.
+
+**The path is in two pieces, and that is deliberate.** The journey runs from
+Interval Reading down to the daily round; thoroughbass sits beside it, its two
+stations joined to each other and to nothing else. Nothing leads in and nothing
+leads out, so the main route runs straight past it from Melodic Dictation to
+Harmonic Prediction. Drawing it into the line would claim it has to be done
+after melodic dictation and before harmony, which is true of neither: it is a
+subject you can take up alongside the journey rather than a stage of it.
+
+So "reach every station from the top" is no longer the property that guards the
+graph. What replaced it is that `PATH_EDGES` has **exactly two components** —
+the journey, and that pair — which still catches the thing the walk was for, a
+station left joined to nothing at all, and now also catches the island being
+quietly wired back into the line.
+
+Within the island the two are a chain rather than a braid, and the geometry is
+why: a braided pair stands level, and **two stations that stand level cannot
+also be joined**. Below about 150px of drop a connector has no room left between
+the label it leaves and the medallion it arrives at, and it draws as a stub or
+inverts entirely. So a pair either stands side by side with nothing between
+them, or runs downhill with a connector. `pathLayout.test.ts` catches this the
+moment a coordinate tries.
 
 `orderedPathNodes` sorts by `position.y`, **not** by the curriculum. The
 registry lists hearing before reading and the path puts reading first, so
@@ -790,8 +846,8 @@ the path for an unplaced station so nothing can silently vanish, and
 
 ## Exercises — `src/exercises/`
 
-Five exercises — two reading/hearing pairs and one that is neither — and the
-folders say which is which:
+Seven exercises — two reading/hearing pairs, one reading/writing pair, and one
+that is neither — and the folders say which is which:
 
 - `shared/` is **exercise-agnostic**. The levels → setup → round → summary state
   machine (`useRound`), the levels screen, the round screen, the summary, the
@@ -812,6 +868,9 @@ folders say which is which:
   moved here and grew two things when melodic dictation arrived, and the bar
   builder moved untouched.
 - `melodic-dictation/` is the two halves at once, and is described below.
+- `thoroughbass-shared/`, `thoroughbass-figuring/` and `thoroughbass-realizing/`
+  are the third pair, and the first where the pair is reading and _writing_
+  rather than reading and hearing. See **Thoroughbass** below.
 
 Within a pair, reading and hearing differ only in what notation they show and
 whether there is a play button beside it, so anything else belongs one level up.
@@ -1101,6 +1160,228 @@ verdict, but a melody can be right in its rhythm and wrong in its notes or the
 reverse, and "you had the rhythm" is the most useful thing there is to read
 back — which is why `answerName` sees the question as well as the answer.
 
+### Thoroughbass — a figure is not a chord
+
+Two exercises, mirroring each other: **Figuring** (`thoroughbass/figuring`, in
+German _beziffern_) shows a bass note with the chord above it and asks for the
+figure; **Realising** (`thoroughbass/realizing`, _aussetzen_) shows the figure
+and asks for the chord. The first reading-and-**writing** pair rather than a
+reading-and-hearing one, which is why the braid metaphor still holds — a figure
+and the chord it stands for are one fact read from either end.
+
+Ground truth is Grove's article on Thoroughbass, and every rule below that is
+quoted comes from it.
+
+**A figure is interval arithmetic above a bass, read through a key signature**
+— never the name of a chord. `6` does not mean "first inversion"; it means _a
+sixth above this bass, spelled as the key spells it_. That single sentence is
+why `lib/music/figuredBass.ts` needs **no chord model at all**: no root, no
+quality, no inversion, no roman numeral. Resolution is a walk up the letters
+from the bass, asking `alterationInKey` what each one is — the same shape
+`degree.ts` already has, where a degree names a note in a mode and a figure
+names a note above a bass. Roots and inversions belong to harmonic _analysis_,
+which is a different subject, and admitting them would double the model for
+nothing.
+
+**A question is a bass line, and one chord is a line of length one** — the same
+move `phrase.ts` made. A `BassEvent` holds a bass note and a _list_ of figures,
+so a suspension (`4–3`, two figures under one bass note) grows one field and
+continuation lines grow another. Neither is built; both are already expressible,
+which is what the shape is for.
+
+**Two things a figure leaves out, and both are computed rather than tabulated
+twice.** `STACKS` is the one table there is — the complete sonorities a written
+figure abbreviates — and it is a table because the convention _is_ a convention,
+not something arithmetic can recover: Grove states it case by case. Everything
+else falls out of it. `expandFigure` picks the first stack containing every
+number written, so a bare `6` reads as 6/3 and a lone accidental reads as a
+plain triad with an altered third. `canonicalFigures` runs it backwards.
+
+**Grading is canonical, not merely correct.** A figure that resolves to the
+right notes is not enough — writing `6/3` under a plain first inversion is
+exactly what "a wholesome rule forbids … any Figure not absolutely necessary"
+is about, and learning the omissions is most of learning to figure at all. Two
+consequences:
+
+- It accepts a **set**, because two forms are genuinely current for the third
+  inversion: Grove blesses the bare `2` while `4/2` is the standard modern
+  spelling. Accepting both is not the same as accepting a redundant figure.
+- The full form becomes legitimate for a figure that **follows another on the
+  same bass note**, which is a fact about the question rather than a setting.
+  `afterAnother` carries it.
+
+**A line carrying an accidental is always written**, whatever the abbreviation
+would drop, and that one rule is where the bare `♯` comes from: a plain triad
+abbreviates to nothing at all, so an altered third leaves only its sign behind.
+The bare accidental therefore needs no key of its own on the keyboard and no
+special case in the model — it is what an armed accidental with no digit after
+it already means.
+
+**`♯` and `♭` shift a semitone from what the key gives, not absolutely.** Grove's
+own example settles it: with the signature of G major and an E♭ bass, `♭5` is
+B♭, taken down from the B♮ the signature spells. `♮` is the exception — it asks
+for the natural note whatever the key says — which is also why a `♮` in a key
+that already spells the note natural is _not_ a figure, and the generator
+refuses to produce one.
+
+**The property that makes figuring answerable** is that no written figure ever
+stands for two different chords over the same bass; under canonical-required
+grading, a chord admitting two figurings is a question with two right answers
+and one of them marked wrong. `figuredBass.test.ts` enforces it as a property
+over every figure and key the levels offer, the same way `catalog.test.ts` does
+for hearable intervals. It holds only because a pitch here is a spelling: `♯5`
+over C is G♯ and `♭6` is A♭, one sound under two written notes, and the staff
+says which.
+
+**The generator derives each question's figure from its notes**, not the other
+way round. A level names a figure to aim for, that figure is resolved against a
+bass, and the question then asks for whatever `preferredFigure` says the
+conventional spelling of those notes is — so a question can never ask for
+something grading would reject. The bass is drawn from the notes of the key,
+which is the whole of keeping a sonority sensible: a figure with no accidental
+resolves to what the signature spells, so nothing from nowhere can come out, and
+no table of which figure suits which degree is needed.
+
+**A figure cannot need more than a double accidental.** The key alters a letter
+by at most one and the figure shifts it by at most one more, so unlike
+`transpose` there is no "retry with another root" here and no level can be
+quietly narrower than it says. Discovered by the test, not reasoned out first.
+
+**Correctness in the realising direction is the set of pitch classes above the
+bass, and nothing more** — octave, order and spacing are the player's, because
+the figure genuinely underdetermines them. `voiceChord` is the single place that
+decides where the notes actually sit (lowest place above the one before it,
+building upward from a floor just under middle C), read by both the staff and
+the keyboard so the two cannot disagree about what was written. v1 forbids
+doubling: the answer is the set of _distinct_ notes, which is what makes the
+chord exactly fillable and so what lets the keyboard keep the no-confirm-key
+rule.
+
+**A row keeps the bass line and the figures and nothing else.** The chord is
+what the figure resolves to, so storing it would be a second copy that could
+disagree. There is no clef either — a grand staff is not in one — and `root`
+and `figure` are facets only where there is a single bass note, so a line of
+several drops out of every filter naming either, exactly as a rhythm drops out
+of every filter that asks about pitch.
+
+### The grand staff and the figures — `thoroughbassMei`, `thoroughbassProfile`
+
+Three things are load-bearing and all three are pinned by
+`thoroughbassVerovio.test.ts`, because in each case Verovio gets it wrong
+_quietly_ — the MEI validates, the render succeeds, and the thing is simply not
+on the page.
+
+- **The brace is a `<grpSym>` child, not a `@symbol` on the `<staffGrp>`.** The
+  attribute form is accepted and draws nothing.
+- **An accidental inside a figure must be the character**, `♯`, not
+  `<accid accid="s"/>`, which is accepted and then dropped.
+- **`@extender` draws no line.** The Verlängerungszeichen therefore cannot come
+  from the engraver today, which is what blocks continuation lines rather than
+  anything in the model. The test asserts its absence so it starts failing on
+  the day Verovio grows it.
+
+**One measure per bass note**, so there is no metre to declare and no bar to
+fill: a figured bass here is a succession of sonorities rather than a piece of
+music, and a time signature would be drawn on the page. Accidentals go through
+`accidentalAttributes` rather than `measureAccidentals`, and that is right
+rather than a shortcut — the barline rule is about successive notes on one
+staff, and here every measure holds one sonority per staff.
+
+**Verovio draws a figure's accidental as a character in the Leipzig font, which
+no browser has.** `<f>♯6</f>` comes out as
+`<tspan font-family="Leipzig">U+EA66</tspan>` — the SMuFL _figured-bass_ sharp,
+which is the right glyph, with nothing to render it with. Only
+`smuflTextFont: 'embedded'` inlines the font, and it is worth knowing the cost
+because the number is surprising: a render with plain digits is 6.7 KB and the
+first accidental takes it to **65 KB** — the whole text font, not a subset, so
+one accidental and three cost the same. The price is paid per render and only by
+a figure that carries one. The fix, when it is worth doing, is the trick
+`npm run glyphs` already uses for Leland: lift the font out at build time,
+self-host it, and switch to `linked`.
+
+**The brace is drawn outside the system it joins**, at x = -432 in a render's
+own units. Against the app's usual page margin of 12 that lands at -312 and the
+inner `<svg>`, which has no `overflow`, clips it away — leaving three short
+strokes at the left edge that read as a rendering fault. This is the only
+profile that moves `pageMarginLeft`, and the page width carries the same amount
+again so the music is not narrowed.
+
+**`pageWidth` and `pageHeight` are a tenth of the viewBox units a render
+reports.** Calibrating by reading a natural size off the viewBox and feeding it
+straight back in makes a page ten times too big: the music is drawn in one
+corner, the column scales the whole sheet down to fit, and the staff comes out a
+tenth of the size it should be — not subtly wrong but illegible. **Nothing that
+compares one render against another can see it**, because every render is
+equally wrong: asked and revealed match, nothing overflows, every stage of
+typing is identical. That is why the profile is checked against a bar of rhythm,
+which is known to be right, and not only against itself.
+
+A grand staff is two staves and a row of figures, so it takes `PHRASE_SCORE_BOX`
+rather than `SCORE_BOX`. Under a single staff's share of the screen it left a
+third of its own box empty with the notation shrunk to fit the rest.
+
+### The two keyboards
+
+**`FigureKeyboard` is a telephone pad.** The grid is the point: everyone already
+knows where the 6 is, so the layout costs nothing to learn, and the row under it
+falls where a phone's `* 0 #` does. Accidentals across the top as one-shot
+switches, `1`–`9` in the grid, then `—`, `✓`, `⌫`.
+
+**The grammar is two keys and it is the written notation itself.** A digit adds
+a line to the column being typed, so `6` then `4` is the column `6/4`; the dash
+closes that column and opens the next one under the same bass note, so `4` `—`
+`3` is `4 – 3`. That mapping is one-to-one with what a figured bass looks like on
+paper, which is the best property an entry keyboard can have — and it is why
+suspensions will need a generator and a level rather than any new UI. The same
+dash is the continuation line when the time comes: pressed under a _new_ bass
+note it means "carry the figure over", which is the meaning the horizontal line
+already has.
+
+A column is drawn highest-first however it was typed, which removes a whole
+class of wrong answers that would have been about typing rather than harmony.
+
+**This is the one keyboard in the app with a confirm key, and the reason is that
+the no-confirm rule's own justification does not carry.** That rule is earned by
+a bar being exactly fillable, so that the only press left is the one that
+completes it. A figure has no such bound — one line, two, three — and inventing
+a fake one would be worse than a confirm key. `✓` means _that is the figure_;
+and because a plain triad is written by writing nothing, "no figure at all" is
+not a key to hunt for but simply pressing done straight away. `1` stays live
+though it is never canonical, under the same no-dead-keys rule as `♭1`. There is
+no zero, and that never bites: two-digit figures are only the historical `10`–`14`
+reduplications, which are reading-only.
+
+**`ChordKeyboard` is the scale degree keyboard with the mode taken out.** One
+key per note of the key, each drawing the note it means, and the two one-shot
+accidentals. There is no tonic and no mode here — only a key signature and a
+bass — so the seven letters are spelled by `alterationInKey` and the switches
+shift from there, which means it needs no scale-degree machinery at all. Labels
+are note names rather than degree numbers, because a figured bass is read as
+intervals above its bass and not as degrees of a key. Each key draws the note at
+the place pressing it _would_ put it, so the placement rule is visible in the
+thing it governs. It autosubmits when the chord is full and keeps the
+no-confirm-key rule, which is the honest difference from its sibling.
+
+### The levels, and the ladder they are the first rung of
+
+Both directions share one list, because reading a figure and writing one are the
+same ladder climbed from opposite ends. What ships is triads, the bare
+accidentals, and the sevenths, over one bass note — and the levels move one axis
+at a time, the figures or the keys, never both.
+
+There are **two axes and they are not the same axis**, which is the thing worth
+keeping straight when this grows: the _vocabulary_ (which figures) and the
+_span_ (how many bass notes, and how many figures under one). Suspensions,
+passing notes and continuation lines are all span, not vocabulary, which is why
+they are not simply "harder figures". And there is **no figure `11` or `13`** —
+Grove figures an eleventh `7/4/2` and a thirteenth `7/6/4`; those are chord
+names from functional harmony rather than thoroughbass signs. `10`–`14` are
+real, but historical, and mean reduplication in the octave above.
+
+Grove is ambiguous in exactly one place that matters, and it should not be
+guessed at: its augmented-sixth example ("signature of G major, E♭ bass — the
+Italian by `6`") only works if that `6` is raised.
+
 ## Guides — `src/pages/MelodyShapePage.tsx` and `components/explain/`
 
 A setting whose meaning takes a picture gets a page, reached from a question
@@ -1260,8 +1541,10 @@ practise next, and the strengths are still there at the other end.
 
 ## Not yet built
 
-Everything after Melodic Dictation — harmonic prediction, harmonic completion,
-counterpoint, the daily round — is still a placeholder page.
+Everything after Thoroughbass — harmonic prediction, harmonic completion,
+counterpoint, the daily round — is still a placeholder page. Figured bass used
+to be a planned exercise under harmonic completion; it is its own category now,
+because reading a figure and writing one are two exercises rather than one.
 
 Settings holds one setting — the interface language. Like Progress it is
 reached only from the top bar and has no station on the path, because neither

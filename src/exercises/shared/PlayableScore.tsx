@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
+import type { VerovioOptions } from 'verovio/esm'
+
 import { Score } from '@/components/notation/Score'
 import { Icon } from '@/components/ui/Icon'
 import { cn } from '@/lib/utils/cn'
@@ -36,6 +38,17 @@ export interface PlayableScoreProps {
   /** What the notation shows, for screen readers. Never the answer. */
   label: string
   noteSpacing?: number
+  /**
+   * The page to engrave onto, for notation that needs one — a grand staff is
+   * neither the size nor the shape of a single-staff example. Must be a stable
+   * reference: `Score` compares it by identity.
+   */
+  profile?: VerovioOptions
+  /**
+   * How much room the staff may take. `SCORE_BOX` by default; notation that is
+   * genuinely taller than one staff passes `PHRASE_SCORE_BOX` instead.
+   */
+  box?: string
   /** Sound the notes. Omitted while the answer is still hidden. */
   onPlay?: (() => void) | undefined
   status?: PlaybackStatus
@@ -45,20 +58,22 @@ export function PlayableScore({
   mei,
   label,
   noteSpacing,
+  profile,
+  box = SCORE_BOX,
   onPlay,
   status = 'idle',
 }: PlayableScoreProps) {
   const { t } = useTranslation('exercise')
 
+  const paper = {
+    ...(noteSpacing === undefined ? {} : { noteSpacing }),
+    ...(profile === undefined ? {} : { profile }),
+  }
+
   return (
     <div className="flex min-h-0 w-full max-w-full flex-1 items-stretch justify-center">
       {onPlay === undefined ? (
-        <Score
-          className={SCORE_BOX}
-          mei={mei}
-          label={label}
-          {...(noteSpacing === undefined ? {} : { noteSpacing })}
-        />
+        <Score className={box} mei={mei} label={label} {...paper} />
       ) : (
         <button
           type="button"
@@ -79,12 +94,7 @@ export function PlayableScore({
             'disabled:cursor-default disabled:bg-transparent disabled:active:scale-100',
           )}
         >
-          <Score
-            className={SCORE_BOX}
-            mei={mei}
-            label={label}
-            {...(noteSpacing === undefined ? {} : { noteSpacing })}
-          />
+          <Score className={box} mei={mei} label={label} {...paper} />
           <PlayMark status={status} />
         </button>
       )}

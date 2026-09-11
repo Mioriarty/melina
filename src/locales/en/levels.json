@@ -248,5 +248,73 @@
       "title": "Everything",
       "blurb": "Six modes, two metres, two bars and every subdivision. Twenty questions."
     }
+  },
+  "thoroughbass-figuring": {
+    "triads": {
+      "title": "Triads",
+      "blurb": "The plain chord and the sixth — the two figures everything else is read against."
+    },
+    "six-four": {
+      "title": "Six-Four",
+      "blurb": "Add the second inversion, the one triad that cannot be written with a single number."
+    },
+    "accidentals": {
+      "title": "Accidentals",
+      "blurb": "A sharp or a flat standing alone under the bass, which alters the third and nothing else."
+    },
+    "sevenths": {
+      "title": "Sevenths",
+      "blurb": "The seventh in root position, where the third and the fifth go without saying."
+    },
+    "inverted-sevenths": {
+      "title": "Inverted Sevenths",
+      "blurb": "The three inversions, where what is written is what is not taken for granted."
+    },
+    "flat-keys": {
+      "title": "Flat Keys",
+      "blurb": "The same figures read against up to four flats."
+    },
+    "sharp-keys": {
+      "title": "Sharp Keys",
+      "blurb": "The same figures read against up to four sharps."
+    },
+    "everything": {
+      "title": "Everything",
+      "blurb": "Every figure and every key the app teaches, mixed."
+    }
+  },
+  "thoroughbass-realizing": {
+    "triads": {
+      "title": "Triads",
+      "blurb": "The plain chord and the sixth — the two figures everything else is read against."
+    },
+    "six-four": {
+      "title": "Six-Four",
+      "blurb": "Add the second inversion: a sixth and a fourth over the bass."
+    },
+    "accidentals": {
+      "title": "Accidentals",
+      "blurb": "A sharp or a flat standing alone, which raises or lowers the third."
+    },
+    "sevenths": {
+      "title": "Sevenths",
+      "blurb": "The seventh in root position: four notes, three of them unwritten."
+    },
+    "inverted-sevenths": {
+      "title": "Inverted Sevenths",
+      "blurb": "The three inversions, each with lines the figure leaves out."
+    },
+    "flat-keys": {
+      "title": "Flat Keys",
+      "blurb": "The same figures read against up to four flats."
+    },
+    "sharp-keys": {
+      "title": "Sharp Keys",
+      "blurb": "The same figures read against up to four sharps."
+    },
+    "everything": {
+      "title": "Everything",
+      "blurb": "Every figure and every key the app teaches, mixed."
+    }
   }
 }
