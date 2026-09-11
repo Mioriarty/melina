@@ -28,8 +28,8 @@ const spell = (found: readonly PitchClass[] | undefined) =>
 
 const figure = (key: string): Figure => parseFigureKey(key) as Figure
 
-/** The figures v1 teaches, before accidentals are put on them. */
-const V1_FIGURES = ['', '6', '6/4', '7', '6/5', '4/3', '2', '4/2']
+/** Every figure the app teaches, before accidentals are put on them. */
+const V1_FIGURES = ['', '6', '6/4', '7', '6/5', '4/3', '2', '4/2', '9', '9/7']
 
 describe('a figure resolves through the key signature', () => {
   it('reads a plain figure as the key spells it', () => {
@@ -93,6 +93,10 @@ describe('the lines a figure leaves out', () => {
     expect(expanded('4/3')).toBe('6/4/3')
     expect(expanded('2')).toBe('6/4/2')
     expect(expanded('4/2')).toBe('6/4/2')
+    // A bare 9 is a ninth over a plain triad; 9/7 is the ninth chord itself,
+    // "taken by direct percussion".
+    expect(expanded('9')).toBe('9/5/3')
+    expect(expanded('9/7')).toBe('9/7/5/3')
   })
 
   it('keeps the accidental that was written on a line it fills in around', () => {
@@ -126,6 +130,8 @@ describe('canonical figuring', () => {
     expect(shortest(pitch('B', 0, 3), '0', '6/5')).toBe('6/5')
     expect(shortest(pitch('D', 0, 3), '0', '4/3')).toBe('4/3')
     expect(shortest(pitch('F', 0, 3), '0', '2')).toBe('2')
+    expect(shortest(pitch('C', 0, 3), '0', '9')).toBe('9')
+    expect(shortest(pitch('G', 0, 3), '0', '9/7')).toBe('9/7')
   })
 
   it('suppresses the 3 and leaves the accidental standing in its place', () => {

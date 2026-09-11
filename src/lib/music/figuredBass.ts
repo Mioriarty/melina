@@ -77,6 +77,10 @@ const STACKS: readonly (readonly number[])[] = [
   [6, 5, 3],
   [6, 4, 3],
   [6, 4, 2],
+  // The ninths, last so that nothing above them changes meaning: a bare `9`
+  // finds the first stack holding a 9, and `9/7` the first holding both.
+  [9, 5, 3],
+  [9, 7, 5, 3],
 ]
 
 /**
@@ -96,6 +100,11 @@ const ABBREVIATIONS = new Map<string, readonly (readonly number[])[]>([
   ['6,5,3', [[6, 5]]],
   ['6,4,3', [[4, 3]]],
   ['6,4,2', [[2], [4, 2]]],
+  ['9,5,3', [[9]]],
+  // "The Figures 9/7 … indicate a Chord of the Ninth, taken by direct
+  // percussion" — struck, as against the `9` of a 9–8 suspension, which is a
+  // ninth over a plain triad and resolves.
+  ['9,7,5,3', [[9, 7]]],
 ])
 
 const stackKey = (stack: readonly number[]) => stack.join(',')

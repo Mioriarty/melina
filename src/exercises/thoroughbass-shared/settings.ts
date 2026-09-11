@@ -41,6 +41,7 @@ export const ROUND_LENGTHS = [10, 20, 30] as const
  * question stores and therefore what a level's accuracy filter matches on.
  */
 export const FIGURE_CHOICES: readonly string[] = [
+  // The everyday ones: triads, the sign that alters a third, the sevenths.
   '',
   '6',
   '6/4',
@@ -51,6 +52,20 @@ export const FIGURE_CHOICES: readonly string[] = [
   '6/5',
   '4/3',
   '2',
+  // And the rest — a line moved out of the key, and the ninths. Every one of
+  // them is still only an accidental on a stack that already existed, apart
+  // from the two ninths, which is why the vocabulary grew this far without the
+  // model growing with it.
+  '#6',
+  'b6',
+  '6/#4',
+  '6/b5',
+  '#5',
+  'b5',
+  '#6/b5',
+  '#6/4/3',
+  '9',
+  '9/7',
 ]
 
 export const KEY_SIGNATURE_CHOICES: readonly KeySignatureId[] = KEY_SIGNATURES.map(

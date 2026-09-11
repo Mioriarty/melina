@@ -281,6 +281,34 @@
     "everything": {
       "title": "Everything",
       "blurb": "Every figure and every key the app teaches, mixed."
+    },
+    "sections": {
+      "foundations": "Foundations",
+      "further": "Going further"
+    },
+    "altered-sixths": {
+      "title": "Altered Sixths",
+      "blurb": "A sixth pushed out of the key either way — the first accidental that sits on a number rather than standing alone."
+    },
+    "altered-fifths": {
+      "title": "Altered Fifths",
+      "blurb": "A triad whose fifth has been raised or lowered, written over a third that is left to be assumed."
+    },
+    "augmented-fourths": {
+      "title": "Augmented Fourths",
+      "blurb": "The six-four, and the same shape with its fourth raised a semitone."
+    },
+    "raised-sixths": {
+      "title": "Raised Sixths",
+      "blurb": "The three shapes an augmented sixth is written with, named for the figures rather than for the chords."
+    },
+    "ninths": {
+      "title": "Ninths",
+      "blurb": "A ninth struck rather than suspended, with and without the seventh under it."
+    },
+    "everything-further": {
+      "title": "The Whole Vocabulary",
+      "blurb": "Every figure the app teaches, in seven keys, mixed."
     }
   },
   "thoroughbass-realizing": {
@@ -315,6 +343,34 @@
     "everything": {
       "title": "Everything",
       "blurb": "Every figure and every key the app teaches, mixed."
+    },
+    "sections": {
+      "foundations": "Foundations",
+      "further": "Going further"
+    },
+    "altered-sixths": {
+      "title": "Altered Sixths",
+      "blurb": "A sixth pushed out of the key either way — the first accidental that sits on a number rather than standing alone."
+    },
+    "altered-fifths": {
+      "title": "Altered Fifths",
+      "blurb": "A triad whose fifth has been raised or lowered, over a third the figure does not mention."
+    },
+    "augmented-fourths": {
+      "title": "Augmented Fourths",
+      "blurb": "The six-four, and the same shape with its fourth raised a semitone."
+    },
+    "raised-sixths": {
+      "title": "Raised Sixths",
+      "blurb": "The three shapes an augmented sixth is written with, named for the figures rather than for the chords."
+    },
+    "ninths": {
+      "title": "Ninths",
+      "blurb": "Four notes over the bass: a ninth struck rather than suspended, with and without its seventh."
+    },
+    "everything-further": {
+      "title": "The Whole Vocabulary",
+      "blurb": "Every figure the app teaches, in seven keys, mixed."
     }
   }
 }

@@ -281,6 +281,34 @@
     "everything": {
       "title": "Alles",
       "blurb": "Jede Bezifferung und jede Tonart der App, gemischt."
+    },
+    "sections": {
+      "foundations": "Grundlagen",
+      "further": "Weiterführend"
+    },
+    "altered-sixths": {
+      "title": "Veränderte Sexten",
+      "blurb": "Eine Sexte, die aus der Tonart gerückt ist — das erste Vorzeichen, das an einer Ziffer steht statt allein."
+    },
+    "altered-fifths": {
+      "title": "Veränderte Quinten",
+      "blurb": "Ein Dreiklang mit erhöhter oder erniedrigter Quinte, über einer Terz, die selbstverständlich bleibt."
+    },
+    "augmented-fourths": {
+      "title": "Übermäßige Quarten",
+      "blurb": "Der Quartsextakkord und dieselbe Gestalt mit um einen Halbton erhöhter Quarte."
+    },
+    "raised-sixths": {
+      "title": "Erhöhte Sexten",
+      "blurb": "Die drei Schreibweisen der übermäßigen Sexte, benannt nach den Ziffern und nicht nach den Akkorden."
+    },
+    "ninths": {
+      "title": "Nonenakkorde",
+      "blurb": "Eine angeschlagene statt vorgehaltene None, mit und ohne Septime darunter."
+    },
+    "everything-further": {
+      "title": "Das ganze Vokabular",
+      "blurb": "Jede Bezifferung der App, in sieben Tonarten, gemischt."
     }
   },
   "thoroughbass-realizing": {
@@ -315,6 +343,34 @@
     "everything": {
       "title": "Alles",
       "blurb": "Jede Bezifferung und jede Tonart der App, gemischt."
+    },
+    "sections": {
+      "foundations": "Grundlagen",
+      "further": "Weiterführend"
+    },
+    "altered-sixths": {
+      "title": "Veränderte Sexten",
+      "blurb": "Eine Sexte, die aus der Tonart gerückt ist — das erste Vorzeichen, das an einer Ziffer steht statt allein."
+    },
+    "altered-fifths": {
+      "title": "Veränderte Quinten",
+      "blurb": "Ein Dreiklang mit erhöhter oder erniedrigter Quinte, über einer Terz, die die Ziffer nicht erwähnt."
+    },
+    "augmented-fourths": {
+      "title": "Übermäßige Quarten",
+      "blurb": "Der Quartsextakkord und dieselbe Gestalt mit um einen Halbton erhöhter Quarte."
+    },
+    "raised-sixths": {
+      "title": "Erhöhte Sexten",
+      "blurb": "Die drei Schreibweisen der übermäßigen Sexte, benannt nach den Ziffern und nicht nach den Akkorden."
+    },
+    "ninths": {
+      "title": "Nonenakkorde",
+      "blurb": "Vier Töne über dem Bass: eine angeschlagene statt vorgehaltene None, mit und ohne Septime."
+    },
+    "everything-further": {
+      "title": "Das ganze Vokabular",
+      "blurb": "Jede Bezifferung der App, in sieben Tonarten, gemischt."
     }
   }
 }

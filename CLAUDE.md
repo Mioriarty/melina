@@ -1399,21 +1399,47 @@ the place pressing it _would_ put it, so the placement rule is visible in the
 thing it governs. It autosubmits when the chord is full and keeps the
 no-confirm-key rule, which is the honest difference from its sibling.
 
-### The levels, and the ladder they are the first rung of
+### The levels, and the ladder they climb
 
 Both directions share one list, because reading a figure and writing one are the
-same ladder climbed from opposite ends. What ships is triads, the bare
-accidentals, and the sevenths, over one bass note — and the levels move one axis
-at a time, the figures or the keys, never both.
+same ladder climbed from opposite ends. The levels move one axis at a time, the
+figures or the keys, never both.
+
+**The list comes in two runs rather than two stations.** An exercise whose
+vocabulary outgrows one list has not become two subjects, and the path is what
+you practise — so the division belongs inside the node. `Difficulty` carries a
+`section`, `levelRuns` groups consecutive levels by it, and a list with no
+sections renders exactly as it always did, with no heading at all, which is
+every exercise but thoroughbass. Numbering stays continuous across the runs: it
+is the level's place in the exercise, not in its section, and it is also the
+index its accuracy is looked up by.
+
+Within a run the rule at the top of `difficulty.ts` still holds — these are
+weaknesses, not rungs. Between the runs the order is honest, because nothing in
+the second is legible until the first is.
 
 There are **two axes and they are not the same axis**, which is the thing worth
 keeping straight when this grows: the _vocabulary_ (which figures) and the
 _span_ (how many bass notes, and how many figures under one). Suspensions,
 passing notes and continuation lines are all span, not vocabulary, which is why
-they are not simply "harder figures". And there is **no figure `11` or `13`** —
-Grove figures an eleventh `7/4/2` and a thirteenth `7/6/4`; those are chord
-names from functional harmony rather than thoroughbass signs. `10`–`14` are
-real, but historical, and mean reduplication in the octave above.
+they are not simply "harder figures".
+
+**The vocabulary grew a long way before the model had to.** Every altered figure
+— `♯6`, `♭6`, `6/♯4`, `6/♭5`, `♯5`, `♭5`, and the three shapes an augmented
+sixth is written with — is an accidental on a stack that already existed, so
+`STACKS` did not change for any of them. Only the ninths needed new entries, and
+they go **last** so that nothing above them changes meaning: a bare `9` finds
+the first stack holding a 9, and `9/7` the first holding both.
+
+A figure's canonical form is worth checking rather than assuming when a level
+names one. `♯4` alone is _not_ canonical — the conventional way to write those
+notes is `6/♯4` — and a level naming the wrong spelling would pin its accuracy
+filter on a figure no row ever stores.
+
+And there is **no figure `11` or `13`** — Grove figures an eleventh `7/4/2` and a
+thirteenth `7/6/4`; those are chord names from functional harmony rather than
+thoroughbass signs. `10`–`14` are real, but historical, and mean reduplication in
+the octave above.
 
 Grove is ambiguous in exactly one place that matters, and it should not be
 guessed at: its augmented-sixth example ("signature of G major, E♭ bass — the

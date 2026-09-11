@@ -8,7 +8,9 @@ import { cn } from '@/lib/utils/cn'
 
 import {
   difficultyBlurbKey,
+  difficultySectionKey,
   difficultyTitleKey,
+  levelRuns,
   type Difficulty,
   type DifficultyGroup,
 } from './difficulty'
@@ -39,6 +41,16 @@ export interface LevelsScreenProps<TSettings> {
  * immediately — the levels exist so that practising is one tap, not a trip
  * through six sets of checkboxes. Custom is last and opens exactly those
  * checkboxes for when a level is not what you want.
+ *
+ * **A long list is broken into named runs rather than into a second station.**
+ * An exercise whose vocabulary outgrows one list has not become two subjects,
+ * and the path is what you practise — so the division belongs inside the node.
+ * A list with no sections renders exactly as it always did, with no heading at
+ * all, which is every exercise but thoroughbass.
+ *
+ * Numbering stays continuous across the runs. It is the level's place in the
+ * exercise, not in its section, and restarting it would put two different
+ * levels behind the same "1".
  */
 export function LevelsScreen<TSettings>({
   titleKey,
@@ -75,61 +87,72 @@ export function LevelsScreen<TSettings>({
         </header>
 
         <ul className="grid gap-2">
-          {levels.map((level, index) => {
-            const measured = accuracies?.[index]
-            // A level with too little history behind it shows nothing rather
-            // than a number that would move ten points on the next answer.
-            const percent = isReportable(measured)
-              ? Math.round((measured?.rate ?? 0) * 100)
-              : undefined
+          {levelRuns(levels).flatMap((run) => [
+            ...(run.section === undefined
+              ? []
+              : [
+                  <li key={`section-${run.section}`} className="mt-4 first:mt-0">
+                    <h2 className="px-1 text-[0.75rem] font-medium tracking-wide text-ink-faint uppercase">
+                      {t(difficultySectionKey(group, run.section))}
+                    </h2>
+                  </li>,
+                ]),
+            ...run.levels.map(({ level, index }) => {
+              const measured = accuracies?.[index]
+              // A level with too little history behind it shows nothing rather
+              // than a number that would move ten points on the next answer.
+              const percent = isReportable(measured)
+                ? Math.round((measured?.rate ?? 0) * 100)
+                : undefined
 
-            return (
-              <li key={level.id}>
-                <button
-                  type="button"
-                  onClick={() => onPick(level)}
-                  className={cn(
-                    'group flex w-full items-center gap-3.5 rounded-2xl border border-rule bg-paper-raised p-3.5 text-left',
-                    'transition-colors duration-150 hover:border-accent',
-                  )}
-                >
-                  <span className="tabular grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent-tint font-serif text-[1.0625rem] font-semibold text-accent">
-                    {index + 1}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block font-serif text-[1.0625rem] font-semibold">
-                      {t(difficultyTitleKey(group, level.id))}
+              return (
+                <li key={level.id}>
+                  <button
+                    type="button"
+                    onClick={() => onPick(level)}
+                    className={cn(
+                      'group flex w-full items-center gap-3.5 rounded-2xl border border-rule bg-paper-raised p-3.5 text-left',
+                      'transition-colors duration-150 hover:border-accent',
+                    )}
+                  >
+                    <span className="tabular grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent-tint font-serif text-[1.0625rem] font-semibold text-accent">
+                      {index + 1}
                     </span>
-                    <span className="mt-0.5 block text-sm leading-snug text-ink-muted">
-                      {t(difficultyBlurbKey(group, level.id))}
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-serif text-[1.0625rem] font-semibold">
+                        {t(difficultyTitleKey(group, level.id))}
+                      </span>
+                      <span className="mt-0.5 block text-sm leading-snug text-ink-muted">
+                        {t(difficultyBlurbKey(group, level.id))}
+                      </span>
                     </span>
-                  </span>
-                  {percent !== undefined && (
-                    <span className="tabular shrink-0 text-sm font-medium text-ink-muted">
-                      {/* The bare figure reads as "82% of what?" out of context,
+                    {percent !== undefined && (
+                      <span className="tabular shrink-0 text-sm font-medium text-ink-muted">
+                        {/* The bare figure reads as "82% of what?" out of context,
                         so the spoken form says what it measures instead. */}
-                      <span aria-hidden="true">
-                        {t('exercise:levels.accuracy', { percent })}
+                        <span aria-hidden="true">
+                          {t('exercise:levels.accuracy', { percent })}
+                        </span>
+                        <span className="sr-only">
+                          {t('exercise:levels.accuracyLabel', {
+                            percent,
+                            answers: measured?.total ?? 0,
+                          })}
+                        </span>
                       </span>
-                      <span className="sr-only">
-                        {t('exercise:levels.accuracyLabel', {
-                          percent,
-                          answers: measured?.total ?? 0,
-                        })}
-                      </span>
-                    </span>
-                  )}
-                  <Icon
-                    name="chevronForward"
-                    size={18}
-                    className="shrink-0 text-ink-faint transition-colors group-hover:text-accent"
-                  />
-                </button>
-              </li>
-            )
-          })}
+                    )}
+                    <Icon
+                      name="chevronForward"
+                      size={18}
+                      className="shrink-0 text-ink-faint transition-colors group-hover:text-accent"
+                    />
+                  </button>
+                </li>
+              )
+            }),
+          ])}
 
-          <li>
+          <li className="mt-4">
             <button
               type="button"
               onClick={onCustom}

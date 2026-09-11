@@ -74,7 +74,9 @@ import { createRandom } from '@/lib/utils/seededRandom'
 
 import {
   difficultyBlurbKey,
+  difficultySectionKey,
   difficultyTitleKey,
+  levelRuns,
   type DifficultyGroup,
 } from './difficulty'
 
@@ -86,7 +88,7 @@ import {
 
 interface NamedLevels {
   group: DifficultyGroup
-  levels: readonly { id: string }[]
+  levels: readonly { id: string; section?: string }[]
 }
 
 const ALL_GROUPS: readonly NamedLevels[] = [
@@ -108,6 +110,30 @@ describe.each(ALL_GROUPS)('$group levels', ({ group, levels }) => {
 
   it('has a unique id', () => {
     expect(new Set(levels.map((level) => level.id)).size).toBe(levels.length)
+  })
+
+  it('keeps each section in one run, and names it in every language', () => {
+    // A section split in two would render as two headings with the same name,
+    // which reads as two different things — and `levelRuns` preserves the
+    // order the list is written in rather than sorting it, so the list itself
+    // is the only place that can go wrong.
+    const seen: string[] = []
+    for (const level of levels) {
+      const section = level.section
+      if (section === undefined) continue
+      if (seen[seen.length - 1] !== section) {
+        expect(seen, `${section} is split into two runs`).not.toContain(section)
+        seen.push(section)
+      }
+    }
+
+    for (const { id: language } of LANGUAGES) {
+      const t = i18n.getFixedT(language)
+      for (const section of seen) {
+        const key = difficultySectionKey(group, section)
+        expect(t(key), `${language}: ${key}`).not.toBe(key)
+      }
+    }
   })
 
   it('is named and described in every language', () => {
@@ -935,5 +961,33 @@ describe.each([
     for (const figure of ['', '6', '6/4', '7', '6/5', '4/3', '2', '#3']) {
       expect(offered, figure).toContain(figure)
     }
+  })
+})
+
+describe('level runs', () => {
+  it('keeps every level, in the order it was written', () => {
+    // `levelRuns` is what the levels screen renders from, so a level dropped
+    // or reordered here is a level the player cannot reach.
+    for (const { levels } of ALL_GROUPS) {
+      const flattened = levelRuns(levels).flatMap((run) =>
+        run.levels.map(({ level, index }) => ({ id: level.id, index })),
+      )
+      expect(flattened.map((entry) => entry.id)).toEqual(levels.map((level) => level.id))
+      // The index is what the accuracy for a level is looked up by, so it has
+      // to stay the level's place in the whole list and not in its run.
+      expect(flattened.map((entry) => entry.index)).toEqual(levels.map((_, i) => i))
+    }
+  })
+
+  it('leaves a list with no sections as one unnamed run', () => {
+    // Which is every exercise but thoroughbass, and they must render exactly
+    // as they always did — no heading at all.
+    const plain = ALL_GROUPS.find(({ levels }) =>
+      levels.every((level) => level.section === undefined),
+    )
+    expect(plain, 'no unsectioned level list left to check').toBeDefined()
+    const runs = levelRuns(plain?.levels ?? [])
+    expect(runs).toHaveLength(1)
+    expect(runs[0]?.section).toBeUndefined()
   })
 })
