@@ -4,6 +4,7 @@ import { AppShell } from '@/components/layout/AppShell'
 import ExercisePage from '@/pages/ExercisePage'
 import HomePage from '@/pages/HomePage'
 import FiguredBassPage from '@/pages/FiguredBassPage'
+import ModesPage from '@/pages/ModesPage'
 import MelodyShapePage from '@/pages/MelodyShapePage'
 import ProgressPage from '@/pages/ProgressPage'
 import SettingsPage from '@/pages/SettingsPage'
@@ -33,6 +34,7 @@ export function App() {
         <Route element={<AppShell header={false} />}>
           <Route path="guide/melodic-shape" element={<MelodyShapePage />} />
           <Route path="guide/figured-bass" element={<FiguredBassPage />} />
+          <Route path="guide/scales" element={<ModesPage />} />
           <Route path="train/:categoryId/:exerciseId" element={<ExercisePage />} />
           <Route path="*" element={<ExercisePage />} />
         </Route>

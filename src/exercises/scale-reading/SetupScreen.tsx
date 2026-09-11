@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router'
 
 import { SetupChip, SetupSection } from '@/exercises/shared/SetupControls'
 import { Icon } from '@/components/ui/Icon'
@@ -67,7 +68,19 @@ export function SetupScreen({ settings, onChange, onStart, onBack }: SetupScreen
           </p>
         </header>
 
-        <SetupSection title={t('exercise:setup.modes')}>
+        <SetupSection
+          title={t('exercise:setup.modes')}
+          action={
+            <Link
+              to="/guide/scales?from=reading"
+              aria-label={t('exercise:setup.modesGuide')}
+              title={t('exercise:setup.modesGuide')}
+              className="-mt-1 -mr-2 grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-faint transition-colors hover:bg-accent-tint hover:text-accent"
+            >
+              <Icon name="help" size={20} />
+            </Link>
+          }
+        >
           <div className="flex flex-wrap gap-2">
             {MODE_IDS.map((mode) => (
               <SetupChip

@@ -154,5 +154,46 @@
     },
     "sourceLink": "Den Artikel auf Wikisource lesen"
   },
-  "backToPath": "Zurück zum Pfad"
+  "backToPath": "Zurück zum Pfad",
+  "modes": {
+    "title": "Die sieben Modi",
+    "intro": "Sieben Tonleitern, ein gemeinsamer Tonvorrat. Diese Seite schreibt jede davon aus und gibt die Eselsbrücke dazu: Jeder Modus ist Dur oder Moll mit ein, zwei verschobenen Tönen.",
+    "what": {
+      "title": "Was ein Modus ist",
+      "body": "Ein Modus ist ein Muster von Intervallen, gemessen vom Grundton aus — Grundton zur Sekunde, Grundton zur Terz und so weiter bis zur Oktave. Ändere eines dieser Intervalle, und du hast auf demselben Grundton einen anderen Modus.",
+      "after": "Das ist auch der Grund, warum die sieben einen Tonvorrat teilen. Spiele die weißen Tasten ab C, und du hast Ionisch; spiele dieselben Töne ab D, und das Muster der Schritte hat sich verschoben — das ist Dorisch. Jeder Modus beginnt auf der nächsten Stufe der Durtonleiter."
+    },
+    "list": {
+      "title": "Die sieben, ausgeschrieben",
+      "body": "Alle auf C, damit der Grundton stehen bleibt und sich von einer Zeile zur nächsten nur die Vorzeichen ändern. Darunter die Stufen, gegen die Durtonleiter geschrieben — die hervorgehobenen sind das, was den Modus ausmacht."
+    },
+    "mode": {
+      "degree": "{{degree}}. Stufe einer Durtonleiter",
+      "staff": "{{scale}}: {{pitches}}"
+    },
+    "table": {
+      "title": "Die Eselsbrücke",
+      "body": "Niemand merkt sich sieben Muster aus je sieben Intervallen. Was sich zu merken lohnt, ist der Abstand jedes Modus zu Dur oder Moll — bei fünf von ihnen ist das ein einziger Ton.",
+      "after": "Auf welche der beiden ein Modus bezogen wird, ist keine Geschmacksfrage: Es ist die, von der er weniger Töne entfernt ist. Dorisch unterscheidet sich von Dur an zwei Stellen und von Moll an einer, also ist es Moll mit großer Sexte.",
+      "mode": "Modus",
+      "degrees": "Stufen",
+      "sameAs": "Wie",
+      "except": "Außer",
+      "itself": "—",
+      "join": ", ",
+      "summary": "Eine Tabelle mit {{count}} Modi: jeder als seine Stufen gegen die Durtonleiter und als Dur oder Moll mit den abweichenden Stufen."
+    },
+    "spelling": {
+      "title": "Warum die Systeme keine Vorzeichen tragen",
+      "body": "Ein Modus wird an den Vorzeichen vor den Noten abgelesen. Unter einer Generalvorzeichnung ist er nicht zu erkennen: F♯-Mixolydisch und G-Dur ergeben dieselbe Seite, und nur was die Musik ringsum tut, sagt welches von beiden. Darum steht jede Tonleiter in melina ohne Vorzeichnung, mit jeder Alteration vor der Note, zu der sie gehört.",
+      "after": "Aus demselben Grund wird ein Modus als Folge von Intervallen gespeichert und nicht als Halbtonzählung. B-Dorisch muss B C Des Es F G As ergeben — jeder Buchstabe einmal — und niemals B C Cis Dis, was derselbe Klang in einer Schreibweise ist, die niemand verwenden würde."
+    },
+    "next": {
+      "title": "Jetzt ausprobieren",
+      "body": "Einen Modus vom Blatt zu lesen und einen zu hören sind zwei verschiedene Fähigkeiten, und die App hält sie auseinander.",
+      "reading": "Tonleitern lesen",
+      "hearing": "Tonleitern hören"
+    },
+    "source": "Jede Tonleiter und jede Zeile dieser Seite ist das Modell der App selbst, ausgewertet — keine Kopie davon. Diese Seite kann also nicht beschreiben, was melina längst nicht mehr tut."
+  }
 }

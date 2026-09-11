@@ -132,7 +132,8 @@
       "title": "Basstöne",
       "hint": "Wie viele bezifferte Basstöne eine Frage trägt. Jeder nimmt den anderen Breite weg — vier ist am Schreibtisch bequem und auf dem Handy eng.",
       "label": "{{count}} Basstöne"
-    }
+    },
+    "modesGuide": "Was die Modi sind"
   },
   "round": {
     "end": "Runde beenden",

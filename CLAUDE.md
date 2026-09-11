@@ -1753,6 +1753,45 @@ time.
 Guides have their own `guide` translation namespace rather than living in
 `exercise`: a page is an area of the app, which is what a namespace is for.
 
+### The modes guide is the model read against major and minor
+
+`/guide/scales` writes the seven modes out and gives the shortcut for
+remembering them. It is **contextual help rather than a stop on the path**, and
+the line between the two is the one already drawn above: the figured bass guide
+exists because canonical-required grading marks a player wrong for a convention
+nothing in the exercise ever states, while the scale exercises teach their own
+vocabulary by asking about it. Nothing here is owed before a player may start,
+so it is the question mark in the corner of the **Modes** setting — on all
+three screens that have one, scale reading, scale hearing and scale degrees,
+with `?from=` saying which to return to.
+
+**All seven are drawn on C.** It is the one thing that makes them comparable:
+the tonic never moves, so the only difference from one staff to the next is the
+accidentals — which is exactly what the shorthand under it names. Each on its
+own white-note tonic they would all print nothing at all, and the page would be
+seven identical rows of notes.
+
+**The shortcut is computed, not written down.** A mode is stored as the
+interval from its tonic to each degree, so two modes differ exactly where those
+intervals differ, and "lydian is major with an augmented fourth" is the
+difference between two rows of `DEGREE_QUALITIES` rather than a mnemonic
+somebody typed. So is `1 2 ♭3 4 5 6 ♭7`: the sign is how far that degree sits
+from the major scale's, and `ModesPage.test.ts` checks the two cannot drift
+apart by adding the sign back on.
+
+**Which of major and minor a mode is read against is computed too**, and it has
+to be — saying dorian is minor with a major sixth rather than major with a
+flattened third and seventh is the whole value of the shortcut. The rule is
+simply whichever is fewer changes away, and it comes out one-sided every time,
+with no tie anywhere for a preference to break.
+
+**The changed degrees are a list of interval names, not a sentence.** "Minor
+with a raised sixth" inflects in German and would need grammar this page has no
+business knowing, and `locales.test.ts` can hold two languages to the same
+placeholders but cannot tell that a translator broke a sentence assembled from
+parts. A list of names is the same fact with nothing in it to break — the same
+reasoning that keeps the figured bass guide's source link on a line of its own.
+
 ## The attempt log — `src/lib/db/attemptQuestion.ts` and `progress.ts`
 
 Every answer is recorded, right or wrong. A row keeps **exactly enough to ask the

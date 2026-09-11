@@ -154,5 +154,46 @@
     },
     "sourceLink": "Read the article on Wikisource"
   },
-  "backToPath": "Back to the path"
+  "backToPath": "Back to the path",
+  "modes": {
+    "title": "The Seven Modes",
+    "intro": "Seven scales, one set of steps between them. This page writes each one out and gives the shortcut for remembering it: every mode is major or minor with one or two notes moved.",
+    "what": {
+      "title": "What a mode is",
+      "body": "A mode is a pattern of intervals measured from its tonic — the tonic to the second, the tonic to the third, and so on up to the octave. Change one of those intervals and you have a different mode on the same tonic.",
+      "after": "That is also why the seven have one set of notes between them. Play the white notes from C and you have ionian; play the same notes from D and the pattern of steps has shifted, and you have dorian. Each mode begins on the next degree of the major scale."
+    },
+    "list": {
+      "title": "The seven, written out",
+      "body": "All on C, so the tonic never moves and the only thing that changes from one staff to the next is the accidentals. Underneath each one, its degrees written against the major scale — the marked ones are what the mode is."
+    },
+    "mode": {
+      "degree": "Degree {{degree}} of a major scale",
+      "staff": "{{scale}}: {{pitches}}"
+    },
+    "table": {
+      "title": "The shortcut",
+      "body": "Nobody remembers seven patterns of seven intervals. What is worth remembering is how far each mode is from major or from minor, which for five of them is a single note.",
+      "after": "Which of the two a mode is read against is not a matter of taste: it is whichever is fewer notes away. Dorian differs from major in two places and from minor in one, so it is minor with a major sixth.",
+      "mode": "Mode",
+      "degrees": "Degrees",
+      "sameAs": "Same as",
+      "except": "Except",
+      "itself": "—",
+      "join": ", ",
+      "summary": "A table of {{count}} modes: each one written as its degrees against the major scale, and as major or minor with the degrees that differ."
+    },
+    "spelling": {
+      "title": "Why the staves carry no key signature",
+      "body": "A mode is read from the accidentals in front of its notes. Under a signature you cannot tell it: F♯ mixolydian and G major print the same page, and only what the music does around them says which it is. So every scale in melina is written keyless, with every alteration in front of the note it belongs to.",
+      "after": "It is also why a mode is stored as intervals rather than as a count of semitones. B♭ dorian has to come out B♭ C D♭ E♭ F G A♭ — one of each letter — and never B♭ C C♯ D♯, which is the same sound spelled in a way no one would write."
+    },
+    "next": {
+      "title": "Now try it",
+      "body": "Reading a mode off the staff and hearing one are two different skills, and the app keeps them apart.",
+      "reading": "Scale Reading",
+      "hearing": "Scale Hearing"
+    },
+    "source": "Every scale and every row on this page is the app's own model evaluated, not a copy of it — so this page cannot come to describe something melina no longer does."
+  }
 }

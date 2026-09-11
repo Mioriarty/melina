@@ -132,7 +132,8 @@
       "title": "Bass notes",
       "hint": "How many figured bass notes a question carries. Each one takes width from the others, so four is comfortable on a desk and tight on a phone.",
       "label": "{{count}} bass notes"
-    }
+    },
+    "modesGuide": "What the modes are"
   },
   "round": {
     "end": "End this round",
