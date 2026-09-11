@@ -127,6 +127,11 @@
     "suspensions": {
       "title": "Suspensions",
       "hint": "A bass note held while the chord over it moves. The second figure writes only the line that moved."
+    },
+    "bassNotes": {
+      "title": "Bass notes",
+      "hint": "How many figured bass notes a question carries. Each one takes width from the others, so four is comfortable on a desk and tight on a phone.",
+      "label": "{{count}} bass notes"
     }
   },
   "round": {

@@ -5,6 +5,7 @@ import { getClef } from '@/lib/music/clef'
 import { KEY_SIGNATURES, type KeySignatureId } from '@/lib/music/keySignature'
 import { diatonicValue, pitchKey } from '@/lib/music/pitch'
 import { tonicKey } from '@/lib/music/scale'
+import { attemptFacets } from '@/lib/db/attemptQuestion'
 import { createRandom } from '@/lib/utils/seededRandom'
 
 import { thoroughbassAttempt, thoroughbassFilter, thoroughbassQuestion } from './attempt'
@@ -14,6 +15,7 @@ import {
   acceptsFigure,
   bassNotes,
   generateRound,
+  type ThoroughbassQuestion,
   type ThoroughbassRoundSpec,
 } from './generate'
 
@@ -277,5 +279,66 @@ describe('suspensions', () => {
         question.events.map((e) => e.figures.map(figureKey).join('-')),
       )
     }
+  })
+})
+
+describe('a bass line', () => {
+  const line = (events: number) =>
+    [1, 2, 3].flatMap((seed) =>
+      generateRound(createRandom(seed), spec({ events, questionsPerRound: 6 })),
+    )
+
+  it('carries as many bass notes as the level asks for', () => {
+    for (const count of [2, 3, 4]) {
+      for (const question of line(count)) {
+        expect(question.events).toHaveLength(count)
+      }
+    }
+  })
+
+  it('keeps every bass note in the key it was drawn from', () => {
+    for (const question of line(3)) {
+      const inKey = new Set(bassNotes(question.keySignature).map(pitchKey))
+      for (const event of question.events) expect(inKey).toContain(pitchKey(event.bass))
+    }
+  })
+
+  it('stores the line as one row and reads it back whole', () => {
+    for (const question of line(3)) {
+      const row = thoroughbassAttempt(question)
+      expect(row.bass.split(',')).toHaveLength(3)
+      expect(row.figures.split(',')).toHaveLength(3)
+
+      const again = thoroughbassQuestion(row)
+      expect(again?.events.map((e) => pitchKey(e.bass))).toEqual(
+        question.events.map((e) => pitchKey(e.bass)),
+      )
+    }
+  })
+
+  it('claims no single root or figure, because it is built on neither', () => {
+    // The documented behaviour of a filter naming a dimension an attempt does
+    // not have: a line is built on no one note and carries no one figure, so
+    // it drops out of every query that asks about either — exactly the way a
+    // rhythm drops out of every query that asks about pitch.
+    const filter = thoroughbassFilter(spec({ events: 3 }), 'thoroughbass/figuring')
+    expect(filter.figure).toBeUndefined()
+    expect(filter.bassNotes).toBe('3')
+
+    const facets = attemptFacets(thoroughbassAttempt(line(3)[0] as ThoroughbassQuestion))
+    expect(facets.root).toBeUndefined()
+    expect(facets.figure).toBeUndefined()
+    expect(facets.bassNotes).toBe('3')
+  })
+
+  it('still names a root and a figure when there is only one bass note', () => {
+    const facets = attemptFacets(
+      thoroughbassAttempt(
+        generateRound(createRandom(1), spec({ events: 1 }))[0] as ThoroughbassQuestion,
+      ),
+    )
+    expect(facets.root).toBeDefined()
+    expect(facets.figure).toBeDefined()
+    expect(facets.bassNotes).toBe('1')
   })
 })

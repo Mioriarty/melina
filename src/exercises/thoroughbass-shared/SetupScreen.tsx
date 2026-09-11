@@ -8,6 +8,7 @@ import { parseFigureKey } from '@/lib/music/figuredBass'
 import { figureText } from '@/lib/notation/figureNotation'
 
 import {
+  EVENT_COUNTS,
   FIGURE_CHOICES,
   KEY_SIGNATURE_CHOICES,
   ROUND_LENGTHS,
@@ -173,6 +174,24 @@ export function SetupScreen({
                 label={names.keyName(id)}
               >
                 {names.keyMajor(id)}
+              </SetupChip>
+            ))}
+          </div>
+        </SetupSection>
+
+        <SetupSection
+          title={t('exercise:setup.bassNotes.title')}
+          hint={t('exercise:setup.bassNotes.hint')}
+        >
+          <div className="flex flex-wrap gap-2">
+            {EVENT_COUNTS.map((count) => (
+              <SetupChip
+                key={count}
+                selected={settings.events === count}
+                onClick={() => onChange({ ...settings, events: count })}
+                label={t('exercise:setup.bassNotes.label', { count })}
+              >
+                {count}
               </SetupChip>
             ))}
           </div>

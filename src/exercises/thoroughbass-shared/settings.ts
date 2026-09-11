@@ -35,6 +35,16 @@ export interface ThoroughbassSettings {
 export const ROUND_LENGTHS = [10, 20, 30] as const
 
 /**
+ * How many bass notes a question may carry.
+ *
+ * Four fits on a desk and not on a phone — the staff is fitted to the column,
+ * so every bass note added takes width from the ones already there. It stays a
+ * Custom setting rather than a level, which is the same call melodic dictation
+ * made about its fourth bar.
+ */
+export const EVENT_COUNTS = [1, 2, 3, 4] as const
+
+/**
  * The figures the app teaches, in the order it teaches them.
  *
  * Triads, then the accidental that alters a third, then the sevenths. The bare
@@ -131,7 +141,8 @@ export function parseThoroughbassSettings(
     SUSPENSION_CHOICES.includes(key),
   )
   const events =
-    typeof raw.events === 'number' && Number.isInteger(raw.events) && raw.events >= 1
+    typeof raw.events === 'number' &&
+    (EVENT_COUNTS as readonly number[]).includes(raw.events)
       ? raw.events
       : DEFAULT_SETTINGS.events
 

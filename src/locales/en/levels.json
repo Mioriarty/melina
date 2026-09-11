@@ -317,6 +317,14 @@
     "more-suspensions": {
       "title": "Every Suspension",
       "blurb": "All four that a held bass can carry, including the ninth resolving to its octave."
+    },
+    "two-in-a-row": {
+      "title": "Two in a Row",
+      "blurb": "Two figured bass notes in one question — the same vocabulary, read twice."
+    },
+    "three-in-a-row": {
+      "title": "Three in a Row",
+      "blurb": "Three of them, which is a line rather than a chord."
     }
   },
   "thoroughbass-realizing": {
@@ -387,6 +395,14 @@
     "more-suspensions": {
       "title": "Every Suspension",
       "blurb": "All four that a held bass can carry, including the ninth resolving to its octave."
+    },
+    "two-in-a-row": {
+      "title": "Two in a Row",
+      "blurb": "Two figured bass notes in one question — the same vocabulary, read twice."
+    },
+    "three-in-a-row": {
+      "title": "Three in a Row",
+      "blurb": "Three of them, which is a line rather than a chord."
     }
   }
 }

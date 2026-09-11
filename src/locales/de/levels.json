@@ -317,6 +317,14 @@
     "more-suspensions": {
       "title": "Alle Vorhalte",
       "blurb": "Alle vier, die ein liegender Bass tragen kann, samt der None, die in ihre Oktave fällt."
+    },
+    "two-in-a-row": {
+      "title": "Zwei nacheinander",
+      "blurb": "Zwei bezifferte Basstöne in einer Frage — dasselbe Vokabular, zweimal gelesen."
+    },
+    "three-in-a-row": {
+      "title": "Drei nacheinander",
+      "blurb": "Drei davon, was eher eine Linie ist als ein Akkord."
     }
   },
   "thoroughbass-realizing": {
@@ -387,6 +395,14 @@
     "more-suspensions": {
       "title": "Alle Vorhalte",
       "blurb": "Alle vier, die ein liegender Bass tragen kann, samt der None, die in ihre Oktave fällt."
+    },
+    "two-in-a-row": {
+      "title": "Zwei nacheinander",
+      "blurb": "Zwei bezifferte Basstöne in einer Frage — dasselbe Vokabular, zweimal gelesen."
+    },
+    "three-in-a-row": {
+      "title": "Drei nacheinander",
+      "blurb": "Drei davon, was eher eine Linie ist als ein Akkord."
     }
   }
 }

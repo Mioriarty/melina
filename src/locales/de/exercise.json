@@ -127,6 +127,11 @@
     "suspensions": {
       "title": "Vorhalte",
       "hint": "Ein liegender Basston, über dem sich der Akkord bewegt. Die zweite Ziffer schreibt nur die Stimme, die sich bewegt hat."
+    },
+    "bassNotes": {
+      "title": "Basstöne",
+      "hint": "Wie viele bezifferte Basstöne eine Frage trägt. Jeder nimmt den anderen Breite weg — vier ist am Schreibtisch bequem und auf dem Handy eng.",
+      "label": "{{count}} Basstöne"
     }
   },
   "round": {

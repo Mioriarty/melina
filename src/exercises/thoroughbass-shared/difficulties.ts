@@ -134,6 +134,19 @@ export const THOROUGHBASS_DIFFICULTIES: readonly Difficulty<ThoroughbassSettings
     settings: { ...DEFAULT_SETTINGS, figures: [], suspensions: SUSPENSIONS },
   },
   {
+    // The first question with more than one bass note in it. Not a harder
+    // figure either — a second reading of the same vocabulary, which is what
+    // a continuo part actually is.
+    id: 'two-in-a-row',
+    section: FURTHER,
+    settings: { ...DEFAULT_SETTINGS, figures: [...TRIADS, ...SEVENTHS], events: 2 },
+  },
+  {
+    id: 'three-in-a-row',
+    section: FURTHER,
+    settings: { ...DEFAULT_SETTINGS, figures: [...TRIADS, ...SEVENTHS], events: 3 },
+  },
+  {
     id: 'everything-further',
     section: FURTHER,
     settings: {

@@ -1332,6 +1332,29 @@ The verdict line has to check **every** figure under the bass. Checking the
 first alone calls a suspension whose resolution went wrong a spelling slip,
 when the player has written a different second chord.
 
+### A bass line is the same question, several times over
+
+`events` was in the model from the start and nothing underneath had to change
+for it: `buildQuestion` already looped, `thoroughbassMei` already wrote one
+measure per bass note, the figuring draft already finished one bass note at a
+time, and the realising draft already flattened its slots. What it needed was a
+setting, two levels, and a look at whether it reads.
+
+**Four bass notes fit on a desk and not on a phone.** The staff is fitted to the
+column, so every bass note added takes width from the ones already there — the
+same call melodic dictation made about its fourth bar, and the same answer:
+`EVENT_COUNTS` goes to four, the levels stop at three.
+
+**Barlines stay invisible between them.** A figured bass here is a succession of
+sonorities rather than a piece of music, and a reader tells a suspension from a
+line by the bass: one bass note under two chords against two bass notes under
+one each.
+
+**The rule of the octave is not this.** A bass line here is a succession of
+figures to read, not a progression — the rule of the octave is a tabulated
+convention about which figure belongs on which degree of a scalewise bass, which
+is a different kind of content and is not built.
+
 **A row keeps the bass line and the figures and nothing else.** The chord is
 what the figure resolves to, so storing it would be a second copy that could
 disagree. There is no clef either — a grand staff is not in one — and `root`
