@@ -15,7 +15,7 @@ import type { Pitch } from '@/lib/music/pitch'
 import {
   fittingOctaves,
   isCleanScale,
-  isModeId,
+  isMelodyModeId,
   parseTonicKey,
   type ModeId,
   type PitchClass,
@@ -68,8 +68,17 @@ export interface DegreeRoundSpec {
  */
 const ALTERATION_CHANCE = 0.22
 
+/**
+ * The modes a spec permits — and melodic minor is never one of them.
+ *
+ * `isMelodyModeId` rather than `isModeId`: this exercise puts a key in the
+ * ear and then wanders about inside it, and melodic minor's sixth and seventh
+ * depend on which way the line is going, which a melody with no fixed
+ * direction cannot say. Enforced here rather than only in the settings form,
+ * so no caller can ask for one.
+ */
 export function allowedModes(spec: DegreeRoundSpec): readonly ModeId[] {
-  return spec.modes.filter(isModeId)
+  return spec.modes.filter(isMelodyModeId)
 }
 
 export function allowedTonics(spec: DegreeRoundSpec): readonly PitchClass[] {

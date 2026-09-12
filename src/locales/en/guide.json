@@ -156,11 +156,11 @@
   },
   "backToPath": "Back to the path",
   "modes": {
-    "title": "The Seven Modes",
-    "intro": "Seven scales, one set of steps between them. This page writes each one out and gives the shortcut for remembering it: every mode is major or minor with one or two notes moved.",
+    "title": "Modes and Minor",
+    "intro": "Nine scales: the seven modes, which share one set of notes between them, and the two minor scales that do not. This page writes each one out and gives the shortcut for remembering it — every one of them is major or minor with one or two notes moved.",
     "what": {
       "title": "What a mode is",
-      "body": "A mode is a pattern of intervals measured from its tonic — the tonic to the second, the tonic to the third, and so on up to the octave. Change one of those intervals and you have a different mode on the same tonic.",
+      "body": "A mode is a pattern of intervals measured from its tonic — the tonic to the second, the tonic to the third, and so on up to the octave. Change one of those intervals and you have a different scale on the same tonic.",
       "after": "That is also why the seven have one set of notes between them. Play the white notes from C and you have ionian; play the same notes from D and the pattern of steps has shifted, and you have dorian. Each mode begins on the next degree of the major scale."
     },
     "list": {
@@ -169,19 +169,26 @@
     },
     "mode": {
       "degree": "Degree {{degree}} of a major scale",
+      "altered": "A minor scale of its own, not a mode",
       "staff": "{{scale}}: {{pitches}}"
+    },
+    "minors": {
+      "title": "The two minor scales",
+      "body": "Natural minor — aeolian — has a seventh a whole tone under the tonic, which does not pull towards it. Harmonic minor raises that seventh to a leading note, and the gap it opens between the sixth and the seventh is an augmented second, which is the sound the scale is known by. Melodic minor raises the sixth as well, so the leading note is reached by a step and the augmented second is gone.",
+      "after": "Neither is a mode. The seven above are one set of notes read from seven starting points; these two raise a degree that no rotation raises, so they begin on no degree of a major scale and no key signature spells them. They are written under the natural minor's signature instead, with the raised degrees printed in front of the notes that carry them.",
+      "direction": "Melodic minor also only goes up. Coming down, the classical convention lowers the sixth and seventh again — which is the natural minor, note for note — so melina asks it ascending and nothing else. It is offered where a scale is the question, and not in scale degrees or melodic dictation, where a melody moves both ways and there would be no way to say which spelling it meant."
     },
     "table": {
       "title": "The shortcut",
-      "body": "Nobody remembers seven patterns of seven intervals. What is worth remembering is how far each mode is from major or from minor, which for five of them is a single note.",
-      "after": "Which of the two a mode is read against is not a matter of taste: it is whichever is fewer notes away. Dorian differs from major in two places and from minor in one, so it is minor with a major sixth.",
+      "body": "Nobody remembers nine patterns of seven intervals. What is worth remembering is how far each scale is from major or from minor, which for seven of them is a single note.",
+      "after": "Which of the two a scale is read against is not a matter of taste: it is whichever is fewer notes away. Dorian differs from major in two places and from minor in one, so it is minor with a major sixth. The one answer worth expecting is melodic minor, which comes out nearer major — a single note, its third — than the minor it is named after.",
       "mode": "Mode",
       "degrees": "Degrees",
       "sameAs": "Same as",
       "except": "Except",
       "itself": "—",
       "join": ", ",
-      "summary": "A table of {{count}} modes: each one written as its degrees against the major scale, and as major or minor with the degrees that differ."
+      "summary": "A table of {{count}} scales: each one written as its degrees against the major scale, and as major or minor with the degrees that differ."
     },
     "spelling": {
       "title": "Why the staves carry no key signature",

@@ -1,6 +1,6 @@
 import { alterationInKey, KEY_SIGNATURES, type KeySignatureId } from './keySignature'
 import { chromaticValue, isAlteration, type Pitch } from './pitch'
-import { scalePitches, type ModeId } from './scale'
+import { scalePitches, signatureMode, type ModeId } from './scale'
 
 /**
  * Scale degrees — what a note is *called* once a key is in your ear.
@@ -434,12 +434,21 @@ export function tonicTriad(tonic: Pitch, mode: ModeId): readonly Pitch[] | undef
  * its notes, and the way to know which is to ask each of them. D dorian comes
  * out under no signature at all, E ionian under four sharps.
  *
+ * The search runs on `signatureMode`, not on the mode itself, and that is the
+ * whole of what harmonic and melodic minor needed here. No signature raises a
+ * seventh, so asking for one that spells A harmonic minor outright would come
+ * back with nothing and quietly empty every level offering it. What is asked
+ * for instead is the signature of the scale it is written under — A minor's —
+ * and the raised degrees then print an accidental, because `melodyMei` prints
+ * whatever differs from the signature. That is exactly how the scale has
+ * always been written down.
+ *
  * `undefined` when no signature spells it — a scale needing a double accidental
  * has no key of its own — and the generator then does not offer that pairing,
  * the same way `isCleanScale` keeps unspellable scales out.
  */
 export function keySignatureFor(tonic: Pitch, mode: ModeId): KeySignatureId | undefined {
-  const scale = scalePitches(tonic, mode)
+  const scale = scalePitches(tonic, signatureMode(mode))
   if (scale === undefined) return undefined
 
   // The octave repeats the tonic, so only the seven distinct letters matter.

@@ -76,9 +76,13 @@
       "title": "The Dark Four",
       "blurb": "Dorian, Aeolian, Phrygian, Locrian. Flat thirds and what follows."
     },
+    "altered-minors": {
+      "title": "Harmonic & Melodic",
+      "blurb": "The two altered minors against the natural one. The last two notes are the whole difference."
+    },
     "one-tonic": {
       "title": "One Tonic",
-      "blurb": "All seven modes, every one of them on D. Only the pattern can tell them apart."
+      "blurb": "Every scale, all of them on D. Only the pattern can tell them apart."
     },
     "flat-tonics": {
       "title": "Flat Tonics",
@@ -94,7 +98,7 @@
     },
     "everything": {
       "title": "Everything",
-      "blurb": "All seven modes, all thirteen tonics, all four clefs."
+      "blurb": "All nine scales, all thirteen tonics, all four clefs."
     }
   },
   "scale-hearing": {
@@ -110,21 +114,25 @@
       "title": "Three Shades of Minor",
       "blurb": "Aeolian, Dorian, Phrygian. Listen to the sixth and the second."
     },
+    "altered-minors": {
+      "title": "Harmonic & Melodic",
+      "blurb": "The two altered minors against the natural one, always upwards. Listen above the fifth."
+    },
     "flat-fifth": {
       "title": "The Flat Fifth",
       "blurb": "Phrygian, Aeolian and Locrian — where the fifth stops holding still."
     },
     "ascending": {
       "title": "All Ascending",
-      "blurb": "Every mode, always upwards. The usual starting point."
+      "blurb": "Every scale, always upwards. The usual starting point."
     },
     "descending": {
       "title": "All Descending",
-      "blurb": "Every mode, falling from the octave. Harder than it sounds."
+      "blurb": "Every mode, falling from the octave. Harder than it sounds. Melodic minor sits this one out — falling, it is the natural minor."
     },
     "everything": {
       "title": "Everything",
-      "blurb": "All seven modes, both directions, all four clefs."
+      "blurb": "All nine scales, both directions, all four clefs."
     }
   },
   "rhythm-dictation": {
@@ -177,6 +185,10 @@
     "minor": {
       "title": "Minor",
       "blurb": "The same seven degrees heard against a minor chord instead."
+    },
+    "harmonic-minor": {
+      "title": "Harmonic Minor",
+      "blurb": "The raised seventh, a semitone under the tonic and pulling towards it."
     },
     "no-anchor": {
       "title": "No Anchor",

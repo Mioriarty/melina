@@ -105,7 +105,7 @@ describe('chord spelling', () => {
   it('spells all nine on C, which is what lets the guide draw them on one root', () => {
     // The guide draws its examples on one root so that the only difference
     // between one staff and the next is the accidentals — the same reason the
-    // modes guide draws all seven modes on C. All nine allow it, the
+    // modes guide draws every scale on C. All nine allow it, the
     // diminished seventh included, because its double flat is a spelling the
     // model keeps rather than one it works around.
     const c = { letter: 'C' as const, alteration: 0 as const }

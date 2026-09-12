@@ -10,7 +10,13 @@ import {
 import { orderedPathNodes } from '@/config/pathLayout'
 import { i18n } from '@/lib/i18n'
 import { intervalSemitones } from '@/lib/music/interval'
-import { getMode, MODE_IDS, type ModeId } from '@/lib/music/scale'
+import {
+  DIATONIC_MODE_IDS,
+  MINOR_SCALE_IDS,
+  getMode,
+  MODE_IDS,
+  type ModeId,
+} from '@/lib/music/scale'
 
 import ModesPage from './ModesPage'
 
@@ -50,7 +56,7 @@ describe('the modes guide', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: guide('modes.title') }),
     ).toBeTruthy()
-    for (const section of ['what', 'list', 'table', 'spelling', 'next']) {
+    for (const section of ['what', 'list', 'minors', 'table', 'spelling', 'next']) {
       expect(
         screen.getByRole('heading', { level: 2, name: guide(`modes.${section}.title`) }),
         section,
@@ -58,7 +64,7 @@ describe('the modes guide', () => {
     }
   })
 
-  it('writes out all seven modes and puts all seven in the table', () => {
+  it('writes out all nine scales and puts all nine in the table', () => {
     open()
 
     for (const id of MODE_IDS) {
@@ -66,6 +72,28 @@ describe('the modes guide', () => {
       // Once as a card heading and once as the table's row header.
       expect(screen.getAllByText(mode(id)).length, id).toBeGreaterThanOrEqual(2)
     }
+  })
+
+  it('says which degree a mode begins on, and says the other thing for the two that do not', () => {
+    // Harmonic and melodic minor are not rotations of the major scale, so
+    // there is no degree they could be said to begin on. The card has to say
+    // something there rather than print "Degree undefined".
+    open()
+
+    for (const id of DIATONIC_MODE_IDS) {
+      const degree = getMode(id).degree
+      expect(degree, id).toBeDefined()
+      expect(
+        screen.getAllByText(
+          guide('modes.mode.degree').replace('{{degree}}', String(degree)),
+        ).length,
+        id,
+      ).toBeGreaterThan(0)
+    }
+
+    expect(screen.getAllByText(guide('modes.mode.altered'))).toHaveLength(
+      MINOR_SCALE_IDS.length,
+    )
   })
 
   it('goes back to the settings it was opened from, not to the level list', () => {
@@ -125,6 +153,26 @@ describe('the shortcut', () => {
         expect(against(summary.reference), summary.id).toBeLessThan(against(other))
       }
     }
+  })
+
+  it('reads the two minor scales the way the rule comes out', () => {
+    // Harmonic minor is the expected answer — minor with a raised seventh.
+    // Melodic minor is the one worth pinning, because the rule sends it the
+    // other way: it is a single note from major and two from minor, so that
+    // is what the page prints. An exception for a scale whose *name* suggests
+    // otherwise would be the page describing something the model does not.
+    const named = (id: ModeId) =>
+      modeSummary(id).changes.map(
+        (change) => `${change.interval.quality} ${change.interval.number}`,
+      )
+
+    expect(modeSummary('harmonicMinor').reference).toBe('aeolian')
+    expect(named('harmonicMinor')).toEqual(['major 7'])
+    expect(modeSummary('melodicMinor').reference).toBe('ionian')
+    expect(named('melodicMinor')).toEqual(['minor 3'])
+
+    // And neither begins on a degree of the major scale.
+    for (const id of MINOR_SCALE_IDS) expect(modeSummary(id).degree, id).toBeUndefined()
   })
 
   it('is the one everybody already says', () => {

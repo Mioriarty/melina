@@ -27,7 +27,11 @@ import {
   generateRound as generateMelodyRound,
   type MelodyRoundSpec,
 } from '@/exercises/melodic-dictation/generate'
-import { MELODY_SETTINGS, MAX_STEPS } from '@/exercises/melodic-dictation/settings'
+import {
+  DEFAULT_SETTINGS as MELODY_DEFAULTS,
+  MELODY_SETTINGS,
+  MAX_STEPS,
+} from '@/exercises/melodic-dictation/settings'
 import { RHYTHM_DIFFICULTIES } from '@/exercises/rhythm-dictation/difficulties'
 import {
   generateRound as generateRhythmRound,
@@ -39,7 +43,10 @@ import {
   generateRound as generateDegreeRound,
   type DegreeRoundSpec,
 } from '@/exercises/scale-degrees/generate'
-import { DEGREE_SETTINGS } from '@/exercises/scale-degrees/settings'
+import {
+  DEFAULT_SETTINGS as DEGREE_DEFAULTS,
+  DEGREE_SETTINGS,
+} from '@/exercises/scale-degrees/settings'
 import { SCALE_HEARING_DIFFICULTIES } from '@/exercises/scale-hearing/difficulties'
 import { SCALE_HEARING_SETTINGS } from '@/exercises/scale-hearing/settings'
 import { SCALE_READING_DIFFICULTIES } from '@/exercises/scale-reading/difficulties'
@@ -593,6 +600,20 @@ describe('scale-degrees settings', () => {
     }
   })
 
+  it('drops melodic minor on the way out of storage', () => {
+    // The same rule melodic dictation follows, and for the same reason: this
+    // exercise puts a key in the ear and then wanders about inside it, which
+    // a scale whose sixth and seventh depend on the direction cannot be.
+    const stored = {
+      ...DEGREE_DEFAULTS,
+      modes: ['aeolian', 'harmonicMinor', 'melodicMinor'],
+    }
+    expect(DEGREE_SETTINGS.parse(JSON.parse(JSON.stringify(stored)))?.modes).toEqual([
+      'aeolian',
+      'harmonicMinor',
+    ])
+  })
+
   it('actually generates a full round', () => {
     // The failure a type cannot catch: a level whose modes will not spell on
     // any of its tonics, or whose scale fits no clef, serving a short round.
@@ -737,6 +758,26 @@ describe('melodic-dictation settings', () => {
         settings,
       )
     }
+  })
+
+  it('drops melodic minor on the way out of storage', () => {
+    // A melody moves both ways and melodic minor's sixth and seventh depend
+    // on which, so there is no one spelling for a line to be drawn from. The
+    // setup screen never offers it; this is what a hand-edited or an
+    // older stored value meets. Harmonic minor is a key like any other.
+    const stored = {
+      ...MELODY_DEFAULTS,
+      modes: ['aeolian', 'harmonicMinor', 'melodicMinor'],
+    }
+    expect(MELODY_SETTINGS.parse(JSON.parse(JSON.stringify(stored)))?.modes).toEqual([
+      'aeolian',
+      'harmonicMinor',
+    ])
+
+    const onlyMelodic = { ...MELODY_DEFAULTS, modes: ['melodicMinor'] }
+    expect(MELODY_SETTINGS.parse(JSON.parse(JSON.stringify(onlyMelodic)))?.modes).toEqual(
+      MELODY_DEFAULTS.modes,
+    )
   })
 
   it('actually generates a full round', () => {

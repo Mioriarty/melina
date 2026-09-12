@@ -6,7 +6,7 @@ import { SetupChip, SetupSection } from '@/exercises/shared/SetupControls'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { CLEFS } from '@/lib/music/clef'
 import { DEGREE_NUMBERS } from '@/lib/music/degree'
-import { MODE_IDS, TONIC_CHOICES, tonicKey } from '@/lib/music/scale'
+import { MELODY_MODE_IDS, TONIC_CHOICES, tonicKey } from '@/lib/music/scale'
 
 import { MELODY_LENGTHS, ROUND_LENGTHS, type DegreeSettings } from './settings'
 
@@ -159,7 +159,7 @@ export function SetupScreen({ settings, onChange, onStart, onBack }: SetupScreen
           }
         >
           <div className="flex flex-wrap gap-2">
-            {MODE_IDS.map((mode) => (
+            {MELODY_MODE_IDS.map((mode) => (
               <SetupChip
                 key={mode}
                 selected={settings.modes.includes(mode)}

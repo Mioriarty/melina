@@ -83,7 +83,7 @@ const SCALE_X = 74
 /**
  * **The path opens with an explainer, and the braid starts below it.**
  *
- * The seven modes are the vocabulary of all three scale exercises, and the
+ * The nine scales are the vocabulary of all three scale exercises, and the
  * shortcut for remembering them is the kind of thing you are told once. So it
  * stands at the head of the scales track rather than behind a question mark on
  * a settings screen — which is behind Custom, where nobody meets it first.

@@ -76,9 +76,13 @@
       "title": "Die dunklen vier",
       "blurb": "Dorisch, Äolisch, Phrygisch, Lokrisch. Kleine Terzen und was folgt."
     },
+    "altered-minors": {
+      "title": "Harmonisch & Melodisch",
+      "blurb": "Die beiden veränderten Molltonleitern gegen das natürliche Moll. Die letzten zwei Töne machen den Unterschied."
+    },
     "one-tonic": {
       "title": "Ein Grundton",
-      "blurb": "Alle sieben Modi, jeder auf D. Nur das Muster unterscheidet sie."
+      "blurb": "Alle neun Tonleitern, jede auf D. Nur das Muster unterscheidet sie."
     },
     "flat-tonics": {
       "title": "B-Grundtöne",
@@ -94,7 +98,7 @@
     },
     "everything": {
       "title": "Alles",
-      "blurb": "Alle sieben Modi, alle dreizehn Grundtöne, alle vier Schlüssel."
+      "blurb": "Alle neun Tonleitern, alle dreizehn Grundtöne, alle vier Schlüssel."
     }
   },
   "scale-hearing": {
@@ -110,21 +114,25 @@
       "title": "Drei Moll-Farben",
       "blurb": "Äolisch, Dorisch, Phrygisch. Achte auf Sexte und Sekunde."
     },
+    "altered-minors": {
+      "title": "Harmonisch & Melodisch",
+      "blurb": "Die beiden veränderten Molltonleitern gegen das natürliche Moll — immer aufwärts. Hör über die Quinte hinaus."
+    },
     "flat-fifth": {
       "title": "Die tiefe Quinte",
       "blurb": "Phrygisch, Äolisch und Lokrisch — wo die Quinte nicht mehr stillhält."
     },
     "ascending": {
       "title": "Alles aufwärts",
-      "blurb": "Jeder Modus, immer aufwärts. Der übliche Anfang."
+      "blurb": "Jede Tonleiter, immer aufwärts. Der übliche Anfang."
     },
     "descending": {
       "title": "Alles abwärts",
-      "blurb": "Jeder Modus, von der Oktave fallend. Schwerer als es klingt."
+      "blurb": "Jeder Modus, von der Oktave fallend. Schwerer als es klingt. Melodisch Moll bleibt außen vor — abwärts ist es natürliches Moll."
     },
     "everything": {
       "title": "Alles",
-      "blurb": "Alle sieben Modi, beide Richtungen, alle vier Schlüssel."
+      "blurb": "Alle neun Tonleitern, beide Richtungen, alle vier Schlüssel."
     }
   },
   "rhythm-dictation": {
@@ -177,6 +185,10 @@
     "minor": {
       "title": "Moll",
       "blurb": "Dieselben sieben Stufen, aber gegen einen Mollakkord gehört."
+    },
+    "harmonic-minor": {
+      "title": "Harmonisch Moll",
+      "blurb": "Die erhöhte Septime, einen Halbton unter dem Grundton und zu ihm hin gezogen."
     },
     "no-anchor": {
       "title": "Ohne Anker",

@@ -60,8 +60,8 @@ describe('the chords guide', () => {
 
   it('draws every one of them on C, which is what makes the staves comparable', () => {
     // The root never moves, so the only difference from one staff to the next
-    // is the accidentals — the same reason the modes guide draws all seven
-    // modes on C. Nothing may quietly wander off it.
+    // is the accidentals — the same reason the modes guide draws every
+    // scale on C. Nothing may quietly wander off it.
     for (const example of CHORD_EXAMPLES) {
       expect(example.root, example.quality).toBe('C')
     }

@@ -49,6 +49,15 @@ export const DEGREE_DIFFICULTIES: readonly Difficulty<DegreeSettings>[] = [
     },
   },
   {
+    id: 'harmonic-minor',
+    settings: {
+      ...DEFAULT_SETTINGS,
+      modes: ['harmonicMinor'],
+      degrees: [1, 2, 3, 4, 5, 6, 7],
+      melodyLength: 4,
+    },
+  },
+  {
     id: 'no-anchor',
     settings: {
       ...DEFAULT_SETTINGS,
@@ -79,7 +88,15 @@ export const DEGREE_DIFFICULTIES: readonly Difficulty<DegreeSettings>[] = [
     id: 'everything',
     settings: {
       ...DEFAULT_SETTINGS,
-      modes: ['ionian', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'aeolian'],
+      modes: [
+        'ionian',
+        'dorian',
+        'phrygian',
+        'lydian',
+        'mixolydian',
+        'aeolian',
+        'harmonicMinor',
+      ],
       degrees: [1, 2, 3, 4, 5, 6, 7],
       clefs: ['treble', 'bass', 'alto', 'tenor'],
       alterations: true,

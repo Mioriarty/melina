@@ -2,6 +2,7 @@ import { getClef, type ClefId } from '@/lib/music/clef'
 import type { Pitch } from '@/lib/music/pitch'
 import {
   fittingOctaves,
+  isAscendingOnly,
   isCleanScale,
   isModeId,
   parseTonicKey,
@@ -53,9 +54,36 @@ export interface ScaleRoundSpec {
   questionsPerRound: number
 }
 
-/** The modes a spec actually permits. */
+/**
+ * The directions a spec offers for one mode.
+ *
+ * Melodic minor is an ascending scale — coming down it is the natural minor,
+ * note for note — so a descending one is a question with two right answers.
+ * It is dropped from the spec's directions rather than turned round quietly:
+ * the direction is what the attempt log records and what a level's own
+ * accuracy filter looks for, so a question asked in a direction the level did
+ * not name would be a row the level could never count.
+ */
+export function modeDirections(
+  mode: ModeId,
+  directions: readonly ScaleDirection[],
+): readonly ScaleDirection[] {
+  return isAscendingOnly(mode)
+    ? directions.filter((direction) => direction === 'ascending')
+    : directions
+}
+
+/**
+ * The modes a spec actually permits.
+ *
+ * A mode with no direction left is not in the round at all: a level of
+ * descending scales simply does not ask melodic minor, which is honest —
+ * there is no descending melodic minor to ask about.
+ */
 export function allowedModes(spec: ScaleRoundSpec): readonly ModeId[] {
-  return spec.modes.filter(isModeId)
+  return spec.modes
+    .filter(isModeId)
+    .filter((mode) => modeDirections(mode, spec.directions).length > 0)
 }
 
 /** The tonics a spec permits, as pitch classes. */
@@ -135,9 +163,11 @@ export function generateRound(random: Random, spec: ScaleRoundSpec): ScaleQuesti
     let question: ScaleQuestion | undefined
     for (let attempt = 0; attempt < 12 && question === undefined; attempt += 1) {
       const clef = randomPick(random, spec.clefs as [ClefId, ...ClefId[]])
+      // Per mode, not per round: `allowedModes` has already dropped anything
+      // with nothing left, so this is never empty.
       const direction = randomPick(
         random,
-        spec.directions as [ScaleDirection, ...ScaleDirection[]],
+        modeDirections(mode, spec.directions) as [ScaleDirection, ...ScaleDirection[]],
       )
       question = buildQuestion(random, mode, clef, tonics, direction)
     }

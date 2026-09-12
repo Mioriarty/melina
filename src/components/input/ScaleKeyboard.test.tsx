@@ -79,7 +79,7 @@ describe('ScaleKeyboard', () => {
     expect(document.activeElement).toBe(key('dorian'))
 
     fireEvent.keyDown(keyboard(), { key: 'End' })
-    expect(document.activeElement).toBe(key('locrian'))
+    expect(document.activeElement).toBe(key(MODE_IDS[MODE_IDS.length - 1] as ModeId))
 
     fireEvent.keyDown(keyboard(), { key: 'Home' })
     expect(document.activeElement).toBe(key('ionian'))

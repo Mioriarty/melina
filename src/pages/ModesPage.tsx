@@ -5,19 +5,18 @@ import { Link, useSearchParams } from 'react-router'
 import { ModeExample } from '@/components/explain/ModeExamples'
 import { ModeTable } from '@/components/explain/ModeTable'
 import { Icon } from '@/components/ui/Icon'
-import { MODE_IDS } from '@/lib/music/scale'
+import { DIATONIC_MODE_IDS, MINOR_SCALE_IDS } from '@/lib/music/scale'
 import { preloadEngraver } from '@/lib/notation/verovio'
 
 /**
- * What the seven modes are, and the shortcut for remembering them.
+ * What the seven modes are, what the two minor scales beside them are, and the
+ * shortcut for remembering all nine.
  *
- * Contextual help rather than a stop on the path, which is the difference
- * between this and the figured bass guide. That one exists because
- * canonical-required grading marks a player wrong for a convention nothing in
- * the exercise ever states; the scale exercises teach their own vocabulary by
- * asking about it, and nothing here is owed before a player may start. So it
- * is the question mark in the corner of the Modes setting, where the modes are
- * the thing being chosen.
+ * A stop on the path at the head of the scales column, and the question mark
+ * in the corner of the Modes setting on all three scale exercises: this is
+ * the vocabulary every one of them is built on, so it is owed before the
+ * first round rather than only to somebody already in the settings. `?from=`
+ * says which exercise opened it, and no `?from=` at all means the path.
  *
  * **Everything on it is `scale.ts` evaluated** — the staves through
  * `scalePitches`, the shorthand and the table through `modeSeries.ts` — for the
@@ -29,7 +28,7 @@ export default function ModesPage() {
   const { t } = useTranslation(['guide', 'curriculum'])
   const [params] = useSearchParams()
 
-  // Seven staves, and this may well be the first thing in a session to want
+  // Nine staves, and this may well be the first thing in a session to want
   // the engraver — asked for on mount rather than by whichever `Score` renders
   // first.
   useEffect(preloadEngraver, [])
@@ -70,10 +69,25 @@ export default function ModesPage() {
         <Section title={t('guide:modes.list.title')}>
           <p>{t('guide:modes.list.body')}</p>
           <div className="mt-1 grid gap-3">
-            {MODE_IDS.map((mode) => (
+            {DIATONIC_MODE_IDS.map((mode) => (
               <ModeExample key={mode} mode={mode} />
             ))}
           </div>
+        </Section>
+
+        {/* A section of their own rather than two more cards in the list
+            above: they are not rotations of the major scale, and what there is
+            to say about them — where the raised degrees come from, and why
+            melodic minor only goes up — is not said about any mode. */}
+        <Section title={t('guide:modes.minors.title')}>
+          <p>{t('guide:modes.minors.body')}</p>
+          <div className="mt-1 grid gap-3">
+            {MINOR_SCALE_IDS.map((mode) => (
+              <ModeExample key={mode} mode={mode} />
+            ))}
+          </div>
+          <p>{t('guide:modes.minors.after')}</p>
+          <p>{t('guide:modes.minors.direction')}</p>
         </Section>
 
         <Section title={t('guide:modes.table.title')}>

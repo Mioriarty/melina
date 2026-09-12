@@ -3,15 +3,22 @@ import { describe, expect, it } from 'vitest'
 import { intervalBetween, intervalKey } from './interval'
 import { chromaticValue, diatonicValue, parsePitch, pitchKey, type Pitch } from './pitch'
 import {
+  ASCENDING_ONLY_MODE_IDS,
+  DIATONIC_MODE_IDS,
+  MELODY_MODE_IDS,
+  MINOR_SCALE_IDS,
   MODES,
   MODE_IDS,
   TONIC_CHOICES,
   cleanTonics,
   fittingOctaves,
+  isAscendingOnly,
   isCleanScale,
+  isMelodyModeId,
   modeOf,
   printedAccidentals,
   scalePitches,
+  signatureMode,
   tonicKey,
   parseTonicKey,
   type ModeId,
@@ -78,7 +85,7 @@ describe('the modes', () => {
     }
   })
 
-  it('is a rotation of the major scale', () => {
+  it('is a rotation of the major scale — every diatonic mode, and only those', () => {
     // Dorian is the major scale played from its second degree, phrygian from
     // its third, and so on. Stated as pitch content — the same seven notes,
     // started somewhere else — so it is independent of how the degrees
@@ -87,10 +94,78 @@ describe('the modes', () => {
     const content = new Set(cMajor.map(tonicKey))
 
     for (const mode of MODES) {
+      if (mode.degree === undefined) continue
       const tonic = cMajor[mode.degree - 1] as Pitch
       const scale = (scalePitches(tonic, mode.id) as readonly Pitch[]).slice(0, 7)
       expect(new Set(scale.map(tonicKey)), mode.id).toEqual(content)
     }
+
+    // The other half of it: carrying a degree *is* being a rotation, so the
+    // two minor scales must not have one. Harmonic minor raises a seventh
+    // that no rotation of the major scale raises, and there is no degree it
+    // could be said to begin on.
+    expect(
+      MODES.filter((mode) => mode.degree === undefined).map((mode) => mode.id),
+    ).toEqual([...MINOR_SCALE_IDS])
+    for (const id of MINOR_SCALE_IDS) {
+      const notes = new Set(
+        (scalePitches(p('C4'), id) as readonly Pitch[]).slice(0, 7).map(tonicKey),
+      )
+      // Not the white notes from anywhere: that is what makes it not a mode.
+      for (const tonic of cMajor) {
+        const rotation = new Set(
+          (scalePitches(tonic, 'ionian') as readonly Pitch[]).slice(0, 7).map(tonicKey),
+        )
+        expect(
+          [...notes].every((note) => rotation.has(note)),
+          `${id} on ${tonicKey(tonic)}`,
+        ).toBe(false)
+      }
+    }
+  })
+
+  it('spells the two minor scales the way they are written', () => {
+    // Nothing new in the model: raising a degree is one stored interval, and
+    // the letters still run in order. E♭ harmonic minor is the case worth
+    // pinning — the sixth is C♭ and the seventh D♮, never B♮ and D♮, which is
+    // the same sound spelled as something that is not a sixth.
+    expect(spell('A4', 'harmonicMinor')).toBe('A4 B4 C5 D5 E5 F5 G#5 A5')
+    expect(spell('A4', 'melodicMinor')).toBe('A4 B4 C5 D5 E5 F#5 G#5 A5')
+    expect(spell('Eb4', 'harmonicMinor')).toBe('Eb4 F4 Gb4 Ab4 Bb4 Cb5 D5 Eb5')
+    expect(spell('Eb4', 'melodicMinor')).toBe('Eb4 F4 Gb4 Ab4 Bb4 C5 D5 Eb5')
+  })
+
+  it('puts an augmented second between the sixth and seventh of harmonic minor', () => {
+    // The sound the scale is known by, and it is what two stored intervals
+    // already say rather than anything tabulated.
+    const scale = scalePitches(p('A4'), 'harmonicMinor') as readonly Pitch[]
+    const step = intervalBetween(scale[5] as Pitch, scale[6] as Pitch)
+    expect(step === undefined ? '' : intervalKey(step)).toBe(
+      intervalKey({
+        number: 2,
+        quality: 'augmented',
+      }),
+    )
+
+    // Melodic minor raises the sixth as well, so the gap closes to a tone.
+    const melodic = scalePitches(p('A4'), 'melodicMinor') as readonly Pitch[]
+    const closed = intervalBetween(melodic[5] as Pitch, melodic[6] as Pitch)
+    expect(closed === undefined ? '' : intervalKey(closed)).toBe(
+      intervalKey({
+        number: 2,
+        quality: 'major',
+      }),
+    )
+  })
+
+  it('refuses a minor scale with no minor key to stand in', () => {
+    // D♭ melodic minor spells perfectly well on its own — raising the sixth
+    // is exactly what turns B double flat into B♭ — but D♭ minor is not a key
+    // anybody writes, and the scale is written under one. C♯ is where it
+    // belongs, and that is offered.
+    expect(spell('Db4', 'melodicMinor')).toBe('Db4 Eb4 Fb4 Gb4 Ab4 Bb4 C5 Db5')
+    expect(isCleanScale({ letter: 'D', alteration: -1 }, 'melodicMinor')).toBe(false)
+    expect(isCleanScale({ letter: 'C', alteration: 1 }, 'melodicMinor')).toBe(true)
   })
 
   it('gives every mode a different sound, so a question is always answerable', () => {
@@ -173,6 +248,40 @@ describe('clean spellings', () => {
     expect(printedAccidentals({ letter: 'F', alteration: 0 }, 'lydian')).toBe(0)
     expect(printedAccidentals({ letter: 'F', alteration: 0 }, 'ionian')).toBe(1)
     expect(printedAccidentals({ letter: 'C', alteration: 0 }, 'locrian')).toBe(5)
+  })
+})
+
+describe('the scales that are not modes', () => {
+  it('writes them under a natural minor and every mode under itself', () => {
+    // The only thing `keySignatureFor` needed, and it is a fact about the
+    // music rather than a fallback: no signature raises a seventh.
+    for (const mode of DIATONIC_MODE_IDS) expect(signatureMode(mode), mode).toBe(mode)
+    for (const mode of MINOR_SCALE_IDS) expect(signatureMode(mode), mode).toBe('aeolian')
+  })
+
+  it('only ever asks melodic minor upwards', () => {
+    // Descending it is the natural minor note for note, so a falling one is a
+    // question with two right answers. Harmonic minor has no such trouble —
+    // its raised seventh is raised whichever way the scale runs.
+    expect(ASCENDING_ONLY_MODE_IDS).toEqual(['melodicMinor'])
+    expect(isAscendingOnly('harmonicMinor')).toBe(false)
+    expect(isAscendingOnly('aeolian')).toBe(false)
+  })
+
+  it('keeps it out of anything that writes a melody, and nothing else out', () => {
+    // A melody moves both ways, so there is no one spelling for it to draw
+    // from. Everything else in the app can ask for every scale there is.
+    expect([...MELODY_MODE_IDS].sort()).toEqual(
+      MODE_IDS.filter((mode) => mode !== 'melodicMinor').sort(),
+    )
+    expect(isMelodyModeId('melodicMinor')).toBe(false)
+    expect(isMelodyModeId('harmonicMinor')).toBe(true)
+    expect(isMelodyModeId('nonsense')).toBe(false)
+  })
+
+  it('leaves a mode where it was on the keyboard', () => {
+    // The two go on the end so nothing already learnt moves under a thumb.
+    expect(MODE_IDS.slice(0, DIATONIC_MODE_IDS.length)).toEqual([...DIATONIC_MODE_IDS])
   })
 })
 

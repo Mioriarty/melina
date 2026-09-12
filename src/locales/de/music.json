@@ -236,6 +236,14 @@
     "locrian": {
       "label": "Lokrisch",
       "short": "Lok"
+    },
+    "harmonicMinor": {
+      "label": "Harmonisch Moll",
+      "short": "Harm"
+    },
+    "melodicMinor": {
+      "label": "Melodisch Moll",
+      "short": "Mel"
     }
   },
   "modeWithAlias": "{{mode}} ({{alias}})",
@@ -355,7 +363,9 @@
     "phrygian": "{{tonic}} phrygisch",
     "lydian": "{{tonic}} lydisch",
     "mixolydian": "{{tonic}} mixolydisch",
-    "locrian": "{{tonic}} lokrisch"
+    "locrian": "{{tonic}} lokrisch",
+    "harmonicMinor": "harmonisches {{tonic}}-Moll",
+    "melodicMinor": "melodisches {{tonic}}-Moll"
   },
   "scaleNameFallback": "{{tonic}} {{mode}}",
   "chordQualities": {

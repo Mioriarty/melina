@@ -99,18 +99,48 @@ describe('generateRound', () => {
   })
 
   it('spreads the modes evenly rather than sampling them', () => {
-    // Twenty uniform samples over seven modes reliably leaves one unasked,
-    // which makes a round feel arbitrary rather than thorough.
+    // Uniform sampling over nine modes reliably leaves one unasked, which
+    // makes a round feel arbitrary rather than thorough. Three each, so the
+    // round length follows the count rather than being typed in beside it.
+    const perMode = 3
     const counts = new Map<ModeId, number>()
     for (const question of generateRound(createRandom(5), {
       ...FULL,
-      questionsPerRound: 21,
+      questionsPerRound: MODE_IDS.length * perMode,
     })) {
       counts.set(question.mode, (counts.get(question.mode) ?? 0) + 1)
     }
 
     expect(counts.size).toBe(MODE_IDS.length)
-    for (const [mode, count] of counts) expect(count, mode).toBe(3)
+    for (const [mode, count] of counts) expect(count, mode).toBe(perMode)
+  })
+
+  it('never asks melodic minor downwards, however the spec is written', () => {
+    // Coming down, melodic minor *is* the natural minor — the classical form
+    // lowers the sixth and seventh again — so a descending one is a question
+    // with two right answers. The round may offer both directions; this one
+    // scale still only ever comes out ascending.
+    for (const question of everyQuestion(FULL)) {
+      if (question.mode !== 'melodicMinor') continue
+      expect(question.direction, pitchKey(question.tonic)).toBe('ascending')
+    }
+  })
+
+  it('leaves melodic minor out of a round that only goes down', () => {
+    // Not turned round quietly: the direction is what the attempt log records
+    // and what a level's own accuracy filter looks for, so an ascending
+    // question in a descending level would be a row the level could never
+    // count. There is no descending melodic minor to ask about, and the round
+    // says so by not asking.
+    const falling = everyQuestion({ ...FULL, directions: ['descending'] })
+    expect(falling.length).toBeGreaterThan(0)
+    expect(falling.some((question) => question.mode === 'melodicMinor')).toBe(false)
+    for (const question of falling) expect(question.direction).toBe('descending')
+
+    // Every other scale is still there, so nothing else was swept up.
+    expect(new Set(falling.map((question) => question.mode)).size).toBe(
+      MODE_IDS.length - 1,
+    )
   })
 
   it('returns nothing rather than a broken round when nothing is allowed', () => {

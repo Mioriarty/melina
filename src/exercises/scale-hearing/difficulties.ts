@@ -17,6 +17,14 @@ import { DEFAULT_SETTINGS, type ScaleHearingSettings } from './settings'
 
 const MAJOR_FAMILY = ['ionian', 'lydian', 'mixolydian'] as const
 const MINOR_FAMILY = ['aeolian', 'dorian', 'phrygian'] as const
+/**
+ * The three minors, which is the distinction an entrance exam actually asks
+ * for. They share their first five notes exactly, so the whole of it is what
+ * happens above the fifth — and it is why this level is ascending: melodic
+ * minor coming down *is* natural minor, so a falling one would be two right
+ * answers. `modeDirections` holds that, whatever a level asks for.
+ */
+const MINORS = ['aeolian', 'harmonicMinor', 'melodicMinor'] as const
 
 export const SCALE_HEARING_DIFFICULTIES: readonly Difficulty<ScaleHearingSettings>[] = [
   {
@@ -45,6 +53,17 @@ export const SCALE_HEARING_DIFFICULTIES: readonly Difficulty<ScaleHearingSetting
       ...DEFAULT_SETTINGS,
       modes: [...MINOR_FAMILY],
       tonics: [...NATURAL_TONIC_KEYS],
+      clefs: ['treble'],
+      questionsPerRound: 10,
+    },
+  },
+  {
+    id: 'altered-minors',
+    settings: {
+      ...DEFAULT_SETTINGS,
+      modes: [...MINORS],
+      tonics: [...NATURAL_TONIC_KEYS],
+      directions: ['ascending'],
       clefs: ['treble'],
       questionsPerRound: 10,
     },

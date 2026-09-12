@@ -21,6 +21,13 @@ import { getMode, MODE_IDS, type ModeId } from '@/lib/music/scale'
  * behind it is simply *whichever is closer*. It comes out one-sided every time
  * — lydian and mixolydian read as major, dorian, phrygian and locrian as minor
  * — with no tie to break anywhere, which `ModesPage.test.ts` pins.
+ *
+ * The two minor scales go through it unchanged, and one of the answers is
+ * worth expecting: harmonic minor is minor with a raised seventh, but melodic
+ * minor is *nearer major* — one note, its third — than it is to the minor it
+ * is named after. That is what the rule says and it is true; the page prints
+ * it rather than making an exception for a scale whose name suggests the
+ * other reading.
  */
 
 /** The two modes every other one is a small change to. */
@@ -50,8 +57,13 @@ export interface ModeChange {
 
 export interface ModeSummary {
   id: ModeId
-  /** Which degree of a major scale the mode begins on. Ionian is 1. */
-  degree: number
+  /**
+   * Which degree of a major scale the mode begins on. Ionian is 1.
+   *
+   * Absent for harmonic and melodic minor, which are not rotations of it —
+   * and the page says so where the others say which degree.
+   */
+  degree?: number
   degrees: readonly ModeDegree[]
   /** Major or minor, whichever this mode is fewer changes away from. */
   reference: ModeId
@@ -87,9 +99,11 @@ export function modeSummary(id: ModeId): ModeSummary {
   // the test — so there is nothing to break one with.
   const closer = minor.length < major.length ? MINOR : MAJOR
 
+  const { degree } = getMode(id)
+
   return {
     id,
-    degree: getMode(id).degree,
+    ...(degree === undefined ? {} : { degree }),
     degrees: degreesOf(id).map((interval, index) => ({
       number: index + 1,
       interval,

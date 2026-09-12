@@ -11,7 +11,7 @@ import type { ChordQuality } from '@/lib/music/chord'
  *
  * **All nine stand on C**, which is what makes them comparable: the root never
  * moves, so the only difference from one staff to the next is the accidentals
- * — exactly the reason the modes guide draws all seven modes on C.
+ * — exactly the reason the modes guide draws every scale on C.
  *
  * That includes the diminished seventh, whose seventh above C is B double
  * flat. Drawing it somewhere more comfortable would have been drawing around

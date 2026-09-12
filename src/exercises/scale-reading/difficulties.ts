@@ -17,6 +17,13 @@ import { DEFAULT_SETTINGS, type ScaleReadingSettings } from './settings'
 
 const BRIGHT = ['lydian', 'ionian', 'mixolydian'] as const
 const DARK = ['dorian', 'aeolian', 'phrygian', 'locrian'] as const
+/**
+ * The three minors, which on the page differ only in their last two notes:
+ * natural minor prints neither, harmonic minor a raised seventh, melodic
+ * minor a raised sixth as well. Reading them apart is reading the top of the
+ * scale, which is the one place a keyless staff makes easy.
+ */
+const MINORS = ['aeolian', 'harmonicMinor', 'melodicMinor'] as const
 const FLAT_TONICS = ['F', 'Bb', 'Eb', 'Ab', 'Db'] as const
 const SHARP_TONICS = ['G', 'D', 'A', 'E', 'B', 'F#', 'C#'] as const
 
@@ -46,6 +53,16 @@ export const SCALE_READING_DIFFICULTIES: readonly Difficulty<ScaleReadingSetting
     settings: {
       ...DEFAULT_SETTINGS,
       modes: [...DARK],
+      tonics: [...NATURAL_TONIC_KEYS],
+      clefs: ['treble', 'bass'],
+      questionsPerRound: 10,
+    },
+  },
+  {
+    id: 'altered-minors',
+    settings: {
+      ...DEFAULT_SETTINGS,
+      modes: [...MINORS],
       tonics: [...NATURAL_TONIC_KEYS],
       clefs: ['treble', 'bass'],
       questionsPerRound: 10,

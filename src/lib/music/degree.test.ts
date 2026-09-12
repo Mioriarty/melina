@@ -22,7 +22,13 @@ import {
 } from './degree'
 import { alterationInKey } from './keySignature'
 import { parsePitch, pitchKey, type Pitch } from './pitch'
-import { MODE_IDS, TONIC_CHOICES, isCleanScale, scalePitches } from './scale'
+import {
+  MODE_IDS,
+  TONIC_CHOICES,
+  isCleanScale,
+  scalePitches,
+  signatureMode,
+} from './scale'
 
 function p(text: string): Pitch {
   const value = parsePitch(text)
@@ -294,7 +300,10 @@ describe('the key signature a mode is written under', () => {
 
   it('agrees with the scale it claims to spell', () => {
     // The property, rather than a table: under the signature it returns, every
-    // note of the scale needs no printed accidental.
+    // note of the scale it is *written under* needs no printed accidental.
+    // For the seven modes that scale is the mode itself, so this is the plain
+    // reading; for harmonic and melodic minor it is the natural minor, and
+    // the degrees they raise are exactly the ones that then print a sign.
     for (const tonic of TONIC_CHOICES) {
       for (const mode of MODE_IDS) {
         if (!isCleanScale(tonic, mode)) continue
@@ -303,7 +312,7 @@ describe('the key signature a mode is written under', () => {
         const signature = keySignatureFor(root, mode)
         if (signature === undefined) continue
 
-        const scale = scalePitches(root, mode)
+        const scale = scalePitches(root, signatureMode(mode))
         expect(scale, `${pitchKey(root)} ${mode}`).toBeDefined()
         for (const note of (scale ?? []).slice(0, 7)) {
           expect(
@@ -313,6 +322,26 @@ describe('the key signature a mode is written under', () => {
         }
       }
     }
+  })
+
+  it('writes the altered minors under the natural minor, so the raised degrees print', () => {
+    // No signature raises a seventh, so asking for one that spells A harmonic
+    // minor outright would come back with nothing and quietly empty every
+    // level offering it. What it is written under is A minor, and the G♯ then
+    // carries its own accidental — which is how the scale has always been
+    // written down.
+    expect(keySignatureFor(p('A4'), 'harmonicMinor')).toBe('0')
+    expect(keySignatureFor(p('A4'), 'melodicMinor')).toBe('0')
+    expect(keySignatureFor(p('C4'), 'harmonicMinor')).toBe('3f')
+    expect(keySignatureFor(p('E4'), 'melodicMinor')).toBe('1s')
+
+    // And exactly the raised degrees are the ones the signature does not
+    // spell, which is what makes them print.
+    const scale = scalePitches(p('A4'), 'harmonicMinor') as readonly Pitch[]
+    const printed = scale
+      .slice(0, 7)
+      .filter((note) => alterationInKey(note.letter, '0') !== note.alteration)
+    expect(printed.map(pitchKey)).toEqual(['G#5'])
   })
 
   it('finds one for every scale a level could offer', () => {
@@ -328,7 +357,11 @@ describe('the key signature a mode is written under', () => {
       }
     }
     // Every clean diatonic mode is a rotation of some major scale, so within
-    // seven sharps and seven flats they all have one.
+    // seven sharps and seven flats they all have one — and the altered minors
+    // are written under a natural minor, which `isCleanScale` has already
+    // insisted spells. D♭ melodic minor is the case that says so: the scale
+    // itself is spellable, D♭ minor is not, and the pairing drops out there
+    // rather than arriving here with no key to be in.
     expect(homeless).toEqual([])
   })
 })

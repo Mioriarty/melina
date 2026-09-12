@@ -10,7 +10,7 @@ import { CLEFS, type ClefId } from '@/lib/music/clef'
 import { degreeKey, stepAt, stepIndex, parseDegreeKey } from '@/lib/music/degree'
 import { parseMeter } from '@/lib/music/meter'
 import { CELL_GROUP_IDS, type CellGroupId } from '@/lib/music/rhythmCells'
-import { MODE_IDS, TONIC_KEYS, type ModeId } from '@/lib/music/scale'
+import { MELODY_MODE_IDS, TONIC_KEYS, type ModeId } from '@/lib/music/scale'
 
 import {
   BAR_COUNTS,
@@ -166,7 +166,7 @@ export function SetupScreen({ settings, onChange, onStart, onBack }: SetupScreen
 
         <SetupSection title={t('exercise:setup.modes')}>
           <div className="flex flex-wrap gap-2">
-            {MODE_IDS.map((mode) => (
+            {MELODY_MODE_IDS.map((mode) => (
               <SetupChip
                 key={mode}
                 selected={settings.modes.includes(mode)}

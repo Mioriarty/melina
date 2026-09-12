@@ -10,14 +10,14 @@ import { SCALE_NOTE_SPACING } from '@/lib/notation/verovio'
 import { degreeShorthand, modeSummary } from './modeSeries'
 
 /**
- * One mode, written out on the staff and spelled against the major scale.
+ * One scale, written out on the staff and spelled against the major scale.
  *
- * **All seven are shown on C**, which is the one thing that makes them
+ * **All nine are shown on C**, which is the one thing that makes them
  * comparable: the tonic never moves, so the only thing that changes between
  * one staff and the next is the accidentals — which is exactly what the
- * shorthand under it names. Shown each on its own white-note tonic they would
- * all print no accidentals at all, and the page would be seven identical rows
- * of notes.
+ * shorthand under it names. Shown each on its own white-note tonic the seven
+ * modes would all print no accidentals at all, and the page would be seven
+ * identical rows of notes.
  *
  * The notes come from `scalePitches`, so they are spelled the way the exercise
  * spells them, and the staff is keyless like every scale in the app: a mode is
@@ -42,7 +42,12 @@ export function ModeExample({ mode }: ModeExampleProps) {
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <h3 className="text-heading">{names.mode(mode)}</h3>
         <p className="text-sm text-ink-faint">
-          {t('modes.mode.degree', { degree: summary.degree })}
+          {/* Harmonic and melodic minor begin on no degree of a major scale,
+              because they are not rotations of one. The caption says that
+              where the others say which degree. */}
+          {summary.degree === undefined
+            ? t('modes.mode.altered')
+            : t('modes.mode.degree', { degree: summary.degree })}
         </p>
       </div>
 

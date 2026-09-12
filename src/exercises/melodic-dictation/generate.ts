@@ -24,7 +24,7 @@ import {
 import type { CellWeights } from '@/lib/music/rhythmCells'
 import {
   isCleanScale,
-  isModeId,
+  isMelodyModeId,
   parseTonicKey,
   type ModeId,
   type PitchClass,
@@ -106,8 +106,16 @@ export const BARS_PER_SYSTEM = 1
  */
 const ALTERATION_CHANCE = 0.18
 
+/**
+ * The modes a spec permits — and melodic minor is never one of them.
+ *
+ * A melody falls as readily as it rises, and melodic minor's sixth and
+ * seventh depend on which way it is going; there is no one spelling of the
+ * scale for a line to be drawn from. Harmonic minor has no such trouble and
+ * is offered like any other. See `MELODY_MODE_IDS`.
+ */
 export function allowedModes(spec: MelodyRoundSpec): readonly ModeId[] {
-  return spec.modes.filter(isModeId)
+  return spec.modes.filter(isMelodyModeId)
 }
 
 export function allowedTonics(spec: MelodyRoundSpec): readonly PitchClass[] {

@@ -143,7 +143,7 @@ whole curriculum as a single journey. There is no map, no zoom, no drag and no
 list toggle; scrolling is the browser's own, which is what keeps it usable with
 a keyboard, a screen reader and a thumb without special cases.
 
-**The path opens with an explainer, and then braids.** The Seven Modes stands
+**The path opens with an explainer, and then braids.** Modes and Minor stands
 alone at the top of the scales column and is joined to scale reading and to
 nothing else — not over the middle, which would read as the way in to the whole
 path and claim it comes before intervals too. It cannot go _into_ the right
@@ -375,6 +375,29 @@ spells the scale and rejects anything past a double accidental, so A♭ locrian
 mode needs no one to work the exceptions out again. `modeOf` reads a run of
 pitches back to the mode that spelled it, which is how the generator is checked
 rather than trusted.
+
+**Harmonic and melodic minor live in the same list and are not modes.** The
+seven are one set of notes read from seven starting points; these two raise a
+degree no rotation raises, so `ModeDef.degree` is absent for them and no key
+signature spells them. That cost the model nothing — a raised seventh is one
+stored interval, and the augmented second in harmonic minor is what two of them
+already say — but it needed three rules stated once each:
+
+- `signatureMode` says what a scale is **written under**: itself for a mode,
+  the natural minor for these two. `keySignatureFor` searches on that rather
+  than hunting for a signature that cannot exist, and the raised degrees then
+  print an accidental, which is how the scale has always been written down.
+- `isCleanScale` asks the same of the scale it is written under. D♭ melodic
+  minor spells perfectly well — raising the sixth is what turns B𝄫 into B♭ —
+  but D♭ minor is not a key anybody writes, so the pairing drops out there
+  rather than arriving at the staff with no key to be in.
+- **Melodic minor only goes up** (`ASCENDING_ONLY_MODE_IDS`). Coming down the
+  convention lowers the sixth and seventh again, which is aeolian note for
+  note, so a descending one is a question with two right answers — the same
+  rule `HEARABLE_INTERVAL_KEYS` states for intervals. `MELODY_MODE_IDS` is the
+  other half of it: a melody moves both ways, so scale degrees and melodic
+  dictation are never offered it, while harmonic minor is a key like any other
+  and goes everywhere.
 
 ### Scale degrees — `degree.ts`
 
@@ -1118,7 +1141,11 @@ cluster.
 equivalent of `HEARABLE_INTERVAL_KEYS`; `scale.test.ts` asserts that property
 rather than assuming it. What scale hearing has instead is which modes are set
 _against_ each other: lydian alone is unmistakable, lydian beside ionian is one
-raised note.
+raised note. Melodic minor is the one that comes close, and what holds it apart
+is the direction it is asked in rather than leaving it out — `modeDirections`
+drops it from a descending round entirely rather than turning it round quietly,
+because the direction is what the attempt log records and what a level's own
+accuracy filter looks for.
 
 On a keyless staff **the tonic decides how much ink is on the page** — B♭ locrian
 prints seven accidentals in eight notes — which is why tonics are a setting and a
@@ -1988,17 +2015,24 @@ Guides have their own `guide` translation namespace rather than living in
 
 ### The modes guide is the model read against major and minor
 
-`/guide/scales` writes the seven modes out and gives the shortcut for
+`/guide/scales` writes the nine scales out and gives the shortcut for
 remembering them. It is **a stop on the path**, at the head of the scales
-column, because the modes are the vocabulary all three scale exercises are
-built on — and it is also the question mark in the corner of the **Modes**
-setting on all three of them, with `?from=` saying which to return to.
+column, because they are the vocabulary all three scale exercises are built on
+— and it is also the question mark in the corner of the **Modes** setting on
+all three of them, with `?from=` saying which to return to.
 
-**All seven are drawn on C.** It is the one thing that makes them comparable:
+**All nine are drawn on C.** It is the one thing that makes them comparable:
 the tonic never moves, so the only difference from one staff to the next is the
 accidentals — which is exactly what the shorthand under it names. Each on its
-own white-note tonic they would all print nothing at all, and the page would be
-seven identical rows of notes.
+own white-note tonic the seven modes would all print nothing at all, and the
+page would be seven identical rows of notes.
+
+**The two minor scales get a section of their own**, not two more cards in the
+list. They are not rotations of the major scale, and what there is to say about
+them — where the raised degrees come from, why no signature spells them, and
+why melodic minor only goes up — is said about no mode. Their card says
+"a minor scale of its own, not a mode" where a mode's says which degree it
+begins on, which is `ModeDef.degree` being absent rather than a second list.
 
 **The shortcut is computed, not written down.** A mode is stored as the
 interval from its tonic to each degree, so two modes differ exactly where those
@@ -2012,7 +2046,10 @@ apart by adding the sign back on.
 to be — saying dorian is minor with a major sixth rather than major with a
 flattened third and seventh is the whole value of the shortcut. The rule is
 simply whichever is fewer changes away, and it comes out one-sided every time,
-with no tie anywhere for a preference to break.
+with no tie anywhere for a preference to break. It sends **melodic minor to
+major** — one note, its third, against two from the minor it is named after —
+and the page prints that rather than making an exception for a scale whose name
+suggests the other reading.
 
 **The changed degrees are a list of interval names, not a sentence.** "Minor
 with a raised sixth" inflects in German and would need grammar this page has no

@@ -10,7 +10,12 @@ import {
   isCellGroupId,
   type CellWeights,
 } from '@/lib/music/rhythmCells'
-import { DEFAULT_TONIC_KEYS, isModeId, isTonicKey, type ModeId } from '@/lib/music/scale'
+import {
+  DEFAULT_TONIC_KEYS,
+  isMelodyModeId,
+  isTonicKey,
+  type ModeId,
+} from '@/lib/music/scale'
 
 /**
  * What the player is allowed to be asked.
@@ -167,7 +172,9 @@ function parseSettings(value: unknown): MelodySettings | undefined {
   if (typeof value !== 'object' || value === null) return undefined
   const raw = value as Record<string, unknown>
 
-  const modes = stringArray(raw.modes)?.filter(isModeId) ?? []
+  // Melodic minor is not a key a melody can be written in — see
+  // `allowedModes` — so a stored setting naming it falls away here.
+  const modes = stringArray(raw.modes)?.filter(isMelodyModeId) ?? []
   const tonics = stringArray(raw.tonics)?.filter(isTonicKey) ?? []
   const clefs = stringArray(raw.clefs)?.filter(isClefId) ?? []
   const meters = stringArray(raw.meters)?.filter(isMeterKey) ?? []

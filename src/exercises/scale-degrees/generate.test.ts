@@ -73,6 +73,15 @@ describe('every question it builds', () => {
     expect(questions.length).toBeGreaterThan(100)
   })
 
+  it('never puts a melody in melodic minor, even asked for one', () => {
+    // A melody moves both ways and melodic minor's sixth and seventh depend
+    // on which; there is no one spelling for a line to be drawn from. The
+    // spec above asks for every mode there is, and this is the one it does
+    // not get. Harmonic minor is a key like any other and comes through.
+    expect(questions.some((question) => question.mode === 'melodicMinor')).toBe(false)
+    expect(questions.some((question) => question.mode === 'harmonicMinor')).toBe(true)
+  })
+
   it('names a key signature that spells its own scale', () => {
     for (const question of questions) {
       expect(
