@@ -232,6 +232,26 @@ describe('the draft as notation', () => {
     expect(onsetsOf(nodes)).toEqual([0, 20, 40, 60, 120])
   })
 
+  it('brackets two triplets in a row separately', () => {
+    // Both brackets say `3`, so gathering them by division alone ran the two
+    // beats together — six notes under one beam and a single `3`, which is a
+    // sextuplet and not what was typed.
+    let draft = emptyDraft(FOUR_FOUR)
+    for (const beat of [0, 1]) {
+      draft = arm(draft, 3)
+      for (let i = 0; i < 3; i += 1) draft = append(draft, note(8))
+      expect(draft.tuplet).toBeUndefined()
+      expect(draftTicks(draft)).toBe((beat + 1) * TICKS_PER_BEAT)
+    }
+
+    const nodes = draftNodes(draft)[0] ?? []
+    const tuplets = nodes.filter((node) => node.kind === 'tuplet')
+
+    expect(tuplets).toHaveLength(2)
+    expect(tuplets.every((node) => onsetsOf([node]).length === 3)).toBe(true)
+    expect(onsetsOf(nodes)).toEqual([0, 20, 40, 60, 80, 100])
+  })
+
   it('grows without ever moving what is already there', () => {
     const keys = [note(4), note(8), note(8), note(16), note(16), note(8), note(2)]
     let previous: number[] = []

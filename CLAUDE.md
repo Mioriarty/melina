@@ -1193,6 +1193,15 @@ switch was still down. The tuplet switch is not one of them — a bracket change
 how long a value lasts, so it belongs to the draft, which is the thing that
 knows where the beat boundaries are, and it stays on until its beat is full.
 
+**The beat is what ends a bracket, not the division changing.** A bracket is
+beat-local, so two triplets in a row are two brackets that both say `3`;
+gathering the draft's entries by division alone ran them together into one
+node, and what came out was six notes under a single beam and a single `3` —
+a sextuplet, which is not what was typed and not what was heard. `draftNodes`
+closes a run at its own beat for that reason. The generated answer never had
+the bug, because `notateRhythm` spells a tuplet beat at a time by
+construction.
+
 A level's `cellWeights` does two jobs with one field: a group at `0` is not in
 the level at all, and the rest are relative likelihoods. That is deliberate —
 "which subdivisions" and "how often" are the same question, and splitting them

@@ -300,11 +300,22 @@ function barNodes(meter: TimeSignature, placed: readonly Placed[]): RhythmNode[]
       continue
     }
 
-    // Everything entered under the same bracket, which by construction sits
-    // inside one beat.
+    // Everything entered under the same bracket.
+    //
+    // **The beat is what ends the run, not the division changing.** A bracket
+    // is beat-local — it may only open on an untouched beat and closes the
+    // moment that beat is exactly full — so two triplets in a row are two
+    // brackets that both say `3`, and gathering by division alone ran them
+    // together: six notes under one beam and a single `3`, which is a
+    // sextuplet and not what was typed.
+    const beat = Math.floor(current.at / TICKS_PER_BEAT)
     const run: RhythmSymbol[] = []
-    while (index < placed.length && placed[index]?.entry.tuplet === division) {
-      run.push(toSymbol(placed[index] as Placed))
+    while (index < placed.length) {
+      const next = placed[index]
+      if (next === undefined) break
+      if (next.entry.tuplet !== division) break
+      if (Math.floor(next.at / TICKS_PER_BEAT) !== beat) break
+      run.push(toSymbol(next))
       index += 1
     }
 
