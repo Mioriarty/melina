@@ -53,7 +53,7 @@ export function DegreeScore({
   onPlay,
   status,
 }: DegreeScoreProps) {
-  const { t } = useTranslation('exercise')
+  const { t } = useTranslation(['exercise', 'common'])
   const names = useMusicNames()
 
   const comparing = answer !== undefined
@@ -93,9 +93,9 @@ export function DegreeScore({
         >
           <Icon name={status === 'failed' ? 'close' : 'volume'} size={16} />
           {status === 'failed'
-            ? t('play.unavailable')
+            ? t('common:play.unavailable')
             : status === 'loading'
-              ? t('play.loading')
+              ? t('common:play.loading')
               : t('degrees.replay')}
         </button>
       </div>

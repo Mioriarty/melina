@@ -1,7 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
 
+import { FigureExample } from '@/components/explain/FigureExamples'
 import { parseWanted } from '@/exercises/thoroughbass-shared/generate'
 import { canonicalFigures, figureKey, figurePitches } from '@/lib/music/figuredBass'
 import { i18n } from '@/lib/i18n'
@@ -27,6 +28,24 @@ vi.mock('@/lib/notation/verovio', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/notation/verovio')>()),
   preloadEngraver: () => undefined,
   renderMei: vi.fn(() => Promise.resolve('<svg xmlns="http://www.w3.org/2000/svg"/>')),
+}))
+
+/**
+ * The engine is stubbed down to what the page actually reaches: the gesture
+ * the AudioContext needs, and the call that schedules the notes. There is no
+ * AudioContext in jsdom and no reason for one — what is worth asserting is
+ * *which notes* each half of a pair asks for.
+ */
+const { playStruck, unlockAudio } = vi.hoisted(() => ({
+  playStruck: vi.fn((_notes: readonly unknown[]) => Promise.resolve()),
+  unlockAudio: vi.fn(() => Promise.resolve()),
+}))
+
+vi.mock('@/lib/audio/engine', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/audio/engine')>()),
+  playStruck,
+  unlockAudio,
+  stopPlayback: () => undefined,
 }))
 
 function open(search = '') {
@@ -101,6 +120,34 @@ describe('the engraved examples', () => {
     open()
     expect(screen.getByText(i18n.t('guide:figures.reading.overC'))).toBeTruthy()
     expect(screen.getByText(i18n.t('guide:figures.reading.overE'))).toBeTruthy()
+  })
+
+  /**
+   * **The comparison, made audible.** The printed half sounds its bass alone,
+   * because a bass alone is what is printed; the played half sounds the whole
+   * chord. Pressing one and then the other is the shortest statement of what a
+   * figured bass is, and it costs no new code at all — `chordSchedule` strikes
+   * the bass of an event whose chords are empty and nothing else.
+   */
+  async function pressed(sounding: boolean) {
+    playStruck.mockClear()
+    const view = render(<FigureExample bass="G3" figure="6" sounding={sounding} />)
+
+    fireEvent.click(await waitFor(() => screen.getByRole('button')))
+    await waitFor(() => expect(playStruck).toHaveBeenCalledTimes(1))
+
+    const notes = playStruck.mock.calls[0]?.[0] ?? []
+    view.unmount()
+    return notes
+  }
+
+  it('sounds the bass alone where only the bass is printed', async () => {
+    expect(await pressed(false)).toHaveLength(1)
+  })
+
+  it('sounds the whole chord where the chord is drawn', async () => {
+    // The bass, and the two notes a 6 over it stands for.
+    expect(await pressed(true)).toHaveLength(3)
   })
 
   it('puts what is printed beside what is played', async () => {

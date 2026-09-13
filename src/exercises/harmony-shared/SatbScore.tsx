@@ -65,7 +65,7 @@ export function SatbScore({
   onPlay,
   status,
 }: SatbScoreProps) {
-  const { t } = useTranslation('exercise')
+  const { t } = useTranslation(['exercise', 'common'])
   const names = useMusicNames()
 
   const { progression, satz } = question
@@ -126,9 +126,9 @@ export function SatbScore({
         >
           <Icon name={status === 'failed' ? 'close' : 'volume'} size={16} />
           {status === 'failed'
-            ? t('play.unavailable')
+            ? t('common:play.unavailable')
             : status === 'loading'
-              ? t('play.loading')
+              ? t('common:play.loading')
               : t('harmony.replay')}
         </button>
       </div>

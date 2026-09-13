@@ -1,7 +1,10 @@
+import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { PlayableExample } from '@/components/explain/PlayableExample'
 import { Score } from '@/components/notation/Score'
 import { useMusicNames } from '@/hooks/useMusicNames'
+import { playChord } from '@/lib/audio/engine'
 import {
   chordPitches,
   chordSize,
@@ -29,25 +32,45 @@ import { degreeShorthand } from './modeSeries'
  *
  * The one thing written by hand is which root each example is *shown* on,
  * which is an illustration rather than a rule — see `pages/chordExamples.ts`.
+ *
+ * **Every staff is pressable.** A quality is a sound before it is a name, and
+ * an inversion is the clearest thing on the page to hear rather than read —
+ * `closePosition` against `Terzlage` is two pictures that differ by one note
+ * and two sounds that plainly differ. Always a block, which is what the
+ * hardest hearing levels ask for; the arpeggio is a difficulty axis and there
+ * is no difficulty here.
  */
 
-/** The staff on its own, with the spoken description a screen reader gets. */
+/** The staff, which is also the play button. */
 function ChordStaff({ chord, className }: { chord: Chord; className?: string }) {
   const { t } = useTranslation('guide')
   const names = useMusicNames()
 
-  const pitches = chordPitches(chord)
+  // Memoised so the sound keeps its identity across renders — see
+  // `PlayableExample`, whose hook silences playback when it changes.
+  const pitches = useMemo(() => chordPitches(chord), [chord])
+  const sound = useCallback(() => playChord(pitches ?? []), [pitches])
+
   if (pitches === undefined) return null
 
+  const label = t('chords.staff', {
+    chord: names.chordName(tonicKey(chord.root), chord.quality),
+    pitches: pitches.map((note) => names.pitchSpoken(note)).join(', '),
+  })
+
   return (
-    <Score
-      className={cn('max-h-32', className)}
-      mei={chordMei({ pitches, clef: 'treble' })}
-      label={t('chords.staff', {
-        chord: names.chordName(tonicKey(chord.root), chord.quality),
-        pitches: pitches.map((note) => names.pitchSpoken(note)).join(', '),
-      })}
-    />
+    <PlayableExample
+      sound={sound}
+      label={label}
+      // The staff's own classes, so the button adds no geometry.
+      className={cn('block w-full', className)}
+    >
+      <Score
+        className="max-h-32"
+        mei={chordMei({ pitches, clef: 'treble' })}
+        label={label}
+      />
+    </PlayableExample>
   )
 }
 
@@ -69,8 +92,15 @@ export function ChordExample({ quality, root }: ChordExampleProps) {
   const { t } = useTranslation('guide')
   const names = useMusicNames()
 
-  const tonic = parseTonicKey(root)
-  if (tonic === undefined) return null
+  // Built once from the two things that name it, rather than per render: the
+  // staff is also a play button, and `usePlayback` reads a new sound as a new
+  // question. An example is the same chord for as long as it is on the page.
+  const chord = useMemo(() => {
+    const tonic = parseTonicKey(root)
+    return tonic === undefined ? undefined : closeChord(tonic, quality)
+  }, [root, quality])
+
+  if (chord === undefined) return null
 
   const summary = chordSummary(quality)
 
@@ -83,7 +113,7 @@ export function ChordExample({ quality, root }: ChordExampleProps) {
         </p>
       </div>
 
-      <ChordStaff chord={closeChord(tonic, quality)} className="mt-2" />
+      <ChordStaff chord={chord} className="mt-2" />
 
       <ol className="mt-2 flex flex-wrap justify-center gap-1.5">
         {summary.degrees.map((degree) => (
@@ -132,11 +162,15 @@ export function ChordPosition({
 }: ChordPositionProps) {
   const names = useMusicNames()
 
-  const tonic = parseTonicKey(root)
-  if (tonic === undefined) return null
+  // Built once, for the reason `ChordExample`'s is.
+  const chord = useMemo(() => {
+    const tonic = parseTonicKey(root)
+    if (tonic === undefined) return undefined
+    const base = closeChord(tonic, quality, inversion)
+    return top === undefined ? base : ({ ...base, top } satisfies Chord)
+  }, [root, quality, inversion, top])
 
-  const base = closeChord(tonic, quality, inversion)
-  const chord: Chord = top === undefined ? base : { ...base, top }
+  if (chord === undefined) return null
 
   return (
     <figure className="rounded-2xl border border-rule bg-paper-raised p-4">

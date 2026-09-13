@@ -11,5 +11,11 @@
     "pending_zero": "Progress. No streak yet.",
     "pending_one": "Progress. {{count}} day in a row, but nothing practised today yet.",
     "pending_other": "Progress. {{count}} days in a row, but nothing practised today yet."
+  },
+  "play": {
+    "hint": "Tap the notes to hear them",
+    "scoreLabel": "{{notes}}. Press to hear it.",
+    "loading": "Loading the instrument",
+    "unavailable": "Playback unavailable"
   }
 }

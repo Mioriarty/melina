@@ -225,12 +225,6 @@
     "twoNotes": "{{clef}}, Tonart {{key}}: {{first}} und {{second}}",
     "notes": "{{clef}}: {{pitches}}"
   },
-  "play": {
-    "hint": "Zum Hören auf die Noten tippen",
-    "scoreLabel": "{{notes}}. Zum Anhören drücken.",
-    "loading": "Instrument wird geladen",
-    "unavailable": "Wiedergabe nicht verfügbar"
-  },
   "summary": {
     "title": "Runde beendet",
     "workOn": "Woran du arbeiten kannst",

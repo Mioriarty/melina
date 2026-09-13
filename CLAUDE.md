@@ -863,10 +863,16 @@ count-in are never wanted separately. It is also the most expensive preload
 there is, and still a preload: the exercise plays by itself the moment a
 question appears.
 
-`playInterval` and `playScale` are both thin wrappers over `playSequence`, which
-schedules a run of notes; a gap of zero is what makes an interval harmonic. A
+`playInterval`, `playScale` and `playChord` are all thin wrappers over
+`playSequence`, which schedules a run of notes; a gap of zero is what makes an
+interval harmonic and is the same arithmetic that makes a chord a block. A
 scale is played faster and shorter than an interval — eight notes at interval pace
-is a series of separate notes rather than a scale.
+is a series of separate notes rather than a scale, and a chord struck on its own
+rings longer than either, because there is nothing before or after it to place it
+against. `playChord` is what a guide's engraved example needs, where the chord is
+being shown rather than asked about; the hearing exercise goes through
+`playStruck` instead, because there whether the notes arrive together or one at a
+time is the difficulty axis its levels are built on.
 
 `playStruck` sounds a figured bass, and **when each note sounds is not decided
 in `engine.ts`**: `chordSchedule` is pure arithmetic over the question, the same
@@ -2169,6 +2175,36 @@ a levels-first exercise that screen is behind Custom — so a guide that matters
 before the first round is a stop on the path as well. Both of them keep their
 question mark too: `?from=` says which exercise opened it, and with no `?from=`
 at all it came from the path and returns there.
+
+**Every engraved example is playable**, by the rule the round screens already
+follow: the notation is the play button. A page explaining what a Sextakkord
+is, or what `♭5` resolves to, or how lydian differs from ionian, is describing
+a _sound_, and a reader who can only look at it is being asked to take the
+whole page on trust. There is nothing to give away here as there is in a
+reading question, so an example is pressable from the moment it is drawn.
+
+`components/explain/PlayableExample.tsx` is the wrapper, and it **wraps the
+staff rather than replacing it**: the caller passes the classes the `Score`
+already carried, so the button adds nothing to the layout but
+`position: relative`. That matters most in the figured bass guide, where the
+height has to come down a definite chain or the staff sizes the box that was
+supposed to size it. `PlayMark` — the speaker in the corner, and the two
+states it turns into — moved to `components/notation/` when a second thing
+needed it, and its strings moved with it from the `exercise` namespace to
+`common`.
+
+Each example holds its own `usePlayback`, so **what it is built from has to be
+memoised**: the hook hangs its silence on the sound's identity changing, so a
+closure rebuilt every render would stop the note it had just started. An
+example is the same chord for as long as it is on the page, which is the
+honest reason to compute it once.
+
+**A figured bass pair is the comparison made audible.** The printed half
+sounds its bass alone, because a bass alone is what is printed; the played
+half sounds the whole chord. That cost no new code — `chordSchedule` strikes
+the bass of an event whose chords are empty and nothing else — and it is what
+`FiguredBassPage.test.ts` pins, since the claim is about which notes each half
+asks for rather than about anything on the page.
 
 Guides are registered in the curriculum — `GuideDef`, on the category they
 serve — and `stations()` emits them **before** that category's exercises. They

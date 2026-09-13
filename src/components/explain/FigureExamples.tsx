@@ -1,8 +1,12 @@
+import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { PlayableExample } from '@/components/explain/PlayableExample'
 import { Score } from '@/components/notation/Score'
+import { chordSchedule } from '@/exercises/thoroughbass-shared/chordSchedule'
 import { describeEvent, parseWanted } from '@/exercises/thoroughbass-shared/generate'
 import { useMusicNames } from '@/hooks/useMusicNames'
+import { playStruck } from '@/lib/audio/engine'
 import type { KeySignatureId } from '@/lib/music/keySignature'
 import { parsePitch } from '@/lib/music/pitch'
 import { centreFigures } from '@/lib/notation/figureAlignment'
@@ -27,6 +31,13 @@ import { cn } from '@/lib/utils/cn'
  * assembles a question with — so where the notes sit, and how many chords a
  * bass note carries, are the exercise's own answers rather than a second set
  * kept in step by hand.
+ *
+ * **Both halves of a pair are pressable, and that is the comparison made
+ * audible.** The printed side sounds its bass alone, because a bass alone is
+ * what is printed; the played side sounds the whole chord. Pressing one and
+ * then the other is the shortest possible statement of what a figured bass is.
+ * `chordSchedule` does both without being told which: an event whose chords
+ * are empty strikes its bass and nothing else.
  */
 
 export interface FigureExampleProps {
@@ -60,19 +71,42 @@ export function FigureExample({
   const { t } = useTranslation('guide')
   const names = useMusicNames()
 
-  const root = parsePitch(bass)
-  const figures = parseWanted(figure)
-  const event =
-    root === undefined || figures === undefined
-      ? undefined
-      : describeEvent(root, keySignature, figures)
+  // Built once from the strings that name it, rather than per render: the staff
+  // is also a play button, and `usePlayback` reads a new sound as a new
+  // question. An example is the same bass for as long as it is on the page.
+  const question = useMemo(() => {
+    const root = parsePitch(bass)
+    const figures = parseWanted(figure)
+    if (root === undefined || figures === undefined) return undefined
 
-  if (root === undefined || figures === undefined || event === undefined) return null
+    const event = describeEvent(root, keySignature, figures)
+    if (event === undefined) return undefined
 
-  // Off is what the page actually prints: the bass and its figures, with the
-  // staff above still empty.
-  const chords = sounding ? event.chords : event.chords.map(() => [])
+    // Off is what the page actually prints: the bass and its figures, with the
+    // staff above still empty.
+    const chords = sounding ? event.chords : event.chords.map(() => [])
+    return { root, figures, event: { ...event, chords } }
+  }, [bass, figure, keySignature, sounding])
+
+  const sound = useCallback(
+    () =>
+      playStruck(
+        question === undefined
+          ? []
+          : chordSchedule({ keySignature, events: [question.event] }),
+      ),
+    [question, keySignature],
+  )
+
+  if (question === undefined) return null
+
+  const { root, figures, event } = question
   const printed = figures.map(figureText).join(' – ')
+  const label = t('figures.exampleLabel', {
+    bass: names.pitchSpoken(root),
+    figure: printed === '' ? t('figures.none') : printed,
+    key: names.keyMajor(keySignature),
+  })
 
   return (
     <figure className={cn('m-0 grid justify-items-center gap-2', className)}>
@@ -85,23 +119,20 @@ export function FigureExample({
         same chain `SCORE_BOX` sets up on a round screen.
       */}
       <div className="flex h-56 w-full items-stretch justify-center sm:h-64">
-        <Score
-          className="h-full min-h-0 flex-1"
-          // Verovio puts a figure's left edge on its note rather than its
-          // middle — see `centreFigures`. Every figured bass in the app goes
-          // through it, the guide included.
-          decorate={centreFigures}
-          mei={thoroughbassMei({
-            keySignature,
-            events: [{ bass: root, figures, chords }],
-          })}
-          profile={THOROUGHBASS_EXAMPLE_PROFILE}
-          label={t('figures.exampleLabel', {
-            bass: names.pitchSpoken(root),
-            figure: printed === '' ? t('figures.none') : printed,
-            key: names.keyMajor(keySignature),
-          })}
-        />
+        {/* The button stretches with the row and hands the height on, so the
+            definite chain the comment above describes is unbroken. */}
+        <PlayableExample sound={sound} label={label} className="flex min-h-0 flex-1">
+          <Score
+            className="h-full min-h-0 flex-1"
+            // Verovio puts a figure's left edge on its note rather than its
+            // middle — see `centreFigures`. Every figured bass in the app goes
+            // through it, the guide included.
+            decorate={centreFigures}
+            mei={thoroughbassMei({ keySignature, events: [event] })}
+            profile={THOROUGHBASS_EXAMPLE_PROFILE}
+            label={label}
+          />
+        </PlayableExample>
       </div>
       {caption !== undefined && (
         <figcaption className="text-center text-sm leading-snug text-ink-muted">

@@ -163,7 +163,7 @@ describe('realising a bass', () => {
     await screen.findByText(t('exercise:round.prompt.realizing'))
 
     expect(labels(container)).not.toContain(
-      tv('exercise:play.scoreLabel', { notes: '' }).trim(),
+      tv('common:play.scoreLabel', { notes: '' }).trim(),
     )
     expect(playStruck).not.toHaveBeenCalled()
   })

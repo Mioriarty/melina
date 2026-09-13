@@ -77,6 +77,14 @@ const MELODIC_GAP = 0.62
  */
 const SCALE_GAP = 0.4
 const SCALE_NOTE_DURATION = 0.6
+/**
+ * How long a chord struck on its own rings.
+ *
+ * Longer than a single note of an interval: there is nothing before or after
+ * it to place it against, so what the ear has to work on is the whole sound
+ * standing still.
+ */
+const BLOCK_CHORD_DURATION = 2.3
 /** Lead-in, so the first note is never clipped by scheduling jitter. */
 const LEAD_IN = 0.06
 
@@ -153,6 +161,21 @@ export async function playInterval(
  */
 export async function playScale(pitches: readonly Pitch[]): Promise<void> {
   await playSequence(pitches, { gap: SCALE_GAP, duration: SCALE_NOTE_DURATION })
+}
+
+/**
+ * Sound a chord: every note at once, ringing together.
+ *
+ * The sibling of `playInterval` and `playScale`, and a wrapper over the same
+ * `playSequence` — a gap of zero *is* a chord, which is the same arithmetic
+ * that makes a harmonic interval one. It is what a guide's engraved example
+ * needs, where the chord is being shown rather than asked about; the hearing
+ * exercise goes through `playStruck` instead, because there whether the notes
+ * arrive together or one at a time is the difficulty axis its levels are built
+ * on.
+ */
+export async function playChord(pitches: readonly Pitch[]): Promise<void> {
+  await playSequence(pitches, { gap: 0, duration: BLOCK_CHORD_DURATION })
 }
 
 /**

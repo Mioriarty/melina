@@ -1,7 +1,10 @@
+import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { PlayableExample } from '@/components/explain/PlayableExample'
 import { Score } from '@/components/notation/Score'
 import { useMusicNames } from '@/hooks/useMusicNames'
+import { playScale } from '@/lib/audio/engine'
 import { pitch } from '@/lib/music/pitch'
 import { scalePitches, tonicKey, type ModeId } from '@/lib/music/scale'
 import { scaleMei } from '@/lib/notation/mei'
@@ -23,7 +26,18 @@ import { degreeShorthand, modeSummary } from './modeSeries'
  * spells them, and the staff is keyless like every scale in the app: a mode is
  * read from the accidentals in front of its notes, and under a signature
  * F♯ mixolydian looks exactly like G major.
+ *
+ * **Every staff is pressable**, because what a mode *is* is a sound, and a
+ * page that only prints one is asking to be taken on trust. Ascending, which
+ * is how a scale is heard here and the only direction melodic minor has.
  */
+
+/**
+ * The one tonic every mode is drawn on — a module constant rather than a value
+ * built per render, so the notes derived from it keep their identity and the
+ * playback hook is not told the sound has changed on every render.
+ */
+const TONIC = pitch('C', 0, 4)
 
 export interface ModeExampleProps {
   mode: ModeId
@@ -33,9 +47,20 @@ export function ModeExample({ mode }: ModeExampleProps) {
   const { t } = useTranslation('guide')
   const names = useMusicNames()
 
-  const tonic = pitch('C', 0, 4)
-  const pitches = scalePitches(tonic, mode)
+  const pitches = useMemo(() => scalePitches(TONIC, mode), [mode])
   const summary = modeSummary(mode)
+
+  // Stable across renders, which is what `usePlayback` hangs its silence on:
+  // a closure rebuilt every render reads as the sound having changed, and the
+  // hook would silence what it had just started.
+  const sound = useCallback(() => playScale(pitches ?? []), [pitches])
+
+  // The notes themselves, the way every scale in the app is described. Read
+  // twice — by the staff and by the button around it — so it is named once.
+  const staffLabel = t('modes.mode.staff', {
+    scale: names.scaleName(tonicKey(TONIC), mode),
+    pitches: (pitches ?? []).map((note) => names.pitchSpoken(note)).join(', '),
+  })
 
   return (
     <section className="rounded-2xl border border-rule bg-paper-raised p-4">
@@ -52,16 +77,20 @@ export function ModeExample({ mode }: ModeExampleProps) {
       </div>
 
       {pitches !== undefined && (
-        <Score
-          className="mt-2 max-h-28"
-          mei={scaleMei({ pitches, clef: 'treble' })}
-          noteSpacing={SCALE_NOTE_SPACING}
-          // The notes themselves, the way every scale in the app is described.
-          label={t('modes.mode.staff', {
-            scale: names.scaleName(tonicKey(tonic), mode),
-            pitches: pitches.map((note) => names.pitchSpoken(note)).join(', '),
-          })}
-        />
+        <PlayableExample
+          sound={sound}
+          label={staffLabel}
+          // The staff's own classes, so the button adds no geometry: a block
+          // filling the card, exactly as the score did on its own.
+          className="mt-2 block w-full"
+        >
+          <Score
+            className="max-h-28"
+            mei={scaleMei({ pitches, clef: 'treble' })}
+            noteSpacing={SCALE_NOTE_SPACING}
+            label={staffLabel}
+          />
+        </PlayableExample>
       )}
 
       <ol className="mt-2 flex flex-wrap justify-center gap-1.5">

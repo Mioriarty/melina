@@ -32,7 +32,7 @@ export interface RhythmScoreProps {
 }
 
 export function RhythmScore({ meter, nodes, answer, onPlay, status }: RhythmScoreProps) {
-  const { t } = useTranslation('exercise')
+  const { t } = useTranslation(['exercise', 'common'])
   const names = useMusicNames()
 
   const comparing = answer !== undefined
@@ -64,9 +64,9 @@ export function RhythmScore({ meter, nodes, answer, onPlay, status }: RhythmScor
       >
         <Icon name={status === 'failed' ? 'close' : 'volume'} size={16} />
         {status === 'failed'
-          ? t('play.unavailable')
+          ? t('common:play.unavailable')
           : status === 'loading'
-            ? t('play.loading')
+            ? t('common:play.loading')
             : t('rhythm.replay')}
       </button>
 

@@ -225,12 +225,6 @@
     "twoNotes": "{{clef}}, key signature of {{key}}: {{first}} and {{second}}",
     "notes": "{{clef}}: {{pitches}}"
   },
-  "play": {
-    "hint": "Tap the notes to hear them",
-    "scoreLabel": "{{notes}}. Press to hear it.",
-    "loading": "Loading the instrument",
-    "unavailable": "Playback unavailable"
-  },
   "summary": {
     "title": "Round complete",
     "workOn": "What to work on",
