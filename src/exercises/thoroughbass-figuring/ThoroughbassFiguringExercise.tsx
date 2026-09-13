@@ -10,7 +10,6 @@ import { chordSchedule } from '@/exercises/thoroughbass-shared/chordSchedule'
 import type { ThoroughbassRoundSpec } from '@/exercises/thoroughbass-shared/generate'
 import { SetupScreen } from '@/exercises/thoroughbass-shared/SetupScreen'
 import type { ThoroughbassSettings } from '@/exercises/thoroughbass-shared/settings'
-import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { playStruck, unlockAudio } from '@/lib/audio/engine'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
 
@@ -37,7 +36,6 @@ const TITLE_KEY = 'curriculum:categories.thoroughbass.exercises.figuring.title'
 export default function ThoroughbassFiguringExercise() {
   const stored = useSetting(FIGURING_SETTINGS)
   const writeSettings = useSettingWriter(FIGURING_SETTINGS)
-  const reducedMotion = useReducedMotion()
   const { t } = useTranslation('exercise')
 
   const [draft, setDraft] = useState<ThoroughbassSettings>()
@@ -148,7 +146,6 @@ export default function ThoroughbassFiguringExercise() {
       question={question}
       onPlay={audio.play}
       playStatus={audio.status}
-      reducedMotion={reducedMotion}
       onAnswer={round.answer}
       onNext={round.next}
       onQuit={round.toLevels}

@@ -44,7 +44,6 @@ export interface BassRoundScreenProps {
   question: HarmonyQuestion
   onPlay: () => void
   playStatus: PlaybackStatus
-  reducedMotion: boolean
   onAnswer: (chosen: BassAnswer, ms: number) => void
   onNext: () => void
   onQuit: () => void
@@ -56,7 +55,6 @@ export function BassRoundScreen({
   question,
   onPlay,
   playStatus,
-  reducedMotion,
   onAnswer,
   onNext,
   onQuit,
@@ -82,7 +80,6 @@ export function BassRoundScreen({
       total={total}
       prompt={t('round.prompt.bass')}
       correct={correct}
-      reducedMotion={reducedMotion}
       onAnswer={onAnswer}
       onNext={onNext}
       onQuit={onQuit}

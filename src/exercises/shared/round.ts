@@ -33,6 +33,3 @@ export type ActivePhase<TQuestion, TAnswer> = Extract<
   Phase<TQuestion, TAnswer>,
   { name: 'asking' | 'revealed' }
 >
-
-/** How long a correct answer stays on screen before the next question. */
-export const CORRECT_DELAY_MS = 750

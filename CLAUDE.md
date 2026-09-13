@@ -1121,6 +1121,17 @@ Reading exercises fetch their samples on that first press rather than up
 front. The piano is tens of megabytes and most reading rounds never ask for
 it; a hearing exercise preloads, because it plays by itself.
 
+**Nothing advances by itself, not even a right answer.** A correct one used
+to move on after three quarters of a second, which read as brisk and quietly
+took away the thing the reveal exists for: on a reading or a writing question
+the staff becomes pressable only when the answer is out, so that moment is the
+_first_ one at which the music can be heard at all, and a screen that leaves on
+its own spends it. Knowing what you wrote and hearing it are different things,
+and the second is most of why you wrote it down. So both verdicts wait to be
+dismissed and the difference between them is what is said rather than how long
+it stays — which is also what left `reducedMotion` with nothing to gate on a
+round screen, since there is no longer a duration to switch off.
+
 **The frame around the notation is the same whether or not it is pressable**,
 and that is load-bearing rather than tidiness. It used not to be: a plain score
 was a direct child of the stretching row, so a box capped below the room

@@ -30,7 +30,6 @@ export interface RhythmRoundScreenProps {
   tuplets: readonly number[]
   onPlay: () => void
   playStatus: PlaybackStatus
-  reducedMotion: boolean
   onAnswer: (chosen: Rhythm, ms: number) => void
   onNext: () => void
   onQuit: () => void
@@ -57,7 +56,6 @@ export function RhythmRoundScreen({
   tuplets,
   onPlay,
   playStatus,
-  reducedMotion,
   onAnswer,
   onNext,
   onQuit,
@@ -74,7 +72,6 @@ export function RhythmRoundScreen({
       total={total}
       prompt={t('round.prompt.rhythm')}
       correct={question.rhythm}
-      reducedMotion={reducedMotion}
       onAnswer={onAnswer}
       onNext={onNext}
       onQuit={onQuit}

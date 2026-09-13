@@ -10,7 +10,6 @@ import { useIntervalRound } from '@/exercises/interval-shared/useIntervalRound'
 import { LevelsScreen } from '@/exercises/shared/LevelsScreen'
 import { usePlayback } from '@/exercises/shared/usePlayback'
 import { useMusicNames } from '@/hooks/useMusicNames'
-import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { playInterval } from '@/lib/audio/engine'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
 import { harmonicIntervalMei } from '@/lib/notation/mei'
@@ -37,7 +36,6 @@ export default function IntervalReadingExercise() {
   const names = useMusicNames()
   const stored = useSetting(INTERVAL_READING_SETTINGS)
   const writeSettings = useSettingWriter(INTERVAL_READING_SETTINGS)
-  const reducedMotion = useReducedMotion()
 
   const [draft, setDraft] = useState<IntervalReadingSettings>()
   const settings = draft ?? stored
@@ -158,7 +156,6 @@ export default function IntervalReadingExercise() {
         first: names.pitchSpoken(question.lower),
         second: names.pitchSpoken(question.upper),
       })}
-      reducedMotion={reducedMotion}
       onAnswer={round.answer}
       onNext={round.next}
       onQuit={round.toLevels}

@@ -20,7 +20,6 @@ export interface IntervalRoundScreenProps {
   /** Sound the question — only once every note is on screen. */
   onPlay?: (() => void) | undefined
   playStatus?: PlaybackStatus
-  reducedMotion: boolean
   onAnswer: (chosen: Interval, ms: number) => void
   onNext: () => void
   onQuit: () => void

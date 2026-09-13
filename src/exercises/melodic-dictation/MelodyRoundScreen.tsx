@@ -36,7 +36,6 @@ export interface MelodyRoundScreenProps {
   tuplets: readonly number[]
   onPlay: () => void
   playStatus: PlaybackStatus
-  reducedMotion: boolean
   onAnswer: (chosen: MelodyAnswer, ms: number) => void
   onNext: () => void
   onQuit: () => void
@@ -69,7 +68,6 @@ export function MelodyRoundScreen({
   tuplets,
   onPlay,
   playStatus,
-  reducedMotion,
   onAnswer,
   onNext,
   onQuit,
@@ -95,7 +93,6 @@ export function MelodyRoundScreen({
       total={total}
       prompt={t('round.prompt.melody')}
       correct={{ phrase: question.phrase, pitches: question.pitches }}
-      reducedMotion={reducedMotion}
       onAnswer={onAnswer}
       onNext={onNext}
       onQuit={onQuit}

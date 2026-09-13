@@ -27,7 +27,6 @@ export interface DegreeRoundScreenProps {
   alterations: boolean
   onPlay: () => void
   playStatus: PlaybackStatus
-  reducedMotion: boolean
   onAnswer: (chosen: readonly Degree[], ms: number) => void
   onNext: () => void
   onQuit: () => void
@@ -53,7 +52,6 @@ export function DegreeRoundScreen({
   alterations,
   onPlay,
   playStatus,
-  reducedMotion,
   onAnswer,
   onNext,
   onQuit,
@@ -76,7 +74,6 @@ export function DegreeRoundScreen({
       total={total}
       prompt={t('round.prompt.degree')}
       correct={question.degrees}
-      reducedMotion={reducedMotion}
       onAnswer={onAnswer}
       onNext={onNext}
       onQuit={onQuit}

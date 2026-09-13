@@ -14,7 +14,6 @@ import type { ChordSettings } from '@/exercises/chord-shared/settings'
 import { useChordRound } from '@/exercises/chord-shared/useChordRound'
 import { LevelsScreen } from '@/exercises/shared/LevelsScreen'
 import { usePlayback } from '@/exercises/shared/usePlayback'
-import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { playStruck, unlockAudio } from '@/lib/audio/engine'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
 import { preloadEngraver } from '@/lib/notation/verovio'
@@ -43,7 +42,6 @@ export default function ChordHearingExercise() {
   const { t } = useTranslation(['exercise', 'common'])
   const stored = useSetting(CHORD_HEARING_SETTINGS)
   const writeSettings = useSettingWriter(CHORD_HEARING_SETTINGS)
-  const reducedMotion = useReducedMotion()
 
   const [draft, setDraft] = useState<ChordSettings>()
   const settings = draft ?? stored
@@ -166,7 +164,6 @@ export default function ChordHearingExercise() {
       question={question}
       spec={spec}
       prompt={t('exercise:chord.prompt.hearing')}
-      reducedMotion={reducedMotion}
       onPlay={audio.play}
       playStatus={audio.status}
       onAnswer={round.answer}

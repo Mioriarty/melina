@@ -27,7 +27,6 @@ export interface WritingRoundScreenProps {
   phase: ActivePhase<ChordQuestion, WritingAnswer>
   total: number
   question: ChordQuestion
-  reducedMotion: boolean
   onPlay: () => void
   playStatus: PlaybackStatus
   onAnswer: (chosen: WritingAnswer, ms: number) => void
@@ -55,7 +54,6 @@ export function WritingRoundScreen({
   phase,
   total,
   question,
-  reducedMotion,
   onPlay,
   playStatus,
   onAnswer,
@@ -88,7 +86,6 @@ export function WritingRoundScreen({
       total={total}
       prompt={t('chord.prompt.writing', { chord: asked })}
       correct={question.pitches}
-      reducedMotion={reducedMotion}
       onAnswer={onAnswer}
       onNext={onNext}
       onQuit={onQuit}

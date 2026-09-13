@@ -2,15 +2,16 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { RoundScreen } from './RoundScreen'
-import { CORRECT_DELAY_MS, type ActivePhase, type Answered } from './round'
+import type { ActivePhase, Answered } from './round'
 
 /**
  * The screen a question is asked on, shared by all four exercises.
  *
- * Its one piece of real behaviour is the reveal: a correct answer advances on
- * its own, and a wrong one waits to be dismissed, because the whole value of
- * getting it wrong is in looking at the answer. A mistake either way strands
- * the player mid-round.
+ * Its one piece of real behaviour is the reveal, and the rule there is that
+ * **nothing advances by itself**: a right answer waits to be dismissed exactly
+ * as a wrong one does, because the staff only becomes pressable once the
+ * answer is out and a screen that left on its own would take that moment away.
+ * A mistake either way strands the player mid-round.
  */
 
 vi.mock('@/components/notation/Score', () => ({
@@ -46,7 +47,6 @@ function screenAt(
       mei="<mei/>"
       scoreLabel="two notes"
       correct="right"
-      reducedMotion={false}
       {...(handlers.onPlay === undefined ? {} : { onPlay: handlers.onPlay })}
       {...(handlers.playStatus === undefined ? {} : { playStatus: handlers.playStatus })}
       keyboard={(binding) => (
@@ -112,12 +112,16 @@ describe('RoundScreen', () => {
     expect(ms).toBeGreaterThanOrEqual(2500)
   })
 
-  it('moves on by itself after a correct answer', () => {
+  it('waits after a correct answer, so the notes can still be heard', () => {
+    // The reveal is the first moment a reading or writing question can be
+    // played at all — moving on by itself gave that moment away.
     const onNext = vi.fn()
     screenAt({ name: 'revealed', index: 0, answer: answered(true) }, { onNext })
 
+    act(() => vi.advanceTimersByTime(60_000))
     expect(onNext).not.toHaveBeenCalled()
-    act(() => vi.advanceTimersByTime(CORRECT_DELAY_MS))
+
+    fireEvent.click(screen.getByRole('button', { name: /next question/i }))
     expect(onNext).toHaveBeenCalledTimes(1)
   })
 
@@ -126,7 +130,7 @@ describe('RoundScreen', () => {
     const onNext = vi.fn()
     screenAt({ name: 'revealed', index: 0, answer: answered(false) }, { onNext })
 
-    act(() => vi.advanceTimersByTime(CORRECT_DELAY_MS * 10))
+    act(() => vi.advanceTimersByTime(60_000))
     expect(onNext).not.toHaveBeenCalled()
 
     fireEvent.click(screen.getByRole('button', { name: /next question/i }))

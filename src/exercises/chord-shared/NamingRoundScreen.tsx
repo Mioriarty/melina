@@ -20,7 +20,6 @@ export interface NamingRoundScreenProps {
   spec: ChordRoundSpec
   /** `chord.prompt.reading` or `chord.prompt.hearing`. */
   prompt: string
-  reducedMotion: boolean
   onPlay: () => void
   playStatus: PlaybackStatus
   onAnswer: (chosen: ChordAnswer, ms: number) => void
@@ -47,7 +46,6 @@ export function NamingRoundScreen({
   question,
   spec,
   prompt,
-  reducedMotion,
   onPlay,
   playStatus,
   onAnswer,
@@ -73,7 +71,6 @@ export function NamingRoundScreen({
         inversion: question.chord.inversion,
         top: question.chord.top,
       }}
-      reducedMotion={reducedMotion}
       onAnswer={onAnswer}
       onNext={onNext}
       onQuit={onQuit}

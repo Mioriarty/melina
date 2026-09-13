@@ -16,7 +16,6 @@ import { useIntervalRound } from '@/exercises/interval-shared/useIntervalRound'
 import { LevelsScreen } from '@/exercises/shared/LevelsScreen'
 import { usePlayback } from '@/exercises/shared/usePlayback'
 import { useMusicNames } from '@/hooks/useMusicNames'
-import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { playInterval, unlockAudio } from '@/lib/audio/engine'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
 import { isMelodic } from '@/lib/music/direction'
@@ -42,7 +41,6 @@ export default function IntervalHearingExercise() {
   const names = useMusicNames()
   const stored = useSetting(INTERVAL_HEARING_SETTINGS)
   const writeSettings = useSettingWriter(INTERVAL_HEARING_SETTINGS)
-  const reducedMotion = useReducedMotion()
 
   const [draft, setDraft] = useState<IntervalHearingSettings>()
   const settings = draft ?? stored
@@ -190,7 +188,6 @@ export default function IntervalHearingExercise() {
       scoreLabel={scoreLabel}
       onPlay={play}
       playStatus={audio.status}
-      reducedMotion={reducedMotion}
       onAnswer={round.answer}
       onNext={round.next}
       onQuit={round.toLevels}

@@ -9,7 +9,6 @@ import type { HarmonySettings } from '@/exercises/harmony-shared/settings'
 import { useBassRound } from '@/exercises/harmony-shared/useHarmonyRound'
 import { LevelsScreen } from '@/exercises/shared/LevelsScreen'
 import { usePlayback } from '@/exercises/shared/usePlayback'
-import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { playStruck, unlockAudio } from '@/lib/audio/engine'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
 import { preloadEngraver } from '@/lib/notation/verovio'
@@ -37,7 +36,6 @@ export default function BassDictationExercise() {
   useTranslation(['exercise', 'common'])
   const stored = useSetting(BASS_DICTATION_SETTINGS)
   const writeSettings = useSettingWriter(BASS_DICTATION_SETTINGS)
-  const reducedMotion = useReducedMotion()
 
   const [draft, setDraft] = useState<HarmonySettings>()
   const settings = draft ?? stored
@@ -145,7 +143,6 @@ export default function BassDictationExercise() {
       question={current}
       onPlay={play}
       playStatus={status}
-      reducedMotion={reducedMotion}
       onAnswer={round.answer}
       onNext={round.next}
       onQuit={round.toLevels}

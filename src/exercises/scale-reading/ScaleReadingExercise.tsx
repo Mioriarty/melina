@@ -9,7 +9,6 @@ import { useScaleRound } from '@/exercises/scale-shared/useScaleRound'
 import { LevelsScreen } from '@/exercises/shared/LevelsScreen'
 import { usePlayback } from '@/exercises/shared/usePlayback'
 import { useMusicNames } from '@/hooks/useMusicNames'
-import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { playScale } from '@/lib/audio/engine'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
 import { scaleMei } from '@/lib/notation/mei'
@@ -35,7 +34,6 @@ const EXERCISE_ID = 'scales/reading'
 export default function ScaleReadingExercise() {
   const stored = useSetting(SCALE_READING_SETTINGS)
   const writeSettings = useSettingWriter(SCALE_READING_SETTINGS)
-  const reducedMotion = useReducedMotion()
   const { t } = useTranslation('exercise')
   const names = useMusicNames()
 
@@ -148,7 +146,6 @@ export default function ScaleReadingExercise() {
         clef: names.clefSpoken(question.clef),
         pitches: question.pitches.map((pitch) => names.pitchSpoken(pitch)).join(', '),
       })}
-      reducedMotion={reducedMotion}
       onAnswer={round.answer}
       onNext={round.next}
       onQuit={round.toLevels}

@@ -27,7 +27,6 @@ export interface FiguringRoundScreenProps {
   question: ThoroughbassQuestion
   onPlay: () => void
   playStatus: PlaybackStatus
-  reducedMotion: boolean
   onAnswer: (chosen: FiguringAnswer, ms: number) => void
   onNext: () => void
   onQuit: () => void
@@ -48,7 +47,6 @@ export function FiguringRoundScreen({
   question,
   onPlay,
   playStatus,
-  reducedMotion,
   onAnswer,
   onNext,
   onQuit,
@@ -84,7 +82,6 @@ export function FiguringRoundScreen({
       total={total}
       prompt={t('round.prompt.figuring')}
       correct={question.events.map((event) => event.figures)}
-      reducedMotion={reducedMotion}
       onAnswer={onAnswer}
       onNext={onNext}
       onQuit={onQuit}

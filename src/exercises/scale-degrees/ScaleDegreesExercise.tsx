@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 
 import { LevelsScreen } from '@/exercises/shared/LevelsScreen'
 import { usePlayback } from '@/exercises/shared/usePlayback'
-import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { playDegrees, unlockAudio } from '@/lib/audio/engine'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
 import { tonicTriad } from '@/lib/music/degree'
@@ -31,7 +30,6 @@ const EXERCISE_ID = 'scales/degrees'
 export default function ScaleDegreesExercise() {
   const stored = useSetting(DEGREE_SETTINGS)
   const writeSettings = useSettingWriter(DEGREE_SETTINGS)
-  const reducedMotion = useReducedMotion()
   const { t } = useTranslation('exercise')
 
   const [draft, setDraft] = useState<DegreeSettings>()
@@ -144,7 +142,6 @@ export default function ScaleDegreesExercise() {
       alterations={settings.alterations}
       onPlay={play}
       playStatus={audio.status}
-      reducedMotion={reducedMotion}
       onAnswer={round.answer}
       onNext={round.next}
       onQuit={round.toLevels}

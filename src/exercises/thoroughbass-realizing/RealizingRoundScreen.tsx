@@ -27,7 +27,6 @@ export interface RealizingRoundScreenProps {
   alterations: boolean
   onPlay: () => void
   playStatus: PlaybackStatus
-  reducedMotion: boolean
   onAnswer: (chosen: RealizingAnswer, ms: number) => void
   onNext: () => void
   onQuit: () => void
@@ -51,7 +50,6 @@ export function RealizingRoundScreen({
   alterations,
   onPlay,
   playStatus,
-  reducedMotion,
   onAnswer,
   onNext,
   onQuit,
@@ -98,7 +96,6 @@ export function RealizingRoundScreen({
       total={total}
       prompt={t('round.prompt.realizing')}
       correct={question.events.flatMap((event) => event.notes)}
-      reducedMotion={reducedMotion}
       onAnswer={onAnswer}
       onNext={onNext}
       onQuit={onQuit}

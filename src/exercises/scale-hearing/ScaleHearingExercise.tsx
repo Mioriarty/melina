@@ -14,7 +14,6 @@ import { useScaleRound } from '@/exercises/scale-shared/useScaleRound'
 import { LevelsScreen } from '@/exercises/shared/LevelsScreen'
 import { usePlayback } from '@/exercises/shared/usePlayback'
 import { useMusicNames } from '@/hooks/useMusicNames'
-import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { playScale, unlockAudio } from '@/lib/audio/engine'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
 import { scaleMei } from '@/lib/notation/mei'
@@ -37,7 +36,6 @@ const EXERCISE_ID = 'scales/hearing'
 export default function ScaleHearingExercise() {
   const stored = useSetting(SCALE_HEARING_SETTINGS)
   const writeSettings = useSettingWriter(SCALE_HEARING_SETTINGS)
-  const reducedMotion = useReducedMotion()
   const { t } = useTranslation('exercise')
   const names = useMusicNames()
 
@@ -171,7 +169,6 @@ export default function ScaleHearingExercise() {
       })}
       onPlay={play}
       playStatus={audio.status}
-      reducedMotion={reducedMotion}
       onAnswer={round.answer}
       onNext={round.next}
       onQuit={round.toLevels}

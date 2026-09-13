@@ -21,7 +21,6 @@ export interface ScaleRoundScreenProps {
   /** Sound the question — only once every note is on screen. */
   onPlay?: (() => void) | undefined
   playStatus?: PlaybackStatus
-  reducedMotion: boolean
   onAnswer: (chosen: ModeId, ms: number) => void
   onNext: () => void
   onQuit: () => void

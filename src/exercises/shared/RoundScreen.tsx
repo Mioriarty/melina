@@ -8,7 +8,7 @@ import { Icon } from '@/components/ui/Icon'
 import { cn } from '@/lib/utils/cn'
 
 import { PlayableScore } from './PlayableScore'
-import { CORRECT_DELAY_MS, type ActivePhase, type Answered } from './round'
+import type { ActivePhase, Answered } from './round'
 import type { PlaybackStatus } from './usePlayback'
 
 /**
@@ -61,7 +61,6 @@ export interface RoundScreenProps<TQuestion, TAnswer> {
   onPlay?: (() => void) | undefined
   playStatus?: PlaybackStatus
   keyboard: (binding: KeyboardBinding<TAnswer>) => ReactNode
-  reducedMotion: boolean
   onAnswer: (chosen: TAnswer, ms: number) => void
   onNext: () => void
   onQuit: () => void
@@ -79,7 +78,6 @@ export function RoundScreen<TQuestion, TAnswer>({
   onPlay,
   playStatus,
   keyboard,
-  reducedMotion,
   onAnswer,
   onNext,
   onQuit,
@@ -95,14 +93,6 @@ export function RoundScreen<TQuestion, TAnswer>({
 
   const revealed = phase.name === 'revealed'
   const answer = phase.name === 'revealed' ? phase.answer : undefined
-
-  // A correct answer advances on its own; a wrong one waits to be dismissed,
-  // because the whole value of getting it wrong is in looking at the answer.
-  useEffect(() => {
-    if (answer === undefined || !answer.correct) return
-    const timer = setTimeout(onNext, reducedMotion ? 0 : CORRECT_DELAY_MS)
-    return () => clearTimeout(timer)
-  }, [answer, onNext, reducedMotion])
 
   const handleAnswer = useCallback(
     (chosen: TAnswer) => onAnswer(chosen, Date.now() - askedAt.current),
@@ -210,6 +200,22 @@ function Progress({
   )
 }
 
+/**
+ * The verdict, and the way on.
+ *
+ * **Nothing advances by itself, not even a right answer.** It used to: a
+ * correct one moved on after three quarters of a second, which read as brisk
+ * and quietly took away the thing the reveal exists for. The staff only
+ * becomes pressable once every note is on screen — see `PlayableScore` — so on
+ * a reading or a writing question the moment the answer lands is the *first*
+ * moment the music can be heard at all, and a screen that leaves on its own
+ * gives that moment away. Knowing what you wrote and hearing it are different
+ * things, and the second is most of why you wrote it down.
+ *
+ * So both verdicts wait to be dismissed, and the difference between them is
+ * what is said rather than how long it stays. Never colour alone: the glyph
+ * carries the verdict as well as the colour does.
+ */
 function Feedback<TQuestion, TAnswer>({
   answer,
   onNext,
@@ -219,32 +225,32 @@ function Feedback<TQuestion, TAnswer>({
 }) {
   const { t } = useTranslation('exercise')
 
-  if (answer.correct) {
-    return (
-      <p className="flex items-center gap-1.5 text-sm font-medium text-correct">
-        <Icon name="correct" size={17} />
-        {t('round.correct')}
-      </p>
-    )
-  }
-
   return (
-    <button
-      type="button"
-      onClick={onNext}
-      autoFocus
-      className={cn(
-        // Sized down against the question above it: the staff is what the
-        // screen is about, and a pill in body type read as the loudest thing
-        // on it. The height stays at the 44px touch target — that is the
-        // thumb's minimum, not a visual choice — so what gives is the type,
-        // the glyph and the padding around them.
-        'flex min-h-11 items-center gap-1.5 rounded-full bg-ink px-3.5 text-sm font-medium text-paper',
-        'transition-colors hover:opacity-90',
+    <div className="flex items-center gap-2.5">
+      {answer.correct && (
+        <p className="flex items-center gap-1.5 text-sm font-medium text-correct">
+          <Icon name="correct" size={17} />
+          {t('round.correct')}
+        </p>
       )}
-    >
-      <Icon name="arrowForward" size={15} />
-      {t('round.next')}
-    </button>
+
+      <button
+        type="button"
+        onClick={onNext}
+        autoFocus
+        className={cn(
+          // Sized down against the question above it: the staff is what the
+          // screen is about, and a pill in body type read as the loudest thing
+          // on it. The height stays at the 44px touch target — that is the
+          // thumb's minimum, not a visual choice — so what gives is the type,
+          // the glyph and the padding around them.
+          'flex min-h-11 items-center gap-1.5 rounded-full bg-ink px-3.5 text-sm font-medium text-paper',
+          'transition-colors hover:opacity-90',
+        )}
+      >
+        <Icon name="arrowForward" size={15} />
+        {t('round.next')}
+      </button>
+    </div>
   )
 }

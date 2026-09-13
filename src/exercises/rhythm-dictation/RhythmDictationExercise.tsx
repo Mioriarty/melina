@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 
 import { LevelsScreen } from '@/exercises/shared/LevelsScreen'
 import { usePlayback } from '@/exercises/shared/usePlayback'
-import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { loadDrums, playRhythm, unlockAudio } from '@/lib/audio/engine'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
 import { preloadEngraver } from '@/lib/notation/verovio'
@@ -38,7 +37,6 @@ function tupletsOf(settings: RhythmSettings): number[] {
 export default function RhythmDictationExercise() {
   const stored = useSetting(RHYTHM_SETTINGS)
   const writeSettings = useSettingWriter(RHYTHM_SETTINGS)
-  const reducedMotion = useReducedMotion()
   const { t } = useTranslation('exercise')
 
   const [draft, setDraft] = useState<RhythmSettings>()
@@ -157,7 +155,6 @@ export default function RhythmDictationExercise() {
       tuplets={tupletsOf(settings)}
       onPlay={play}
       playStatus={audio.status}
-      reducedMotion={reducedMotion}
       onAnswer={round.answer}
       onNext={round.next}
       onQuit={round.toLevels}

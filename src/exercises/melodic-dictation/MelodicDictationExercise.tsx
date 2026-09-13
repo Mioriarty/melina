@@ -4,7 +4,6 @@ import { useSearchParams } from 'react-router'
 
 import { LevelsScreen } from '@/exercises/shared/LevelsScreen'
 import { usePlayback } from '@/exercises/shared/usePlayback'
-import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { loadMelodyInstruments, playMelody, unlockAudio } from '@/lib/audio/engine'
 import { useSetting, useSettingWriter } from '@/lib/db/settings'
 import { preloadEngraver } from '@/lib/notation/verovio'
@@ -32,7 +31,6 @@ const EXERCISE_ID = 'dictation/short-melodies'
 export default function MelodicDictationExercise() {
   const stored = useSetting(MELODY_SETTINGS)
   const writeSettings = useSettingWriter(MELODY_SETTINGS)
-  const reducedMotion = useReducedMotion()
   const { t } = useTranslation('exercise')
 
   const [draft, setDraft] = useState<MelodySettings>()
@@ -173,7 +171,6 @@ export default function MelodicDictationExercise() {
       tuplets={tuplets}
       onPlay={play}
       playStatus={audio.status}
-      reducedMotion={reducedMotion}
       onAnswer={round.answer}
       onNext={round.next}
       onQuit={round.toLevels}
