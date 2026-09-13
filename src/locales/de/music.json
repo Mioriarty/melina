@@ -432,5 +432,103 @@
     "third": "Terz",
     "fifth": "Quint",
     "seventh": "Sept"
+  },
+  "techniques": {
+    "eroeffnung-tonika": {
+      "label": "Eröffnende Tonika",
+      "short": "Tonika"
+    },
+    "tonika-prolongation": {
+      "label": "Tonika-Prolongation",
+      "short": "T–V6–I6"
+    },
+    "tonika-sextakkord": {
+      "label": "Tonika mit Sextakkord",
+      "short": "I–I6"
+    },
+    "dominant-prolongation": {
+      "label": "Dominant-Prolongation",
+      "short": "Dom."
+    },
+    "subdominant-prolongation": {
+      "label": "Subdominant-Prolongation",
+      "short": "Subdom."
+    },
+    "durchgangs-quartsext": {
+      "label": "Durchgangsquartsextakkord",
+      "short": "Durchgangs-6/4"
+    },
+    "wechsel-quartsext": {
+      "label": "Wechselquartsextakkord",
+      "short": "Wechsel-6/4"
+    },
+    "quintfall": {
+      "label": "Quintfallsequenz",
+      "short": "Quintfall"
+    },
+    "quintfall-septakkorde": {
+      "label": "Quintfallsequenz mit Septakkorden",
+      "short": "Quintfall 7"
+    },
+    "quintanstieg": {
+      "label": "Quintanstiegssequenz",
+      "short": "Quintanstieg"
+    },
+    "monte": {
+      "label": "Monte",
+      "short": "Monte"
+    },
+    "fonte": {
+      "label": "Fonte",
+      "short": "Fonte"
+    },
+    "fauxbourdon": {
+      "label": "Fauxbourdon",
+      "short": "Fauxbourdon"
+    },
+    "zwischendominante": {
+      "label": "Zwischendominante",
+      "short": "ZD"
+    },
+    "doppeldominante": {
+      "label": "Doppeldominante",
+      "short": "DD"
+    },
+    "neapolitaner": {
+      "label": "Neapolitanischer Sextakkord",
+      "short": "Neapolitaner"
+    },
+    "ganzschluss-vollkommen": {
+      "label": "Vollkommener Ganzschluss",
+      "short": "Vollkommen"
+    },
+    "ganzschluss-unvollkommen": {
+      "label": "Unvollkommener Ganzschluss",
+      "short": "Unvollkommen"
+    },
+    "kadenz-quartsext": {
+      "label": "Kadenz-Quartsextakkord",
+      "short": "Quartsext"
+    },
+    "halbschluss": {
+      "label": "Halbschluss",
+      "short": "Halbschluss"
+    },
+    "phrygischer-halbschluss": {
+      "label": "Phrygischer Halbschluss",
+      "short": "Phrygisch"
+    },
+    "trugschluss": {
+      "label": "Trugschluss",
+      "short": "Trugschluss"
+    },
+    "plagalschluss": {
+      "label": "Plagalschluss",
+      "short": "Plagal"
+    },
+    "frei": {
+      "label": "Freie Fortschreitung",
+      "short": "Frei"
+    }
   }
 }

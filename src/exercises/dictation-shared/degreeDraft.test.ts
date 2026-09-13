@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { degreesKey, type Degree } from '@/lib/music/degree'
 
-import { append, canAppend, emptyDraft, isFull, removeLast } from './draft'
+import { append, canAppend, emptyDraft, isFull, removeLast } from './degreeDraft'
 
 const d = (number: number, alteration: -1 | 0 | 1 = 0): Degree => ({ number, alteration })
 

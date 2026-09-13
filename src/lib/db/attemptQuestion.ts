@@ -12,7 +12,17 @@ import type { PlayDirection } from '@/lib/music/direction'
 import { parseIntervalKey, transpose } from '@/lib/music/interval'
 import type { KeySignatureId } from '@/lib/music/keySignature'
 import { chromaticValue, parsePitch, pitchKey, type Pitch } from '@/lib/music/pitch'
-import { degreePitch, parseDegreesKey, type Degree } from '@/lib/music/degree'
+import {
+  degreePitch,
+  degreesKey,
+  isDegreeAlteration,
+  parseDegreesKey,
+  type Degree,
+} from '@/lib/music/degree'
+import { parseEvents } from '@/lib/music/harmony'
+import { degreeOf, keySignatureOf, parseKeyKey } from '@/lib/music/key'
+import { parseAnalysis } from '@/lib/music/progression'
+import { getBlock } from '@/lib/music/satzmodell'
 import { isMeterKey, parseMeter, type TimeSignature } from '@/lib/music/meter'
 import { parsePhraseBars, phraseOnsets, phraseRhythms } from '@/lib/music/phrase'
 import { DIVISION_IDS, isOffBeat, parseOnsets, rhythmDivision } from '@/lib/music/rhythm'
@@ -44,7 +54,14 @@ import {
  */
 
 export type AttemptKind =
-  'interval' | 'scale' | 'rhythm' | 'degree' | 'melody' | 'figured-bass' | 'chord'
+  | 'interval'
+  | 'scale'
+  | 'rhythm'
+  | 'degree'
+  | 'melody'
+  | 'figured-bass'
+  | 'chord'
+  | 'harmony'
 
 export interface IntervalAttempt {
   kind: 'interval'
@@ -183,6 +200,39 @@ export interface ChordAttempt {
   direction: PlayDirection
 }
 
+/**
+ * A harmonic progression.
+ *
+ * **Stored as a figured bass**, which is the best property this model has:
+ * `preferredFigure` and `figurePitches` are exact inverses and already
+ * round-trip tested, so a bass line and a figure line are the whole of what a
+ * progression needs to be rebuilt from. The chords, the Stufen, the function
+ * symbols, the four voices and the answer are every one of them derived on the
+ * way back out — so a row cannot disagree with itself, and the chromatic
+ * sonorities cost nothing, since an augmented sixth is `♯6/5` over a
+ * flattened sixth and that is a stack `STACKS` already holds.
+ *
+ * `analysis` is the one thing kept that is **not** derivable. `I–IV–V–I` may
+ * be a cadence or the tail of a sequence, and telling those apart is itself a
+ * future exercise — so the reading has to be recorded rather than recovered.
+ * Neither string derives the other, which is why keeping both is not the kind
+ * of redundancy this file otherwise refuses.
+ */
+export interface HarmonyAttempt {
+  kind: 'harmony'
+  /** Tonic and mode, as `Eb:aeolian`. */
+  key: string
+  /** The bass notes as pitch classes: `C,F,G,C`. */
+  bass: string
+  /** The figures over them, in `figuredBass.ts`'s own separators. */
+  figures: string
+  /** How long each sonority lasts, in ticks, shaped like `figures`. */
+  beats: string
+  /** The Satztechniken, as `id:origin:links:from:to` spans. */
+  analysis: string
+  tempo: number
+}
+
 export type AttemptQuestion =
   | IntervalAttempt
   | ScaleAttempt
@@ -191,6 +241,7 @@ export type AttemptQuestion =
   | MelodyAttempt
   | FiguredBassAttempt
   | ChordAttempt
+  | HarmonyAttempt
 
 /** The answer the question was asking for. Derived, never stored twice. */
 export function correctAnswer(question: AttemptQuestion): string {
@@ -209,7 +260,41 @@ export function correctAnswer(question: AttemptQuestion): string {
       return question.figures
     case 'chord':
       return chordAnswerKey(question)
+    case 'harmony':
+      return harmonyAnswerKey(question)
   }
+}
+
+/**
+ * The bass line a harmony question wanted, as scale degrees.
+ *
+ * Derived from the stored figures rather than kept beside them, which is the
+ * rule this whole file follows: what a row implies is never also written down.
+ */
+export function harmonyAnswerKey(question: HarmonyAttempt): string {
+  const degrees = harmonyBassDegrees(question)
+  return degrees === undefined ? '' : degreesKey(degrees)
+}
+
+function harmonyBassDegrees(question: HarmonyAttempt): readonly Degree[] | undefined {
+  const key = parseKeyKey(question.key)
+  if (key === undefined) return undefined
+
+  const events = parseEvents(key, {
+    bass: question.bass,
+    figures: question.figures,
+    beats: question.beats,
+  })
+  if (events === undefined) return undefined
+
+  const degrees: Degree[] = []
+  for (const event of events) {
+    if (event.held === true) continue
+    const found = degreeOf(key, event.bass)
+    if (found === undefined || !isDegreeAlteration(found.alteration)) return undefined
+    degrees.push({ number: found.number, alteration: found.alteration })
+  }
+  return degrees
 }
 
 /**
@@ -513,6 +598,62 @@ function chordFacets(question: ChordAttempt): Facets {
   }
 }
 
+/**
+ * A progression's dimensions.
+ *
+ * **Nothing new had to be invented for the pitch half**, which was the design
+ * being tested a fifth time: `root` already meant "the note a question is
+ * built on", so `{ root: 'Eb' }` reaches progressions in E flat without being
+ * told that harmony exists, and `mode` and `tempo` likewise.
+ *
+ * What is added is harmony's own vocabulary, and it is the *analysis* rather
+ * than the chords: which cadence closed it, which Satzmodell it used, whether
+ * anything was borrowed and whether anything suspended. Those are the
+ * dimensions a player actually has a weakness in — "you keep missing the
+ * Trugschluss" is a finding; "you keep missing the third chord" is not.
+ */
+function harmonyFacets(question: HarmonyAttempt): Facets {
+  const base: Facets = {
+    kind: 'harmony',
+    key: question.key,
+    tempo: String(question.tempo),
+  }
+
+  const key = parseKeyKey(question.key)
+  const analysis = parseAnalysis(question.analysis)
+  // A row can only fail to read if it was hand-edited or written by a version
+  // that stored something else. It then matches no filter that asks about the
+  // harmony, rather than throwing inside a statistics query.
+  if (key === undefined || analysis === undefined) return base
+
+  const events = parseEvents(key, {
+    bass: question.bass,
+    figures: question.figures,
+    beats: question.beats,
+  })
+  if (events === undefined) return { ...base, mode: key.mode, root: tonicKey(key.tonic) }
+
+  const spans = analysis.map((span) => span.id)
+  const model = analysis.find((span) => getBlock(span.id)?.kind === 'model')?.id
+  const cadence = analysis.findLast((span) => getBlock(span.id)?.kind === 'cadence')?.id
+
+  return {
+    ...base,
+    mode: key.mode,
+    root: tonicKey(key.tonic),
+    ...(keySignatureOf(key) === undefined
+      ? {}
+      : { keySignature: keySignatureOf(key) as string }),
+    chords: String(events.length),
+    length: String(events.filter((event) => event.held !== true).length),
+    ...(cadence === undefined ? {} : { cadence }),
+    ...(model === undefined ? {} : { model }),
+    free: spans.includes('frei'),
+    suspension: events.some((event) => event.held === true),
+    altered: /[#bn]/.test(question.figures),
+  }
+}
+
 export function attemptFacets(question: AttemptQuestion): Facets {
   switch (question.kind) {
     case 'interval':
@@ -529,5 +670,7 @@ export function attemptFacets(question: AttemptQuestion): Facets {
       return figuredBassFacets(question)
     case 'chord':
       return chordFacets(question)
+    case 'harmony':
+      return harmonyFacets(question)
   }
 }

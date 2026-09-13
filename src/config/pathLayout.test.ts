@@ -171,7 +171,12 @@ describe('path layout', () => {
     expect(joins('guide/chords', 'chords/hearing')).toBe(true)
     expect(joins('chords/reading', 'chords/writing')).toBe(true)
     expect(joins('chords/hearing', 'chords/writing')).toBe(true)
-    expect(joins('chords/writing', 'harmonic-prediction')).toBe(true)
+    // Harmony is the next stop after the chord braid merges, and the route
+    // runs through it rather than past it: hearing a progression is what
+    // hearing a chord was for.
+    expect(joins('chords/writing', 'harmony/bass')).toBe(true)
+    expect(joins('harmony/bass', 'harmonic-prediction')).toBe(true)
+    expect(joins('chords/writing', 'harmonic-prediction')).toBe(false)
     expect(joins('dictation/short-melodies', 'harmonic-prediction')).toBe(false)
 
     // Thoroughbass stands off the path: joined to itself and to nothing else,

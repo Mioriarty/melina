@@ -432,5 +432,103 @@
     "third": "3rd",
     "fifth": "5th",
     "seventh": "7th"
+  },
+  "techniques": {
+    "eroeffnung-tonika": {
+      "label": "Opening tonic",
+      "short": "Tonic"
+    },
+    "tonika-prolongation": {
+      "label": "Tonic prolongation",
+      "short": "T–V6–I6"
+    },
+    "tonika-sextakkord": {
+      "label": "Tonic and its sixth chord",
+      "short": "I–I6"
+    },
+    "dominant-prolongation": {
+      "label": "Dominant prolongation",
+      "short": "Dom."
+    },
+    "subdominant-prolongation": {
+      "label": "Subdominant prolongation",
+      "short": "Subdom."
+    },
+    "durchgangs-quartsext": {
+      "label": "Passing six-four",
+      "short": "Passing 6/4"
+    },
+    "wechsel-quartsext": {
+      "label": "Neighbour six-four",
+      "short": "Neighbour 6/4"
+    },
+    "quintfall": {
+      "label": "Falling fifths",
+      "short": "Quintfall"
+    },
+    "quintfall-septakkorde": {
+      "label": "Falling fifths with sevenths",
+      "short": "Quintfall 7"
+    },
+    "quintanstieg": {
+      "label": "Rising fifths",
+      "short": "Quintanstieg"
+    },
+    "monte": {
+      "label": "Monte",
+      "short": "Monte"
+    },
+    "fonte": {
+      "label": "Fonte",
+      "short": "Fonte"
+    },
+    "fauxbourdon": {
+      "label": "Fauxbourdon",
+      "short": "Fauxbourdon"
+    },
+    "zwischendominante": {
+      "label": "Secondary dominant",
+      "short": "V/x"
+    },
+    "doppeldominante": {
+      "label": "Dominant of the dominant",
+      "short": "DD"
+    },
+    "neapolitaner": {
+      "label": "Neapolitan sixth",
+      "short": "Neapolitan"
+    },
+    "ganzschluss-vollkommen": {
+      "label": "Perfect authentic cadence",
+      "short": "Perfect"
+    },
+    "ganzschluss-unvollkommen": {
+      "label": "Imperfect authentic cadence",
+      "short": "Imperfect"
+    },
+    "kadenz-quartsext": {
+      "label": "Cadential six-four",
+      "short": "Cadential 6/4"
+    },
+    "halbschluss": {
+      "label": "Half cadence",
+      "short": "Half"
+    },
+    "phrygischer-halbschluss": {
+      "label": "Phrygian half cadence",
+      "short": "Phrygian"
+    },
+    "trugschluss": {
+      "label": "Deceptive cadence",
+      "short": "Deceptive"
+    },
+    "plagalschluss": {
+      "label": "Plagal cadence",
+      "short": "Plagal"
+    },
+    "frei": {
+      "label": "Free progression",
+      "short": "Free"
+    }
   }
 }

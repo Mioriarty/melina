@@ -160,6 +160,36 @@
       "harmonic": "All at once",
       "ascending": "Upwards",
       "descending": "Downwards"
+    },
+    "harmonyKeys": {
+      "major": "Major keys",
+      "minor": "Minor keys",
+      "hint": "A cadence fixes the key before each question, so you are never guessing where home is."
+    },
+    "cadences": {
+      "title": "Cadences",
+      "hint": "How a progression closes. Every one of them ends somewhere different."
+    },
+    "blocks": {
+      "prolongation": "Prolongations",
+      "model": "Stock progressions",
+      "approach": "Borrowed chords"
+    },
+    "freedom": {
+      "title": "How schematic",
+      "strict": "Models only",
+      "mixed": "Mixed",
+      "free": "Mostly free",
+      "hint": "Not every progression should be a textbook example. A free stretch still cadences properly."
+    },
+    "harmonyLength": {
+      "title": "Chords per progression"
+    },
+    "establish": {
+      "title": "Establishing cadence",
+      "on": "Play it",
+      "off": "Leave it out",
+      "hint": "Four chords that say what key we are in, before the question."
     }
   },
   "round": {
@@ -184,7 +214,8 @@
       "degree": "Which degrees do you hear?",
       "melody": "Write the melody you hear",
       "figuring": "How is this chord figured?",
-      "realizing": "Write the chord the figure asks for"
+      "realizing": "Write the chord the figure asks for",
+      "bass": "Write down the bass line."
     }
   },
   "score": {
@@ -384,6 +415,16 @@
     "writing": {
       "levelsBlurb": "A chord is named. Put it on the staff, one note at a time.",
       "setupBlurb": "Choose which chords you will be asked to write, and on which roots."
+    }
+  },
+  "harmony": {
+    "replay": "Play again",
+    "scoreLabel": {
+      "draft": "The bass line you have written so far, in {{key}}",
+      "revealed": "The progression in four parts, in {{key}}, with its figures, Stufen and functions"
+    },
+    "summary": {
+      "allCorrect": "Every bass line right."
     }
   }
 }

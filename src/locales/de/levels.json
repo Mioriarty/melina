@@ -541,5 +541,56 @@
       "title": "Alles",
       "blurb": "Alle neun, jede Stellung, jede Lage — und die C-Schlüssel."
     }
+  },
+  "harmony-bass": {
+    "sections": {
+      "diatonik": "Leitereigen",
+      "chromatik": "Ausweichungen",
+      "modelle": "Satzmodelle"
+    },
+    "erste-schritte": {
+      "title": "Erste Schritte",
+      "blurb": "Vier Akkorde in drei leichten Tonarten, langsam und schlicht geschlossen."
+    },
+    "dur": {
+      "title": "Dur-Tonarten",
+      "blurb": "Fünf oder sechs Akkorde, mit ausgehaltener Tonika vor dem Schluss."
+    },
+    "moll": {
+      "title": "Moll-Tonarten",
+      "blurb": "Dasselbe in Moll, wo der phrygische Halbschluss zu Hause ist."
+    },
+    "trugschluss": {
+      "title": "Trugschlüsse",
+      "blurb": "Es geht auf die sechste Stufe statt heim. Hör den Bass ausweichen."
+    },
+    "quartsext": {
+      "title": "Quartsextakkorde",
+      "blurb": "Kadenz, Durchgang und Wechsel — drei Dinge unter einer Ziffer."
+    },
+    "zwischendominanten": {
+      "title": "Zwischendominanten",
+      "blurb": "Ein geborgter Akkord, der eine andere Stufe zur Tonika macht."
+    },
+    "neapolitaner": {
+      "title": "Der Neapolitaner",
+      "blurb": "Die tiefalterierte zweite Stufe in Sextlage, zur Dominante hin."
+    },
+    "quintfall": {
+      "title": "Quintfallsequenz",
+      "blurb": "Grundtöne fallen um eine Quinte, mit und ohne Septakkorde."
+    },
+    "monte-fonte": {
+      "title": "Monte und Fonte",
+      "blurb": "Das steigende Paar und das fallende, jede Stufe tonikalisiert."
+    },
+    "fauxbourdon": {
+      "title": "Parallele Sexten",
+      "blurb": "Sextakkorde die Skala hinab, Quinten wieder hinauf."
+    },
+    "alles": {
+      "title": "Alles",
+      "blurb": "Jede Technik, längere Folgen und schneller."
+    }
   }
 }

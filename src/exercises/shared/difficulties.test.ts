@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { BASS_DIFFICULTIES } from '@/exercises/bass-dictation/difficulties'
 import { CHORD_DIFFICULTIES } from '@/exercises/chord-shared/difficulties'
 import {
   chordSpec,
@@ -69,7 +70,20 @@ import {
   FIGURE_CHOICES,
   SUSPENSION_CHOICES,
 } from '@/exercises/thoroughbass-shared/settings'
+import {
+  bassDegrees,
+  generateRound as generateBassRound,
+  harmonySpec,
+} from '@/exercises/harmony-shared/generate'
+import {
+  BLOCK_CHOICES,
+  CADENCE_CHOICES,
+  parseHarmonySettings,
+} from '@/exercises/harmony-shared/settings'
 import { figureKey, figurePitches } from '@/lib/music/figuredBass'
+import { isKeyKey } from '@/lib/music/key'
+import { cadenceOf } from '@/lib/music/progression'
+import { errorsOf, satzFindings } from '@/lib/music/voiceLeading'
 import { i18n } from '@/lib/i18n'
 import { LANGUAGES } from '@/lib/i18n/languages'
 import { CATALOG_KEYS, HEARABLE_INTERVAL_KEYS } from '@/lib/music/catalog'
@@ -130,6 +144,7 @@ const ALL_GROUPS: readonly NamedLevels[] = [
   { group: 'chord-reading', levels: CHORD_DIFFICULTIES },
   { group: 'chord-hearing', levels: CHORD_DIFFICULTIES },
   { group: 'chord-writing', levels: CHORD_DIFFICULTIES },
+  { group: 'harmony-bass', levels: BASS_DIFFICULTIES },
 ]
 
 describe.each(ALL_GROUPS)('$group levels', ({ group, levels }) => {
@@ -1152,5 +1167,73 @@ describe('chord settings', () => {
     expect(clefs.size).toBe(4)
     // And the Lage is asked somewhere, or the row would never be seen.
     expect(CHORD_DIFFICULTIES.some((level) => level.settings.lage)).toBe(true)
+  })
+})
+
+/* ---------------------------------------------------------------- harmony */
+
+describe('harmony levels', () => {
+  it.each(BASS_DIFFICULTIES)('$id names real keys and techniques', (level) => {
+    for (const key of level.settings.keys) expect(isKeyKey(key), key).toBe(true)
+    for (const id of level.settings.cadences) {
+      expect(CADENCE_CHOICES, id).toContain(id)
+    }
+    for (const id of level.settings.blocks) {
+      expect(BLOCK_CHOICES, id).toContain(id)
+    }
+    expect(level.settings.cadences.length).toBeGreaterThan(0)
+  })
+
+  it.each(BASS_DIFFICULTIES)('$id round-trips through the defensive parser', (level) => {
+    // A level that the parser would quietly change is a level whose name and
+    // whose behaviour have come apart.
+    expect(parseHarmonySettings(level.settings)).toEqual(level.settings)
+  })
+
+  it.each(BASS_DIFFICULTIES)(
+    '$id generates a full round, and every setting of it obeys the rules',
+    (level) => {
+      const spec = harmonySpec(level.settings)
+      const round = generateBassRound(createRandom(4242), spec)
+
+      // A level too narrow to fill a round would serve a short one in silence.
+      expect(round).toHaveLength(spec.questionsPerRound)
+
+      for (const question of round) {
+        // The length the level declares is the length the player writes.
+        expect(spec.chords).toContain(question.progression.events.length)
+        expect(bassDegrees(question.progression)).toBeDefined()
+
+        // **The generator checked against the grader, per shipped level.**
+        const faults = errorsOf(satzFindings(question.satz))
+        expect(
+          faults.map((fault) => `${fault.id}@${fault.at}`),
+          question.progression.analysis.map((span) => span.id).join(' → '),
+        ).toEqual([])
+
+        // Every cadence the round produced is one the level actually allows.
+        const cadence = cadenceOf(question.progression)
+        expect(level.settings.cadences, cadence).toContain(cadence)
+      }
+    },
+    30_000,
+  )
+
+  it('reaches every technique it offers, given enough rounds', () => {
+    // A block that is allowed and never comes up is a level quietly narrower
+    // than it says — the same property `generate.test.ts` measures for rhythm,
+    // where a weight that never reaches a bar does nothing at all.
+    const level = BASS_DIFFICULTIES.find((entry) => entry.id === 'alles')
+    expect(level).toBeDefined()
+    if (level === undefined) return
+
+    const random = createRandom(99)
+    const spec = { ...harmonySpec(level.settings), questionsPerRound: 60 }
+    const seen = new Set<string>()
+    for (const question of generateBassRound(random, spec)) {
+      for (const span of question.progression.analysis) seen.add(span.id)
+    }
+
+    for (const id of level.settings.cadences) expect(seen, id).toContain(id)
   })
 })

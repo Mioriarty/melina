@@ -2,13 +2,19 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { DegreeKeyboard } from '@/components/input/DegreeKeyboard'
+import {
+  append,
+  emptyDraft,
+  isFull,
+  removeLast,
+  type DegreeDraft,
+} from '@/exercises/dictation-shared/degreeDraft'
 import { RoundScreen } from '@/exercises/shared/RoundScreen'
 import type { ActivePhase } from '@/exercises/shared/round'
 import type { PlaybackStatus } from '@/exercises/shared/usePlayback'
 import { degreePitch, type Degree } from '@/lib/music/degree'
 import type { Pitch } from '@/lib/music/pitch'
 
-import { append, emptyDraft, isFull, removeLast, type DegreeDraft } from './draft'
 import type { DegreeQuestion } from './generate'
 import { DegreeScore } from './DegreeScore'
 

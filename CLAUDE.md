@@ -6,18 +6,19 @@ The name comes from the toki pona word for melody.
 
 ## Commands
 
-|                     |                                                    |
-| ------------------- | -------------------------------------------------- |
-| `npm run dev`       | dev server                                         |
-| `npm run build`     | typecheck + production build                       |
-| `npm run preview`   | serve the production build                         |
-| `npm run typecheck` | `tsc -b`                                           |
-| `npm run lint`      | oxlint                                             |
-| `npm run format`    | Prettier (also sorts Tailwind classes)             |
-| `npm test`          | Vitest                                             |
-| `npm run shot`      | screenshot the running app (see **Looking at it**) |
-| `npm run icons`     | regenerate PWA icons from `scripts/mark.mjs`       |
-| `npm run glyphs`    | re-extract Leland note glyphs from Verovio         |
+|                        |                                                    |
+| ---------------------- | -------------------------------------------------- |
+| `npm run dev`          | dev server                                         |
+| `npm run build`        | typecheck + production build                       |
+| `npm run preview`      | serve the production build                         |
+| `npm run typecheck`    | `tsc -b`                                           |
+| `npm run lint`         | oxlint                                             |
+| `npm run format`       | Prettier (also sorts Tailwind classes)             |
+| `npm test`             | Vitest                                             |
+| `npm run shot`         | screenshot the running app (see **Looking at it**) |
+| `npm run icons`        | regenerate PWA icons from `scripts/mark.mjs`       |
+| `npm run glyphs`       | re-extract Leland note glyphs from Verovio         |
+| `npm run progressions` | print generated harmony as text (see **Harmony**)  |
 
 ## Architecture
 
@@ -986,8 +987,8 @@ the path for an unplaced station so nothing can silently vanish, and
 
 ## Exercises — `src/exercises/`
 
-Seven exercises — two reading/hearing pairs, one reading/writing pair, and one
-that is neither — and the folders say which is which:
+Eleven exercises — two reading/hearing pairs, one reading/writing pair, one
+trio, and two that stand alone — and the folders say which is which:
 
 - `shared/` is **exercise-agnostic**. The levels → setup → round → summary state
   machine (`useRound`), the levels screen, the round screen, the summary, the
@@ -1014,6 +1015,11 @@ that is neither — and the folders say which is which:
 - `chord-shared/`, `chord-reading/`, `chord-hearing/` and `chord-writing/` are
   the first **three**: the same fact read, heard and written. See **Chords**
   below.
+- `harmony-shared/` and `bass-dictation/` are the first exercise that hears a
+  whole _progression_ rather than a chord. The generator, the four-part setting,
+  the playback schedule and the attempt row live in the shared folder because
+  every harmony exercise after this one reads them; the exercise folder holds
+  the levels, the round screen and the setup. See **Harmony**.
 - `chord-entry/` is what thoroughbass realising and chord writing genuinely
   share — the draft a chord is pressed into — the way `dictation-shared/` is
   what the two dictations share. `ChordKeyboard` reads it, and `voicing.ts`
@@ -1893,6 +1899,226 @@ The levels run in **three sections** — triads, sevenths, positions — and mov
 one axis at a time. Clefs widen with them and the C-clefs arrive only at the
 top, which is the level meant to be uncomfortable.
 
+## Harmony — `lib/music/key.ts`, `harmony.ts`, `satzmodell.ts`, `progression.ts`
+
+**A progression is a stack of named blocks, not a chain of chords**, and that
+is the whole of what makes one _meaningful_. A generator that picks chords one
+at a time produces progressions that arrive nowhere, contain no technique
+anybody has a name for, and — worst for an app — carry no label, so nothing
+downstream can say what the player just heard.
+
+Four layers, and the line between the first two is the design:
+
+- **Key** (`key.ts`) — a tonic and a mode. **Minor is stored as `aeolian`**,
+  the natural minor, and the raised degrees come from the chords. That is not a
+  simplification but the notation: no signature raises a seventh, so a minor
+  key is written under the natural minor's and the leading note is printed in
+  front of the note that carries it. Storing harmonic minor as the key instead
+  would raise the seventh everywhere, including where the music lowers it.
+- **`ChordSpec`** — the _plan_. A scale step, a quality, an inversion; nothing
+  in it is a pitch. This is what the Satzmodelle are written in.
+- **`HarmonicEvent`** — the _fact_. The sonority as spelled pitch classes over
+  a bass, and how long it lasts. Key-independent, doubling-free, octave-free.
+- **`Satz`** (`satb.ts`) — four spelled pitches per event.
+
+**The plan generates downward and every reading derives upward.** From an event
+you get the figure (`preferredFigure`, unchanged), the Stufe (`readChord`,
+unchanged) and the function symbol (a table). That is Karlsruhe's own exam task
+— _"entweder in Generalbassziffern oder in Funktionszeichen oder in
+Stufenzeichen"_ — falling out of one model rather than three implementations
+that could disagree.
+
+**One convention table in the whole functional layer**: `RAISED_DEGREES` says
+the fifth and seventh degrees of a minor key raise the seventh scale degree
+wherever their stack contains it. One rule, and four chords come out right at
+once — V major, V7 a dominant seventh, vii° diminished, vii°7 fully diminished,
+the last because the natural sixth is already where a diminished seventh wants
+it. Everything else is computed by reading the stack back.
+
+**A sequence stays in the mode** (`ChordSpec.plain`). Inside a Quintfallsequenz
+the chord on the fifth degree of a minor key is a passing `v`, not the
+dominant; raising its third puts an F♯ beside the F♮ of the chord after it,
+which is a cross-relation and an audible fault. The leading note belongs to a
+real dominant — a cadence, a prolongation or an applied chord — and every one
+of those says so.
+
+### The backwards walk
+
+**The destination is chosen first.** A cadence is picked and everything is
+prepended in front of it until the target length is reached. Harmony is
+goal-directed, and _"what may precede a dominant"_ has a short confident answer
+where _"what may follow a tonic"_ has a long weak one — so `PRECEDENTS` is
+smaller, better motivated, and every progression arrives somewhere by
+construction rather than by luck.
+
+The walk is over **blocks**, and **a single chord is a block of length one**
+(`FREE_BLOCKS`) — so one loop covers the named Satzmodelle and a plain
+chord-by-chord Markov walk at once, and `freeWeight` is how hard it reaches for
+the short ones. Not every progression should be a textbook example; what makes
+the free stretches honest is that they run backwards through the same table the
+blocks join by, and that the analysis records `frei` rather than claiming a
+technique.
+
+**One table serves both jobs.** `PRECEDENTS` is the walk's transition weights
+_and_ what decides whether one block may stand before another. Two tables would
+be two things that could disagree about one question.
+
+Two mechanisms express the whole literature: a **fixed schema** (a stored run of
+chords relative to a starting degree — cadences, prolongations, approaches and
+the Romanesca family are all this shape) and a **transposition sequence** (a
+unit, a step, a repeat count — Quintfall, Monte, Fonte, Fauxbourdon, the
+Konsekutiven). Widening the vocabulary is therefore **rows, never code**.
+
+**A walk that ran out of moves is a failed progression, not a shorter one.**
+With no free chords to fall back on, the blocks that fit the remaining budget
+can simply run out; handing that back gave four chords where the level said
+six. It is refused and the caller draws again. The opening tonic is part of the
+length and whether it is _needed_ is not knowable until the walk has run — a
+sequence placed on the first degree arrives there on its own — so the walk runs
+twice at most and the pass that actually starts on the tonic is kept.
+
+### A progression is stored as a figured bass
+
+The best property in the model. `preferredFigure` and `figurePitches` are exact
+inverses and already round-trip tested, so a bass line and a figure line are the
+whole of what a progression needs:
+
+```
+bass    "C,F,G,G,C"
+figures ",,6/4-5/3,"      ← ',' bass notes · '-' successive figures · '/' lines
+```
+
+— literally `thoroughbass-shared`'s own separators. The chords, the Stufen, the
+functions, the four voices and the correct answer are all derived on the way
+back out, so **a row cannot disagree with itself**, and the chromatic
+sonorities cost nothing: a German sixth is `♯6/5` over a flattened sixth, which
+is a stack `STACKS` already holds.
+
+**The analysis is the one thing stored and not derived.** `I–IV–V–I` may be a
+cadence or the tail of a sequence, and telling those apart is itself a future
+exercise, so the _reading_ has to be recorded rather than recovered. Neither
+string derives the other, which is why keeping both is not the redundancy the
+attempt log otherwise refuses.
+
+`constraintsOf` places each span's voicing constraints by that span's own
+`from`. Walking the list and counting events instead skipped `frei` — which is
+not in `BLOCKS` — and shifted every index after it, putting a cadence's "tonic
+in the soprano" on the wrong chord until the voicing search could find nothing
+legal at all and reading the row back returned nothing.
+
+### Four parts — `voiceLeading.ts` and `satb.ts`
+
+**`voiceLeading.ts` is written once and read twice.** Run as a filter it is what
+`satb.ts` generates through — an edge that breaks a rule is an edge that does
+not exist, and a preference is a weight. Run as a detector over a finished
+`Satz` it is a **grader**, returning a list of findings rather than a verdict,
+which is the shape the four-part _writing_ exercises will need and the one thing
+melina's round machinery has never had.
+
+Building it that way round is why the generator can be trusted: `satb.test.ts`
+and `difficulties.test.ts` voice every level's progressions and insist the
+grader finds **nothing**. A generator checked against its own grader is the move
+`modeOf` makes on the scale generator and `readChord` on the chord one.
+
+The rule list is the standard Stimmführung inventory — ranges, spacing,
+crossing, overlap, doubling, omission, the four motions, leading-note and
+seventh resolution, dissonance preparation. `SATB_RANGES` are **chorale ranges,
+not the staff ranges in `clef.ts`**: those are geometry, these are what a voice
+can sing.
+
+**Voicing is a shortest path, not a greedy walk.** Choosing each chord by what
+is cheapest from the one before is how a generator paints itself into a corner:
+the locally tidy choice leaves the next chord with no legal move. So the whole
+progression is solved at once — nodes are (event, voicing), edges are the legal
+transitions, and Viterbi finds the globally cheapest path. A **branch and bound**
+cuts most of the work and is _exact_ rather than a beam, which is why
+`contourFloor` is measured rather than assumed: under `steady` the contour term
+goes negative, and a bound that skipped a term with no floor would stop being
+sound.
+
+**The soprano is a first-class objective, not a by-product.** A search that only
+minimised motion leaves the top voice sitting still, so the line is shaped by
+`leapWeight` from `contour.ts` — the same curve that shapes a melody in melodic
+dictation, its likelihood turned into a cost by taking the negative log.
+
+**Register is a preference and nothing else stated it.** The ranges say what is
+singable, not where a part usually sits, so a search counting only motion put
+the bass at B3 under a tenor on the same note. `voicingCost` pulls each voice
+toward the middle of its own compass, which is what makes the texture sound like
+a chorus rather than four lines that happened to be legal.
+
+`CHORALE_WEIGHTS` is meant to be turned, as `PACED_CONTOUR` is. A second idiom —
+the modal Kantionalsatz the UdK paper offers — is a second table here and not a
+second algorithm.
+
+### A four-part setting on the page — `satbMei.ts`, `satbProfile`
+
+**Two voices to a staff, and that was new here.** Every other engraving in
+melina puts one `<layer>` on a staff; a chorale needs two, upper stems up and
+lower stems down, or the lines cannot be read apart. `satbVerovio.test.ts` pins
+what actually comes out, because each way it fails is silent: the MEI validates,
+the render succeeds, and the thing is not on the page.
+
+**One measure per bass note.** A suspension is two sonorities over one bass, and
+the bass is written once and held — striking it again would say it had moved,
+which is the one thing a suspension is defined by not doing. So the upper voices
+carry two notes where the bass carries one, exactly as `thoroughbassMei` splits
+a measure. Barlines are invisible throughout: a generated progression is a
+succession of sonorities rather than a piece of music.
+
+Under the staff go three rows of `<harm>` — figures, Stufen, functions. Verovio
+has no notion of "the third analysis row" and nothing in the markup says they
+must not collide; that they come out at distinct heights is a fact the test
+pins.
+
+**The page is fixed and reserved for the _revealed_ version.** A question opens
+as a blank grand staff and the answer arrives carrying three rows of text under
+it; sized to the content, the staff would shrink by a third at the moment the
+player looked at it.
+
+Every number in `satbProfile` is **measured against the widest thing the
+exercise can print**, which is not the music but the labels. Sizing it from the
+music alone shipped a page too narrow for two chords, and the way that failed is
+worth remembering: under `breaks: 'auto'` Verovio wraps to a second system, the
+fixed page height leaves no room, and the overflow lands on a page that is never
+rendered. **Chords vanish, with no error and nothing hanging off an edge to
+notice.** `pageWidth` and `pageHeight` are a tenth of the viewBox units a render
+reports, which is the other trap, so the profile is checked against a bar of
+rhythm that is known to be right.
+
+### Bass dictation — `harmony/bass`
+
+Hear a four-part progression, write down its bass as scale degrees. The smallest
+exercise the model can carry, and deliberately so: it exists to make the
+generator **audible and judgeable**.
+
+**The bass is answered without an octave**, and that is a decision rather than a
+shortcut — which octave the bass sits in is a fact about the voicing the search
+settled on, not about the harmony, so asking for it would grade the player on
+something the question never posed. `bassTonic` then picks the octave the
+_drawing_ uses, per key, so the seven degrees stay inside the bass staff
+whatever the tonic is.
+
+**A cadence is played first to fix the key**, which Münster's own ear-training
+paper does for the same reason: writing a bass as scale degrees without one asks
+the player to find the tonic first, which is a different and much harder
+question. It is built from the same `buildEvents` and voiced by the same search,
+so it cannot come out in a different idiom from the question it introduces.
+
+`DegreeDraft` moved from `scale-degrees/` to `dictation-shared/` when this
+became the second exercise writing an answer as a run of degrees — the move
+`voicing.ts` made into `lib/music` for the same reason.
+
+The summary groups misses by **the cadence the progression closed with**, which
+is the payoff of storing the analysis: "you keep missing the Trugschluss" is a
+finding a player can act on, where anything derivable from the notes alone could
+only say "you keep missing the third chord".
+
+**`npm run progressions` prints generated harmony as text** — Stufen, figures
+and the four voices, with the analysis under each. Judging a harmony generator
+by ear through the UI is a slow loop; judging fifty of them in a terminal is a
+fast one, and it is where the block weights actually get tuned.
+
 ## Guides — `src/pages/MelodyShapePage.tsx` and `components/explain/`
 
 A setting whose meaning takes a picture gets a page, reached from a question
@@ -2196,10 +2422,23 @@ practise next, and the strengths are still there at the other end.
 
 ## Not yet built
 
-Everything after Chords — harmonic prediction, harmonic completion,
+Everything after Harmony — harmonic prediction, harmonic completion,
 counterpoint, the daily round — is still a placeholder page. Figured bass used
 to be a planned exercise under harmonic completion; it is its own category now,
 because reading a figure and writing one are two exercises rather than one.
+
+The harmony model is deliberately ahead of the one exercise standing on it.
+Three things it is built for and does not yet do:
+
+- **Harmoniefremde Töne.** Durchgänge, Wechselnoten and Antizipationen are a
+  layer over a finished setting — a `HarmonicEvent` carries `ticks` so they have
+  somewhere to go — and nothing generates into it. Suspensions do ship, because
+  a Vorhalt is _figured_ and therefore harmony rather than ornament.
+- **The wide block table.** Romanesca, Folia, Lamentobass, the Oktavregel, the
+  5–6 and 7–6 Konsekutiven, the augmented sixths and modal mixture are all
+  expressible in the two mechanisms `satzmodell.ts` already has. They are rows,
+  not code — and worth writing only once the core has been listened to.
+- **Modulation.** A block may change key; none does.
 
 Settings holds one setting — the interface language. Like Progress it is
 reached only from the top bar and has no station on the path, because neither

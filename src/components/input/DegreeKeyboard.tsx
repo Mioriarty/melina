@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import { MiniStaff } from '@/components/notation/MiniStaff'
 import { Icon } from '@/components/ui/Icon'
-import { canAppend, type DegreeDraft } from '@/exercises/scale-degrees/draft'
+import { canAppend, type DegreeDraft } from '@/exercises/dictation-shared/degreeDraft'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import type { ClefId } from '@/lib/music/clef'
 import { degreePitch, type Degree, type DegreeAlteration } from '@/lib/music/degree'

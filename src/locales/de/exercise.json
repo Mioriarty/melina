@@ -160,6 +160,36 @@
       "harmonic": "Gleichzeitig",
       "ascending": "Aufwärts",
       "descending": "Abwärts"
+    },
+    "harmonyKeys": {
+      "major": "Dur-Tonarten",
+      "minor": "Moll-Tonarten",
+      "hint": "Vor jeder Frage steht eine Kadenz, damit die Tonart nie erraten werden muss."
+    },
+    "cadences": {
+      "title": "Kadenzen",
+      "hint": "Wie eine Folge schließt. Jede endet woanders."
+    },
+    "blocks": {
+      "prolongation": "Prolongationen",
+      "model": "Satzmodelle",
+      "approach": "Ausweichungen"
+    },
+    "freedom": {
+      "title": "Wie modellhaft",
+      "strict": "Nur Modelle",
+      "mixed": "Gemischt",
+      "free": "Überwiegend frei",
+      "hint": "Nicht jede Folge soll ein Lehrbuchbeispiel sein. Auch eine freie Strecke kadenziert sauber."
+    },
+    "harmonyLength": {
+      "title": "Akkorde pro Folge"
+    },
+    "establish": {
+      "title": "Einleitende Kadenz",
+      "on": "Spielen",
+      "off": "Weglassen",
+      "hint": "Vier Akkorde, die die Tonart festlegen, vor der eigentlichen Frage."
     }
   },
   "round": {
@@ -184,7 +214,8 @@
       "degree": "Welche Stufen hörst du?",
       "melody": "Schreibe die Melodie auf, die du hörst",
       "figuring": "Wie wird dieser Akkord beziffert?",
-      "realizing": "Schreibe den Akkord zur Bezifferung"
+      "realizing": "Schreibe den Akkord zur Bezifferung",
+      "bass": "Schreibe die Basslinie auf."
     }
   },
   "score": {
@@ -384,6 +415,16 @@
     "writing": {
       "levelsBlurb": "Ein Akkord wird genannt. Setze ihn Ton für Ton ins System.",
       "setupBlurb": "Wähle, welche Akkorde du schreiben sollst und auf welchen Grundtönen."
+    }
+  },
+  "harmony": {
+    "replay": "Nochmal hören",
+    "scoreLabel": {
+      "draft": "Die bisher geschriebene Basslinie, in {{key}}",
+      "revealed": "Die Harmoniefolge vierstimmig, in {{key}}, mit Bezifferung, Stufen und Funktionen"
+    },
+    "summary": {
+      "allCorrect": "Jede Basslinie richtig."
     }
   }
 }

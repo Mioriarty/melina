@@ -98,6 +98,13 @@ export interface AttemptFilter {
   span?: OneOrMany<string>
 
   /** Chord questions only. */
+  key?: OneOrMany<string>
+  chords?: OneOrMany<string>
+  cadence?: OneOrMany<string>
+  model?: OneOrMany<string>
+  free?: boolean
+  suspension?: boolean
+
   quality?: OneOrMany<string>
   /** Which member stands in the bass, as a string: `0` is root position. */
   inversion?: OneOrMany<string>

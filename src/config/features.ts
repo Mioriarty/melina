@@ -13,6 +13,7 @@ export const FEATURES = {
   dictation: true,
   thoroughbass: true,
   chords: true,
+  harmony: true,
   'harmonic-prediction': false,
   'harmonic-completion': false,
   counterpoint: false,

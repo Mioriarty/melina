@@ -1,11 +1,17 @@
 import type { Degree } from '@/lib/music/degree'
 
 /**
- * The melody as it is being written down.
+ * A run of scale degrees as it is being written down.
  *
  * Far simpler than the rhythm draft, because a degree has no length: the answer
  * is just the degrees pressed, in order, and it is finished when there are as
  * many of them as there were notes.
+ *
+ * It lives here rather than beside scale degrees because bass dictation writes
+ * its answer the same way — one degree per chord, finished when the line is as
+ * long as the progression — and two copies of "the degrees pressed so far" is
+ * two things that could disagree. The same move `voicing.ts` made into
+ * `lib/music` when a second exercise needed it.
  */
 
 export interface DegreeDraft {

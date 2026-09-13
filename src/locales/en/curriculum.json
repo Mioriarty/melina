@@ -103,6 +103,17 @@
         }
       }
     },
+    "harmony": {
+      "title": "Harmony",
+      "blurb": "Chords going somewhere: cadences, sequences and the bass that carries them.",
+      "exercises": {
+        "bass": {
+          "title": "Bass Dictation",
+          "short": "Bass",
+          "blurb": "Hear a progression in four parts and write down its bass, degree by degree."
+        }
+      }
+    },
     "harmonic-prediction": {
       "title": "Harmonic Prediction",
       "blurb": "Guess where the progression wants to go.",

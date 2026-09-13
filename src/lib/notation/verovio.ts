@@ -444,6 +444,75 @@ export function thoroughbassProfile(
   return profile
 }
 
+/* ------------------------------------------------------- four parts */
+
+/**
+ * A four-part setting on a grand staff, with room kept for its analysis.
+ *
+ * **Fixed, and reserved for the revealed version**, which is the same reserve
+ * a rhythm and a melody get and is here for a sharper reason: a question opens
+ * as a blank grand staff and the answer arrives carrying three rows of text
+ * under it — the figures, the Stufen and the functions. Sized to the content,
+ * the staff would shrink by a third at the exact moment the player looked at
+ * it. Sized to the widest case, nothing moves and the rows simply appear.
+ *
+ * Every number below is **measured, not derived**, against a bar of rhythm
+ * whose profile is known to be right — because the failure this guards is
+ * invisible to any comparison of one render with another. A page ten times too
+ * large draws the music in one corner and lets the column scale the whole sheet
+ * down, so asked still matches revealed, nothing overflows, and the staff is
+ * simply illegible. `pageWidth` and `pageHeight` are **a tenth** of the
+ * viewBox units a render reports, and that is the trap.
+ *
+ * Measured against the **widest thing the exercise can print**, which is not
+ * the music but the labels: three lines of figure, a Stufe like `vii°6/5` and
+ * a function symbol under every chord. At that content each chord wants 133
+ * page units, each signature accidental 30, and the clef, brace and first
+ * measure's padding come to 130 between them. The numbers below carry about a
+ * tenth more than that.
+ *
+ * Sizing this from the music alone is what shipped a page too narrow for two
+ * chords, and the way it failed is worth remembering: under `breaks: 'auto'`
+ * Verovio wraps to a second system, the fixed page height leaves no room for
+ * it, and the overflow lands on a page that is never rendered. Chords vanish,
+ * with no error and nothing hanging off an edge to notice.
+ */
+const SATB_MARGIN_LEFT = 50
+const SATB_PAGE_LEAD = 150
+const SATB_PER_ACCIDENTAL = 36
+const SATB_PER_CHORD = 145
+const SATB_PAGE_HEIGHT = 620
+
+const SATB_PROFILES = new Map<string, VerovioOptions>()
+
+export function satbProfile(
+  chords: number,
+  signatureAccidentals: number,
+): VerovioOptions {
+  const key = `${chords}:${signatureAccidentals}`
+  const cached = SATB_PROFILES.get(key)
+  if (cached !== undefined) return cached
+
+  const profile: VerovioOptions = {
+    ...FILL_THE_PAGE,
+    ...EMBED_FIGURE_ACCIDENTALS,
+    breaks: 'auto',
+    adjustPageWidth: false,
+    adjustPageHeight: false,
+    // The brace is drawn outside the system it joins, and the inner `<svg>`
+    // has no overflow — without the margin it is clipped to three short
+    // strokes at the left edge.
+    pageMarginLeft: SATB_MARGIN_LEFT,
+    pageWidth:
+      SATB_PAGE_LEAD +
+      SATB_PER_ACCIDENTAL * signatureAccidentals +
+      SATB_PER_CHORD * Math.max(1, chords),
+    pageHeight: SATB_PAGE_HEIGHT,
+  }
+  SATB_PROFILES.set(key, profile)
+  return profile
+}
+
 /**
  * **A chord being written into, on a page that cannot move.**
  *

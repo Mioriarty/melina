@@ -163,10 +163,16 @@ export const PATH_NODES: readonly PathNodePosition[] = [
   { stationId: 'chords/reading', x: 74, y: 2130 },
   { stationId: 'chords/hearing', x: 26, y: 2200 },
   { stationId: 'chords/writing', x: 56, y: 2455 },
-  { stationId: 'harmonic-prediction', x: 30, y: 2745 },
-  { stationId: 'harmonic-completion', x: 66, y: 2960 },
-  { stationId: 'counterpoint', x: 35, y: 3190 },
-  { stationId: 'daily', x: 62, y: 3390 },
+  // **Harmony goes in below the chord braid**, which is the only vacant
+  // stretch on the main line — and 290px was not enough to split, since two
+  // gaps of 145 fall under the floor a connector needs. So everything below
+  // moves down, and everything below **changes side**: the column alternates
+  // and one extra station flips the parity of every node under it.
+  { stationId: 'harmony/bass', x: 30, y: 2715 },
+  { stationId: 'harmonic-prediction', x: 68, y: 2955 },
+  { stationId: 'harmonic-completion', x: 32, y: 3170 },
+  { stationId: 'counterpoint', x: 66, y: 3400 },
+  { stationId: 'daily', x: 34, y: 3600 },
 ]
 
 /**
@@ -203,7 +209,8 @@ export const PATH_EDGES: readonly PathEdge[] = [
   { from: 'guide/chords', to: 'chords/hearing' },
   { from: 'chords/reading', to: 'chords/writing' },
   { from: 'chords/hearing', to: 'chords/writing' },
-  { from: 'chords/writing', to: 'harmonic-prediction' },
+  { from: 'chords/writing', to: 'harmony/bass' },
+  { from: 'harmony/bass', to: 'harmonic-prediction' },
   // **Thoroughbass is off the path, joined only to itself.** Nothing leads
   // into it and nothing leads out, so `PATH_EDGES` has exactly two components
   // and the walk from the top of the column does not reach this one. That is

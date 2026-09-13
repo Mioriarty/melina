@@ -176,6 +176,23 @@ export const CATEGORIES: readonly CategoryDef[] = [
     ],
   },
   {
+    // **Harmony, and the first exercise that hears a progression rather than a
+    // chord.** It sits between the chords braid and the rest because that is
+    // the real dependency: you cannot hear where a chord is going until you
+    // can hear what it is. The vocabulary — cadences, Satzmodelle, applied
+    // chords — is generated rather than tabulated, so a second exercise on
+    // this category costs a round screen and nothing underneath.
+    id: 'harmony',
+    icon: 'analytics',
+    status: 'ready',
+    exercises: [
+      {
+        id: 'bass',
+        status: 'ready',
+      },
+    ],
+  },
+  {
     id: 'harmonic-prediction',
     icon: 'sparkles',
     status: 'planned',

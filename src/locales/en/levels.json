@@ -541,5 +541,56 @@
       "title": "Everything",
       "blurb": "All nine, every position, every Lage — and the C-clefs."
     }
+  },
+  "harmony-bass": {
+    "sections": {
+      "diatonik": "In the key",
+      "chromatik": "Borrowed chords",
+      "modelle": "Stock progressions"
+    },
+    "erste-schritte": {
+      "title": "First Steps",
+      "blurb": "Four chords in three easy keys, slowly, ending plainly."
+    },
+    "dur": {
+      "title": "Major Keys",
+      "blurb": "Five or six chords, with the tonic prolonged before it closes."
+    },
+    "moll": {
+      "title": "Minor Keys",
+      "blurb": "The same in minor, where the Phrygian half cadence lives."
+    },
+    "trugschluss": {
+      "title": "Deceptive Cadences",
+      "blurb": "It goes to the sixth degree instead. Hear the bass refuse to land."
+    },
+    "quartsext": {
+      "title": "Six-Four Chords",
+      "blurb": "Cadential, passing and neighbouring — three different things under one figure."
+    },
+    "zwischendominanten": {
+      "title": "Secondary Dominants",
+      "blurb": "A chord borrowed to make another one sound like a tonic."
+    },
+    "neapolitaner": {
+      "title": "The Neapolitan",
+      "blurb": "A flattened second in first inversion, leaning on the dominant."
+    },
+    "quintfall": {
+      "title": "Falling Fifths",
+      "blurb": "Roots dropping a fifth at a time, with and without sevenths."
+    },
+    "monte-fonte": {
+      "title": "Monte & Fonte",
+      "blurb": "The rising pair and the falling one, each step tonicised."
+    },
+    "fauxbourdon": {
+      "title": "Parallel Sixths",
+      "blurb": "Six-chords walking down the scale, and fifths climbing back up."
+    },
+    "alles": {
+      "title": "Everything",
+      "blurb": "Every technique, longer progressions, and faster."
+    }
   }
 }

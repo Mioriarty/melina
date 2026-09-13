@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "icons": "node scripts/generate-icons.mjs",
     "glyphs": "node scripts/extract-glyphs.mjs",
-    "shot": "node scripts/shot.mjs"
+    "shot": "node scripts/shot.mjs",
+    "progressions": "vite-node scripts/progressions.ts"
   },
   "dependencies": {
     "@fontsource-variable/eb-garamond": "^5.3.0",

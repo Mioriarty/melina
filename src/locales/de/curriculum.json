@@ -103,6 +103,17 @@
         }
       }
     },
+    "harmony": {
+      "title": "Harmonielehre",
+      "blurb": "Akkorde, die irgendwohin gehen: Kadenzen, Sequenzen und der Bass darunter.",
+      "exercises": {
+        "bass": {
+          "title": "Bassdiktat",
+          "short": "Bass",
+          "blurb": "Höre eine vierstimmige Harmoniefolge und schreibe ihren Bass in Stufen auf."
+        }
+      }
+    },
     "harmonic-prediction": {
       "title": "Harmonische Vorhersage",
       "blurb": "Erraten, wohin die Verbindung strebt.",

@@ -132,6 +132,17 @@ export interface MusicNames {
   lage: (member: ChordMember) => string
   /** The same on a key: `3rd`, `Terz`. */
   lageShort: (member: ChordMember) => string
+  /**
+   * A Satztechnik by name: `Falling fifths`, `Quintfallsequenz`.
+   *
+   * Music vocabulary, so it lives here rather than in the exercise's own
+   * namespace — the German names are the ones the literature uses and several
+   * of them have no settled English equivalent, which is exactly the case
+   * `useMusicNames` exists for.
+   */
+  technique: (id: string) => string
+  /** Short enough for a chip: `Quintfall`. */
+  techniqueShort: (id: string) => string
 }
 
 export function useMusicNames(): MusicNames {
@@ -231,6 +242,11 @@ export function useMusicNames(): MusicNames {
       inversionShort: (inversion) => t(`inversionsShort.${inversion}`),
       lage: (member) => t(`lagen.${member}`),
       lageShort: (member) => t(`lagenShort.${member}`),
+      technique: (id) => t(`techniques.${id}.label`, { defaultValue: id }),
+      techniqueShort: (id) =>
+        t(`techniques.${id}.short`, {
+          defaultValue: t(`techniques.${id}.label`, { defaultValue: id }),
+        }),
     }
   }, [t])
 }
