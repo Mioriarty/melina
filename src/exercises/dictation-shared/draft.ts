@@ -5,6 +5,7 @@ import {
   beamed,
   beamedByBeat,
   borrowedFrom,
+  tupletSpaces,
   valueTicks,
   type NoteValue,
   type RhythmNode,
@@ -320,11 +321,24 @@ function barNodes(meter: TimeSignature, placed: readonly Placed[]): RhythmNode[]
     }
 
     flushPlain()
+
+    // **A half-typed bracket still accounts for its whole beat.** Nothing on
+    // the plain grid can cover the stretch it leaves — one triplet eighth in
+    // is 20 ticks, and every value there is a whole number of sixteenths — so
+    // the measure came out short of its own duration and Verovio, justifying
+    // the system to fill a fixed page, spread the few notes there were across
+    // the whole staff. The bar opened out under the player's hands, and closed
+    // again the moment the bracket was finished.
+    const filled = beat * TICKS_PER_BEAT + run.reduce((sum, s) => sum + s.ticks, 0)
+
     nodes.push({
       kind: 'tuplet',
       num: division,
       numbase: borrowedFrom(division),
-      children: beamed(run),
+      children: [
+        ...beamed(run),
+        ...tupletSpaces(division, filled, (beat + 1) * TICKS_PER_BEAT),
+      ],
     })
   }
 

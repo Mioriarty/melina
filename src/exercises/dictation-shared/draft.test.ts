@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { TICKS_PER_BEAT, ticksPerMeasure, type TimeSignature } from '@/lib/music/meter'
 import { barRhythm } from '@/lib/music/phrase'
-import { onsetsOf } from '@/lib/notation/rhythmNotation'
+import { notatedTicks, onsetsOf, padding } from '@/lib/notation/rhythmNotation'
 
 import {
   append,
@@ -260,6 +260,40 @@ describe('the draft as notation', () => {
       const onsets = onsetsOf(draftNodes(type(FOUR_FOUR, keys.slice(0, count)))[0] ?? [])
       expect(onsets.slice(0, previous.length)).toEqual(previous)
       previous = onsets
+    }
+  })
+
+  it('accounts for the whole bar at every stage, brackets included', () => {
+    // **What `rhythmMei` needs and could not get inside a bracket.** The
+    // measure has to keep its full duration at every keystroke, or Verovio —
+    // which justifies the system to fill a fixed page — spreads the few notes
+    // there are across the whole staff, and the bar opens out under the
+    // player's hands. `padding` covers the plain grid and cannot start inside
+    // a half-typed tuplet, where the write head is 20 ticks in; the bracket
+    // completes its own beat instead.
+    const total = ticksPerMeasure(FOUR_FOUR)
+    const stages: BarDraft[] = []
+
+    let draft = arm(emptyDraft(FOUR_FOUR), 3)
+    for (let i = 0; i < 3; i += 1) stages.push((draft = append(draft, note(8))))
+    stages.push((draft = append(draft, note(4))))
+    draft = arm(draft, 5)
+    for (let i = 0; i < 5; i += 1) stages.push((draft = append(draft, note(16))))
+    stages.push((draft = append(draft, note(4))))
+
+    for (const stage of stages) {
+      const nodes = draftNodes(stage)[0] ?? []
+      const written = notatedTicks(nodes)
+      const padded = padding(FOUR_FOUR, written, total).reduce(
+        (sum, symbol) => sum + symbol.ticks,
+        0,
+      )
+
+      const where = `after ${stage.entries.length} keys`
+      expect(written + padded, where).toBe(total)
+      // And what fills the bracket is drawn as nothing at all, so it can never
+      // be mistaken for an impact.
+      expect(onsetsOf(nodes), where).toEqual(barRhythm(draftPhrase(stage), 0).onsets)
     }
   })
 

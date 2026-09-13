@@ -27,7 +27,12 @@ import { onsetsInBeat, type Rhythm } from '@/lib/music/rhythm'
 export type NoteValue = 1 | 2 | 4 | 8 | 16
 
 export interface RhythmSymbol {
-  kind: 'note' | 'rest'
+  /**
+   * `space` is drawn as nothing at all, and only ever pads the end of
+   * something that has not been written yet — see `tupletSpaces` and
+   * `padding`. It is never graded and never carries an impact.
+   */
+  kind: 'note' | 'rest' | 'space'
   dur: NoteValue
   dots: 0 | 1
   /** Ticks from the barline. */
@@ -138,13 +143,20 @@ function fill(
  * duration constant while it is being filled in, which is what stops the notes
  * already on screen from re-spacing under the player's hands — see
  * `rhythmMei`.
+ *
+ * **It can only start where a value can start**, which is a whole number of
+ * sixteenths from the barline. Inside a half-typed tuplet the write head is
+ * not there — one triplet eighth in is 20 ticks — and nothing this can write
+ * would land on the grid again. `tupletSpaces` is what covers that stretch,
+ * from inside the bracket and in the units it borrows, so that by the time
+ * this is asked the write head is back on a beat.
  */
 export function padding(
   meter: TimeSignature,
   from: number,
   to: number,
 ): readonly RhythmSymbol[] {
-  return fill(meter, from, to, 'rest')
+  return fill(meter, from, to, 'rest').map((symbol) => ({ ...symbol, kind: 'space' }))
 }
 
 /** A stretch of plain, un-bracketed beats, with the impacts that fall in it. */
@@ -182,6 +194,43 @@ function tupletDivision(offsets: readonly number[]): number | undefined {
 /** 3 in the space of 2, 5 in the space of 4 — the next power of two down. */
 export function borrowedFrom(division: number): number {
   return 1 << Math.floor(Math.log2(division))
+}
+
+/**
+ * The rest of an unfinished tuplet's beat, drawn as nothing at all.
+ *
+ * **A bar being typed into has to keep its full duration at every keystroke**,
+ * or Verovio — which justifies the system to fill a fixed page — spreads the
+ * few notes there are across the whole staff, and the bar visibly opens out
+ * under the player's hands. `padding` does that for the plain grid and cannot
+ * do it here: a bracket may only open on an untouched beat and closes the
+ * moment that beat is full, so while it is half typed the write head sits
+ * somewhere no written value can reach — 20 ticks in, for one triplet eighth.
+ *
+ * So the tuplet completes its own beat, in the units it borrows, and the write
+ * head `padding` is then asked about is always on a beat boundary again.
+ */
+export function tupletSpaces(
+  division: number,
+  from: number,
+  to: number,
+): readonly RhythmSymbol[] {
+  const unit = TICKS_PER_BEAT / division
+  const writtenUnit = TICKS_PER_BEAT / borrowedFrom(division)
+  const symbols: RhythmSymbol[] = []
+  let at = from
+
+  while (at < to) {
+    // No metric cap inside a tuplet: the bracket is the boundary.
+    const value = largestValueWithin(((to - at) / unit) * writtenUnit)
+    if (value === undefined) break
+
+    const ticks = (value.ticks / writtenUnit) * unit
+    symbols.push({ kind: 'space', dur: value.dur, dots: value.dots, at, ticks })
+    at += ticks
+  }
+
+  return symbols
 }
 
 function fillTuplet(rhythm: Rhythm, beat: number, division: number): RhythmTuplet {

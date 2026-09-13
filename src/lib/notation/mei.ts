@@ -432,6 +432,10 @@ function nodeElement(node: RhythmNode): string {
   }
 
   const dots = attribute('dots', node.dots)
+  // Drawn as nothing at all: the unwritten end of a tuplet that is still being
+  // typed, there so the measure keeps its full duration — see `tupletSpaces`.
+  if (node.kind === 'space') return spaceElement(node)
+
   // `@loc` is a staff position rather than a pitch, which is what an unpitched
   // note has: 0 is the single line the whole rhythm sits on.
   //
@@ -669,6 +673,9 @@ function melodicNodeElement(
   }
 
   const dots = attribute('dots', node.dots)
+  // Takes no pitch, because it is not a note: the unwritten end of a tuplet
+  // still being typed — see `tupletSpaces`.
+  if (node.kind === 'space') return spaceElement(node)
   if (node.kind === 'rest') return `<rest dur="${node.dur}"${dots}/>`
 
   const { pitch, accidental } = take()

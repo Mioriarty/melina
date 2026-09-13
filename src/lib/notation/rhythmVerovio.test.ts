@@ -11,7 +11,14 @@ import {
 import type { Rhythm } from '@/lib/music/rhythm'
 
 import { rhythmMei } from './mei'
-import { notateRhythm, padding } from './rhythmNotation'
+import {
+  beamed,
+  notateRhythm,
+  padding,
+  tupletSpaces,
+  type RhythmNode,
+  type RhythmSymbol,
+} from './rhythmNotation'
 import { renderMei, rhythmProfile } from './verovio'
 
 /**
@@ -126,6 +133,70 @@ describe('the bar being typed into', () => {
     for (let written = 0; written < total; written += TICKS_PER_BEAT / 4) {
       const filled = padding(meter, written, total).reduce((sum, s) => sum + s.ticks, 0)
       expect(written + filled, `from ${written}`).toBe(total)
+    }
+  })
+
+  /**
+   * A triplet with `typed` of its three eighths written, completed to its beat
+   * the way `draftNodes` completes one — see `tupletSpaces`.
+   */
+  function halfTypedTriplet(typed: number): RhythmNode[] {
+    const unit = TICKS_PER_BEAT / 3
+    const notes: RhythmSymbol[] = Array.from({ length: typed }, (_, index) => ({
+      kind: 'note',
+      dur: 8,
+      dots: 0,
+      at: index * unit,
+      ticks: unit,
+    }))
+
+    return [
+      {
+        kind: 'tuplet',
+        num: 3,
+        numbase: 2,
+        children: [...beamed(notes), ...tupletSpaces(3, typed * unit, TICKS_PER_BEAT)],
+      },
+    ]
+  }
+
+  it('holds a half-typed bracket where it belongs, rather than opening the bar out', async () => {
+    // **The symptom the tuplet padding exists for.** A bracket may only open on
+    // an untouched beat and closes the moment that beat is full, so while it is
+    // half typed the write head sits where no written value can reach — one
+    // triplet eighth in is 20 ticks. `padding` gave up there, the measure came
+    // out short of its own duration, and Verovio, justifying the system to fill
+    // a fixed page, spread what little there was across the whole staff: the
+    // lone note sat at 41% of the page and two notes at 30% and 63%, snapping
+    // back to 18% and 28% the instant the third arrived. The bar visibly opened
+    // out and closed again under the player's hands.
+    const noteheads = async (nodes: readonly RhythmNode[]) => {
+      const svg = await renderMei(
+        rhythmMei({ meter: FOUR_FOUR, staves: [{ nodes }] }),
+        undefined,
+        rhythmProfile(FOUR_FOUR.beats, 1),
+      )
+      const page = Number(svg.match(/viewBox="0 0 (\d+)/)?.[1] ?? 0)
+      const xs = [
+        ...svg.matchAll(/class="notehead"[^>]*>\s*<use[^>]*translate\((\d+),/g),
+      ].map((match) => Number(match[1]) / page)
+      return xs
+    }
+
+    const finished = await noteheads(halfTypedTriplet(3))
+    expect(finished).toHaveLength(3)
+
+    for (const typed of [1, 2]) {
+      const placed = await noteheads(halfTypedTriplet(typed))
+      expect(placed).toHaveLength(typed)
+
+      // Each note is already within a fiftieth of the page of where it ends up
+      // once the bracket is finished, rather than most of a staff away.
+      placed.forEach((x, index) => {
+        expect(Math.abs(x - (finished[index] as number)), `note ${index}`).toBeLessThan(
+          0.02,
+        )
+      })
     }
   })
 

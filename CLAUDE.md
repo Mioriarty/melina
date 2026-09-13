@@ -743,6 +743,22 @@ note already placed never moves. Three things make it work: `breaks: 'auto'`
 it grew the moment a beam appeared), and `rhythmMei` padding the unentered end
 of the bar with `<space>` so the measure keeps its full duration.
 
+**The padding cannot start inside a half-typed tuplet, and the tuplet has to
+finish the job itself.** `padding` writes plain values, every one of them a
+whole number of sixteenths from the barline — and a bracket leaves the write
+head nowhere near that: one triplet eighth in is 20 ticks, and nothing it can
+write would ever land on the grid again. So it wrote nothing, the measure came
+out short of its own duration, and Verovio — justifying the system to fill the
+fixed page — spread what little was there across the whole staff. One triplet
+eighth sat at 41% of the page and two at 30% and 63%, snapping back to 18% and
+28% the instant the third arrived: the bar opened out and closed again under
+the player's hands. `tupletSpaces` covers that stretch from _inside_ the
+bracket, in the units it borrows, so the write head `padding` is then asked
+about is always on a beat. `RhythmSymbol` gained a `space` kind for it —
+engraved in its place and drawn as nothing at all, never graded and never an
+impact, which is the same trick the unheard notes of a hearing question play
+with `@visible="false"`.
+
 **The page width is per metre.** It has to hold the densest bar the keyboard can
 produce — every sixteenth of every beat — since that is what a player might type
 whatever the question was. Sizing for the worst case in 5/4 and reusing it in
