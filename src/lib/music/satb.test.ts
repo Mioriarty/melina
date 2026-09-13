@@ -57,7 +57,14 @@ function settings(
   return found
 }
 
-describe('voiceProgression', () => {
+/**
+ * Voicing a few hundred progressions is seconds of work, and it earns them —
+ * this is the block the whole design rests on. The timeout sits on the
+ * describe rather than on one test so that no case here is left on the default
+ * five seconds, which is close enough to what these actually cost that a
+ * slower machine under load would fail them for being slow rather than wrong.
+ */
+describe('voiceProgression', { timeout: 60_000 }, () => {
   /**
    * **The test this whole design exists for.** `voiceLeading.ts` is written
    * once and read twice — as the filter the search generates through, and as
@@ -76,7 +83,7 @@ describe('voiceProgression', () => {
         ).toEqual([])
       }
     }
-  }, 20_000) // earns the seconds: this is the test the whole design rests on. // The search is a few hundred progressions here and about 17 ms each. It
+  })
 
   it('keeps every voice inside its own compass', () => {
     for (const [, satz] of settings(EVERYTHING, 25)) {

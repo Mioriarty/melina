@@ -50,9 +50,17 @@ export function keysOf(settings: HarmonySettings): readonly Key[] {
   return settings.keys.map(parseKeyKey).filter((key): key is Key => key !== undefined)
 }
 
-function progressionSpec(
+/**
+ * A level's settings as the generator's own spec.
+ *
+ * Exported because the *grammar* can be exercised without the voicing search,
+ * which is the expensive half: whether a level reaches every technique it
+ * offers is a question about the blocks, and nothing about where four voices
+ * end up can change the answer.
+ */
+export function progressionSpec(
   settings: HarmonySettings,
-  keys: readonly Key[],
+  keys: readonly Key[] = keysOf(settings),
 ): ProgressionSpec {
   return {
     keys,

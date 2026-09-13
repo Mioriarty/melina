@@ -74,6 +74,7 @@ import {
   bassDegrees,
   generateRound as generateBassRound,
   harmonySpec,
+  progressionSpec,
 } from '@/exercises/harmony-shared/generate'
 import {
   BLOCK_CHOICES,
@@ -82,7 +83,7 @@ import {
 } from '@/exercises/harmony-shared/settings'
 import { figureKey, figurePitches } from '@/lib/music/figuredBass'
 import { isKeyKey } from '@/lib/music/key'
-import { cadenceOf } from '@/lib/music/progression'
+import { cadenceOf, generateProgression } from '@/lib/music/progression'
 import { errorsOf, satzFindings } from '@/lib/music/voiceLeading'
 import { i18n } from '@/lib/i18n'
 import { LANGUAGES } from '@/lib/i18n/languages'
@@ -1219,19 +1220,26 @@ describe('harmony levels', () => {
     30_000,
   )
 
-  it('reaches every technique it offers, given enough rounds', () => {
+  it('reaches every technique it offers, given enough progressions', () => {
     // A block that is allowed and never comes up is a level quietly narrower
     // than it says — the same property `generate.test.ts` measures for rhythm,
     // where a weight that never reaches a bar does nothing at all.
+    //
+    // **The grammar alone**, without the voicing search. Whether a cadence gets
+    // reached is decided by the backwards walk and nothing about where four
+    // voices end up can change it, so setting each progression as well was
+    // paying ten times the cost for none of the answer.
     const level = BASS_DIFFICULTIES.find((entry) => entry.id === 'alles')
     expect(level).toBeDefined()
     if (level === undefined) return
 
     const random = createRandom(99)
-    const spec = { ...harmonySpec(level.settings), questionsPerRound: 60 }
+    const spec = progressionSpec(level.settings)
     const seen = new Set<string>()
-    for (const question of generateBassRound(random, spec)) {
-      for (const span of question.progression.analysis) seen.add(span.id)
+
+    for (let index = 0; index < 120; index += 1) {
+      const progression = generateProgression(random, spec)
+      for (const span of progression?.analysis ?? []) seen.add(span.id)
     }
 
     for (const id of level.settings.cadences) expect(seen, id).toContain(id)
