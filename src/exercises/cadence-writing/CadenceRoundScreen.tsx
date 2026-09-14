@@ -95,12 +95,14 @@ export function CadenceRoundScreen({
             cursor={cursor}
             {...(revealed ? { onPlay, status: playStatus } : {})}
           />
-          {report !== undefined && (
-            <FindingList
-              findings={report.findings}
-              {...(report.lage ? {} : { missedLage: question.lage })}
-            />
-          )}
+          {/* Drawn empty while the question is open, because the room it
+              takes is reserved either way — see `FindingList`. */}
+          <FindingList
+            findings={report?.findings ?? []}
+            {...(report === undefined || report.lage
+              ? {}
+              : { missedLage: question.lage })}
+          />
         </>
       }
       keyboard={(binding) => (

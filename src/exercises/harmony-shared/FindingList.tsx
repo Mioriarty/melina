@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Icon } from '@/components/ui/Icon'
+import { cn } from '@/lib/utils/cn'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import type { ChordMember } from '@/lib/music/chord'
 import type { Finding } from '@/lib/music/voiceLeading'
@@ -30,8 +31,26 @@ import { findingLine, orderFindings } from './findingText'
  * given over to a wall of text is one where the staff has no room left.
  */
 
-/** How many lines are worth reading before the rest is just a count. */
-const SHOWN = 4
+/**
+ * How many lines are worth reading before the rest is just a count.
+ *
+ * Three, and the number is a layout fact as much as an editorial one: the space
+ * this list takes is **reserved whether or not there is anything in it**, so
+ * every line of it is a line the notation does not get. A setting that broke
+ * nine rules does not need nine lines to say so.
+ */
+const SHOWN = 3
+
+/**
+ * The room kept for the list, full or empty.
+ *
+ * The rule the play caption under a staff already follows: its height is
+ * reserved either way, so revealing an answer does not move the staff. Without
+ * it the notation is `flex-1` and the findings take their height straight out
+ * of it — the staff shrinks at the exact moment the player looks at it, which
+ * is the failure the fixed page exists to prevent, arriving by another door.
+ */
+const RESERVED = 'min-h-[5.5rem]'
 
 export interface FindingListProps {
   findings: readonly Finding[]
@@ -47,10 +66,8 @@ export function FindingList({ findings, missedLage }: FindingListProps) {
   const shown = ordered.slice(0, missedLage === undefined ? SHOWN : SHOWN - 1)
   const rest = ordered.length - shown.length
 
-  if (missedLage === undefined && ordered.length === 0) return null
-
   return (
-    <ul className="flex w-full shrink-0 flex-col gap-1 text-left text-sm">
+    <ul className={cn('flex w-full shrink-0 flex-col gap-1 text-left text-sm', RESERVED)}>
       {missedLage !== undefined && (
         <Line severity="error">
           {t('satb.findings.wrongLage', { lage: names.lage(missedLage) })}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { pitch, pitchKey } from '@/lib/music/pitch'
-import { SATB_RANGES, type VoiceId } from '@/lib/music/satbVoicing'
+import type { VoiceId } from '@/lib/music/satbVoicing'
 
 import {
   canRemove,
@@ -81,23 +81,29 @@ describe('filling a setting', () => {
 })
 
 describe('where a pressed note goes', () => {
-  it('opens near the middle of the voice, not hard against the bass', () => {
-    // There is no previous note to follow in the first chord, and opening
-    // every setting in close position would force the one thing the prompt
-    // actually names — the Lage — into a corner.
-    const note = placedPitch(empty(), G)
-    expect(note).toBeDefined()
-
-    const middle =
-      (SATB_RANGES.tenor.lowest.octave + SATB_RANGES.tenor.highest.octave) / 2
-    expect(Math.abs((note?.octave ?? 0) - middle)).toBeLessThanOrEqual(1)
+  it('opens in close position above the voice underneath', () => {
+    // Nothing to follow in the first chord, so it stacks from the bass up:
+    // the lowest G at or above the bass's C3 is G3. A default in the middle of
+    // the tenor's own compass would be A3 instead — legal, and two ledger
+    // lines above the bass staff, which made every key draw a note hanging in
+    // the air over its own staff.
+    const draft = emptySatzDraft([{ bass: pitch('C', 0, 3) }], ORDER)
+    expect(pitchKey(placedPitch(draft, G) as ReturnType<typeof pitch>)).toBe('G3')
   })
 
   it('never opens below the voice underneath it', () => {
-    // The bass is up at C3 here, so the tenor's low C is not a candidate the
-    // default may reach for.
-    const draft = emptySatzDraft([{ bass: pitch('C', 0, 3) }], ORDER)
+    // The bass is up at D3, so the tenor's C3 is under it and the default
+    // reaches for the octave above instead.
+    const draft = emptySatzDraft([{ bass: pitch('D', 0, 3) }], ORDER)
     expect(pitchKey(placedPitch(draft, C) as ReturnType<typeof pitch>)).toBe('C4')
+  })
+
+  it('will sit on the voice underneath rather than under it', () => {
+    // A unison with the bass is thin and it is not a fault, so "at or above"
+    // is what close position means. The octave switch reaches the other C.
+    const draft = emptySatzDraft([{ bass: pitch('C', 0, 3) }], ORDER)
+    expect(pitchKey(placedPitch(draft, C) as ReturnType<typeof pitch>)).toBe('C3')
+    expect(pitchKey(placedPitch(draft, C, true) as ReturnType<typeof pitch>)).toBe('C4')
   })
 
   it('follows the same voice from the chord before', () => {

@@ -150,10 +150,12 @@ export function satzVoicings(draft: SatzDraft): readonly Voicing[] | undefined {
  * - **After the first chord, the nearest note to where this voice just was.**
  *   That is the voice-leading default and the one that is right almost every
  *   time; a line that moves the least is the line a chorale writes.
- * - **In the first chord, the middle of the voice's own compass** — but never
- *   below the voice underneath it. There is no previous note to follow, and
- *   opening every setting hard against the voice below would force close
- *   position on the one chord whose spacing the prompt actually names.
+ * - **In the first chord, the lowest note at or above the voice underneath.**
+ *   Close position from the bass up, which is the ordinary chorale texture,
+ *   the one `voiceChord` already uses everywhere else in the app, and — not
+ *   incidentally — the one that keeps every key legible: a tenor default in the
+ *   middle of its own compass sits at A3, two ledger lines above the bass
+ *   staff, so every key drew a note hanging in the air over its own staff.
  *
  * `shift` is the one-shot octave switch, and it means *the other octave*. There
  * is only ever one, so the switch is unambiguous; where there is none, it does
@@ -173,8 +175,7 @@ export function placedPitch(
   const options = placements(note, slot.voice)
   if (options.length === 0) return undefined
 
-  const preferred = preference(draft, slot)
-  const best = nearest(options, preferred)
+  const best = preferred(draft, slot, options)
   if (!shift) return best
 
   const other = options.find((option) => option.octave !== best.octave)
@@ -216,19 +217,25 @@ function placements(note: PitchClass, voice: VoiceId): readonly Pitch[] {
   return found
 }
 
-/** The pitch this voice should sit nearest to, in semitones. */
-function preference(draft: SatzDraft, slot: SatzSlot): number {
-  const before = voicesAt(draft, slot.chord - 1)[slot.voice]
-  if (slot.chord > 0 && before !== undefined) return chromaticValue(before)
+/**
+ * Which of a letter's two pitches this voice should take.
+ *
+ * After the first chord it is wherever the voice already was. In the first
+ * chord there is nothing to follow, so it stacks: the lowest note at or above
+ * the voice underneath, which is close position and the texture a chorale opens
+ * in more often than not. Where a voice has nothing below it — the bass, in a
+ * question that gives none — the bottom of its own compass stands in.
+ *
+ * It is only ever a *default*: the octave switch reaches the other one, and
+ * every key draws what it will actually write, so nothing about this can
+ * surprise the player.
+ */
+function preferred(draft: SatzDraft, slot: SatzSlot, options: readonly Pitch[]): Pitch {
+  const before = slot.chord > 0 ? voicesAt(draft, slot.chord - 1)[slot.voice] : undefined
+  if (before !== undefined) return nearest(options, chromaticValue(before))
 
-  const range = SATB_RANGES[slot.voice]
-  const middle = (chromaticValue(range.lowest) + chromaticValue(range.highest)) / 2
-
-  // Never below the voice underneath, where there is one: an opening chord
-  // that crosses itself before the player has pressed anything is a worse
-  // default than one that opens a little wide.
-  const below = under(draft, slot)
-  return below === undefined ? middle : Math.max(middle, below)
+  const floor = under(draft, slot) ?? chromaticValue(SATB_RANGES[slot.voice].lowest)
+  return stackedOn(options, floor)
 }
 
 function under(draft: SatzDraft, slot: SatzSlot): number | undefined {
@@ -246,5 +253,18 @@ function nearest(options: readonly Pitch[], to: number): Pitch {
     Math.abs(chromaticValue(option) - to) < Math.abs(chromaticValue(best) - to)
       ? option
       : best,
+  )
+}
+
+/** The lowest option at or above `floor`, or the highest there is below it. */
+function stackedOn(options: readonly Pitch[], floor: number): Pitch {
+  const above = options.filter((option) => chromaticValue(option) >= floor)
+  if (above.length > 0) {
+    return above.reduce((best, option) =>
+      chromaticValue(option) < chromaticValue(best) ? option : best,
+    )
+  }
+  return options.reduce((best, option) =>
+    chromaticValue(option) > chromaticValue(best) ? option : best,
   )
 }

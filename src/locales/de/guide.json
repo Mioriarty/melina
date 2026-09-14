@@ -303,7 +303,6 @@
       "body": "Die vollständige Liste, die die App prüft. Die letzte Spalte sagt, was ein Verstoß bewirkt.",
       "rule": "Regel",
       "asks": "Was sie verlangt",
-      "costs": "Verstoß",
       "error": "Falsch",
       "warning": "Anmerkung",
       "always": "Immer geprüft"

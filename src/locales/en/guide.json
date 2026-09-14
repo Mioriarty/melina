@@ -303,7 +303,6 @@
       "body": "The whole list the app checks. The last column says what breaking one does.",
       "rule": "Rule",
       "asks": "What it asks for",
-      "costs": "Breaking it",
       "error": "Fails",
       "warning": "Noted",
       "always": "Always checked"

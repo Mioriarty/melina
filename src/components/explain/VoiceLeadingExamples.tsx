@@ -63,23 +63,40 @@ export function SatzExample({ example, className }: SatzExampleProps) {
       : t('voiceLeading.staff.fault', { rule: names.rule(example.rule) })
 
   return (
-    <PlayableExample
-      sound={sound}
-      label={label}
-      className={cn('block w-full', className)}
+    /*
+      The height has to come down the box, not up from the drawing. `Score`
+      puts `max-h-full` on the SVG, and against a parent whose height is
+      indefinite that resolves to nothing — the staff then sizes the box that
+      was supposed to size it and prints straight over the prose above and
+      below it, which is exactly what it did the first time. A `max-height` on
+      the wrapper is not enough: it bounds nothing, because it leaves the
+      parent's height indefinite just the same. So the wrapper carries a
+      *definite* height and `items-stretch` hands it on — the chain `SCORE_BOX`
+      sets up on a round screen, and the figured bass guide on its own
+      examples.
+
+      Taller than that guide's, because a grand staff is two staves and a brace
+      where a figured bass example is one staff and a figure.
+    */
+    <div
+      className={cn('flex h-60 w-full items-stretch justify-center sm:h-72', className)}
     >
-      <Score
-        className="max-h-52"
-        mei={satbMei({
-          keySignature: signature,
-          events: satz.events.map((event, index) => ({
-            voicing: satz.voicings[index] as NonNullable<(typeof satz.voicings)[number]>,
-            ticks: event.ticks,
-          })),
-        })}
-        profile={SATB_EXAMPLE_PROFILE}
-        label={label}
-      />
-    </PlayableExample>
+      <PlayableExample sound={sound} label={label} className="flex min-h-0 flex-1">
+        <Score
+          className="h-full min-h-0 flex-1"
+          mei={satbMei({
+            keySignature: signature,
+            events: satz.events.map((event, index) => ({
+              voicing: satz.voicings[index] as NonNullable<
+                (typeof satz.voicings)[number]
+              >,
+              ticks: event.ticks,
+            })),
+          })}
+          profile={SATB_EXAMPLE_PROFILE}
+          label={label}
+        />
+      </PlayableExample>
+    </div>
   )
 }

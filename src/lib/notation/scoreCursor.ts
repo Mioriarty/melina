@@ -66,6 +66,22 @@ const RISE = 3
 /** Kept clear of the page's own bottom edge, so the band reads as a band. */
 const FOOT = 60
 
+/**
+ * How far below the lowest staff line the band may reach, in staff-line gaps.
+ *
+ * **The page is not the music**, and on a four-part setting the two are a long
+ * way apart: `satbProfile` reserves room for three rows of analysis that are
+ * only printed once the answer is in, so a band drawn to the page's own foot
+ * ran a third of its length through blank paper below the figures. Enough to
+ * cover the figure row — which *is* drawn while the question is open — and no
+ * further.
+ *
+ * Taken as a *cap* rather than as the bottom, so a tightly fitted page still
+ * ends where it always did: a thoroughbass render leaves less slack than this
+ * and keeps its own foot.
+ */
+const REACH = 7
+
 /** A corner just soft enough not to read as a form control. */
 const CORNER = 110
 
@@ -138,14 +154,16 @@ function measureChunks(svg: string): readonly string[] {
  */
 function measureSpan(
   chunk: string,
-): { left: number; right: number; top: number } | undefined {
+): { left: number; right: number; top: number; bottom: number } | undefined {
   let left = 0
   let right = 0
   let top: number | undefined
+  let bottom = 0
   let widest = 0
 
   for (const rule of horizontalRules(chunk)) {
     if (top === undefined || rule.y < top) top = rule.y
+    if (rule.y > bottom) bottom = rule.y
     const width = Math.abs(rule.x2 - rule.x1)
     if (width > widest) {
       widest = width
@@ -154,7 +172,7 @@ function measureSpan(
     }
   }
 
-  return top === undefined ? undefined : { left, right, top }
+  return top === undefined ? undefined : { left, right, top, bottom }
 }
 
 /**
@@ -291,7 +309,10 @@ export function markSlot(svg: string, cursor: ScoreCursor): string {
   const left = Math.max(page.left, musicLeft(chunks, gap), found.x - half)
   const right = Math.min(page.right, found.x + half)
   const top = span === undefined ? page.top : span.top - RISE * gap
-  const bottom = page.bottom - FOOT
+  const bottom =
+    span === undefined
+      ? page.bottom - FOOT
+      : Math.min(page.bottom - FOOT, span.bottom + REACH * gap)
 
   // **`stroke-width` rather than `stroke`.** Every render carries a stylesheet
   // of Verovio's own containing `#<id> rect { stroke: currentcolor }` — an ID
