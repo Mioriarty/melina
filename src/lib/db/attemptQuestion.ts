@@ -19,6 +19,7 @@ import {
   parseDegreesKey,
   type Degree,
 } from '@/lib/music/degree'
+import { CHORD_MEMBERS, type ChordMember } from '@/lib/music/chord'
 import { parseEvents } from '@/lib/music/harmony'
 import { degreeOf, keySignatureOf, parseKeyKey } from '@/lib/music/key'
 import { parseAnalysis } from '@/lib/music/progression'
@@ -231,6 +232,22 @@ export interface HarmonyAttempt {
   /** The Satztechniken, as `id:origin:links:from:to` spans. */
   analysis: string
   tempo: number
+  /**
+   * Which Lage the opening chord was asked to stand in.
+   *
+   * Present only for a row that asked for a four-part setting, and the one
+   * thing about such a question that is **not** derivable from the progression:
+   * everything else a cadence-writing question says is the bass and the
+   * figures, but which note the prompt wanted on top is the prompt's own, and
+   * no reading of the chords can recover it.
+   *
+   * It is also a dimension a player can be weak in — "you keep missing the
+   * Terzlage" is a finding — and it is the dimension chord questions already
+   * call `top`, so that is the facet it becomes: `{ top: '1' }` means every
+   * question about a Terzlage, in either exercise, exactly as `{ root: 'Eb' }`
+   * spans intervals and scales.
+   */
+  lage?: ChordMember
 }
 
 export type AttemptQuestion =
@@ -272,6 +289,12 @@ export function correctAnswer(question: AttemptQuestion): string {
  * rule this whole file follows: what a row implies is never also written down.
  */
 export function harmonyAnswerKey(question: HarmonyAttempt): string {
+  // **A four-part setting has no single right answer**, which is the whole
+  // reason it is graded by rules rather than by equality — so there is nothing
+  // honest to put here, and an invented one would be a model answer printed as
+  // though it were the answer.
+  if (question.lage !== undefined) return ''
+
   const degrees = harmonyBassDegrees(question)
   return degrees === undefined ? '' : degreesKey(degrees)
 }
@@ -617,6 +640,9 @@ function harmonyFacets(question: HarmonyAttempt): Facets {
     kind: 'harmony',
     key: question.key,
     tempo: String(question.tempo),
+    ...(question.lage === undefined
+      ? {}
+      : { top: String(CHORD_MEMBERS.indexOf(question.lage)) }),
   }
 
   const key = parseKeyKey(question.key)

@@ -16,7 +16,7 @@ import { preloadEngraver } from '@/lib/notation/verovio'
 import { BASS_DIFFICULTIES } from './difficulties'
 import { BassRoundScreen } from './BassRoundScreen'
 import { BassSummary } from './BassSummary'
-import { SetupScreen } from './SetupScreen'
+import { SetupScreen } from '@/exercises/harmony-shared/SetupScreen'
 import { BASS_DICTATION_SETTINGS } from './settings'
 
 const EXERCISE_ID = 'harmony/bass'
@@ -110,7 +110,8 @@ export default function BassDictationExercise() {
         settings={settings}
         titleKey={TITLE_KEY}
         blurbKey={BLURB_KEY}
-        onChange={(next) => {
+        onChange={(patch) => {
+          const next = { ...settings, ...patch }
           setDraft(next)
           writeSettings(next)
         }}

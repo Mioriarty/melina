@@ -111,6 +111,11 @@
           "title": "Bassdiktat",
           "short": "Bass",
           "blurb": "Höre eine vierstimmige Harmoniefolge und schreibe ihren Bass in Stufen auf."
+        },
+        "cadence": {
+          "title": "Kadenzen aussetzen",
+          "short": "Kadenzen",
+          "blurb": "Setze eine Kadenz vierstimmig aus und beginne in der angegebenen Lage."
         }
       }
     },
@@ -183,6 +188,10 @@
     "chords": {
       "title": "Akkordarten",
       "blurb": "Die neun Akkorde, nach denen melina fragt, und was ihre Namen sagen."
+    },
+    "voice-leading": {
+      "title": "Stimmführung",
+      "blurb": "Die Regeln, nach denen ein vierstimmiger Satz bewertet wird — und warum jede eine ist."
     }
   }
 }

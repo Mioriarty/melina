@@ -30,6 +30,15 @@ export interface RoundSummaryProps<TQuestion, TAnswer> {
    * the answer against the question it was answering.
    */
   answerName: (answer: Answered<TQuestion, TAnswer>) => string
+  /**
+   * Which phrase introduces what `answerName` returns.
+   *
+   * "You answered …" is right wherever the answer was a choice, which is every
+   * exercise that picks one. It is not right where the answer was a whole
+   * four-part setting: what is worth printing back there is not the answer but
+   * *where* it went wrong, and "You answered chords 2–3" is not a sentence.
+   */
+  answerLabelKey?: string
   /** Tooltip on a chip: what was asked, and in what context. */
   chipTitle: (answer: Answered<TQuestion, TAnswer>) => string
   /** Where to go next when nothing was missed. Exercise-specific advice. */
@@ -54,6 +63,7 @@ export function RoundSummary<TQuestion, TAnswer>({
   subjectKey,
   subjectName,
   answerName,
+  answerLabelKey = 'exercise:summary.youAnswered',
   chipTitle,
   allCorrect,
   onPlayAgain,
@@ -134,7 +144,7 @@ export function RoundSummary<TQuestion, TAnswer>({
                       {subjectName(entry.answer)}
                     </span>
                     <span className="mt-0.5 block text-sm leading-snug text-ink-muted">
-                      {t('exercise:summary.youAnswered', {
+                      {t(answerLabelKey, {
                         answers: [...entry.answered].join(', '),
                       })}
                     </span>

@@ -1,6 +1,7 @@
 import type { IconBaseProps } from 'react-icons'
 import {
   IoAddOutline,
+  IoAlertCircleOutline,
   IoAlbumsOutline,
   IoAnalyticsOutline,
   IoArrowBackOutline,
@@ -49,6 +50,7 @@ import {
  */
 const ICONS = {
   add: IoAddOutline,
+  alert: IoAlertCircleOutline,
   albums: IoAlbumsOutline,
   analytics: IoAnalyticsOutline,
   arrowBack: IoArrowBackOutline,

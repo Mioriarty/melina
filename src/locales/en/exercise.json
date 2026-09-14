@@ -190,6 +190,17 @@
       "on": "Play it",
       "off": "Leave it out",
       "hint": "Four chords that say what key we are in, before the question."
+    },
+    "lagen": {
+      "title": "Opening Lage",
+      "hint": "Which note the prompt may ask for on top of the first chord."
+    },
+    "rules": {
+      "errors": "Rules that cost the answer",
+      "errorsHint": "Break one of these and the setting is marked wrong.",
+      "warnings": "Rules that are only pointed out",
+      "warningsHint": "These are places to look at. They never cost the answer.",
+      "explain": "What the rules mean"
     }
   },
   "round": {
@@ -239,7 +250,8 @@
       "degrees": "Every one correct. Try a longer melody, the whole scale, or letting notes step outside the key.",
       "melody": "Every one correct. Try a wider range, a finer subdivision, or a second bar.",
       "figuring": "Every one correct. Try the sevenths, a key further round the circle, or the accidentals.",
-      "realizing": "Every one correct. Try the inversions, more flats or sharps, or the accidentals."
+      "realizing": "Every one correct. Try the inversions, more flats or sharps, or the accidentals.",
+      "cadence": "Every one correct. Try a wider Lage, a minor key, or switching every rule on at once."
     },
     "thisRound": "This round",
     "questionLabel": "{{subject}} · {{clef}}",
@@ -421,6 +433,10 @@
     },
     "summary": {
       "allCorrect": "Every bass line right."
+    },
+    "cadence": {
+      "levelsBlurb": "Write a cadence out in four parts, beginning in the Lage the prompt names.",
+      "setupBlurb": "Choose the keys, the cadences and the rules a setting is marked against."
     }
   },
   "satb": {
@@ -443,8 +459,17 @@
       "wrongLage": "The setting had to begin in {{lage}}."
     },
     "summary": {
-      "clean": "No mistakes",
-      "faults": "{{count}} to look at"
+      "where": "At {{answers}}",
+      "chord": "chord {{chord}}",
+      "chords": "chords {{from}}–{{to}}",
+      "opening": "the opening chord",
+      "lage": "The opening Lage",
+      "chipTitle": "{{key}}, beginning in {{lage}}"
+    },
+    "scoreLabel": {
+      "staff": "A cadence in {{key}}, beginning in {{lage}}: {{events}}",
+      "plain": "{{bass}}",
+      "figured": "{{bass}} with {{figure}}"
     }
   }
 }

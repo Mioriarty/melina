@@ -268,5 +268,60 @@
       "writing": "Akkorde schreiben"
     },
     "source": "Jede Zeile und jede Tabellenzeile auf dieser Seite entsteht, indem das Akkordmodell selbst ausgewertet wird, nicht indem es nachgezeichnet würde — sie kann also nicht etwas beschreiben, was die App nicht mehr tut."
+  },
+  "voiceLeading": {
+    "title": "Stimmführung",
+    "intro": "Ein vierstimmiger Satz sind vier Sänger, und fast alles, was ein Korrektor an den Rand schreibt, betrifft die Frage, wie eine von ihnen von einem Akkord zum nächsten gekommen ist. Die Regeln unten sind das übliche Inventar — sie sind mechanisch, sie sind vollständig, und sie sind der Teil einer Tonsatzklausur, den eine App mit Sicherheit prüfen kann.",
+    "what": {
+      "title": "Was ein Satz ist",
+      "body": "Vier Stimmen — Sopran, Alt, Tenor und Bass — zu zweit auf einem System. Die obere Stimme eines Systems bekommt Hälse nach oben, die untere nach unten; so unterscheidet man die beiden Linien auf einem System. Der Bass ist in der Regel vorgegeben, die drei Stimmen darüber schreibst du.",
+      "after": "Drück auf das Notenbild. Vier Stimmen, die sich gemeinsam bewegen, sind der Klang, den jede Regel unten schützt — und wer den guten Satz zuerst hört, erkennt die fehlerhaften sofort."
+    },
+    "ranges": {
+      "title": "Was jede Stimme singen kann",
+      "body": "Choralumfänge, nicht die Grenzen einer ausgebildeten Stimme: ein Satz, der darin bleibt, ist von Laien singbar — und dafür ist der Satztyp da.",
+      "after": "Das ist nicht der Umfang des Notensystems. Wo ein Ton auf der Seite steht, ist Geometrie; was eine Stimme singen kann, ist eine Tatsache über Menschen."
+    },
+    "faults": {
+      "title": "Die Fehler, einer nach dem anderen",
+      "body": "Jedes Beispiel unten ist der Satz von oben mit einer einzigen bewegten Stimme. Hör sie nacheinander an — der Unterschied ist ein Ton, und man hört ihn jedes Mal.",
+      "parallel-fifths": "Zwei Stimmen im Quintabstand gehen in eine weitere Quinte. Die beiden Linien klingen nicht mehr wie zwei.",
+      "parallel-octaves": "Dasselbe im Oktavabstand, und schlimmer: aus vier Stimmen werden drei.",
+      "crossing": "Eine Stimme singt unter der Stimme unter ihr, und der Hörer hört keine der beiden Linien dort, wo sie hingehört.",
+      "spacing": "Mehr als eine Oktave zwischen benachbarten Oberstimmen lässt ein Loch in der Mitte des Akkords.",
+      "doubled-leading-note": "Der Leitton will in die Tonika steigen. Tun das zwei Stimmen gemeinsam, entstehen Oktavparallelen.",
+      "unresolved-seventh": "Eine Septime ist eine Dissonanz und geht schrittweise abwärts. Alles andere lässt sie in der Luft hängen.",
+      "after": "Nichts davon ist Geschmackssache. Jeder Fall ist eine Beziehung zwischen zwei Tönen in zwei Akkorden — genau deshalb kann eine App jeden davon finden und keinen übersehen."
+    },
+    "marking": {
+      "title": "Was ein Verstoß kostet",
+      "body": "Die meisten Regeln machen einen Satz schlicht falsch. Einige wenige — ein Sprung über die Sexte hinaus, ein Querstand — werden nur angemerkt, denn dorthin darf eine Linie durchaus wollen, und ein menschlicher Korrektor wägt sie ab, statt sie zu zählen.",
+      "after": "Welche Regeln überhaupt bewertet werden, entscheidest du: ein Level benennt sie, sodass du Parallelen allein üben und den Rest dazunehmen kannst, wenn sie nicht mehr vorkommen."
+    },
+    "table": {
+      "title": "Alle Regeln",
+      "body": "Die vollständige Liste, die die App prüft. Die letzte Spalte sagt, was ein Verstoß bewirkt.",
+      "rule": "Regel",
+      "asks": "Was sie verlangt",
+      "costs": "Verstoß",
+      "error": "Falsch",
+      "warning": "Anmerkung",
+      "always": "Immer geprüft"
+    },
+    "limits": {
+      "title": "Was das nicht sagen kann",
+      "body": "Es findet jede Quintparallele mit Sicherheit. Es kann nicht sagen, ob der Sopran eine gute Linie ist, ob die Harmonik Sinn ergibt oder ob der Satz nach Bach klingt.",
+      "after": "Die Regeln sind der Boden, nicht die Decke. Sie einzuhalten ist der Anfang eines lesenswerten Satzes, nicht sein Ende."
+    },
+    "next": {
+      "title": "Wo das gebraucht wird",
+      "body": "Zwei Übungen bauen darauf auf.",
+      "cadence": "Kadenzen aussetzen",
+      "bass": "Bassdiktat"
+    },
+    "staff": {
+      "clean": "Ein vierstimmiger Satz ohne Fehler",
+      "fault": "Ein vierstimmiger Satz mit {{rule}}"
+    }
   }
 }

@@ -168,11 +168,23 @@ export const PATH_NODES: readonly PathNodePosition[] = [
   // gaps of 145 fall under the floor a connector needs. So everything below
   // moves down, and everything below **changes side**: the column alternates
   // and one extra station flips the parity of every node under it.
-  { stationId: 'harmony/bass', x: 30, y: 2715 },
-  { stationId: 'harmonic-prediction', x: 68, y: 2955 },
-  { stationId: 'harmonic-completion', x: 32, y: 3170 },
-  { stationId: 'counterpoint', x: 66, y: 3400 },
-  { stationId: 'daily', x: 34, y: 3600 },
+  //
+  // Two stations were added here later — the voice-leading explainer and the
+  // cadence writing it serves — and **two** is what made that cheap: an even
+  // number leaves the parity of everything under it alone, so nothing below
+  // had to change side. Only the y coordinates moved.
+  //
+  // The explainer stands at the head of the harmony run rather than behind a
+  // question mark, for the reason the figured bass one does: a setting is
+  // marked against a list of prohibitions, and a player who was never told
+  // them is not being asked a hard question but an unfair one.
+  { stationId: 'guide/voice-leading', x: 30, y: 2670 },
+  { stationId: 'harmony/cadence', x: 68, y: 2900 },
+  { stationId: 'harmony/bass', x: 32, y: 3150 },
+  { stationId: 'harmonic-prediction', x: 66, y: 3360 },
+  { stationId: 'harmonic-completion', x: 34, y: 3620 },
+  { stationId: 'counterpoint', x: 68, y: 3855 },
+  { stationId: 'daily', x: 32, y: 4145 },
 ]
 
 /**
@@ -209,7 +221,9 @@ export const PATH_EDGES: readonly PathEdge[] = [
   { from: 'guide/chords', to: 'chords/hearing' },
   { from: 'chords/reading', to: 'chords/writing' },
   { from: 'chords/hearing', to: 'chords/writing' },
-  { from: 'chords/writing', to: 'harmony/bass' },
+  { from: 'chords/writing', to: 'guide/voice-leading' },
+  { from: 'guide/voice-leading', to: 'harmony/cadence' },
+  { from: 'harmony/cadence', to: 'harmony/bass' },
   { from: 'harmony/bass', to: 'harmonic-prediction' },
   // **Thoroughbass is off the path, joined only to itself.** Nothing leads
   // into it and nothing leads out, so `PATH_EDGES` has exactly two components

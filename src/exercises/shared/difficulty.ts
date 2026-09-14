@@ -50,6 +50,7 @@ export type DifficultyGroup =
   | 'chord-hearing'
   | 'chord-writing'
   | 'harmony-bass'
+  | 'harmony-cadence'
 
 export function difficultyTitleKey(group: DifficultyGroup, id: string): string {
   return `levels:${group}.${id}.title`

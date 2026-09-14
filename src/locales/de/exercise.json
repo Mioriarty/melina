@@ -190,6 +190,17 @@
       "on": "Spielen",
       "off": "Weglassen",
       "hint": "Vier Akkorde, die die Tonart festlegen, vor der eigentlichen Frage."
+    },
+    "lagen": {
+      "title": "Anfangslage",
+      "hint": "Welcher Ton im ersten Akkord oben verlangt werden darf."
+    },
+    "rules": {
+      "errors": "Regeln, die den Satz falsch machen",
+      "errorsHint": "Wird eine davon verletzt, gilt der Satz als falsch.",
+      "warnings": "Regeln, die nur angemerkt werden",
+      "warningsHint": "Stellen zum Ansehen. Sie kosten nie die Antwort.",
+      "explain": "Was die Regeln bedeuten"
     }
   },
   "round": {
@@ -239,7 +250,8 @@
       "degrees": "Alles richtig. Versuch eine längere Melodie, die ganze Tonleiter, oder lass Töne aus der Tonart heraustreten.",
       "melody": "Alles richtig. Versuch einen größeren Tonumfang, eine feinere Unterteilung oder einen zweiten Takt.",
       "figuring": "Alles richtig. Versuch die Septakkorde, eine Tonart weiter im Quintenzirkel oder die Vorzeichen.",
-      "realizing": "Alles richtig. Versuch die Umkehrungen, mehr B oder Kreuze oder die Vorzeichen."
+      "realizing": "Alles richtig. Versuch die Umkehrungen, mehr B oder Kreuze oder die Vorzeichen.",
+      "cadence": "Alles richtig. Versuch eine andere Lage, eine Moll-Tonart, oder schalte alle Regeln auf einmal ein."
     },
     "thisRound": "Diese Runde",
     "questionLabel": "{{subject}} · {{clef}}",
@@ -421,6 +433,10 @@
     },
     "summary": {
       "allCorrect": "Jede Basslinie richtig."
+    },
+    "cadence": {
+      "levelsBlurb": "Setze eine Kadenz vierstimmig aus und beginne in der angegebenen Lage.",
+      "setupBlurb": "Wähle die Tonarten, die Kadenzen und die Regeln, nach denen ein Satz bewertet wird."
     }
   },
   "satb": {
@@ -443,8 +459,17 @@
       "wrongLage": "Der Satz musste in der {{lage}} beginnen."
     },
     "summary": {
-      "clean": "Fehlerfrei",
-      "faults": "{{count}} anzusehen"
+      "where": "Bei {{answers}}",
+      "chord": "Akkord {{chord}}",
+      "chords": "Akkord {{from}}–{{to}}",
+      "opening": "dem ersten Akkord",
+      "lage": "Die Anfangslage",
+      "chipTitle": "{{key}}, beginnend in der {{lage}}"
+    },
+    "scoreLabel": {
+      "staff": "Eine Kadenz in {{key}}, beginnend in der {{lage}}: {{events}}",
+      "plain": "{{bass}}",
+      "figured": "{{bass}} mit {{figure}}"
     }
   }
 }

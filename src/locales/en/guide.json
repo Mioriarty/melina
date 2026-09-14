@@ -268,5 +268,60 @@
       "writing": "Writing chords"
     },
     "source": "Every staff and every row on this page is drawn by evaluating the chord model itself rather than by redrawing it, so it cannot come to describe something the app no longer does."
+  },
+  "voiceLeading": {
+    "title": "Voice Leading",
+    "intro": "A four-part setting is four singers, and almost everything a marker writes in the margin is about how one of them got from one chord to the next. The rules below are the standard inventory — they are mechanical, they are complete, and they are the part of a Tonsatzklausur an app can check with certainty.",
+    "what": {
+      "title": "What a setting is",
+      "body": "Four voices — soprano, alto, tenor and bass — two to a staff. The upper voice of each staff takes its stems up and the lower one takes them down, which is how the two lines on one staff are told apart. The bass is normally given; the three voices above it are what you write.",
+      "after": "Press the staff. Four voices moving together is the sound every rule below is protecting, and hearing the good one first is what makes the faulty ones obvious."
+    },
+    "ranges": {
+      "title": "What each voice can sing",
+      "body": "Chorale ranges rather than the outer limits of a trained voice: a setting that stays inside these is singable by amateurs, which is what the idiom is for.",
+      "after": "These are not the staff's range. Where a note sits on the page is geometry; what a voice can sing is a fact about people."
+    },
+    "faults": {
+      "title": "The faults, one at a time",
+      "body": "Each example below is the setting above with a single voice moved. Press them in turn — the difference is one note, and in every case you can hear it.",
+      "parallel-fifths": "Two voices a fifth apart move to another fifth. The two lines stop sounding like two.",
+      "parallel-octaves": "The same, an octave apart, and worse: four voices become three.",
+      "crossing": "A voice sings below the one underneath it, so a listener hears neither line where it belongs.",
+      "spacing": "More than an octave between neighbouring upper voices leaves a hole in the middle of the chord.",
+      "doubled-leading-note": "The leading note wants to rise into the tonic. Two voices doing that together make octaves.",
+      "unresolved-seventh": "A seventh is a dissonance and falls by a step. Taking it anywhere else leaves it hanging.",
+      "after": "Nothing here is a matter of taste. Each one is a relation between two notes in two chords, which is exactly why an app can find every instance of it and never miss one."
+    },
+    "marking": {
+      "title": "What breaking one costs",
+      "body": "Most of the rules fail a setting outright. A few — a leap wider than a sixth, a cross-relation — are only pointed out, because those are places a line may legitimately want to go and a human marker weighs them rather than counting them.",
+      "after": "Which rules are marked at all is yours to choose: a level names them, so you can drill parallels on their own and add the rest when they stop happening."
+    },
+    "table": {
+      "title": "Every rule",
+      "body": "The whole list the app checks. The last column says what breaking one does.",
+      "rule": "Rule",
+      "asks": "What it asks for",
+      "costs": "Breaking it",
+      "error": "Fails",
+      "warning": "Noted",
+      "always": "Always checked"
+    },
+    "limits": {
+      "title": "What this cannot tell you",
+      "body": "It can find every parallel fifth with certainty. It cannot tell you whether the soprano is a good line, whether the harmony makes sense, or whether the setting sounds like Bach.",
+      "after": "The rules are the floor, not the ceiling. Clearing them is where a setting starts being worth reading, not where it stops."
+    },
+    "next": {
+      "title": "Where to use it",
+      "body": "Two exercises stand on this.",
+      "cadence": "Cadence Writing",
+      "bass": "Bass Dictation"
+    },
+    "staff": {
+      "clean": "A four-part setting with nothing wrong with it",
+      "fault": "A four-part setting showing {{rule}}"
+    }
   }
 }

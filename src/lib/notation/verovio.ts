@@ -483,6 +483,24 @@ const SATB_PER_ACCIDENTAL = 36
 const SATB_PER_CHORD = 145
 const SATB_PAGE_HEIGHT = 620
 
+/**
+ * A four-part setting on a guide page, which is a different problem.
+ *
+ * The exercise's page is fixed so that a staff cannot move while an answer is
+ * typed into it. **Nothing is typed into an example**, so the reserve buys
+ * nothing there and costs a great deal: a two-chord illustration drawn on a
+ * page sized for the widest case would sit in the left third of it and be
+ * scaled down to nothing. So an example shrinks to its own music, exactly as
+ * `THOROUGHBASS_EXAMPLE_PROFILE` does and for the same reason.
+ */
+export const SATB_EXAMPLE_PROFILE: VerovioOptions = {
+  ...EMBED_FIGURE_ACCIDENTALS,
+  breaks: 'auto',
+  adjustPageWidth: true,
+  adjustPageHeight: true,
+  pageMarginLeft: SATB_MARGIN_LEFT,
+}
+
 const SATB_PROFILES = new Map<string, VerovioOptions>()
 
 export function satbProfile(

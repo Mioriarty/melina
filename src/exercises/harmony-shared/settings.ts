@@ -1,4 +1,6 @@
 import type { SettingSpec } from '@/lib/db/settings'
+import type { ChordMember } from '@/lib/music/chord'
+import { isRuleId, SELECTABLE_RULE_IDS, type RuleId } from '@/lib/music/voiceLeading'
 import { KEY_KEYS, isKeyKey } from '@/lib/music/key'
 import { BLOCKS, isSatztechnikId, type SatztechnikId } from '@/lib/music/satzmodell'
 
@@ -138,3 +140,90 @@ export function harmonySettings(key: string): SettingSpec<HarmonySettings> {
 }
 
 export const ALL_KEY_CHOICES: readonly string[] = KEY_KEYS
+
+/* ------------------------------------------------ writing one down, in four parts */
+
+/**
+ * What a four-part writing round is made of.
+ *
+ * The progression half is `HarmonySettings` unchanged — the same keys, the same
+ * cadences, the same Satztechniken — because what is written down is a
+ * progression like any other. What is added is the two things only a *writing*
+ * exercise has: which Lage the prompt may ask the setting to open in, and which
+ * rules the answer is marked against.
+ *
+ * Here rather than in the exercise folder, because the chorale is the same
+ * settings with a longer progression and a soprano given instead of a bass —
+ * `chord-shared/settings.ts` holds its three exercises' settings for the same
+ * reason.
+ */
+export interface CadenceSettings extends HarmonySettings {
+  /** Which Lagen the opening chord may be asked to stand in. */
+  lagen: readonly ChordMember[]
+  /** The voice-leading rules an answer is held to. */
+  rules: readonly RuleId[]
+}
+
+/**
+ * The rules a level may name here — every Satzfehler **but the range**.
+ *
+ * The keyboard offers a voice nothing outside its own compass, so a range fault
+ * is not something a player can commit however hard they try. Offering the rule
+ * anyway would put a switch on the settings screen that can never change an
+ * outcome, which is worse than leaving it out. It stays in the model, where the
+ * generator is still held to it.
+ */
+export const CADENCE_RULE_CHOICES: readonly RuleId[] = SELECTABLE_RULE_IDS.filter(
+  (id) => id !== 'range',
+)
+
+/**
+ * Which Lage a cadence may be asked to open in.
+ *
+ * The three a written exam names — *"Beginnen Sie in der angegebenen Lage"* —
+ * and the three a triad has. A seventh chord could open in Septlage too, but a
+ * cadence opens on a triad, and the vocabulary is better kept to what is
+ * actually asked for.
+ */
+export const OPENING_LAGEN: readonly ChordMember[] = ['root', 'third', 'fifth']
+
+export const LAGE_CHOICES: readonly ChordMember[] = OPENING_LAGEN
+
+export const DEFAULT_CADENCE_SETTINGS: CadenceSettings = {
+  ...DEFAULT_SETTINGS,
+  keys: ['C:ionian', 'G:ionian', 'F:ionian'],
+  chords: [4],
+  cadences: ['ganzschluss-vollkommen', 'halbschluss'],
+  blocks: [],
+  freedom: 'mixed',
+  // Nothing is heard until the answer is in, so there is no key to establish.
+  establish: false,
+  lagen: [...OPENING_LAGEN],
+  rules: [...CADENCE_RULE_CHOICES],
+}
+
+export function parseCadenceSettings(value: unknown): CadenceSettings | undefined {
+  const base = parseHarmonySettings(value)
+  if (base === undefined) return undefined
+
+  const raw = value as Record<string, unknown>
+  const lagen = stringArray(raw.lagen).filter((id): id is ChordMember =>
+    (LAGE_CHOICES as readonly string[]).includes(id),
+  )
+  const rules = stringArray(raw.rules).filter(
+    (id): id is RuleId => isRuleId(id) && CADENCE_RULE_CHOICES.includes(id),
+  )
+
+  return {
+    ...base,
+    establish: false,
+    lagen: lagen.length > 0 ? lagen : DEFAULT_CADENCE_SETTINGS.lagen,
+    // A level with no rules at all is legitimate — it is the one that asks only
+    // for the right chords — so an empty list is kept rather than replaced.
+    rules,
+  }
+}
+
+export function cadenceSettings(key: string): SettingSpec<CadenceSettings> {
+  return { key, fallback: DEFAULT_CADENCE_SETTINGS, parse: parseCadenceSettings }
+}

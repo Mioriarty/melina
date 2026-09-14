@@ -1,7 +1,14 @@
 import { useTranslation } from 'react-i18next'
 
+import type { ReactNode } from 'react'
+
 import { Icon } from '@/components/ui/Icon'
 import { SetupChip, SetupSection } from '@/exercises/shared/SetupControls'
+import { useMusicNames } from '@/hooks/useMusicNames'
+import { KEY_CHOICES, keyKey } from '@/lib/music/key'
+import { tonicKey } from '@/lib/music/scale'
+import { blocksOfKind, type BlockKind } from '@/lib/music/satzmodell'
+
 import {
   BLOCK_CHOICES,
   CADENCE_CHOICES,
@@ -10,19 +17,27 @@ import {
   ROUND_LENGTHS,
   TEMPOS,
   type HarmonySettings,
-} from '@/exercises/harmony-shared/settings'
-import { useMusicNames } from '@/hooks/useMusicNames'
-import { KEY_CHOICES, keyKey } from '@/lib/music/key'
-import { tonicKey } from '@/lib/music/scale'
-import { blocksOfKind, type BlockKind } from '@/lib/music/satzmodell'
+} from './settings'
 
 /**
- * What to practise, before a round starts.
+ * What to practise, before a round starts — the progression half.
  *
  * The Satztechniken are offered **one at a time**, grouped by what they do,
  * because that is what makes the setting worth having: "only Trugschluss" and
  * "only Quintfallsequenz" are real things to sit down and practise, and a
  * switch per family could express neither.
+ *
+ * Shared between the harmony exercises rather than copied, because *which
+ * progressions* is the same question wherever one is going to be heard or
+ * written. What differs is what the exercise then does with them, and that
+ * arrives as `children`: cadence writing adds the Lage and the rules, and they
+ * go **above** the shared sections because they are what that exercise is
+ * about, where the keys and the cadences are the background.
+ *
+ * **`onChange` takes a patch rather than a whole settings object**, which is
+ * what lets one screen serve a settings type it does not know about. Cadence
+ * writing's settings are these plus two fields; the screen changes the fields
+ * it knows and the caller merges.
  */
 
 export interface SetupScreenProps {
@@ -30,10 +45,18 @@ export interface SetupScreenProps {
   /** `curriculum:` keys, so the header names the exercise this was reached from. */
   titleKey: string
   blurbKey: string
-  onChange: (settings: HarmonySettings) => void
+  onChange: (patch: Partial<HarmonySettings>) => void
   onStart: () => void
   /** Back to the level list, which is where this screen is reached from. */
   onBack: () => void
+  /** Sections this exercise adds, drawn first. */
+  children?: ReactNode
+  /**
+   * Whether an establishing cadence is a choice here. It is a question about
+   * *hearing* the key, so an exercise that plays nothing until the answer is in
+   * has nothing to establish.
+   */
+  establish?: boolean
 }
 
 const MIDDLE_KINDS: readonly BlockKind[] = ['prolongation', 'model', 'approach']
@@ -45,6 +68,8 @@ export function SetupScreen({
   onChange,
   onStart,
   onBack,
+  children,
+  establish = true,
 }: SetupScreenProps) {
   const { t } = useTranslation(['exercise', 'curriculum'])
   const names = useMusicNames()
@@ -70,7 +95,7 @@ export function SetupScreen({
             selected={settings.keys.includes(id)}
             onClick={() => {
               const next = toggle(settings.keys, id)
-              if (next !== undefined) onChange({ ...settings, keys: next })
+              if (next !== undefined) onChange({ keys: next })
             }}
             label={names.scaleName(tonicKey(key.tonic), key.mode)}
           >
@@ -101,6 +126,8 @@ export function SetupScreen({
           <p className="mt-2 leading-relaxed text-ink-muted">{t(blurbKey)}</p>
         </header>
 
+        {children}
+
         <SetupSection
           title={t('exercise:setup.harmonyKeys.major')}
           hint={t('exercise:setup.harmonyKeys.hint')}
@@ -123,7 +150,7 @@ export function SetupScreen({
                 selected={settings.cadences.includes(id)}
                 onClick={() => {
                   const next = toggle(settings.cadences, id)
-                  if (next !== undefined) onChange({ ...settings, cadences: next })
+                  if (next !== undefined) onChange({ cadences: next })
                 }}
                 label={names.technique(id)}
               >
@@ -149,7 +176,7 @@ export function SetupScreen({
                       const next = settings.blocks.includes(block.id)
                         ? settings.blocks.filter((id) => id !== block.id)
                         : [...settings.blocks, block.id]
-                      onChange({ ...settings, blocks: next })
+                      onChange({ blocks: next })
                     }}
                     label={names.technique(block.id)}
                   >
@@ -169,7 +196,7 @@ export function SetupScreen({
               <SetupChip
                 key={freedom}
                 selected={settings.freedom === freedom}
-                onClick={() => onChange({ ...settings, freedom })}
+                onClick={() => onChange({ freedom })}
               >
                 {t(`exercise:setup.freedom.${freedom}`)}
               </SetupChip>
@@ -185,7 +212,7 @@ export function SetupScreen({
                 selected={settings.chords.includes(count)}
                 onClick={() => {
                   const next = toggle(settings.chords, count)
-                  if (next !== undefined) onChange({ ...settings, chords: next })
+                  if (next !== undefined) onChange({ chords: next })
                 }}
               >
                 {count}
@@ -194,22 +221,24 @@ export function SetupScreen({
           </div>
         </SetupSection>
 
-        <SetupSection
-          title={t('exercise:setup.establish.title')}
-          hint={t('exercise:setup.establish.hint')}
-        >
-          <div className="flex flex-wrap gap-2">
-            {[true, false].map((on) => (
-              <SetupChip
-                key={String(on)}
-                selected={settings.establish === on}
-                onClick={() => onChange({ ...settings, establish: on })}
-              >
-                {t(`exercise:setup.establish.${on ? 'on' : 'off'}`)}
-              </SetupChip>
-            ))}
-          </div>
-        </SetupSection>
+        {establish && (
+          <SetupSection
+            title={t('exercise:setup.establish.title')}
+            hint={t('exercise:setup.establish.hint')}
+          >
+            <div className="flex flex-wrap gap-2">
+              {[true, false].map((on) => (
+                <SetupChip
+                  key={String(on)}
+                  selected={settings.establish === on}
+                  onClick={() => onChange({ establish: on })}
+                >
+                  {t(`exercise:setup.establish.${on ? 'on' : 'off'}`)}
+                </SetupChip>
+              ))}
+            </div>
+          </SetupSection>
+        )}
 
         <SetupSection title={t('exercise:setup.tempo')}>
           <div className="flex flex-wrap gap-2">
@@ -217,7 +246,7 @@ export function SetupScreen({
               <SetupChip
                 key={tempo}
                 selected={settings.tempo === tempo}
-                onClick={() => onChange({ ...settings, tempo })}
+                onClick={() => onChange({ tempo })}
               >
                 {tempo}
               </SetupChip>
@@ -231,7 +260,7 @@ export function SetupScreen({
               <SetupChip
                 key={length}
                 selected={settings.questionsPerRound === length}
-                onClick={() => onChange({ ...settings, questionsPerRound: length })}
+                onClick={() => onChange({ questionsPerRound: length })}
               >
                 {length}
               </SetupChip>

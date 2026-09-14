@@ -1,4 +1,4 @@
-import { dealEvenly, type Random } from '@/lib/utils/seededRandom'
+import { dealEvenly, randomPick, type Random } from '@/lib/utils/seededRandom'
 
 import { degreeOf, parseKeyKey, type Key } from '@/lib/music/key'
 import {
@@ -6,7 +6,12 @@ import {
   generateProgression,
   type Progression,
   type ProgressionSpec,
+  type VoicingConstraint,
 } from '@/lib/music/progression'
+import { chordNotes, CHORD_MEMBERS, type ChordMember } from '@/lib/music/chord'
+import { eventChord } from '@/lib/music/harmony'
+import type { RuleId } from '@/lib/music/voiceLeading'
+
 import { bassLine } from '@/lib/music/progression'
 import { buildEvents, type ChordSpec, type HarmonicEvent } from '@/lib/music/harmony'
 import { isDegreeAlteration, type Degree } from '@/lib/music/degree'
@@ -15,8 +20,8 @@ import { voiceProgression } from '@/lib/music/satb'
 import type { Satz } from '@/lib/music/satbVoicing'
 import type { SatztechnikId } from '@/lib/music/satzmodell'
 
-import type { HarmonySettings } from './settings'
-import { FREE_WEIGHTS } from './settings'
+import type { CadenceSettings, HarmonySettings } from './settings'
+import { FREE_WEIGHTS, OPENING_LAGEN } from './settings'
 
 /**
  * A harmony question: a progression, the four voices singing it, and the
@@ -38,6 +43,14 @@ export interface HarmonyQuestion {
 export interface HarmonyRoundSpec extends HarmonySettings {
   /** What the round asks for. Fixed by the exercise, not by the level. */
   asks: 'bass'
+}
+
+export interface CadenceRoundSpec extends CadenceSettings {
+  asks: 'satz'
+}
+
+export function cadenceSpec(settings: CadenceSettings): CadenceRoundSpec {
+  return { ...settings, asks: 'satz' }
 }
 
 const PLACEMENT_TRIES = 20
@@ -206,4 +219,124 @@ export function bassDegrees(progression: Progression): readonly Degree[] | undef
 /** How many notes the bass line has, which is how many the player writes. */
 export function bassLength(progression: Progression): number {
   return bassLine(progression).length
+}
+
+/* ------------------------------------------------- writing one down, in four parts */
+
+/**
+ * A cadence to be written out in four parts.
+ *
+ * The progression is the question and the `model` is the search's own answer to
+ * it — kept because the question has to be *playable* once it is revealed, and
+ * because a progression the search cannot set is a question nobody could answer.
+ * It is not "the right answer": there is no single right answer, which is the
+ * whole reason this exercise is graded by rules rather than by equality.
+ *
+ * **`rules` rides on the question rather than beside it**, the same move
+ * `ChordQuestion.asks` makes: what an answer is held to is a fact about the
+ * question that was asked, and a verdict that had to be handed the level's
+ * settings separately is a verdict that can be given the wrong ones.
+ */
+export interface CadenceQuestion {
+  progression: Progression
+  /** Which chord member the opening soprano must sing — what the prompt names. */
+  lage: ChordMember
+  /** The voicing search's own setting: what the question sounds like. */
+  model: Satz
+  /** The voice-leading rules this answer is marked against. */
+  rules: readonly RuleId[]
+  tempo: number
+}
+
+/**
+ * The opening Lage as the voicing search understands it: a note for the top.
+ *
+ * Resolved here rather than carried as a member index, for the reason
+ * `sopranoNote` resolves a block's own constraint — the search is handed a
+ * pitch class and asked to put it on top, and never has to know what a chord
+ * member is.
+ */
+export function openingConstraint(
+  progression: Progression,
+  lage: ChordMember,
+): VoicingConstraint | undefined {
+  const opening = progression.events[0]
+  if (opening === undefined) return undefined
+
+  const chord = eventChord(opening)
+  if (chord === undefined) return undefined
+
+  const note = chordNotes(chord.root, chord.quality)?.[CHORD_MEMBERS.indexOf(lage)]
+  return note === undefined ? undefined : { event: 0, soprano: note }
+}
+
+/**
+ * A progression's own voicing constraints, with the prompt's Lage on top.
+ *
+ * **The opening block already has an opinion about the soprano, and the prompt
+ * outranks it.** `eroeffnung-tonika` asks for the root on top — which is
+ * Oktavlage — and that is a good default for a progression that is going to be
+ * *heard*, where a tonic in the soprano opens the key clearly. It is exactly
+ * what a written exam varies, so here it is replaced rather than respected.
+ *
+ * The block is still an opening tonic: which member sits on top is a fact about
+ * the voicing and not about the technique, which is why `RelativeEvent.soprano`
+ * was always a preference the search honours rather than part of the schema.
+ *
+ * One function because two callers need it — the generator and the way back out
+ * of the attempt log — and a row that rebuilt its chords under different
+ * constraints would disagree with the notation it produced.
+ */
+export function cadenceConstraints(
+  progression: Progression,
+  lage: ChordMember,
+): readonly VoicingConstraint[] | undefined {
+  const opening = openingConstraint(progression, lage)
+  if (opening === undefined) return undefined
+  return [...progression.constraints.filter((c) => c.event !== 0), opening]
+}
+
+export function buildCadence(
+  random: Random,
+  spec: CadenceRoundSpec,
+  key: Key,
+): CadenceQuestion | undefined {
+  const lagen = spec.lagen.length > 0 ? spec.lagen : OPENING_LAGEN
+
+  for (let tries = 0; tries < PLACEMENT_TRIES; tries += 1) {
+    const progression = generateProgression(random, progressionSpec(spec, [key]))
+    if (progression === undefined) continue
+
+    const lage = randomPick(random, lagen as readonly [ChordMember, ...ChordMember[]])
+    const constraints = cadenceConstraints(progression, lage)
+    if (constraints === undefined) continue
+
+    const model = voiceProgression(progression, { constraints })
+    if (model === undefined) continue
+
+    return { progression, lage, model, rules: spec.rules, tempo: spec.tempo }
+  }
+  return undefined
+}
+
+export function generateCadenceRound(
+  random: Random,
+  spec: CadenceRoundSpec,
+): CadenceQuestion[] {
+  const keys = keysOf(spec)
+  if (keys.length === 0) return []
+
+  const deck = dealEvenly(random, keys, spec.questionsPerRound)
+
+  const questions: CadenceQuestion[] = []
+  for (const key of deck) {
+    const question = buildCadence(random, spec, key)
+    if (question !== undefined) questions.push(question)
+  }
+  return questions
+}
+
+/** The bass line a cadence gives the player, at the octaves the model sings it. */
+export function givenBass(question: CadenceQuestion): readonly Pitch[] {
+  return question.model.voicings.map((voicing) => voicing.bass)
 }

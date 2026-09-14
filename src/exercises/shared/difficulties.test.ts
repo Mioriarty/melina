@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { BASS_DIFFICULTIES } from '@/exercises/bass-dictation/difficulties'
+import { CADENCE_DIFFICULTIES } from '@/exercises/cadence-writing/difficulties'
 import { CHORD_DIFFICULTIES } from '@/exercises/chord-shared/difficulties'
 import {
   chordSpec,
@@ -72,13 +73,22 @@ import {
 } from '@/exercises/thoroughbass-shared/settings'
 import {
   bassDegrees,
+  cadenceSpec,
+  generateCadenceRound,
   generateRound as generateBassRound,
   harmonySpec,
+  openingConstraint,
   progressionSpec,
 } from '@/exercises/harmony-shared/generate'
+import { cadenceReport, isCadenceCorrect } from '@/exercises/cadence-writing/rules'
+import { samePitchClass } from '@/lib/music/satbVoicing'
+import type { PitchClass } from '@/lib/music/scale'
+import type { VoicingConstraint } from '@/lib/music/progression'
 import {
   BLOCK_CHOICES,
   CADENCE_CHOICES,
+  CADENCE_RULE_CHOICES,
+  parseCadenceSettings,
   parseHarmonySettings,
 } from '@/exercises/harmony-shared/settings'
 import { figureKey, figurePitches } from '@/lib/music/figuredBass'
@@ -146,6 +156,7 @@ const ALL_GROUPS: readonly NamedLevels[] = [
   { group: 'chord-hearing', levels: CHORD_DIFFICULTIES },
   { group: 'chord-writing', levels: CHORD_DIFFICULTIES },
   { group: 'harmony-bass', levels: BASS_DIFFICULTIES },
+  { group: 'harmony-cadence', levels: CADENCE_DIFFICULTIES },
 ]
 
 describe.each(ALL_GROUPS)('$group levels', ({ group, levels }) => {
@@ -1243,5 +1254,105 @@ describe('harmony levels', () => {
     }
 
     for (const id of level.settings.cadences) expect(seen, id).toContain(id)
+  })
+})
+
+/* ------------------------------------------------------- cadence writing */
+
+describe('cadence writing levels', () => {
+  it.each(CADENCE_DIFFICULTIES)('$id names real keys, cadences and rules', (level) => {
+    for (const key of level.settings.keys) expect(isKeyKey(key), key).toBe(true)
+    for (const id of level.settings.cadences) expect(CADENCE_CHOICES, id).toContain(id)
+    for (const id of level.settings.blocks) expect(BLOCK_CHOICES, id).toContain(id)
+    for (const id of level.settings.rules) {
+      expect(CADENCE_RULE_CHOICES, id).toContain(id)
+    }
+    expect(level.settings.lagen.length).toBeGreaterThan(0)
+  })
+
+  it.each(CADENCE_DIFFICULTIES)(
+    '$id round-trips through the defensive parser',
+    (level) => {
+      expect(parseCadenceSettings(level.settings)).toEqual(level.settings)
+    },
+  )
+
+  it.each(CADENCE_DIFFICULTIES)(
+    '$id generates a full round that can actually be answered',
+    (level) => {
+      const spec = cadenceSpec(level.settings)
+      const round = generateCadenceRound(createRandom(1717), spec)
+
+      expect(round).toHaveLength(spec.questionsPerRound)
+
+      for (const question of round) {
+        expect(spec.chords).toContain(question.progression.events.length)
+        expect(spec.lagen).toContain(question.lage)
+
+        // **The setting the player is asked to match the standard of is one
+        // the app itself can write cleanly.** A level whose questions the
+        // voicing search can only solve by breaking a rule would be asking for
+        // something impossible, and nothing on the screen would say so.
+        const faults = errorsOf(satzFindings(question.model))
+        expect(
+          faults.map((fault) => `${fault.id}@${fault.at}`),
+          question.progression.analysis.map((span) => span.id).join(' → '),
+        ).toEqual([])
+
+        // And it opens in the Lage the prompt names, so the question is
+        // answerable as posed rather than only nearly.
+        const wanted = openingConstraint(question.progression, question.lage)
+        const opening = question.model.voicings[0]?.soprano
+        expect(wanted).toBeDefined()
+        expect(opening).toBeDefined()
+        expect(
+          samePitchClass(opening as PitchClass, (wanted as VoicingConstraint).soprano),
+          `${question.lage} was asked for and not achieved`,
+        ).toBe(true)
+      }
+    },
+    30_000,
+  )
+
+  it('marks a clean setting right and a faulty one wrong', () => {
+    // The verdict end to end, against the model's own answer: what the search
+    // wrote must pass the level that asked for it, and the same setting with
+    // two voices swapped must not.
+    const level = CADENCE_DIFFICULTIES.find((entry) => entry.id === 'alles')
+    expect(level).toBeDefined()
+    if (level === undefined) return
+
+    const round = generateCadenceRound(createRandom(31), cadenceSpec(level.settings))
+    expect(round.length).toBeGreaterThan(0)
+
+    for (const question of round) {
+      expect(isCadenceCorrect(question.model.voicings, question)).toBe(true)
+
+      // Put the alto where the tenor is: a unison inside the chord, which is
+      // at the very least a wrong note or a crossing somewhere.
+      const broken = question.model.voicings.map((voicing) => ({
+        ...voicing,
+        alto: voicing.bass,
+      }))
+      expect(isCadenceCorrect(broken, question)).toBe(false)
+    }
+  })
+
+  it('opening in the wrong Lage is wrong however clean the setting is', () => {
+    const level = CADENCE_DIFFICULTIES[0] as (typeof CADENCE_DIFFICULTIES)[number]
+    const round = generateCadenceRound(createRandom(7), cadenceSpec(level.settings))
+    const question = round[0]
+    expect(question).toBeDefined()
+    if (question === undefined) return
+
+    const wrong = {
+      ...question,
+      lage: question.lage === 'root' ? 'third' : 'root',
+    } as const
+    const report = cadenceReport(wrong as typeof question, question.model.voicings)
+    expect(report.lage).toBe(false)
+    expect(isCadenceCorrect(question.model.voicings, wrong as typeof question)).toBe(
+      false,
+    )
   })
 })

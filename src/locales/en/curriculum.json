@@ -111,6 +111,11 @@
           "title": "Bass Dictation",
           "short": "Bass",
           "blurb": "Hear a progression in four parts and write down its bass, degree by degree."
+        },
+        "cadence": {
+          "title": "Cadence Writing",
+          "short": "Cadences",
+          "blurb": "Set a cadence in four parts, beginning in the Lage you are given."
         }
       }
     },
@@ -183,6 +188,10 @@
     "chords": {
       "title": "Chord Types",
       "blurb": "The nine chords melina asks about, and what their names say."
+    },
+    "voice-leading": {
+      "title": "Voice Leading",
+      "blurb": "The rules a four-part setting is held to, and why each one is a rule."
     }
   }
 }

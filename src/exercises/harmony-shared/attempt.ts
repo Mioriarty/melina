@@ -5,8 +5,14 @@ import { DEFAULT_METER } from '@/lib/music/progression'
 import { parseProgression, progressionKey } from '@/lib/music/progression'
 import { voiceProgression } from '@/lib/music/satb'
 
+import { CHORD_MEMBERS } from '@/lib/music/chord'
+import type { RuleId } from '@/lib/music/voiceLeading'
+
 import {
+  cadenceConstraints,
   establishingCadence,
+  type CadenceQuestion,
+  type CadenceRoundSpec,
   type HarmonyQuestion,
   type HarmonyRoundSpec,
 } from './generate'
@@ -84,5 +90,91 @@ export function harmonyFilter(
     cadence: [...spec.cadences],
     chords: spec.chords.map(String),
     tempo: String(spec.tempo),
+  }
+}
+
+/* ------------------------------------------------ writing one down, in four parts */
+
+/**
+ * A cadence-writing question on the way into the log.
+ *
+ * The progression is stored exactly as bass dictation's is — bass, figures,
+ * beats, analysis — because it *is* a progression, and nothing about it being
+ * written rather than heard changes what a progression is. The one field added
+ * is the Lage, which is the only part of this question that cannot be derived
+ * from the chords: which note the prompt wanted on top is the prompt's own.
+ *
+ * The player's setting is deliberately **not** stored. It is not the answer to
+ * anything the row could ask again — a row keeps enough to pose the question,
+ * and the question is the bass, the figures and the Lage.
+ */
+export function cadenceAttempt(question: CadenceQuestion): HarmonyAttempt {
+  const stored = progressionKey(question.progression)
+  const { key } = question.progression
+
+  return {
+    kind: 'harmony',
+    key: keyKey(key),
+    bass: stored?.bass ?? '',
+    figures: stored?.figures ?? '',
+    beats: stored?.beats ?? '',
+    analysis: stored?.analysis ?? '',
+    tempo: question.tempo,
+    lage: question.lage,
+  }
+}
+
+/** The question a row was, rebuilt — the round trip the log's shape rests on. */
+export function cadenceQuestion(
+  attempt: HarmonyAttempt,
+  rules: readonly RuleId[],
+): CadenceQuestion | undefined {
+  const key: Key | undefined = parseKeyKey(attempt.key)
+  const lage = attempt.lage
+  if (key === undefined || lage === undefined) return undefined
+
+  const progression = parseProgression(key, DEFAULT_METER, {
+    bass: attempt.bass,
+    figures: attempt.figures,
+    beats: attempt.beats,
+    analysis: attempt.analysis,
+  })
+  if (progression === undefined) return undefined
+
+  // Voiced under the same constraints the generator used — reading a row back
+  // without them rebuilds the same chords in different places, which is a row
+  // disagreeing with the notation it produced.
+  const constraints = cadenceConstraints(progression, lage)
+  if (constraints === undefined) return undefined
+
+  const model = voiceProgression(progression, { constraints })
+  if (model === undefined) return undefined
+
+  return { progression, lage, model, rules, tempo: attempt.tempo }
+}
+
+/**
+ * A cadence level's own accuracy filter.
+ *
+ * Its keys, its cadences, how many chords, and the Lagen it asks for — the
+ * dimensions the level actually **bounds**. Which rules were switched on is
+ * deliberately absent, for the same reason a rhythm level does not filter on
+ * its cell weights: the rules shape what counts as right rather than what comes
+ * up, and a row does not record them.
+ */
+export function cadenceFilter(
+  spec: CadenceRoundSpec,
+  exerciseId?: string,
+): AttemptFilter {
+  return {
+    ...(exerciseId === undefined ? {} : { exerciseId }),
+    kind: 'harmony',
+    key: [...spec.keys],
+    cadence: [...spec.cadences],
+    chords: spec.chords.map(String),
+    // `top` rather than a facet of its own: which member stands on top is the
+    // dimension chord questions already have, and sharing it is what lets one
+    // query reach both.
+    top: spec.lagen.map((lage) => String(CHORD_MEMBERS.indexOf(lage))),
   }
 }

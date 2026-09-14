@@ -592,5 +592,35 @@
       "title": "Alles",
       "blurb": "Jede Technik, längere Folgen und schneller."
     }
+  },
+  "harmony-cadence": {
+    "parallelen": {
+      "title": "Parallelen",
+      "blurb": "Drei Durtonarten, vier Akkorde, Beginn in der Oktavlage. Bewertet werden nur Quint- und Oktavparallelen samt der verdeckten."
+    },
+    "abstand": {
+      "title": "Abstand",
+      "blurb": "Nur die vertikalen Regeln — wie weit die Stimmen auseinanderstehen und dass keine die andere kreuzt oder überschneidet."
+    },
+    "verdopplung": {
+      "title": "Verdopplung",
+      "blurb": "Was nie von zwei Stimmen zugleich gesungen werden darf: der Leitton, eine Septime, ein leitereigenfremder Ton."
+    },
+    "aufloesungen": {
+      "title": "Auflösungen",
+      "blurb": "Vorhalte und Septimen, und wohin jede von ihnen weitergehen muss."
+    },
+    "lagen": {
+      "title": "Alle drei Lagen",
+      "blurb": "Alle Regeln auf einmal, in Dur, beginnend in der jeweils angegebenen Lage."
+    },
+    "moll": {
+      "title": "Moll",
+      "blurb": "Die Mollkadenzen, wo die erhöhte Septime die übermäßige Sekunde in Reichweite bringt."
+    },
+    "alles": {
+      "title": "Alles",
+      "blurb": "Beide Tongeschlechter, längere Verläufe, Sequenzen und Zwischendominanten, und jede Regel bewertet."
+    }
   }
 }

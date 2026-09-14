@@ -592,5 +592,35 @@
       "title": "Everything",
       "blurb": "Every technique, longer progressions, and faster."
     }
+  },
+  "harmony-cadence": {
+    "parallelen": {
+      "title": "Parallels",
+      "blurb": "Three major keys, four chords, opening in Oktavlage. Only the parallel and hidden fifths and octaves are marked."
+    },
+    "abstand": {
+      "title": "Spacing",
+      "blurb": "The vertical rules alone — how far apart the voices stand, and that none crosses or overlaps another."
+    },
+    "verdopplung": {
+      "title": "Doubling",
+      "blurb": "What may never be sung by two voices at once: the leading note, a seventh, a note from outside the key."
+    },
+    "aufloesungen": {
+      "title": "Resolutions",
+      "blurb": "Suspensions and sevenths, and where each of them has to go next."
+    },
+    "lagen": {
+      "title": "All three Lagen",
+      "blurb": "Every rule at once, in major, opening in whichever Lage the prompt names."
+    },
+    "moll": {
+      "title": "Minor",
+      "blurb": "The minor cadences, where the raised seventh puts an augmented second within reach."
+    },
+    "alles": {
+      "title": "Everything",
+      "blurb": "Both modes, longer progressions, sequences and secondary dominants, and every rule marked."
+    }
   }
 }

@@ -174,7 +174,9 @@ describe('path layout', () => {
     // Harmony is the next stop after the chord braid merges, and the route
     // runs through it rather than past it: hearing a progression is what
     // hearing a chord was for.
-    expect(joins('chords/writing', 'harmony/bass')).toBe(true)
+    expect(joins('chords/writing', 'guide/voice-leading')).toBe(true)
+    expect(joins('guide/voice-leading', 'harmony/cadence')).toBe(true)
+    expect(joins('harmony/cadence', 'harmony/bass')).toBe(true)
     expect(joins('harmony/bass', 'harmonic-prediction')).toBe(true)
     expect(joins('chords/writing', 'harmonic-prediction')).toBe(false)
     expect(joins('dictation/short-melodies', 'harmonic-prediction')).toBe(false)

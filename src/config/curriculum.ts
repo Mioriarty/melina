@@ -185,7 +185,25 @@ export const CATEGORIES: readonly CategoryDef[] = [
     id: 'harmony',
     icon: 'analytics',
     status: 'ready',
+    guides: [
+      {
+        // **The rules are a convention you have to be told**, and this one more
+        // than any other here: a setting is marked against a list of
+        // prohibitions, and failing someone for a parallel fifth nobody ever
+        // mentioned is the same unfairness the figured bass guide exists to
+        // undo. It also explains the thing the exercise cannot — *why* each
+        // rule is a rule.
+        id: 'voice-leading',
+        icon: 'book',
+        status: 'ready',
+      },
+    ],
     exercises: [
+      {
+        id: 'cadence',
+        icon: 'create',
+        status: 'ready',
+      },
       {
         id: 'bass',
         status: 'ready',
