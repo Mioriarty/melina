@@ -461,7 +461,7 @@
     "summary": {
       "where": "Bei {{answers}}",
       "chord": "Akkord {{chord}}",
-      "chords": "Akkord {{from}}–{{to}}",
+      "chords": "Akkorde {{from}}–{{to}}",
       "opening": "dem ersten Akkord",
       "lage": "Die Anfangslage",
       "chipTitle": "{{key}}, beginnend in der {{lage}}"

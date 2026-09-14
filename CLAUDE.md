@@ -975,6 +975,13 @@ two edges arriving, which is what the graph in `PATH_EDGES` exists to express.
 It sits **left of centre rather than on it**, to leave the right of the column
 free — which is where thoroughbass now stands.
 
+**The harmony run is a guide and two exercises**, and it went in as **two**
+stations on purpose: an even number leaves the parity of everything below it
+alone, so nothing under it had to change side and only the y coordinates moved.
+The explainer stands at its head for the reason the figured bass one does — a
+setting is marked against a list of prohibitions, and a player who was never
+shown the list is not being asked a hard question but an unfair one.
+
 **The path is in two pieces, and that is deliberate.** The journey runs from
 Interval Reading down to the daily round; thoroughbass sits beside it, its two
 stations joined to each other and to nothing else. Nothing leads in and nothing
@@ -1009,8 +1016,8 @@ the path for an unplaced station so nothing can silently vanish, and
 
 ## Exercises — `src/exercises/`
 
-Eleven exercises — two reading/hearing pairs, one reading/writing pair, one
-trio, and two that stand alone — and the folders say which is which:
+Twelve exercises — two reading/hearing pairs, one reading/writing pair, one
+trio, and three that stand alone — and the folders say which is which:
 
 - `shared/` is **exercise-agnostic**. The levels → setup → round → summary state
   machine (`useRound`), the levels screen, the round screen, the summary, the
@@ -1039,14 +1046,25 @@ trio, and two that stand alone — and the folders say which is which:
   below.
 - `harmony-shared/` and `bass-dictation/` are the first exercise that hears a
   whole _progression_ rather than a chord. The generator, the four-part setting,
-  the playback schedule and the attempt row live in the shared folder because
-  every harmony exercise after this one reads them; the exercise folder holds
-  the levels, the round screen and the setup. See **Harmony**.
+  the playback schedule, the settings and the attempt row live in the shared
+  folder because every harmony exercise after this one reads them; the exercise
+  folder holds the levels, the round screen and the setup. See **Harmony**.
+- `cadence-writing/` is the second exercise on that shared folder, and the first
+  anywhere here whose answer is **not compared against anything**: a cadence has
+  a dozen right settings, so it is marked by which rules were broken. It is also
+  what turned `harmony-shared/SetupScreen.tsx` into a shared screen — _which
+  progressions_ is the same question wherever one is heard or written, so it
+  takes a **patch** rather than a whole settings object and the exercise's own
+  sections arrive as `children`. See **Kadenz aussetzen**.
 - `chord-entry/` is what thoroughbass realising and chord writing genuinely
   share — the draft a chord is pressed into — the way `dictation-shared/` is
   what the two dictations share. `ChordKeyboard` reads it, and `voicing.ts`
   moved to `lib/music/` when a second exercise needed it, because where a note
   sits is a fact about music rather than about either exercise.
+- `satb-entry/` is `chord-entry/`'s sibling rather than its replacement: there a
+  chord is a _set_ of notes and `voiceChord` places them, here which voice sings
+  which note is the answer and the octave is half of what is graded. See **The
+  answer surface**.
 
 Within a pair, reading and hearing differ only in what notation they show and
 whether there is a play button beside it, so anything else belongs one level up.
@@ -2048,19 +2066,51 @@ not in `BLOCKS` — and shifted every index after it, putting a cadence's "tonic
 in the soprano" on the wrong chord until the voicing search could find nothing
 legal at all and reading the row back returned nothing.
 
-### Four parts — `voiceLeading.ts` and `satb.ts`
+### Four parts — `satbVoicing.ts`, `voiceLeading.ts` and `satb.ts`
 
-**`voiceLeading.ts` is written once and read twice.** Run as a filter it is what
-`satb.ts` generates through — an edge that breaks a rule is an edge that does
-not exist, and a preference is a weight. Run as a detector over a finished
+**Three modules in a line, and the line is what keeps it out of a cycle.**
+`satbVoicing.ts` is the vocabulary — `VoiceId`, `Voicing`, `SATB_RANGES`,
+`Satz`, `Move`, `motionBetween`, `contextOf` — and decides nothing.
+`voiceLeading.ts` holds the rules. `satb.ts` generates through them and owns the
+pricing (`Weights`, `CHORALE_WEIGHTS`, `voicingCost`, `transitionCost`), because
+the search is the only thing that reads it.
+
+**`voiceLeading.ts` is written once and read three times.** Run as a filter it
+is what `satb.ts` generates through — an edge that breaks a rule is an edge that
+does not exist, and a preference is a weight. Run as a detector over a finished
 `Satz` it is a **grader**, returning a list of findings rather than a verdict,
-which is the shape the four-part _writing_ exercises will need and the one thing
-melina's round machinery has never had.
+which is what cadence writing is marked by and the one thing melina's round
+machinery had never had. Run as a **list** it is the vocabulary the writing
+exercises and their guide are built out of.
 
 Building it that way round is why the generator can be trusted: `satb.test.ts`
 and `difficulties.test.ts` voice every level's progressions and insist the
 grader finds **nothing**. A generator checked against its own grader is the move
 `modeOf` makes on the scale generator and `readChord` on the chord one.
+
+**Every rule is a row in `VOICE_LEADING_RULES`**, and that is what changed when
+the exercises arrived. They used to be paragraphs inside two long functions,
+which is fine for a filter and useless for everything else: a rule written that
+way cannot be named, cannot be explained, and cannot be switched off. Each entry
+carries its id, its kind and its severity plus a `check` that returns only the
+voices at fault; the framework builds the `Finding`. Adding a rule is a row, and
+so is teaching the guide about it, since `/guide/voice-leading` walks the same
+list.
+
+Two lines are drawn across that list and neither is decoration:
+
+- **`RuleKind` separates the chord from the writing.** `wrong-note` and
+  `incomplete-chord` say the setting is a _different chord_, not a badly written
+  one, so they are always in force and no level may switch them off.
+  `SELECTABLE_RULE_IDS` is the rest — the Satzfehler proper.
+- **Every findings function takes a `RuleSet`, and `undefined` means all of
+  them.** That is what `transitionCost` passes, so the generator is held to
+  every rule whatever a level has switched off: a level's selection says what a
+  _player_ is marked on and can never make the app's own writing worse.
+
+`MoveCase` carries the six voice pairs measured once, because splitting one loop
+into four parallel rules is what makes them nameable and the search asks about
+tens of thousands of transitions per progression.
 
 The rule list is the standard Stimmführung inventory — ranges, spacing,
 crossing, overlap, doubling, omission, the four motions, leading-note and
@@ -2161,6 +2211,100 @@ and the four voices, with the analysis under each. Judging a harmony generator
 by ear through the UI is a slow loop; judging fifty of them in a terminal is a
 fast one, and it is where the block weights actually get tuned.
 
+### Kadenz aussetzen — `harmony/cadence`
+
+Karlsruhe's Aufgabe 6: a bass line with its figures, an opening Lage named above
+it, and four parts to write out. **The first exercise here whose answer is not
+compared against anything.** A cadence can be set a dozen ways, all of them
+correct, so the verdict is which rules the setting broke — which is what
+`voiceLeading.ts` was built as a grader for, one exercise before there was
+anything to grade.
+
+Nothing underneath it was new. `buildEvents`, `generateProgression`,
+`voiceProgression`, `useRound`, `RoundScreen` and `HarmonyAttempt` all took it
+as written, and the widenings it needed were four, each earned.
+
+**The prompt outranks the block's own soprano.** `eroeffnung-tonika` asks for
+the root on top, which _is_ Oktavlage — a good default for a progression that
+will be heard, and exactly the thing a written exam varies. `cadenceConstraints`
+replaces it rather than respecting it, and it is one function because two
+callers need it: the generator, and the way back out of the attempt log. A row
+rebuilt under different constraints would disagree with the notation it
+produced.
+
+**Three kinds of thing are checked and they are not the same kind.** The chords,
+always — a voice singing a note the chord does not contain has written a
+different cadence rather than a bad one. The Lage, always, and deliberately
+**not** a rule in the registry: it is what the prompt asked for, and a `Satz`
+cannot carry the question that produced it, so making it a rule would mean a
+grader that had to be told what was asked. Then the Satzfehler the level named —
+of which **only an error fails**, because a wide leap or a Querstand is
+somewhere a line may legitimately want to go and a marker weighs those rather
+than counting them.
+
+**A level names which rules it marks**, and the families of rule are genuinely
+not a ladder: doubling the leading note is not a harder mistake than a parallel
+fifth, it is a different one, and the player who keeps making one is usually not
+the player who keeps making the other. So the list runs by family — Parallels,
+Spacing, Doubling, Resolutions — which is what makes these weaknesses rather
+than rungs better than any other list in the app.
+
+**The row is `HarmonyAttempt` with one field.** The Lage is the only part of the
+question the chords cannot recover, and it becomes the **`top`** facet chord
+questions already have: `{ top: '1' }` means every question about a Terzlage in
+either exercise, the way `{ root: 'Eb' }` already spans intervals and scales.
+
+**Nothing sounds until the answer is in**, because the setting _is_ the answer;
+afterwards the staff sounds what the player wrote rather than what the search
+would have written. No model answer is drawn at all — a wrong chord is normally
+shown beside the right one here, and that rule does not carry where there is no
+right one to show.
+
+### The answer surface — `satb-entry/` and `SatbKeyboard`
+
+`satb-entry/draft.ts` is `chord-entry/`'s sibling, not its replacement, and the
+difference is what the question asked. A figure underdetermines its voicing, so
+that draft collects a **set** and lets `voiceChord` place it; here _which voice
+sings which note_ is the answer and where each one sits is most of what is
+graded — spacing, crossing and overlap are all facts about octaves. So a slot is
+a voice of a chord and it holds a `Pitch`.
+
+Which voices are given and which are written belongs to the **question**:
+cadence writing gives the bass and asks for the three above it bottom up, and a
+chorale harmonisation will give the soprano and ask for the other three in the
+same shape. There is no confirm key — a setting is exactly fillable, so the
+press that completes the last chord is the press that answers.
+
+**Seven letter keys, so the octave is the app's to choose**, and `placedPitch`
+chooses it the way a singer would: follow this voice from the chord before, and
+in the first chord stack from the voice below. A voice's compass never spans two
+octaves, so a letter names two pitches at most — which is what makes one
+one-shot switch for _the other octave_ unambiguous. Without that switch the
+tenor could never open wide of the bass, no spacing could ever be wrong, and
+half of what the exercise is about would quietly vanish.
+
+The opening default was the middle of the voice's own compass once. That is A3
+for the tenor, two ledger lines above the bass staff, and every key drew a note
+hanging in the air over its own staff — the thing `npm run shot` exists to
+catch.
+
+**Each key draws the note pressing it would write, on that voice's staff and
+with that voice's stem.** `VOICE_PARTS` says which once and `satbMei` engraves
+from the same table, so a key cannot come to look unlike the note it puts down.
+The stem only halves the four voices, so the voice is named beside the switches
+too. The accidentals are **always offered, never per question**: switches that
+appeared only where one was needed would announce a borrowed chord before the
+player had written a note.
+
+**The findings are text, and the room they take is reserved.** A parallel fifth
+is a relation between two voices across two chords, and a bracket drawn round
+four noteheads says where to look without saying what is wrong — the name of the
+fault is the thing to learn. The list is `shrink-0` beside a `flex-1` score box,
+so every line of it comes straight out of the notation: its height is reserved
+whether or not there is anything in it, the way the play caption under a staff
+already is, and it is capped at three lines because every line is a line the
+notation does not get.
+
 ## Guides — `src/pages/MelodyShapePage.tsx` and `components/explain/`
 
 A setting whose meaning takes a picture gets a page, reached from a question
@@ -2169,9 +2313,18 @@ Corner rather than a line under the hint, so it is there the first time you meet
 the setting and invisible every time after.
 
 **A guide that has to be read before the exercise makes sense gets a station of
-its own.** There are three of them now — figured bass, the modes, and the
-chords, whose names are a convention nothing in the exercise can teach you: a
-first inversion is a Sextakkord because that is what it has always been called.
+its own.** There are four of them now — figured bass, the modes, the chords,
+whose names are a convention nothing in the exercise can teach you (a first
+inversion is a Sextakkord because that is what it has always been called), and
+**voice leading**, which is the strongest case of the four: cadence writing
+marks a setting against a list of prohibitions, and failing someone for a
+parallel fifth nobody ever mentioned is exactly the unfairness these pages
+exist to undo. Its table walks `VOICE_LEADING_RULES` rather than repeating it,
+so a rule cannot be added to the model without being explained, and its six
+examples are one clean setting with a single voice moved —
+`VoiceLeadingPage.test.ts` holds each to showing **exactly** the fault it claims
+and no other, so the detector and the page that explains it are proved by one
+test rather than two that could drift apart.
 Everything on that page is `chord.ts` evaluated, so it cannot come to describe
 something the app no longer does, and `ChordsPage.test.ts` holds the examples to
 `isCleanChord` — the same bar a question has to clear — so the guide can never
@@ -2499,8 +2652,17 @@ counterpoint, the daily round — is still a placeholder page. Figured bass used
 to be a planned exercise under harmonic completion; it is its own category now,
 because reading a figure and writing one are two exercises rather than one.
 
-The harmony model is deliberately ahead of the one exercise standing on it.
-Three things it is built for and does not yet do:
+**The chorale is the next thing the four-part machinery is for**, and most of it
+is already here: `satb-entry`'s draft takes which voices are given as a
+parameter precisely so a chorale can give the soprano and ask for the other
+three, `voiceLeading.ts` grades any `Satz`, and `SatbKeyboard` is voice-agnostic.
+What it wants is public-domain chorale melodies, a generator that harmonises one
+rather than inventing a progression, and — for the modal Kantionalsatz the UdK
+paper offers as the alternative — a _second rule set_ rather than a flag on this
+one.
+
+The harmony model is deliberately ahead of the exercises standing on it. Three
+things it is built for and does not yet do:
 
 - **Harmoniefremde Töne.** Durchgänge, Wechselnoten and Antizipationen are a
   layer over a finished setting — a `HarmonicEvent` carries `ticks` so they have

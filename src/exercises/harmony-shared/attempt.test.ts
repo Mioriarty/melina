@@ -8,9 +8,27 @@ import { eventNotes } from '@/lib/music/harmony'
 import { tonicKey } from '@/lib/music/scale'
 import { createRandom } from '@/lib/utils/seededRandom'
 
-import { harmonyAttempt, harmonyFilter, harmonyQuestion } from './attempt'
-import { bassDegrees, generateRound, harmonySpec } from './generate'
-import { DEFAULT_SETTINGS } from './settings'
+import { isCadenceCorrect } from '@/exercises/cadence-writing/rules'
+import { CHORD_MEMBERS } from '@/lib/music/chord'
+import { pitchKey } from '@/lib/music/pitch'
+import { voicingPitches } from '@/lib/music/satbVoicing'
+
+import {
+  cadenceAttempt,
+  cadenceFilter,
+  cadenceQuestion,
+  harmonyAttempt,
+  harmonyFilter,
+  harmonyQuestion,
+} from './attempt'
+import {
+  bassDegrees,
+  cadenceSpec,
+  generateCadenceRound,
+  generateRound,
+  harmonySpec,
+} from './generate'
+import { DEFAULT_CADENCE_SETTINGS, DEFAULT_SETTINGS } from './settings'
 
 /**
  * A progression into the log and back out.
@@ -154,5 +172,90 @@ describe('the facets a progression is queryable on', () => {
     })
     expect(facets.kind).toBe('harmony')
     expect(facets.cadence).toBeUndefined()
+  })
+})
+
+/* ------------------------------------------------ writing one down, in four parts */
+
+const CADENCE_SPEC = cadenceSpec({
+  ...DEFAULT_CADENCE_SETTINGS,
+  keys: ['C:ionian', 'Eb:ionian', 'A:aeolian', 'F#:ionian'],
+  chords: [4, 5],
+  cadences: ['ganzschluss-vollkommen', 'kadenz-quartsext', 'trugschluss'],
+  blocks: ['tonika-prolongation', 'zwischendominante'],
+  questionsPerRound: 12,
+})
+
+const cadences = generateCadenceRound(createRandom(4711), CADENCE_SPEC)
+
+describe('cadenceAttempt', () => {
+  it('generated a round to check against', () => {
+    expect(cadences).toHaveLength(CADENCE_SPEC.questionsPerRound)
+  })
+
+  it('rebuilds the same question, in the same places', () => {
+    // **The round trip the row's shape rests on.** The Lage is stored because
+    // no reading of the chords can recover it; everything else is derived. And
+    // the setting has to be rebuilt under the *same* constraints — a row voiced
+    // without the prompt's Lage puts the same chords in different places, which
+    // is a row disagreeing with the notation it produced.
+    for (const question of cadences) {
+      const row = cadenceAttempt(question)
+      const read = cadenceQuestion(row, question.rules)
+      expect(read, row.bass).toBeDefined()
+      if (read === undefined) continue
+
+      expect(read.lage).toBe(question.lage)
+      expect(read.model.voicings.map((v) => voicingPitches(v).map(pitchKey))).toEqual(
+        question.model.voicings.map((v) => voicingPitches(v).map(pitchKey)),
+      )
+    }
+  })
+
+  it('keeps the setting it rebuilt answerable', () => {
+    // A row read back has to still be a question: the answer that was right
+    // when it was asked is still right when it is asked again.
+    for (const question of cadences) {
+      const read = cadenceQuestion(cadenceAttempt(question), question.rules)
+      expect(read).toBeDefined()
+      if (read === undefined) continue
+      expect(isCadenceCorrect(read.model.voicings, read)).toBe(true)
+    }
+  })
+
+  it('says there is no single right answer', () => {
+    // A four-part setting has a dozen of them, which is the whole reason it is
+    // graded by rules. Printing one would be printing a model answer as though
+    // it were *the* answer.
+    expect(correctAnswer(cadenceAttempt(cadences[0] as (typeof cadences)[number]))).toBe(
+      '',
+    )
+  })
+
+  it('is reached by the Lage, in the same dimension a chord is', () => {
+    // `top` rather than a facet of its own: which member stands on top is a
+    // dimension chord questions already have, and sharing it is what lets one
+    // query span both.
+    for (const question of cadences) {
+      const row = cadenceAttempt(question)
+      const facets = attemptFacets(row)
+      expect(facets.top).toBe(String(CHORD_MEMBERS.indexOf(question.lage)))
+
+      const spec = { ...CADENCE_SPEC, lagen: [question.lage] }
+      expect(
+        matchesFilter(
+          {
+            id: 1,
+            exerciseId: 'harmony/cadence',
+            ts: 0,
+            correct: true,
+            question: row,
+            answered: '',
+            ms: 0,
+          },
+          cadenceFilter(spec),
+        ),
+      ).toBe(true)
+    }
   })
 })
