@@ -38,8 +38,15 @@ import { figureLines } from './figureNotation'
  * the right place, which is the fallback the cursor already reaches for.
  */
 
-/** Which staff and stem direction each voice takes. */
-const PARTS: Readonly<
+/**
+ * Which staff and stem direction each voice takes.
+ *
+ * Exported because the four-part keyboard draws each key with the stem of the
+ * voice it is about to write into, on that voice's own staff — so a key looks
+ * like the note it will put down. Two answers to "where does the tenor live"
+ * is two answers that can disagree, and the player is who would find out.
+ */
+export const VOICE_PARTS: Readonly<
   Record<VoiceId, { staff: number; layer: number; stem: 'up' | 'down' }>
 > = {
   soprano: { staff: 1, layer: 1, stem: 'up' },
@@ -177,10 +184,10 @@ export function satbMei({
 
       const staves = [1, 2]
         .map((staff) => {
-          const layers = VOICES.filter((voice) => PARTS[voice].staff === staff)
-            .sort((a, b) => PARTS[a].layer - PARTS[b].layer)
+          const layers = VOICES.filter((voice) => VOICE_PARTS[voice].staff === staff)
+            .sort((a, b) => VOICE_PARTS[a].layer - VOICE_PARTS[b].layer)
             .map((voice) => {
-              const part = PARTS[voice]
+              const part = VOICE_PARTS[voice]
 
               // The bass is one note for the whole measure; every other voice
               // moves with the sonorities above it.

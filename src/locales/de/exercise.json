@@ -205,7 +205,8 @@
       "melody": "Melodietasten",
       "figure": "Zifferntasten",
       "chord": "Akkordtöne",
-      "chordName": "Akkordname"
+      "chordName": "Akkordname",
+      "satb": "Vierstimmige Tasten"
     },
     "prompt": {
       "interval": "Welches Intervall ist das?",
@@ -215,7 +216,8 @@
       "melody": "Schreibe die Melodie auf, die du hörst",
       "figuring": "Wie wird dieser Akkord beziffert?",
       "realizing": "Schreibe den Akkord zur Bezifferung",
-      "bass": "Schreibe die Basslinie auf."
+      "bass": "Schreibe die Basslinie auf.",
+      "cadence": "Setzen Sie diese Kadenz vierstimmig aus"
     }
   },
   "score": {
@@ -419,6 +421,30 @@
     },
     "summary": {
       "allCorrect": "Jede Basslinie richtig."
+    }
+  },
+  "satb": {
+    "lage": "Beginnen Sie in der {{lage}}",
+    "keyboard": {
+      "sharp": "Nächsten Ton erhöhen",
+      "flat": "Nächsten Ton erniedrigen",
+      "octave": "Andere Oktave",
+      "delete": "Letzten Ton löschen",
+      "press": "{{note}}, {{voice}}"
+    },
+    "findings": {
+      "heading": "Das ist anzusehen",
+      "chord": "Akkord {{chord}}: {{rule}}",
+      "chordVoices": "Akkord {{chord}}: {{rule}} — {{voices}}",
+      "move": "Akkorde {{from}}–{{to}}: {{rule}}",
+      "moveVoices": "Akkorde {{from}}–{{to}}: {{rule}} — {{voices}}",
+      "pair": "{{a}} und {{b}}",
+      "more": "und {{count}} weitere",
+      "wrongLage": "Der Satz musste in der {{lage}} beginnen."
+    },
+    "summary": {
+      "clean": "Fehlerfrei",
+      "faults": "{{count}} anzusehen"
     }
   }
 }

@@ -2,6 +2,8 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { ChordMember, ChordQuality } from '@/lib/music/chord'
+import type { VoiceId } from '@/lib/music/satbVoicing'
+import type { RuleId } from '@/lib/music/voiceLeading'
 import type { ClefId } from '@/lib/music/clef'
 import type { PlayDirection } from '@/lib/music/direction'
 import type { Interval, IntervalQuality } from '@/lib/music/interval'
@@ -143,6 +145,19 @@ export interface MusicNames {
   technique: (id: string) => string
   /** Short enough for a chip: `Quintfall`. */
   techniqueShort: (id: string) => string
+  /** One of the four parts: `Tenor`, `Alt`. */
+  voice: (id: VoiceId) => string
+  /**
+   * A voice-leading rule by name: `Parallel fifths`, `Parallelquinten`.
+   *
+   * Music vocabulary, and vocabulary of exactly the kind this hook exists for:
+   * the rules are named differently in the two languages and a Querstand is not
+   * a "cross-relation" by translation but by convention. The model in
+   * `voiceLeading.ts` carries ids and predicates and no display string at all.
+   */
+  rule: (id: RuleId) => string
+  /** What the rule actually asks for, in a sentence. */
+  ruleBlurb: (id: RuleId) => string
 }
 
 export function useMusicNames(): MusicNames {
@@ -247,6 +262,9 @@ export function useMusicNames(): MusicNames {
         t(`techniques.${id}.short`, {
           defaultValue: t(`techniques.${id}.label`, { defaultValue: id }),
         }),
+      voice: (id) => t(`voices.${id}`),
+      rule: (id) => t(`rules.${id}.label`),
+      ruleBlurb: (id) => t(`rules.${id}.blurb`),
     }
   }, [t])
 }

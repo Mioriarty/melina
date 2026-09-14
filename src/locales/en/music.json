@@ -433,6 +433,90 @@
     "fifth": "5th",
     "seventh": "7th"
   },
+  "voices": {
+    "soprano": "Soprano",
+    "alto": "Alto",
+    "tenor": "Tenor",
+    "bass": "Bass"
+  },
+  "rules": {
+    "range": {
+      "label": "Range",
+      "blurb": "Every voice stays inside what it can comfortably sing."
+    },
+    "spacing": {
+      "label": "Spacing",
+      "blurb": "No more than an octave between neighbouring upper voices; tenor to bass may open further."
+    },
+    "crossing": {
+      "label": "Voice crossing",
+      "blurb": "No voice sings below the one underneath it."
+    },
+    "overlap": {
+      "label": "Voice overlap",
+      "blurb": "No voice moves past where its neighbour just was."
+    },
+    "parallel-fifths": {
+      "label": "Parallel fifths",
+      "blurb": "Two voices a fifth apart do not stay a fifth apart."
+    },
+    "parallel-octaves": {
+      "label": "Parallel octaves",
+      "blurb": "Two voices an octave apart do not stay an octave apart."
+    },
+    "hidden-fifths": {
+      "label": "Hidden fifths",
+      "blurb": "The outer voices do not leap into a fifth in the same direction."
+    },
+    "hidden-octaves": {
+      "label": "Hidden octaves",
+      "blurb": "The outer voices do not leap into an octave in the same direction."
+    },
+    "doubled-leading-note": {
+      "label": "Doubled leading note",
+      "blurb": "The leading note is sung by one voice only."
+    },
+    "doubled-altered": {
+      "label": "Doubled dissonance",
+      "blurb": "A seventh, or a note from outside the key, is sung by one voice only."
+    },
+    "incomplete-chord": {
+      "label": "Incomplete chord",
+      "blurb": "Every note of the chord is there, except a fifth that may be left out."
+    },
+    "wrong-note": {
+      "label": "Wrong note",
+      "blurb": "Every voice sings a note the chord actually contains."
+    },
+    "unresolved-leading-note": {
+      "label": "Unresolved leading note",
+      "blurb": "A leading note in an outer voice rises into the tonic."
+    },
+    "unresolved-seventh": {
+      "label": "Unresolved seventh",
+      "blurb": "A seventh falls by a step."
+    },
+    "unresolved-suspension": {
+      "label": "Unresolved suspension",
+      "blurb": "A suspension falls by a step into its resolution."
+    },
+    "augmented-second": {
+      "label": "Augmented second",
+      "blurb": "No voice moves by an augmented second."
+    },
+    "cross-relation": {
+      "label": "Cross-relation",
+      "blurb": "One voice does not sing the note another has just altered."
+    },
+    "large-leap": {
+      "label": "Large leap",
+      "blurb": "No voice leaps further than a sixth."
+    },
+    "static": {
+      "label": "Nothing moves",
+      "blurb": "At least one voice moves from each chord to the next."
+    }
+  },
   "techniques": {
     "eroeffnung-tonika": {
       "label": "Opening tonic",

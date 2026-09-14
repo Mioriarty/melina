@@ -807,8 +807,9 @@ export function melodicPhraseMei({
  * armed, so the key draws that — a dotted half if a dotted half is what
  * pressing it would put on the staff.
  */
-function keyNote(dur: NoteValue, dots: 0 | 1): string {
-  return `dur="${dur}"${attribute('dots', dots)}`
+function keyNote(dur: NoteValue, dots: 0 | 1, stem?: 'up' | 'down'): string {
+  const direction = stem === undefined ? '' : ` stem.dir="${stem}"`
+  return `dur="${dur}"${attribute('dots', dots)}${direction}`
 }
 
 /**
@@ -826,12 +827,24 @@ export function degreeKeyMei({
   keySignature,
   dur = 4,
   dots = 0,
+  stem,
 }: {
   pitch: Pitch
   clef: ClefId
   keySignature: KeySignatureId
   dur?: NoteValue
   dots?: 0 | 1
+  /**
+   * Which way the stem points, where that carries meaning.
+   *
+   * Left to the engraver everywhere else — a stem's direction is a fact about
+   * where the note sits on the staff and nobody should be choosing it. The
+   * four-part keyboard is the exception: there the note on a key belongs to a
+   * *voice*, and a chorale writes the upper voice of each staff stem-up and
+   * the lower one stem-down, so pointing the stem the way the staff will point
+   * it is the key saying which voice it is about to write.
+   */
+  stem?: 'up' | 'down'
 }): string {
   const { sign, line } = getClef(clef)
 
@@ -843,7 +856,7 @@ export function degreeKeyMei({
           </scoreDef>`,
     `<measure n="1" right="invis">
               <staff n="1">
-                <layer n="1">${noteElement(pitch, keySignature, keyNote(dur, dots))}</layer>
+                <layer n="1">${noteElement(pitch, keySignature, keyNote(dur, dots, stem))}</layer>
               </staff>
             </measure>`,
   )

@@ -35,6 +35,11 @@ export interface MiniStaffProps {
    */
   dur?: NoteValue
   dots?: 0 | 1
+  /**
+   * Which way the stem points. Only the four-part keyboard sets it, where the
+   * direction says which voice the key is about to write into.
+   */
+  stem?: 'up' | 'down'
   /** What the staff shows, for a screen reader. Usually the key already says. */
   label?: string
   className?: string
@@ -46,10 +51,11 @@ export function MiniStaff({
   keySignature,
   dur = 4,
   dots = 0,
+  stem,
   label,
   className,
 }: MiniStaffProps) {
-  const cacheKey = `${clef}|${keySignature}|${pitchKey(pitch)}|${dur}.${dots}`
+  const cacheKey = `${clef}|${keySignature}|${pitchKey(pitch)}|${dur}.${dots}|${stem ?? ''}`
   const [rendered, setRendered] = useState<{ key: string; svg: string }>()
 
   // A hit is available on the very first render, so a keyboard that has been
@@ -68,7 +74,14 @@ export function MiniStaff({
     let active = true
 
     renderMei(
-      degreeKeyMei({ pitch, clef, keySignature, dur, dots }),
+      degreeKeyMei({
+        pitch,
+        clef,
+        keySignature,
+        dur,
+        dots,
+        ...(stem === undefined ? {} : { stem }),
+      }),
       undefined,
       DEGREE_KEY_PROFILE,
     )
@@ -84,7 +97,7 @@ export function MiniStaff({
     return () => {
       active = false
     }
-  }, [cacheKey, pitch, clef, keySignature, dur, dots])
+  }, [cacheKey, pitch, clef, keySignature, dur, dots, stem])
 
   if (svg === undefined) {
     // Holds the space rather than collapsing, so the key does not resize when

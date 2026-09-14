@@ -205,7 +205,8 @@
       "melody": "Melody keys",
       "figure": "Figure keys",
       "chord": "Chord notes",
-      "chordName": "Chord name"
+      "chordName": "Chord name",
+      "satb": "Four-part notes"
     },
     "prompt": {
       "interval": "What interval is this?",
@@ -215,7 +216,8 @@
       "melody": "Write the melody you hear",
       "figuring": "How is this chord figured?",
       "realizing": "Write the chord the figure asks for",
-      "bass": "Write down the bass line."
+      "bass": "Write down the bass line.",
+      "cadence": "Set this cadence in four parts"
     }
   },
   "score": {
@@ -419,6 +421,30 @@
     },
     "summary": {
       "allCorrect": "Every bass line right."
+    }
+  },
+  "satb": {
+    "lage": "Begin in {{lage}}",
+    "keyboard": {
+      "sharp": "Raise the next note",
+      "flat": "Lower the next note",
+      "octave": "The other octave",
+      "delete": "Delete the last note",
+      "press": "{{note}}, {{voice}}"
+    },
+    "findings": {
+      "heading": "What to look at",
+      "chord": "Chord {{chord}}: {{rule}}",
+      "chordVoices": "Chord {{chord}}: {{rule}} — {{voices}}",
+      "move": "Chords {{from}}–{{to}}: {{rule}}",
+      "moveVoices": "Chords {{from}}–{{to}}: {{rule}} — {{voices}}",
+      "pair": "{{a}} and {{b}}",
+      "more": "and {{count}} more",
+      "wrongLage": "The setting had to begin in {{lage}}."
+    },
+    "summary": {
+      "clean": "No mistakes",
+      "faults": "{{count}} to look at"
     }
   }
 }

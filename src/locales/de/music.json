@@ -433,6 +433,90 @@
     "fifth": "Quint",
     "seventh": "Sept"
   },
+  "voices": {
+    "soprano": "Sopran",
+    "alto": "Alt",
+    "tenor": "Tenor",
+    "bass": "Bass"
+  },
+  "rules": {
+    "range": {
+      "label": "Stimmumfang",
+      "blurb": "Jede Stimme bleibt in ihrem bequem singbaren Umfang."
+    },
+    "spacing": {
+      "label": "Stimmabstand",
+      "blurb": "Höchstens eine Oktave zwischen benachbarten Oberstimmen; Tenor zu Bass darf weiter stehen."
+    },
+    "crossing": {
+      "label": "Stimmkreuzung",
+      "blurb": "Keine Stimme singt unter der Stimme unter ihr."
+    },
+    "overlap": {
+      "label": "Stimmüberschneidung",
+      "blurb": "Keine Stimme geht über den Ton hinaus, den ihre Nachbarstimme eben noch hatte."
+    },
+    "parallel-fifths": {
+      "label": "Quintparallelen",
+      "blurb": "Zwei Stimmen im Quintabstand bleiben nicht im Quintabstand."
+    },
+    "parallel-octaves": {
+      "label": "Oktavparallelen",
+      "blurb": "Zwei Stimmen im Oktavabstand bleiben nicht im Oktavabstand."
+    },
+    "hidden-fifths": {
+      "label": "Verdeckte Quinten",
+      "blurb": "Die Außenstimmen springen nicht gleichgerichtet in eine Quinte."
+    },
+    "hidden-octaves": {
+      "label": "Verdeckte Oktaven",
+      "blurb": "Die Außenstimmen springen nicht gleichgerichtet in eine Oktave."
+    },
+    "doubled-leading-note": {
+      "label": "Verdoppelter Leitton",
+      "blurb": "Den Leitton singt nur eine Stimme."
+    },
+    "doubled-altered": {
+      "label": "Verdoppelte Dissonanz",
+      "blurb": "Eine Septime oder ein leitereigenfremder Ton wird nur von einer Stimme gesungen."
+    },
+    "incomplete-chord": {
+      "label": "Unvollständiger Akkord",
+      "blurb": "Jeder Akkordton ist vorhanden; nur die Quinte darf fehlen."
+    },
+    "wrong-note": {
+      "label": "Falscher Ton",
+      "blurb": "Jede Stimme singt einen Ton, der wirklich zum Akkord gehört."
+    },
+    "unresolved-leading-note": {
+      "label": "Nicht aufgelöster Leitton",
+      "blurb": "Ein Leitton in einer Außenstimme steigt in die Tonika."
+    },
+    "unresolved-seventh": {
+      "label": "Nicht aufgelöste Septime",
+      "blurb": "Eine Septime geht schrittweise abwärts."
+    },
+    "unresolved-suspension": {
+      "label": "Nicht aufgelöster Vorhalt",
+      "blurb": "Ein Vorhalt löst sich schrittweise abwärts auf."
+    },
+    "augmented-second": {
+      "label": "Übermäßige Sekunde",
+      "blurb": "Keine Stimme bewegt sich um eine übermäßige Sekunde."
+    },
+    "cross-relation": {
+      "label": "Querstand",
+      "blurb": "Keine Stimme singt den Ton, den eine andere gerade alteriert hat."
+    },
+    "large-leap": {
+      "label": "Großer Sprung",
+      "blurb": "Keine Stimme springt weiter als eine Sexte."
+    },
+    "static": {
+      "label": "Stillstand",
+      "blurb": "Von Akkord zu Akkord bewegt sich mindestens eine Stimme."
+    }
+  },
   "techniques": {
     "eroeffnung-tonika": {
       "label": "Eröffnende Tonika",
