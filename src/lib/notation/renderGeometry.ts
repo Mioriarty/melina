@@ -11,22 +11,42 @@
  */
 
 /**
+ * Every horizontal rule in a render — the staff lines and the ledger lines.
+ *
+ * **A rule has length, and insisting on that is not pedantry.** A note the
+ * question has not revealed yet is engraved in place and not painted, and
+ * Verovio gives such a note a *degenerate stem*: `<path d="M933 2430 L933
+ * 2430"/>`, whose two ends share a y as surely as a staff line's do. Its y is
+ * the notehead's, which sits on a space as often as on a line — so counting it
+ * halved the measured staff gap and put the top of the page wherever the
+ * highest hidden note happened to be. Nothing about that is visible in a render
+ * that has no hidden notes, which is every render this file was written
+ * against.
+ */
+export function horizontalRules(
+  chunk: string,
+): readonly { x1: number; x2: number; y: number }[] {
+  return [...chunk.matchAll(/<path d="M(-?[\d.]+) (-?[\d.]+) L(-?[\d.]+) \2"/g)]
+    .map((found) => ({
+      x1: Number(found[1]),
+      x2: Number(found[3]),
+      y: Number(found[2]),
+    }))
+    .filter((rule) => rule.x1 !== rule.x2)
+}
+
+/**
  * The distance between two staff lines, or `undefined` for a render with no
  * staff in it.
  *
- * Read off the horizontal rules themselves — a staff line is a `<path>` whose
- * two ends share a y. Ledger lines share that shape, but they sit *on* the
- * same ladder, so the smallest distance between any two of these is a staff
- * gap either way.
+ * Read off the horizontal rules themselves. Ledger lines are rules too, but
+ * they sit *on* the same ladder, so the smallest distance between any two of
+ * these is a staff gap either way.
  */
 export function staffGap(svg: string): number | undefined {
-  const ys = [
-    ...new Set(
-      [...svg.matchAll(/<path d="M(-?[\d.]+) (-?[\d.]+) L(-?[\d.]+) \2"/g)].map((found) =>
-        Number(found[2]),
-      ),
-    ),
-  ].sort((a, b) => a - b)
+  const ys = [...new Set(horizontalRules(svg).map((rule) => rule.y))].sort(
+    (a, b) => a - b,
+  )
 
   const gaps = ys.slice(1).map((y, at) => y - (ys[at] as number))
   const smallest = Math.min(...gaps)

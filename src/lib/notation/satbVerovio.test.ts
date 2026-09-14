@@ -101,9 +101,9 @@ describe('satbMei', () => {
     // lines cannot be told apart — which is the whole reason a chorale is
     // written in two layers rather than as a chord.
     const svg = await satbMei({ keySignature: '0', events: chords(1) })
-    expect(svg).toContain('<layer n="1"><note xml:id="soprano1"')
+    expect(svg).toContain('<layer n="1"><note xml:id="soprano1-1"')
     expect(svg).toContain('stem.dir="up"')
-    expect(svg).toContain('<layer n="2"><note xml:id="alto1"')
+    expect(svg).toContain('<layer n="2"><note xml:id="alto1-1"')
 
     const rendered = await render(chords(1))
     // Four stems drawn, one per voice, and none of them merged away.

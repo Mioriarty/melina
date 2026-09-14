@@ -46,7 +46,7 @@
  * always in the right place.
  */
 
-import { NOTEHEAD_HALF, staffGap } from './renderGeometry'
+import { horizontalRules, NOTEHEAD_HALF, staffGap } from './renderGeometry'
 
 /** Which chord of the question is being written into. Both indices 0-based. */
 export interface ScoreCursor {
@@ -144,22 +144,13 @@ function measureSpan(
   let top: number | undefined
   let widest = 0
 
-  for (const line of chunk.matchAll(
-    /<path d="M(-?[\d.]+) (-?[\d.]+) L(-?[\d.]+) (-?[\d.]+)"/g,
-  )) {
-    const [x1, y1, x2, y2] = [1, 2, 3, 4].map((at) => Number(line[at])) as [
-      number,
-      number,
-      number,
-      number,
-    ]
-    if (y1 !== y2) continue
-    if (top === undefined || y1 < top) top = y1
-    const width = Math.abs(x2 - x1)
+  for (const rule of horizontalRules(chunk)) {
+    if (top === undefined || rule.y < top) top = rule.y
+    const width = Math.abs(rule.x2 - rule.x1)
     if (width > widest) {
       widest = width
-      left = Math.min(x1, x2)
-      right = Math.max(x1, x2)
+      left = Math.min(rule.x1, rule.x2)
+      right = Math.max(rule.x1, rule.x2)
     }
   }
 
@@ -198,14 +189,34 @@ function anchorOf(chunk: string, id: string, gap: number): number | undefined {
 }
 
 /**
+ * What a sonority may be called, most reliable first.
+ *
+ * Two renders write into this cursor and they name their chords differently,
+ * because they *are* different things: `thoroughbassMei` writes a stack of
+ * noteheads and calls it `chord<event>-<position>`, while `satbMei` writes four
+ * separate voices and the soprano is the one that moves with every sonority.
+ * Both then carry `figure<event>-<position>` under the bass.
+ *
+ * Stated once here rather than passed in by each caller: the two schemes are
+ * disjoint, so probing for all of them costs one failed string search and
+ * means neither caller has to remember which of its ids the cursor reads.
+ */
+const SONORITY_ANCHORS: readonly string[] = ['chord', 'soprano', 'figure']
+
+/**
  * Every chord of the render, in the order they are written into.
  *
  * The count per bass note comes from the ids that are actually there: a
- * suspension always has two figures printed under it — the resolution writes
- * the line that moved, so it can never come out empty — and in the figuring
+ * suspension always has two sonorities drawn above it, and in the figuring
  * direction the chords themselves are the question and are always drawn. A
- * bass note with neither carries exactly one chord, and is anchored on the
+ * bass note with none of them carries exactly one chord, and is anchored on the
  * bass note.
+ *
+ * **A figure alone is not enough to count by**, which is what a four-part
+ * setting proved: a plain triad is figured by writing nothing at all, so a
+ * render with no chords drawn and no figures printed collapsed a suspension's
+ * two sonorities into one band. The notes are the thing always there — engraved
+ * in place and merely not painted while the answer is still being written.
  */
 function slotsOf(svg: string, gap: number): readonly Slot[] {
   const slots: Slot[] = []
@@ -214,9 +225,10 @@ function slotsOf(svg: string, gap: number): readonly Slot[] {
     const event = index + 1
     const anchors: number[] = []
     for (let position = 1; ; position += 1) {
-      const anchor =
-        anchorOf(chunk, `chord${event}-${position}`, gap) ??
-        anchorOf(chunk, `figure${event}-${position}`, gap)
+      const anchor = SONORITY_ANCHORS.reduce<number | undefined>(
+        (found, prefix) => found ?? anchorOf(chunk, `${prefix}${event}-${position}`, gap),
+        undefined,
+      )
       if (anchor === undefined) break
       anchors.push(anchor)
     }

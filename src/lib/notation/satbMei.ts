@@ -26,6 +26,16 @@ import { figureLines } from './figureNotation'
  * and the Funktionen — which is Karlsruhe's own exam task (*"entweder in
  * Generalbassziffern oder in Funktionszeichen oder in Stufenzeichen"*) with
  * all three answers printed at once, each derived from the same events.
+ *
+ * **Everything is named `<what><measure>-<position>`**, which is not this
+ * file's own convention but `thoroughbassMei`'s — and that is the point. An
+ * authored `xml:id` survives into the SVG as the element's `id`, and
+ * `scoreCursor.ts` finds the chord being written into by probing exactly those
+ * names; speaking the same ones means the band that marks it works here with
+ * no change at all. The bass keeps a bare `bass<measure>`, also deliberately:
+ * a measure carrying one sonority has no figure of its own when the chord is a
+ * plain triad, and the bass note is the one thing always drawn and always in
+ * the right place, which is the fallback the cursor already reaches for.
  */
 
 /** Which staff and stem direction each voice takes. */
@@ -118,13 +128,13 @@ export interface SatbMeiOptions {
 function harmRow(
   rows: readonly string[],
   index: number,
+  id: string,
   n: number,
-  prefix: string,
   tstamp: number,
 ): string {
   const text = rows[index]
   if (text === undefined || text === '') return ''
-  return `<harm xml:id="${prefix}${index + 1}" n="${n}" staff="2" tstamp="${tstamp}" place="below">${escapeText(text)}</harm>`
+  return `<harm xml:id="${id}" n="${n}" staff="2" tstamp="${tstamp}" place="below">${escapeText(text)}</harm>`
 }
 
 /**
@@ -192,7 +202,7 @@ export function satbMei({
                         keySignature,
                         event.ticks,
                         part.stem,
-                        `${voice}${at + position + 1}`,
+                        `${voice}${index + 1}-${position + 1}`,
                         hidden || (event.hide ?? []).includes(voice),
                       ),
                     )
@@ -215,17 +225,19 @@ export function satbMei({
           const figure = analysis.figures?.[slot]
           const lines = figure === undefined ? [] : figureLines(figure)
 
+          const here = `${index + 1}-${position + 1}`
+
           const figured =
             lines.length === 0
               ? ''
-              : `<harm xml:id="figure${slot + 1}" n="1" staff="2" tstamp="${share}" place="below"><fb>${lines
+              : `<harm xml:id="figure${here}" n="1" staff="2" tstamp="${share}" place="below"><fb>${lines
                   .map((line) => `<f>${escapeText(line)}</f>`)
                   .join('')}</fb></harm>`
 
           return [
             figured,
-            harmRow(analysis.stufen ?? [], slot, 2, 'stufe', share),
-            harmRow(analysis.functions ?? [], slot, 3, 'function', share),
+            harmRow(analysis.stufen ?? [], slot, `stufe${here}`, 2, share),
+            harmRow(analysis.functions ?? [], slot, `function${here}`, 3, share),
           ].join('')
         })
         .join('')

@@ -3,11 +3,14 @@ import { describe, expect, it } from 'vitest'
 
 import { parseFigureKey, type Figure } from '@/lib/music/figuredBass'
 import { pitch } from '@/lib/music/pitch'
+import type { Voicing } from '@/lib/music/satbVoicing'
 
 import { centreFigures } from './figureAlignment'
 import { thoroughbassMei, type ThoroughbassEvent } from './mei'
+import { satbMei, type SatbEvent } from './satbMei'
+import { staffGap } from './renderGeometry'
 import { markSlot } from './scoreCursor'
-import { renderMei, thoroughbassProfile } from './verovio'
+import { renderMei, satbProfile, thoroughbassProfile } from './verovio'
 
 /**
  * The cursor band, against the real engraver.
@@ -241,5 +244,153 @@ describe('the band', () => {
     })
 
     expect(new Set(widths).size).toBe(1)
+  })
+})
+
+/* ------------------------------------------------------- the grand staff */
+
+/**
+ * The same band on a four-part setting, which is a different render entirely.
+ *
+ * `markSlot` was written for `thoroughbassMei` and reads a chord back off the
+ * ids it authored. `satbMei` now names its own sonorities the same way, so the
+ * cursor reaches a chorale with no change to it at all — and this is the test
+ * that the claim survives contact with the engraver rather than only with the
+ * markup, which is the trap every other node-environment suite here exists for.
+ */
+
+const TONIC: Voicing = {
+  bass: pitch('C', 0, 3),
+  tenor: pitch('G', 0, 3),
+  alto: pitch('C', 0, 4),
+  soprano: pitch('E', 0, 4),
+}
+const DOMINANT: Voicing = {
+  bass: pitch('G', 0, 2),
+  tenor: pitch('B', 0, 3),
+  alto: pitch('D', 0, 4),
+  soprano: pitch('G', 0, 4),
+}
+
+/** Three chords, the middle bass note carrying a suspension over it. */
+const UPPER = ['soprano', 'alto', 'tenor'] as const
+
+const SETTING: readonly SatbEvent[] = [
+  { voicing: TONIC, ticks: 120 },
+  { voicing: { ...DOMINANT, alto: pitch('C', 0, 4) }, ticks: 60 },
+  { voicing: DOMINANT, ticks: 60, held: true },
+  { voicing: TONIC, ticks: 240 },
+]
+
+function satbRender(events: readonly SatbEvent[], figures?: readonly string[]) {
+  return renderMei(
+    satbMei({
+      keySignature: '0',
+      events,
+      ...(figures === undefined
+        ? {}
+        : { analysis: { figures: figures.map((key) => fig(key)) } }),
+    }),
+    undefined,
+    satbProfile(events.length, 0),
+  )
+}
+
+describe('the band on a grand staff', () => {
+  it('lands on the sonority it names, and on no other', async () => {
+    const svg = await satbRender(SETTING)
+
+    // Three bass notes, four sonorities: the middle one carries a suspension.
+    const slots = [
+      { cursor: { event: 0, position: 0 }, id: 'soprano1-1' },
+      { cursor: { event: 1, position: 0 }, id: 'soprano2-1' },
+      { cursor: { event: 1, position: 1 }, id: 'soprano2-2' },
+      { cursor: { event: 2, position: 0 }, id: 'soprano3-1' },
+    ]
+
+    for (const { cursor, id } of slots) {
+      const band = bandOf(markSlot(svg, cursor))
+      expect(band, `no band for ${id}`).toBeDefined()
+      expect(inside(band as Band, xOf(svg, id)), `${id} is outside its own band`).toBe(
+        true,
+      )
+
+      for (const other of slots) {
+        if (other.id === id) continue
+        expect(
+          inside(band as Band, xOf(svg, other.id)),
+          `${other.id} is inside ${id}'s band`,
+        ).toBe(false)
+      }
+    }
+  })
+
+  it('stays put as the voices above the bass are written', async () => {
+    // The reason the page is a fixed size, read back: the band is computed
+    // from whatever is engraved at the moment it is asked for, so it must not
+    // depend on how much of the answer has arrived.
+    //
+    // **Held to a fraction of a staff-line gap rather than to equality**, and
+    // the difference is honest. An unwritten voice is engraved in place and
+    // not painted, and Verovio spaces a note it is not painting a little more
+    // tightly than one it is — so the music does creep as the answer fills, by
+    // 13 units of a 7300-unit page across the whole of it, which is two thirds
+    // of a pixel in the column a phone gives this. What the fixed page buys is
+    // that the staff cannot *resize*; this is what is left, and it is nothing.
+    const cursor = { event: 1, position: 1 }
+    const stages = await Promise.all(
+      [0, 1, 2, 3, 4].map((written) =>
+        satbRender(
+          SETTING.map((event, index) =>
+            index < written ? event : { ...event, hide: UPPER },
+          ),
+        ),
+      ),
+    )
+
+    const bands = stages.map((svg) => bandOf(markSlot(svg, cursor)) as Band)
+    const gap = staffGap(stages[0] as string) as number
+    const first = bands[0] as Band
+
+    for (const band of bands) {
+      expect(band, 'no band at some stage of writing').toBeDefined()
+      expect(Math.abs(band.left - first.left)).toBeLessThan(gap / 4)
+      expect(band.top, 'the band changed height as the answer arrived').toBe(first.top)
+      expect(band.bottom).toBe(first.bottom)
+    }
+  })
+
+  it('measures the staff by its lines and not by a note it is not painting', async () => {
+    // The trap this file found the hard way. A hidden note still carries a
+    // *degenerate stem* — `<path d="M933 2430 L933 2430"/>` — whose two ends
+    // share a y exactly as a staff line's do, and whose y is a notehead's,
+    // which sits on a space as often as on a line. Counted as a rule it halved
+    // the staff gap and dragged the top of the band to wherever the highest
+    // unwritten note happened to be. Nothing shows it up on a render with
+    // every note painted, which is what every other suite here uses.
+    const drawn = await satbRender(SETTING)
+    const blank = await satbRender(SETTING.map((event) => ({ ...event, hide: UPPER })))
+
+    expect(staffGap(blank)).toBe(staffGap(drawn))
+  })
+
+  it('reaches over both staves and under the figures', async () => {
+    // A grand staff is two staves and a row of text, and a band covering only
+    // the top one would read as marking the soprano rather than the chord.
+    const svg = await satbRender(SETTING, ['5/3', '4', '3', '5/3'])
+    const band = bandOf(markSlot(svg, { event: 1, position: 0 })) as Band
+
+    expect(band).toBeDefined()
+    for (const id of ['soprano2-1', 'bass2', 'figure2-1']) {
+      const at = svg.indexOf(`id="${id}"`)
+      expect(at, `${id} is not in the render`).toBeGreaterThan(-1)
+      const y =
+        /transform="translate\(-?[\d.]+,\s*(-?[\d.]+)\)"|<text [^>]*y="(-?[\d.]+)"/.exec(
+          svg.slice(at),
+        )
+      const value = Number(y?.[1] ?? y?.[2] ?? Number.NaN)
+      expect(value, `${id} is outside the band vertically`).toBeGreaterThan(band.top)
+      expect(value, `${id} is outside the band vertically`).toBeLessThan(band.bottom)
+    }
   })
 })
