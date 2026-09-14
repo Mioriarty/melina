@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { createRandom } from '@/lib/utils/seededRandom'
 import { KEY_CHOICES, type Key } from '@/lib/music/key'
-import { VOICES } from '@/lib/music/voiceLeading'
+import { VOICES } from '@/lib/music/satbVoicing'
 import { BLOCKS } from '@/lib/music/satzmodell'
 
 import { buildQuestion, harmonySpec, type HarmonyQuestion } from './generate'

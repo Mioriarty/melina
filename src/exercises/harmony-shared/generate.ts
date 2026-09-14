@@ -12,7 +12,7 @@ import { buildEvents, type ChordSpec, type HarmonicEvent } from '@/lib/music/har
 import { isDegreeAlteration, type Degree } from '@/lib/music/degree'
 import { chromaticValue, pitch, type Pitch } from '@/lib/music/pitch'
 import { voiceProgression } from '@/lib/music/satb'
-import type { Satz } from '@/lib/music/voiceLeading'
+import type { Satz } from '@/lib/music/satbVoicing'
 import type { SatztechnikId } from '@/lib/music/satzmodell'
 
 import type { HarmonySettings } from './settings'

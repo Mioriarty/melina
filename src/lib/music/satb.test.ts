@@ -12,7 +12,8 @@ import {
 } from './progression'
 import { satzChord, satzLine, voiceProgression } from './satb'
 import { BLOCKS } from './satzmodell'
-import { errorsOf, satzFindings, SATB_RANGES, VOICES, type Satz } from './voiceLeading'
+import { SATB_RANGES, VOICES, type Satz } from './satbVoicing'
+import { errorsOf, satzFindings } from './voiceLeading'
 
 const CADENCES = BLOCKS.filter((block) => block.kind === 'cadence').map(
   (block) => block.id,

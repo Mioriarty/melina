@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { parseFigureKey, type Figure } from '@/lib/music/figuredBass'
 import { KEY_SIGNATURES, type KeySignatureId } from '@/lib/music/keySignature'
 import { pitch, type Letter } from '@/lib/music/pitch'
-import { VOICES, type Voicing } from '@/lib/music/voiceLeading'
+import { VOICES, type Voicing } from '@/lib/music/satbVoicing'
 
 import { rhythmMei } from './mei'
 import { notateRhythm } from './rhythmNotation'

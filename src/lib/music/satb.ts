@@ -4,20 +4,20 @@ import { chromaticValue, type Pitch } from './pitch'
 import type { Progression, VoicingConstraint } from './progression'
 import { tonicKey, type PitchClass } from './scale'
 import {
-  chordAllowed,
   contextOf,
-  voicingCost,
-  transitionCost,
+  COMFORTABLE_LEAP,
+  motionBetween,
+  SATB_RANGES,
+  step,
   VOICES,
   type EventContext,
+  type Move,
   type Satz,
   type VoiceId,
   type VoiceRange,
   type Voicing,
-  type Weights,
-  SATB_RANGES,
-  CHORALE_WEIGHTS,
-} from './voiceLeading'
+} from './satbVoicing'
+import { chordAllowed, moveFindings } from './voiceLeading'
 
 /**
  * Putting a progression into four parts.
@@ -39,6 +39,125 @@ import {
  * sitting still, so the line is shaped by `leapWeight` from `contour.ts`, the
  * same curve that shapes a melody in melodic dictation.
  */
+
+/* ------------------------------------------------------------------- cost */
+
+export interface Weights {
+  motion: number
+  leap: number
+  contrary: number
+  commonTone: number
+  sopranoLeap: number
+  warning: number
+  /** How hard each voice is pulled toward the middle of its own compass. */
+  tessitura: number
+  /** Two upper voices on the same note — legal, and not the chorale sound. */
+  unison: number
+}
+
+/**
+ * The chorale weights.
+ *
+ * Meant to be turned — the numbers are measured by listening rather than
+ * derived, exactly as `PACED_CONTOUR`'s are. A second idiom is a second table
+ * here and not a second algorithm, which is what the modal Kantionalsatz will
+ * want.
+ */
+export const CHORALE_WEIGHTS: Weights = {
+  motion: 1,
+  leap: 1.6,
+  contrary: -3,
+  commonTone: -2.5,
+  sopranoLeap: 2.2,
+  warning: 14,
+  tessitura: 0.55,
+  unison: 6,
+}
+
+/** The middle of each voice's compass, where a chorale part mostly sits. */
+const CENTRES: Readonly<Record<VoiceId, number>> = Object.fromEntries(
+  VOICES.map((voice) => [
+    voice,
+    (chromaticValue(SATB_RANGES[voice].lowest) +
+      chromaticValue(SATB_RANGES[voice].highest)) /
+      2,
+  ]),
+) as Readonly<Record<VoiceId, number>>
+
+/**
+ * What one chord costs to stand in, before anything moves.
+ *
+ * **Register is a preference and nothing else stated it.** The ranges say what
+ * is singable; they do not say where a part usually sits, so a search that
+ * only counted motion was free to put the bass up at B3 under a tenor on the
+ * same note, or let the soprano sink to the bottom of its compass and stay
+ * there. Pulling each voice gently toward the middle of its own range is what
+ * makes the texture sound like a chorus rather than like four lines that
+ * happened to be legal.
+ */
+export function voicingCost(
+  voicing: Voicing,
+  weights: Weights = CHORALE_WEIGHTS,
+): number {
+  const top = chromaticValue(voicing.soprano) - chromaticValue(voicing.tenor)
+  let cost = Math.max(0, top - 14) * 0.5
+
+  for (const voice of VOICES) {
+    cost +=
+      Math.abs(chromaticValue(voicing[voice]) - (CENTRES[voice] ?? 0)) * weights.tessitura
+  }
+
+  // Two upper voices on one note is thin, and it is the shape a search finds
+  // when it is only avoiding crossings.
+  if (chromaticValue(voicing.soprano) === chromaticValue(voicing.alto))
+    cost += weights.unison
+  if (chromaticValue(voicing.alto) === chromaticValue(voicing.tenor))
+    cost += weights.unison
+
+  return cost
+}
+
+/**
+ * What a move costs, or `undefined` when it breaks a rule.
+ *
+ * The two questions answered in one pass, because the search asks both of
+ * every edge it looks at and `moveFindings` is the expensive part. **A broken
+ * rule is not priced, it is refused** — that is the difference between a hard
+ * rule and a preference, and pricing them together is how a generator ends up
+ * emitting parallel fifths whenever the alternative was awkward enough.
+ *
+ * Run with no rule set, so the generator is always held to **every** rule
+ * whatever a level has switched off for the player. A level's selection says
+ * what a player is marked on; it can never make the app's own writing worse.
+ */
+export function transitionCost(
+  move: Move,
+  weights: Weights = CHORALE_WEIGHTS,
+): number | undefined {
+  const findings = moveFindings(move, 0)
+  let cost = 0
+  for (const finding of findings) {
+    if (finding.severity === 'error') return undefined
+    cost += weights.warning
+  }
+
+  const { before, after } = move
+  for (const voice of VOICES) {
+    const distance = Math.abs(step(before[voice], after[voice]))
+    cost += distance * weights.motion
+    if (distance === 0) cost += weights.commonTone
+    if (distance > COMFORTABLE_LEAP) {
+      cost +=
+        (distance - COMFORTABLE_LEAP) *
+        (voice === 'soprano' ? weights.sopranoLeap : weights.leap)
+    }
+  }
+
+  const outer = motionBetween([before.soprano, before.bass], [after.soprano, after.bass])
+  if (outer === 'contrary') cost += weights.contrary
+
+  return cost
+}
 
 export interface SatzOptions {
   weights?: Weights
@@ -295,8 +414,6 @@ export function satzChord(satz: Satz, index: number): readonly Pitch[] {
   if (voicing === undefined) return []
   return [voicing.bass, voicing.tenor, voicing.alto, voicing.soprano]
 }
-
-export { VOICES, type Satz, type Voicing, type VoiceId }
 
 /** Every event of a progression, as the four voices singing it. */
 export function satzEvents(satz: Satz): readonly HarmonicEvent[] {

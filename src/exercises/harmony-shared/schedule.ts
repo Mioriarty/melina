@@ -1,6 +1,6 @@
 import type { StruckNote } from '@/lib/audio/engine'
 import { TICKS_PER_BEAT } from '@/lib/music/meter'
-import { VOICES, type Satz } from '@/lib/music/voiceLeading'
+import { VOICES, type Satz } from '@/lib/music/satbVoicing'
 
 import type { HarmonyQuestion } from './generate'
 

@@ -1,69 +1,58 @@
-import { chordNotes, isSeventh, type Chord } from './chord'
-import { eventChord, eventNotes, type HarmonicEvent } from './harmony'
 import { intervalBetween } from './interval'
-import { keyNotes, type Key } from './key'
-import { chromaticValue, isAlteration, pitch, type Pitch } from './pitch'
-import { tonicKey, type PitchClass } from './scale'
+import { chromaticValue } from './pitch'
+import { tonicKey } from './scale'
+import {
+  LOWER_SPACING,
+  motionBetween,
+  PERFECT_FIFTH,
+  PERFECT_OCTAVE,
+  reduced,
+  samePitchClass,
+  SATB_RANGES,
+  step,
+  UPPER_SPACING,
+  VOICES,
+  WIDE_LEAP,
+  contextOf,
+  type EventContext,
+  type Motion,
+  type Move,
+  type Satz,
+  type VoiceId,
+  type Voicing,
+} from './satbVoicing'
 
 /**
  * The rules a four-part setting is held to.
  *
- * **This module is written once and read twice.** Run as a filter it is what
- * `satb.ts` generates through — an edge that breaks a rule is an edge that
- * does not exist, and a preference is a weight. Run as a detector over a
+ * **This module is written once and read three times.** Run as a filter it is
+ * what `satb.ts` generates through — an edge that breaks a rule is an edge
+ * that does not exist, and a preference is a weight. Run as a detector over a
  * finished `Satz` it is a *grader*, returning a list of findings rather than a
- * verdict, which is the shape the four-part writing exercises need and the one
- * thing melina's round machinery has never had.
+ * verdict. And run as a *list*, it is the vocabulary the writing exercises and
+ * their guide are built out of: a level names the rules it holds the player to,
+ * and the guide explains them one at a time.
  *
  * Building it that way round is the whole reason the generator can be trusted:
- * `satb.test.ts` voices every level's progressions and insists the grader
- * finds **nothing**. A generator checked against its own grader is the same
- * move `modeOf` makes on the scale generator and `readChord` on the chord one.
+ * `satb.test.ts` voices every level's progressions and insists the grader finds
+ * **nothing**. A generator checked against its own grader is the same move
+ * `modeOf` makes on the scale generator and `readChord` on the chord one.
  *
- * The rule list is not invented here. It is the standard
- * Stimmführung inventory — spacing, crossing, overlap, doubling, omission,
- * the four kinds of motion, leading-note and seventh resolution, dissonance
- * preparation — and each entry below says which one it is.
+ * **Every rule is a row, and that is what changed when the exercises arrived.**
+ * They used to be paragraphs inside two long functions, which is fine for a
+ * filter and useless for everything else: a rule written that way cannot be
+ * named, cannot be explained, and cannot be switched off. Each one is now an
+ * entry in `VOICE_LEADING_RULES` carrying its id, what kind of fault it is and
+ * how bad it is, plus a `check` that returns only the voices at fault — the
+ * framework builds the `Finding`. Adding a rule is a row; so is teaching the
+ * guide about it, since the page walks this same list.
+ *
+ * The list itself is not invented here. It is the standard Stimmführung
+ * inventory — spacing, crossing, overlap, doubling, omission, the four kinds of
+ * motion, leading-note and seventh resolution, dissonance preparation.
  */
 
-export type VoiceId = 'soprano' | 'alto' | 'tenor' | 'bass'
-
-/** Top down, which is the order a score is read in. */
-export const VOICES: readonly VoiceId[] = ['soprano', 'alto', 'tenor', 'bass']
-
-export type Voicing = Readonly<Record<VoiceId, Pitch>>
-
-export interface VoiceRange {
-  lowest: Pitch
-  highest: Pitch
-}
-
-/**
- * Chorale ranges, which are **not** the staff ranges in `clef.ts`.
- *
- * Those are geometry — the staff plus two ledger lines — and they say nothing
- * about what a voice can sing. These are the ordinary compass of a four-part
- * chorus, deliberately conservative: a setting that stays inside them is
- * singable by amateurs, which is what the idiom is for.
- */
-export const SATB_RANGES: Readonly<Record<VoiceId, VoiceRange>> = {
-  soprano: { lowest: pitch('C', 0, 4), highest: pitch('G', 0, 5) },
-  alto: { lowest: pitch('G', 0, 3), highest: pitch('D', 0, 5) },
-  tenor: { lowest: pitch('C', 0, 3), highest: pitch('G', 0, 4) },
-  bass: { lowest: pitch('E', 0, 2), highest: pitch('C', 0, 4) },
-}
-
-/** Widest gap allowed between neighbouring upper voices, in semitones. */
-const UPPER_SPACING = 12
-/** Tenor to bass may open further, which is the ordinary chorale texture. */
-const LOWER_SPACING = 19
-/** Beyond this a voice is leaping rather than moving. */
-const COMFORTABLE_LEAP = 5
-const WIDE_LEAP = 9
-
-export type Motion = 'parallel' | 'similar' | 'contrary' | 'oblique' | 'none'
-
-export type FindingId =
+export type RuleId =
   | 'range'
   | 'spacing'
   | 'crossing'
@@ -84,214 +73,520 @@ export type FindingId =
   | 'large-leap'
   | 'static'
 
+/**
+ * Whether a rule says the **chord** is wrong or the **writing** is.
+ *
+ * The line matters because only one side of it is ever a choice. A setting
+ * whose alto sings a note the chord does not contain has not answered the
+ * question at all, so `harmony` rules are always on and are not offered to a
+ * level; `leading` rules are the Satzfehler proper, and which of them a player
+ * is held to is exactly what a level is for.
+ */
+export type RuleKind = 'harmony' | 'leading'
+
+export type Severity = 'error' | 'warning'
+
 export interface Finding {
-  id: FindingId
-  severity: 'error' | 'warning'
+  id: RuleId
+  severity: Severity
   /** The event the fault is at; for a transition, the later of the two. */
   at: number
   voices: readonly VoiceId[]
 }
 
-const error = (id: FindingId, at: number, voices: readonly VoiceId[]): Finding => ({
-  id,
-  severity: 'error',
-  at,
-  voices,
-})
+/** Every voice group one rule faults. Empty is a clean pass. */
+type Faults = readonly (readonly VoiceId[])[]
 
-const warning = (id: FindingId, at: number, voices: readonly VoiceId[]): Finding => ({
-  id,
-  severity: 'warning',
-  at,
-  voices,
-})
+const NONE: Faults = []
 
-/* ------------------------------------------------------------------ motion */
-
-function step(from: Pitch, to: Pitch): number {
-  return chromaticValue(to) - chromaticValue(from)
+interface RuleBase {
+  id: RuleId
+  kind: RuleKind
+  severity: Severity
 }
 
-/** How a pair of voices moves between two chords. */
-export function motionBetween(
-  from: readonly [Pitch, Pitch],
-  to: readonly [Pitch, Pitch],
-): Motion {
-  const upper = step(from[0], to[0])
-  const lower = step(from[1], to[1])
-
-  if (upper === 0 && lower === 0) return 'none'
-  if (upper === 0 || lower === 0) return 'oblique'
-  if (upper > 0 !== lower > 0) return 'contrary'
-  return upper === lower ? 'parallel' : 'similar'
+export interface ChordRule extends RuleBase {
+  scope: 'chord'
+  check: (subject: ChordCase) => Faults
 }
 
-/** Reduced to within the octave, so a twelfth reads as a fifth. */
-function reduced(lower: Pitch, upper: Pitch): number {
-  return (((chromaticValue(upper) - chromaticValue(lower)) % 12) + 12) % 12
+export interface MoveRule extends RuleBase {
+  scope: 'move'
+  check: (subject: MoveCase) => Faults
 }
 
-const PERFECT_FIFTH = 7
-const PERFECT_OCTAVE = 0
+export type VoiceLeadingRule = ChordRule | MoveRule
 
-/* ------------------------------------------------------- what a chord holds */
+/* ------------------------------------------------------------ the subjects */
 
 /**
- * Everything about one event the rules need, worked out once.
+ * One chord, with the doubling worked out.
  *
- * `readChord` walks nine qualities against every rotation of a stack, which is
- * far too much to repeat inside a search that evaluates thousands of edges. So
- * the search builds one of these per event and the detectors read it.
+ * Two rules need to know which voices share a note, and counting it inside
+ * each of them would count it twice for every candidate voicing the search
+ * looks at. So the framework counts once and the rules read it.
  */
-export interface EventContext {
-  event: HarmonicEvent
-  /** The distinct notes of the sonority, bass first. */
-  notes: readonly PitchClass[]
-  chord: Chord | undefined
-  root: PitchClass | undefined
-  fifth: PitchClass | undefined
-  seventh: PitchClass | undefined
-  /** The key's own leading note, when this chord contains it. */
-  leadingNote: PitchClass | undefined
-  /** Whether this chord is the one the key is named after. */
-  isTonic: boolean
-  /** Notes that do not belong to the key, which must never be doubled. */
-  altered: readonly PitchClass[]
+export interface ChordCase {
+  context: EventContext
+  voicing: Voicing
+  /** Voices by pitch class, so a group of two or more is a doubling. */
+  doubled: ReadonlyMap<string, readonly VoiceId[]>
 }
 
-/** The note a semitone below the tonic — the key's leading note, raised in minor. */
-export function leadingNoteOf(key: Key): PitchClass | undefined {
-  const notes = keyNotes(key)
-  const tonic = notes?.[0]
-  const seventh = notes?.[6]
-  if (tonic === undefined || seventh === undefined) return undefined
-
-  const distance =
-    (chromaticValue({ ...tonic, octave: 5 }) -
-      chromaticValue({ ...seventh, octave: 4 }) +
-      12) %
-    12
-  if (distance === 1) return seventh
-
-  const raised = seventh.alteration + 1
-  return isAlteration(raised) ? { letter: seventh.letter, alteration: raised } : undefined
+/** How one pair of voices got from one chord to the next. */
+export interface PairMotion {
+  upper: VoiceId
+  lower: VoiceId
+  motion: Motion
+  /** The interval between them before and after, reduced within the octave. */
+  was: number
+  now: number
 }
 
-export function contextOf(key: Key, event: HarmonicEvent): EventContext {
-  const notes = eventNotes(event)
-  const chord = eventChord(event)
-  const inKey = new Set((keyNotes(key) ?? []).map(tonicKey))
-  const leading = leadingNoteOf(key)
+/**
+ * One transition, with every pair of voices measured.
+ *
+ * The four parallel rules all read the same six pairs, and the search asks
+ * about tens of thousands of transitions per progression — so the pairs are
+ * measured once here rather than four times over. Splitting one loop into four
+ * rules is what makes them nameable; sharing this is what keeps it free.
+ */
+export interface MoveCase {
+  move: Move
+  pairs: readonly PairMotion[]
+}
 
-  const members = chord === undefined ? undefined : chordMembers(chord)
+/** Neighbouring voices, top down: soprano–alto, alto–tenor, tenor–bass. */
+const NEIGHBOURS: readonly (readonly [VoiceId, VoiceId])[] = VOICES.slice(0, -1).map(
+  (voice, index) => [voice, VOICES[index + 1] as VoiceId] as const,
+)
 
-  return {
-    event,
-    notes,
-    chord,
-    root: chord?.root,
-    fifth: members?.fifth,
-    seventh: members?.seventh,
-    leadingNote:
-      leading !== undefined && notes.some((note) => tonicKey(note) === tonicKey(leading))
-        ? leading
-        : undefined,
-    isTonic: chord !== undefined && tonicKey(chord.root) === tonicKey(key.tonic),
-    altered: notes.filter((note) => !inKey.has(tonicKey(note))),
+function pairsOf(move: Move): readonly PairMotion[] {
+  const { before, after } = move
+  const pairs: PairMotion[] = []
+
+  for (let i = 0; i < VOICES.length; i += 1) {
+    for (let j = i + 1; j < VOICES.length; j += 1) {
+      const upper = VOICES[i] as VoiceId
+      const lower = VOICES[j] as VoiceId
+      pairs.push({
+        upper,
+        lower,
+        motion: motionBetween(
+          [before[upper], before[lower]],
+          [after[upper], after[lower]],
+        ),
+        was: reduced(before[lower], before[upper]),
+        now: reduced(after[lower], after[upper]),
+      })
+    }
   }
+
+  return pairs
 }
 
-function chordMembers(chord: Chord): {
-  fifth: PitchClass | undefined
-  seventh: PitchClass | undefined
-} {
-  // `chordNotes` is member-ordered — root, third, fifth, seventh — so the
-  // index *is* the member.
-  const notes = chordNotes(chord.root, chord.quality)
-  return { fifth: notes?.[2], seventh: isSeventh(chord.quality) ? notes?.[3] : undefined }
+function doublingOf(voicing: Voicing): ReadonlyMap<string, readonly VoiceId[]> {
+  const counts = new Map<string, VoiceId[]>()
+  for (const voice of VOICES) {
+    const key = tonicKey(voicing[voice])
+    counts.set(key, [...(counts.get(key) ?? []), voice])
+  }
+  return counts
+}
+
+/* ------------------------------------------------------- one chord standing */
+
+/**
+ * Which of a pair may move into a perfect consonance by similar motion.
+ *
+ * **Only the outer voices**, because it is only there that the ear hears it —
+ * a hidden fifth between alto and tenor is buried under two other parts and
+ * nobody has ever marked one.
+ */
+const outerPair = (pair: PairMotion) => pair.upper === 'soprano' && pair.lower === 'bass'
+
+/** A perfect consonance reached by similar motion, with the top voice leaping. */
+function hiddenInto(subject: MoveCase, interval: number): Faults {
+  const { before, after } = subject.move
+  const found = subject.pairs.filter(
+    (pair) =>
+      outerPair(pair) &&
+      (pair.motion === 'parallel' || pair.motion === 'similar') &&
+      pair.was !== pair.now &&
+      pair.now === interval &&
+      Math.abs(step(before.soprano, after.soprano)) > 2,
+  )
+  return found.map((pair) => [pair.upper, pair.lower])
+}
+
+/** The same perfect consonance twice running, in the same pair of voices. */
+function parallelAt(subject: MoveCase, interval: number): Faults {
+  const found = subject.pairs.filter(
+    (pair) =>
+      (pair.motion === 'parallel' || pair.motion === 'similar') &&
+      (pair.motion === 'parallel' || pair.was === pair.now) &&
+      pair.was === interval &&
+      pair.now === interval,
+  )
+  return found.map((pair) => [pair.upper, pair.lower])
+}
+
+/**
+ * Every rule, in the order a reader meets them.
+ *
+ * The order is the one the guide prints and the one a report is sorted into:
+ * what a voice can sing, then how the four stand together, then how they move,
+ * then what a dissonance owes. It is not a ranking — `severity` is.
+ */
+export const VOICE_LEADING_RULES: readonly VoiceLeadingRule[] = [
+  {
+    // **Range.** What a voice can actually sing, which is `SATB_RANGES` and
+    // not the staff.
+    id: 'range',
+    kind: 'leading',
+    severity: 'error',
+    scope: 'chord',
+    check: ({ voicing }) =>
+      VOICES.filter((voice) => {
+        const note = chromaticValue(voicing[voice])
+        return (
+          note < chromaticValue(SATB_RANGES[voice].lowest) ||
+          note > chromaticValue(SATB_RANGES[voice].highest)
+        )
+      }).map((voice) => [voice]),
+  },
+  {
+    // **Crossing.** A voice below the one under it — the two lines swap, and
+    // a listener hears neither of them any more.
+    id: 'crossing',
+    kind: 'leading',
+    severity: 'error',
+    scope: 'chord',
+    check: ({ voicing }) =>
+      NEIGHBOURS.filter(
+        ([upper, lower]) =>
+          chromaticValue(voicing[upper]) - chromaticValue(voicing[lower]) < 0,
+      ),
+  },
+  {
+    // **Spacing.** An octave at most between neighbouring upper voices; tenor
+    // to bass may open further, which is the ordinary chorale texture.
+    id: 'spacing',
+    kind: 'leading',
+    severity: 'error',
+    scope: 'chord',
+    check: ({ voicing }) =>
+      NEIGHBOURS.filter(([upper, lower]) => {
+        const gap = chromaticValue(voicing[upper]) - chromaticValue(voicing[lower])
+        return gap > (lower === 'bass' ? LOWER_SPACING : UPPER_SPACING)
+      }),
+  },
+  {
+    // **The wrong note.** The bass is the event's own rather than a choice,
+    // and every other voice has to sing a note the chord actually contains.
+    // This is `harmony` rather than `leading`: a setting that fails it has not
+    // written the chord badly, it has written a different chord.
+    id: 'wrong-note',
+    kind: 'harmony',
+    severity: 'error',
+    scope: 'chord',
+    check: ({ context, voicing }) => {
+      const found: (readonly VoiceId[])[] = []
+      if (!samePitchClass(voicing.bass, context.event.bass)) found.push(['bass'])
+      for (const voice of VOICES) {
+        if (!context.notes.some((note) => samePitchClass(note, voicing[voice]))) {
+          found.push([voice])
+        }
+      }
+      return found
+    },
+  },
+  {
+    // **Omission.** A seventh chord may drop its fifth; a triad may too, with
+    // the root then standing three times. Nothing else may go missing — the
+    // third says whether the chord is major or minor, and the seventh is the
+    // reason it is a seventh chord at all.
+    id: 'incomplete-chord',
+    kind: 'harmony',
+    severity: 'error',
+    scope: 'chord',
+    check: ({ context, voicing }) => {
+      const sounded = new Set(VOICES.map((voice) => tonicKey(voicing[voice])))
+      const missing = context.notes.filter(
+        (note) =>
+          !sounded.has(tonicKey(note)) &&
+          !(context.fifth !== undefined && samePitchClass(note, context.fifth)),
+      )
+      return missing.map(() => [])
+    },
+  },
+  {
+    // **Never double the leading note.** It wants to go somewhere particular,
+    // and two voices going there together is what makes octaves.
+    id: 'doubled-leading-note',
+    kind: 'leading',
+    severity: 'error',
+    scope: 'chord',
+    check: ({ context, doubled }) => {
+      const leading = context.leadingNote
+      if (leading === undefined) return NONE
+      const voices = doubled.get(tonicKey(leading)) ?? []
+      return voices.length > 1 ? [voices] : NONE
+    },
+  },
+  {
+    // **Never double a note from outside the key, or the seventh.** Both are
+    // dissonances owing a resolution, and a doubled dissonance cannot pay it
+    // in two voices at once without making octaves on the way.
+    id: 'doubled-altered',
+    kind: 'leading',
+    severity: 'error',
+    scope: 'chord',
+    check: ({ context, doubled }) => {
+      const found: (readonly VoiceId[])[] = []
+      const leading =
+        context.leadingNote === undefined ? undefined : tonicKey(context.leadingNote)
+
+      for (const [note, voices] of doubled) {
+        if (voices.length < 2 || note === leading) continue
+        if (context.altered.some((altered) => tonicKey(altered) === note)) {
+          found.push(voices)
+        }
+      }
+
+      if (context.seventh !== undefined) {
+        const voices = doubled.get(tonicKey(context.seventh)) ?? []
+        if (voices.length > 1) found.push(voices)
+      }
+
+      return found
+    },
+  },
+  {
+    // **Parallel fifths** — the oldest prohibition there is, and the one an
+    // exam marker finds first.
+    id: 'parallel-fifths',
+    kind: 'leading',
+    severity: 'error',
+    scope: 'move',
+    check: (subject) => parallelAt(subject, PERFECT_FIFTH),
+  },
+  {
+    // **Parallel octaves**, which are worse: the two voices stop being two.
+    id: 'parallel-octaves',
+    kind: 'leading',
+    severity: 'error',
+    scope: 'move',
+    check: (subject) => parallelAt(subject, PERFECT_OCTAVE),
+  },
+  {
+    id: 'hidden-fifths',
+    kind: 'leading',
+    severity: 'error',
+    scope: 'move',
+    check: (subject) => hiddenInto(subject, PERFECT_FIFTH),
+  },
+  {
+    id: 'hidden-octaves',
+    kind: 'leading',
+    severity: 'error',
+    scope: 'move',
+    check: (subject) => hiddenInto(subject, PERFECT_OCTAVE),
+  },
+  {
+    // **Overlap** — a voice moving past where its neighbour just *was*. Not a
+    // crossing, since nothing is crossed in either chord taken alone; it is
+    // heard across the two, which is why it is a rule about a move.
+    id: 'overlap',
+    kind: 'leading',
+    severity: 'error',
+    scope: 'move',
+    check: ({ move: { before, after } }) =>
+      NEIGHBOURS.flatMap(([upper, lower]) => {
+        const found: (readonly VoiceId[])[] = []
+        if (chromaticValue(after[lower]) > chromaticValue(before[upper])) {
+          found.push([upper, lower])
+        }
+        if (chromaticValue(after[upper]) < chromaticValue(before[lower])) {
+          found.push([upper, lower])
+        }
+        return found
+      }),
+  },
+  {
+    // **The augmented second** — the interval harmonic minor puts between its
+    // sixth and seventh, and the one melodic minor exists to avoid. Unsingable
+    // in this idiom, and a real trap in a minor key rather than a nicety.
+    id: 'augmented-second',
+    kind: 'leading',
+    severity: 'error',
+    scope: 'move',
+    check: ({ move: { before, after } }) =>
+      VOICES.filter((voice) => {
+        const interval = intervalBetween(before[voice], after[voice])
+        return interval?.number === 2 && interval.quality === 'augmented'
+      }).map((voice) => [voice]),
+  },
+  {
+    // A leap wider than a sixth is singable and rare. A warning, because the
+    // line may well want it.
+    id: 'large-leap',
+    kind: 'leading',
+    severity: 'warning',
+    scope: 'move',
+    check: ({ move: { before, after } }) =>
+      VOICES.filter(
+        (voice) => Math.abs(step(before[voice], after[voice])) > WIDE_LEAP,
+      ).map((voice) => [voice]),
+  },
+  {
+    // **Cross-relation** — the same letter, differently altered, in two voices
+    // across the barline. A warning rather than an error: some are idiomatic.
+    id: 'cross-relation',
+    kind: 'leading',
+    severity: 'warning',
+    scope: 'move',
+    check: ({ move: { before, after } }) => {
+      const found: (readonly VoiceId[])[] = []
+      for (const one of VOICES) {
+        for (const other of VOICES) {
+          if (one === other) continue
+          const a = before[one]
+          const b = after[other]
+          if (a.letter === b.letter && a.alteration !== b.alteration) {
+            found.push([one, other])
+          }
+        }
+      }
+      return found
+    },
+  },
+  {
+    // **The seventh resolves down by step.** The one rule every textbook opens
+    // with, and the reason a seventh chord is not just a chord with a note
+    // added. Holding it is allowed: it has not resolved yet.
+    id: 'unresolved-seventh',
+    kind: 'leading',
+    severity: 'error',
+    scope: 'move',
+    check: ({ move: { from, before, after } }) => {
+      if (from.seventh === undefined) return NONE
+      const seventh = from.seventh
+
+      return VOICES.filter((voice) => {
+        if (!samePitchClass(before[voice], seventh)) return false
+        if (samePitchClass(after[voice], seventh)) return false
+        const moved = step(before[voice], after[voice])
+        return moved > 0 || moved < -2
+      }).map((voice) => [voice])
+    },
+  },
+  {
+    // **The leading note rises into the tonic**, checked only where it
+    // actually has to: going to the chord the key is named after, in an outer
+    // voice. Elsewhere a leading note may fall to the fifth so the chord can
+    // be complete, which is the standard exception and not a fault — and a
+    // leading note *inside a sequence* is a passing note that goes where the
+    // sequence goes, so calling that a fault taxed every sequence the
+    // generator could write.
+    id: 'unresolved-leading-note',
+    kind: 'leading',
+    severity: 'warning',
+    scope: 'move',
+    check: ({ move: { from, to, before, after } }) => {
+      if (from.leadingNote === undefined || !to.isTonic) return NONE
+      const leading = from.leadingNote
+
+      return VOICES.filter((voice) => {
+        if (voice !== 'soprano' && voice !== 'bass') return false
+        if (!samePitchClass(before[voice], leading)) return false
+        const moved = step(before[voice], after[voice])
+        return moved !== 1 && moved !== 0
+      }).map((voice) => [voice])
+    },
+  },
+  {
+    // **A suspension resolves downward by step.** `held` says the bass did not
+    // restrike, which is what makes this event the resolution of the one
+    // before it: every upper voice whose note is gone has to have stepped down
+    // into the note that replaced it.
+    id: 'unresolved-suspension',
+    kind: 'leading',
+    severity: 'error',
+    scope: 'move',
+    check: ({ move: { to, before, after } }) => {
+      if (to.event.held !== true) return NONE
+
+      return VOICES.filter((voice) => {
+        if (voice === 'bass') return false
+        if (samePitchClass(before[voice], after[voice])) return false
+        const moved = step(before[voice], after[voice])
+        return moved !== -1 && moved !== -2
+      }).map((voice) => [voice])
+    },
+  },
+  {
+    // Nothing moving at all is not a progression.
+    id: 'static',
+    kind: 'leading',
+    severity: 'warning',
+    scope: 'move',
+    check: ({ move: { before, after } }) =>
+      VOICES.every((voice) => samePitchClass(before[voice], after[voice]))
+        ? [VOICES]
+        : NONE,
+  },
+]
+
+/* ------------------------------------------------------------ reading them */
+
+export const RULE_IDS: readonly RuleId[] = VOICE_LEADING_RULES.map((rule) => rule.id)
+
+/**
+ * The rules a level may switch off.
+ *
+ * Everything a setting can get *wrong about the writing*. The `harmony` rules
+ * are absent on purpose: a level cannot allow the alto to sing a note that is
+ * not in the chord, because then there is no question left.
+ */
+export const SELECTABLE_RULE_IDS: readonly RuleId[] = VOICE_LEADING_RULES.filter(
+  (rule) => rule.kind === 'leading',
+).map((rule) => rule.id)
+
+export function getRule(id: RuleId): VoiceLeadingRule | undefined {
+  return VOICE_LEADING_RULES.find((rule) => rule.id === id)
+}
+
+export function isRuleId(value: string): value is RuleId {
+  return (RULE_IDS as readonly string[]).includes(value)
+}
+
+/** Which rules are in force. `undefined` is all of them, which is the generator. */
+export type RuleSet = ReadonlySet<RuleId> | undefined
+
+function inForce(rule: VoiceLeadingRule, enabled: RuleSet): boolean {
+  // A `harmony` rule is never a choice: a setting that breaks one has written
+  // a different chord, and no level can be lenient about that.
+  return rule.kind === 'harmony' || enabled === undefined || enabled.has(rule.id)
 }
 
 /* ------------------------------------------------------- vertical: one chord */
-
-const same = (a: PitchClass, b: PitchClass) => tonicKey(a) === tonicKey(b)
 
 /** Everything that can be wrong with a single chord, without looking at its neighbours. */
 export function chordFindings(
   context: EventContext,
   voicing: Voicing,
   at: number,
+  enabled?: RuleSet,
 ): readonly Finding[] {
+  const subject: ChordCase = { context, voicing, doubled: doublingOf(voicing) }
   const found: Finding[] = []
 
-  // Range.
-  for (const voice of VOICES) {
-    const note = voicing[voice]
-    const range = SATB_RANGES[voice]
-    if (
-      chromaticValue(note) < chromaticValue(range.lowest) ||
-      chromaticValue(note) > chromaticValue(range.highest)
-    ) {
-      found.push(error('range', at, [voice]))
+  for (const rule of VOICE_LEADING_RULES) {
+    if (rule.scope !== 'chord' || !inForce(rule, enabled)) continue
+    for (const voices of rule.check(subject)) {
+      found.push({ id: rule.id, severity: rule.severity, at, voices })
     }
-  }
-
-  // Crossing, and spacing between neighbours.
-  const ladder: readonly VoiceId[] = VOICES
-  for (let i = 0; i < ladder.length - 1; i += 1) {
-    const upper = ladder[i] as VoiceId
-    const lower = ladder[i + 1] as VoiceId
-    const gap = chromaticValue(voicing[upper]) - chromaticValue(voicing[lower])
-    if (gap < 0) found.push(error('crossing', at, [upper, lower]))
-    else if (gap > (lower === 'bass' ? LOWER_SPACING : UPPER_SPACING)) {
-      found.push(error('spacing', at, [upper, lower]))
-    }
-  }
-
-  // The bass is the event's own, not a choice.
-  if (!same(voicing.bass, context.event.bass))
-    found.push(error('wrong-note', at, ['bass']))
-
-  // Every voice must sing a note of the chord.
-  for (const voice of VOICES) {
-    const note = voicing[voice]
-    if (!context.notes.some((candidate) => same(candidate, note))) {
-      found.push(error('wrong-note', at, [voice]))
-    }
-  }
-
-  // **Omission.** A seventh chord may drop its fifth; a triad may too, with
-  // the root then standing three times. Nothing else may go missing — the
-  // third says whether the chord is major or minor and the seventh is the
-  // reason it is a seventh chord.
-  const sounded = new Set(VOICES.map((voice) => tonicKey(voicing[voice])))
-  for (const note of context.notes) {
-    if (sounded.has(tonicKey(note))) continue
-    if (context.fifth !== undefined && same(note, context.fifth)) continue
-    found.push(error('incomplete-chord', at, []))
-  }
-
-  // **Doubling.** Never the leading note, never a note from outside the key:
-  // both want to move somewhere particular, and two voices going there
-  // together is what makes octaves.
-  const counts = new Map<string, VoiceId[]>()
-  for (const voice of VOICES) {
-    const key = tonicKey(voicing[voice])
-    counts.set(key, [...(counts.get(key) ?? []), voice])
-  }
-
-  for (const [note, voices] of counts) {
-    if (voices.length < 2) continue
-    if (context.leadingNote !== undefined && note === tonicKey(context.leadingNote)) {
-      found.push(error('doubled-leading-note', at, voices))
-    } else if (context.altered.some((altered) => tonicKey(altered) === note)) {
-      found.push(error('doubled-altered', at, voices))
-    }
-  }
-
-  // The seventh is the dissonance; doubling it makes it unresolvable.
-  if (context.seventh !== undefined) {
-    const voices = counts.get(tonicKey(context.seventh)) ?? []
-    if (voices.length > 1) found.push(error('doubled-altered', at, voices))
   }
 
   return found
@@ -299,147 +594,20 @@ export function chordFindings(
 
 /* ----------------------------------------------------- horizontal: a move */
 
-export interface Move {
-  from: EventContext
-  to: EventContext
-  before: Voicing
-  after: Voicing
-}
-
 /** Everything that can be wrong about getting from one chord to the next. */
 export function moveFindings(
-  { from, to, before, after }: Move,
+  move: Move,
   at: number,
+  enabled?: RuleSet,
 ): readonly Finding[] {
+  const subject: MoveCase = { move, pairs: pairsOf(move) }
   const found: Finding[] = []
 
-  // **Parallel fifths and octaves**, between every pair of voices.
-  for (let i = 0; i < VOICES.length; i += 1) {
-    for (let j = i + 1; j < VOICES.length; j += 1) {
-      const upper = VOICES[i] as VoiceId
-      const lower = VOICES[j] as VoiceId
-      const motion = motionBetween(
-        [before[upper], before[lower]],
-        [after[upper], after[lower]],
-      )
-      if (motion !== 'parallel' && motion !== 'similar') continue
-
-      const was = reduced(before[lower], before[upper])
-      const now = reduced(after[lower], after[upper])
-
-      if (motion === 'parallel' || was === now) {
-        if (was === PERFECT_FIFTH && now === PERFECT_FIFTH) {
-          found.push(error('parallel-fifths', at, [upper, lower]))
-        }
-        if (was === PERFECT_OCTAVE && now === PERFECT_OCTAVE) {
-          found.push(error('parallel-octaves', at, [upper, lower]))
-        }
-      }
-
-      // **Hidden fifths and octaves** — the outer pair arriving at a perfect
-      // consonance by similar motion, with the soprano leaping into it. Only
-      // the outer voices, because it is only there that the ear hears it.
-      if (upper === 'soprano' && lower === 'bass' && was !== now) {
-        const leap = Math.abs(step(before.soprano, after.soprano)) > 2
-        if (leap && now === PERFECT_FIFTH)
-          found.push(error('hidden-fifths', at, ['soprano', 'bass']))
-        if (leap && now === PERFECT_OCTAVE) {
-          found.push(error('hidden-octaves', at, ['soprano', 'bass']))
-        }
-      }
+  for (const rule of VOICE_LEADING_RULES) {
+    if (rule.scope !== 'move' || !inForce(rule, enabled)) continue
+    for (const voices of rule.check(subject)) {
+      found.push({ id: rule.id, severity: rule.severity, at, voices })
     }
-  }
-
-  // **Overlap** — a voice moving past where its neighbour just was.
-  for (let i = 0; i < VOICES.length - 1; i += 1) {
-    const upper = VOICES[i] as VoiceId
-    const lower = VOICES[i + 1] as VoiceId
-    if (chromaticValue(after[lower]) > chromaticValue(before[upper])) {
-      found.push(error('overlap', at, [upper, lower]))
-    }
-    if (chromaticValue(after[upper]) < chromaticValue(before[lower])) {
-      found.push(error('overlap', at, [upper, lower]))
-    }
-  }
-
-  for (const voice of VOICES) {
-    const a = before[voice]
-    const b = after[voice]
-
-    // **The augmented second** — the interval harmonic minor puts between its
-    // sixth and seventh, and the one melodic minor exists to avoid. Unsingable
-    // in this idiom, and a real trap in a minor key rather than a nicety.
-    const interval = intervalBetween(a, b)
-    if (interval?.number === 2 && interval.quality === 'augmented') {
-      found.push(error('augmented-second', at, [voice]))
-    }
-
-    if (Math.abs(step(a, b)) > WIDE_LEAP) found.push(warning('large-leap', at, [voice]))
-  }
-
-  // **Cross-relation** — the same letter, differently altered, in two voices
-  // across the bar. A warning rather than an error: some are idiomatic.
-  for (const one of VOICES) {
-    for (const other of VOICES) {
-      if (one === other) continue
-      const a = before[one]
-      const b = after[other]
-      if (a.letter === b.letter && a.alteration !== b.alteration) {
-        found.push(warning('cross-relation', at, [one, other]))
-      }
-    }
-  }
-
-  // **The seventh resolves down by step.** The one rule every textbook opens
-  // with, and the reason a seventh chord is not just a chord with a note added.
-  if (from.seventh !== undefined) {
-    for (const voice of VOICES) {
-      if (!same(before[voice], from.seventh)) continue
-      const moved = step(before[voice], after[voice])
-      const held = same(after[voice], from.seventh)
-      if (!held && (moved > 0 || moved < -2)) {
-        found.push(error('unresolved-seventh', at, [voice]))
-      }
-    }
-  }
-
-  // **The leading note rises into the tonic.** Checked only where it actually
-  // has to: going to the chord the key is named after. Elsewhere a leading
-  // note in an inner voice may fall to the fifth so the chord can be complete,
-  // which is the standard exception and not a fault.
-  // **Only where it is actually a dominant resolving.** A leading note inside
-  // a sequence is a passing note and goes where the sequence goes — vii° to
-  // iii in a Quintfallsequenz drops a fourth, and calling that a fault taxed
-  // every sequence the generator could write.
-  if (from.leadingNote !== undefined && to.isTonic) {
-    for (const voice of VOICES) {
-      if (!same(before[voice], from.leadingNote)) continue
-      const moved = step(before[voice], after[voice])
-      if (voice !== 'soprano' && voice !== 'bass') continue
-      if (moved !== 1 && moved !== 0) {
-        found.push(warning('unresolved-leading-note', at, [voice]))
-      }
-    }
-  }
-
-  // **A suspension resolves downward by step.** `held` says the bass did not
-  // restrike, which is what makes this event the resolution of the one before
-  // it: every upper voice whose note is gone has to have stepped down into the
-  // note that replaced it.
-  if (to.event.held === true) {
-    for (const voice of VOICES) {
-      if (voice === 'bass') continue
-      if (same(before[voice], after[voice])) continue
-      const moved = step(before[voice], after[voice])
-      if (moved !== -1 && moved !== -2) {
-        found.push(error('unresolved-suspension', at, [voice]))
-      }
-    }
-  }
-
-  // Nothing moving at all is not a progression.
-  if (VOICES.every((voice) => same(before[voice], after[voice]))) {
-    found.push(warning('static', at, VOICES))
   }
 
   return found
@@ -447,27 +615,25 @@ export function moveFindings(
 
 /* ----------------------------------------------------------- the whole thing */
 
-export interface Satz {
-  key: Key
-  events: readonly HarmonicEvent[]
-  voicings: readonly Voicing[]
-}
-
 /** Every finding in a finished setting — the grader. */
-export function satzFindings(satz: Satz): readonly Finding[] {
+export function satzFindings(satz: Satz, enabled?: RuleSet): readonly Finding[] {
   const contexts = satz.events.map((event) => contextOf(satz.key, event))
   const found: Finding[] = []
 
   for (const [index, context] of contexts.entries()) {
     const voicing = satz.voicings[index]
     if (voicing === undefined) continue
-    found.push(...chordFindings(context, voicing, index))
+    found.push(...chordFindings(context, voicing, index, enabled))
 
     const next = contexts[index + 1]
     const after = satz.voicings[index + 1]
     if (next === undefined || after === undefined) continue
     found.push(
-      ...moveFindings({ from: context, to: next, before: voicing, after }, index + 1),
+      ...moveFindings(
+        { from: context, to: next, before: voicing, after },
+        index + 1,
+        enabled,
+      ),
     )
   }
 
@@ -478,166 +644,13 @@ export function errorsOf(findings: readonly Finding[]): readonly Finding[] {
   return findings.filter((finding) => finding.severity === 'error')
 }
 
-/* ------------------------------------------------------------------- cost */
-
-export interface Weights {
-  motion: number
-  leap: number
-  contrary: number
-  commonTone: number
-  sopranoLeap: number
-  warning: number
-  /** How hard each voice is pulled toward the middle of its own compass. */
-  tessitura: number
-  /** Two upper voices on the same note — legal, and not the chorale sound. */
-  unison: number
-}
-
-/**
- * The chorale weights.
- *
- * Meant to be turned — the numbers are measured by listening rather than
- * derived, exactly as `PACED_CONTOUR`'s are. A second idiom is a second table
- * here and not a second algorithm, which is what the modal Kantionalsatz will
- * want.
- */
-export const CHORALE_WEIGHTS: Weights = {
-  motion: 1,
-  leap: 1.6,
-  contrary: -3,
-  commonTone: -2.5,
-  sopranoLeap: 2.2,
-  warning: 14,
-  tessitura: 0.55,
-  unison: 6,
-}
-
-/** How much a move costs. Lower is better; a broken rule is not priced, it is refused. */
-export function moveCost(move: Move, weights: Weights = CHORALE_WEIGHTS): number {
-  const { before, after } = move
-  let cost = 0
-
-  for (const voice of VOICES) {
-    const distance = Math.abs(step(before[voice], after[voice]))
-    cost += distance * weights.motion
-    if (distance === 0) cost += weights.commonTone
-    if (distance > COMFORTABLE_LEAP) {
-      cost +=
-        (distance - COMFORTABLE_LEAP) *
-        (voice === 'soprano' ? weights.sopranoLeap : weights.leap)
-    }
-  }
-
-  const outer = motionBetween([before.soprano, before.bass], [after.soprano, after.bass])
-  if (outer === 'contrary') cost += weights.contrary
-
-  for (const finding of moveFindings(move, 0)) {
-    if (finding.severity === 'warning') cost += weights.warning
-  }
-
-  return cost
-}
-
-/** Whether a move breaks no rule at all — the filter the search runs on. */
-export function moveAllowed(move: Move): boolean {
-  return moveFindings(move, 0).every((finding) => finding.severity !== 'error')
-}
-
-/**
- * What a move costs, or `undefined` when it breaks a rule.
- *
- * The two questions answered in one pass, because the search asks both of
- * every edge it looks at and `moveFindings` is the expensive part. **A broken
- * rule is not priced, it is refused** — that is the difference between a hard
- * rule and a preference, and pricing them together is how a generator ends up
- * emitting parallel fifths whenever the alternative was awkward enough.
- */
-export function transitionCost(
-  move: Move,
-  weights: Weights = CHORALE_WEIGHTS,
-): number | undefined {
-  const findings = moveFindings(move, 0)
-  let cost = 0
-  for (const finding of findings) {
-    if (finding.severity === 'error') return undefined
-    cost += weights.warning
-  }
-
-  const { before, after } = move
-  for (const voice of VOICES) {
-    const distance = Math.abs(step(before[voice], after[voice]))
-    cost += distance * weights.motion
-    if (distance === 0) cost += weights.commonTone
-    if (distance > COMFORTABLE_LEAP) {
-      cost +=
-        (distance - COMFORTABLE_LEAP) *
-        (voice === 'soprano' ? weights.sopranoLeap : weights.leap)
-    }
-  }
-
-  const outer = motionBetween([before.soprano, before.bass], [after.soprano, after.bass])
-  if (outer === 'contrary') cost += weights.contrary
-
-  return cost
-}
-
 export function chordAllowed(context: EventContext, voicing: Voicing): boolean {
   return chordFindings(context, voicing, 0).every(
     (finding) => finding.severity !== 'error',
   )
 }
 
-/** The middle of each voice's compass, where a chorale part mostly sits. */
-const CENTRES: Readonly<Record<VoiceId, number>> = {
-  soprano:
-    (chromaticValue(SATB_RANGES.soprano.lowest) +
-      chromaticValue(SATB_RANGES.soprano.highest)) /
-    2,
-  alto:
-    (chromaticValue(SATB_RANGES.alto.lowest) + chromaticValue(SATB_RANGES.alto.highest)) /
-    2,
-  tenor:
-    (chromaticValue(SATB_RANGES.tenor.lowest) +
-      chromaticValue(SATB_RANGES.tenor.highest)) /
-    2,
-  bass:
-    (chromaticValue(SATB_RANGES.bass.lowest) + chromaticValue(SATB_RANGES.bass.highest)) /
-    2,
-}
-
-/**
- * What one chord costs to stand in, before anything moves.
- *
- * **Register is a preference and nothing else stated it.** The ranges say what
- * is singable; they do not say where a part usually sits, so a search that
- * only counted motion was free to put the bass up at B3 under a tenor on the
- * same note, or let the soprano sink to the bottom of its compass and stay
- * there. Pulling each voice gently toward the middle of its own range is what
- * makes the texture sound like a chorus rather than like four lines that
- * happened to be legal.
- */
-export function voicingCost(
-  voicing: Voicing,
-  weights: Weights = CHORALE_WEIGHTS,
-): number {
-  const top = chromaticValue(voicing.soprano) - chromaticValue(voicing.tenor)
-  let cost = Math.max(0, top - 14) * 0.5
-
-  for (const voice of VOICES) {
-    cost +=
-      Math.abs(chromaticValue(voicing[voice]) - (CENTRES[voice] ?? 0)) * weights.tessitura
-  }
-
-  // Two upper voices on one note is thin, and it is the shape a search finds
-  // when it is only avoiding crossings.
-  if (chromaticValue(voicing.soprano) === chromaticValue(voicing.alto))
-    cost += weights.unison
-  if (chromaticValue(voicing.alto) === chromaticValue(voicing.tenor))
-    cost += weights.unison
-
-  return cost
-}
-
-export function voicingPitches(voicing: Voicing): readonly Pitch[] {
-  return [voicing.bass, voicing.tenor, voicing.alto, voicing.soprano]
+/** Whether a move breaks no rule at all — the filter the search runs on. */
+export function moveAllowed(move: Move): boolean {
+  return moveFindings(move, 0).every((finding) => finding.severity !== 'error')
 }

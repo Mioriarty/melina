@@ -2,7 +2,7 @@ import { TICKS_PER_BEAT } from '@/lib/music/meter'
 import { meiKeySignature, type KeySignatureId } from '@/lib/music/keySignature'
 import type { Pitch } from '@/lib/music/pitch'
 import type { Figure } from '@/lib/music/figuredBass'
-import { VOICES, type VoiceId, type Voicing } from '@/lib/music/voiceLeading'
+import { VOICES, type VoiceId, type Voicing } from '@/lib/music/satbVoicing'
 
 import { accidentalAttributes } from './mei'
 import { figureLines } from './figureNotation'
