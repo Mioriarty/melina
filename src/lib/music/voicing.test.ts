@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { getClef } from '@/lib/music/clef'
+import { CLEFS, getClef } from '@/lib/music/clef'
 import {
   chromaticValue,
   diatonicValue,
@@ -10,7 +10,10 @@ import {
 } from '@/lib/music/pitch'
 import type { PitchClass } from '@/lib/music/scale'
 
-import { DEFAULT_REGISTER, OPENING_OCTAVE, voiceChord, voiceChords } from './voicing'
+import { openingPitch, voiceChord, voiceChords } from './voicing'
+
+const ORIGIN = pitch('C', 0, 4)
+const CLEF_IDS = CLEFS.map((clef) => clef.id)
 
 /**
  * Where a chord sits.
@@ -31,28 +34,49 @@ const spell = (chord: readonly ReturnType<typeof pitch>[]) => chord.map(pitchKey
 const opensOn = (notes: readonly PitchClass[]) => voiceChord(notes)[0]
 
 describe('a chord on its own', () => {
-  it('opens in one octave whatever its letters', () => {
+  it('opens within three steps of the bottom line, in every clef', () => {
     // **The register used to depend on which letter happened to be lowest.** A
     // triad over G sat a sixth above one over C, so two questions in a row
     // could be drawn in quite different places for no reason a player could
-    // see.
-    const low = diatonicValue(pitch('C', 0, OPENING_OCTAVE))
-    const high = diatonicValue(pitch('B', 0, OPENING_OCTAVE))
+    // see. And it has to open *low*: a chord is built upward one key at a
+    // time, so an opening note in the middle of the staff left a seventh chord
+    // running off the top.
+    for (const clef of CLEF_IDS) {
+      const bottom = diatonicValue(getClef(clef).staffLowest)
+      for (const letter of ['C', 'D', 'E', 'F', 'G', 'A', 'B']) {
+        const first = voiceChord([pc(letter), pc('D')], undefined, clef)[0]
+        expect(first, `${clef} ${letter}`).toBeDefined()
+        const offset = diatonicValue(first ?? ORIGIN) - bottom
+        expect(Math.abs(offset), `${clef} ${letter}`).toBeLessThanOrEqual(3)
+      }
+    }
+  })
 
-    for (const letter of ['C', 'D', 'E', 'F', 'G', 'A', 'B']) {
-      const first = opensOn([pc(letter), pc('D')])
-      expect(first, letter).toBeDefined()
-      expect(diatonicValue(first ?? DEFAULT_REGISTER), letter).toBeGreaterThanOrEqual(low)
-      expect(diatonicValue(first ?? DEFAULT_REGISTER), letter).toBeLessThanOrEqual(high)
+  it('leaves room above it for a whole seventh chord', () => {
+    // The regression: in the bass clef an E opened on E4 and in the treble a
+    // B on B4, so the chord had to be moved down an octave while it was being
+    // typed. A close seventh chord from any opening note stays on the staff
+    // where it was begun.
+    const letters = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
+    for (const clef of CLEF_IDS) {
+      for (const [index, letter] of letters.entries()) {
+        const seventh = [0, 2, 4, 6].map((step) => pc(letters[(index + step) % 7] ?? 'C'))
+        const chord = voiceChord(seventh, undefined, clef)
+        expect(chord[0], `${clef} ${letter}`).toEqual(openingPitch(pc(letter), clef))
+      }
     }
   })
 
   it('opens exactly where the keyboard drew the key', () => {
-    // Which is what makes a fixed row of keys honest for an opening chord: the
-    // key shows the note in `OPENING_OCTAVE`, and that is where it lands.
-    for (const letter of ['C', 'D', 'E', 'F', 'G', 'A', 'B']) {
-      expect(opensOn([pc(letter)])?.octave, letter).toBe(OPENING_OCTAVE)
-    }
+    // Which is what makes a fixed row of keys honest for an opening chord.
+    expect(
+      spell(['C', 'D', 'E', 'F', 'G', 'A', 'B'].map((l) => opensOn([pc(l)]) ?? ORIGIN)),
+    ).toEqual(['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B3'])
+    expect(
+      ['C', 'D', 'E', 'F', 'G', 'A', 'B'].map((l) =>
+        pitchKey(openingPitch(pc(l), 'bass')),
+      ),
+    ).toEqual(['C3', 'D2', 'E2', 'F2', 'G2', 'A2', 'B2'])
   })
 
   it('stacks upward in close position, in the order it is given', () => {
@@ -69,7 +93,7 @@ describe('a chord on its own', () => {
 
   it('keeps the spelling it was given', () => {
     expect(spell(voiceChord([pc('G', 1)]))).toEqual(['G#4'])
-    expect(spell(voiceChord([pc('B', -1)]))).toEqual(['Bb4'])
+    expect(spell(voiceChord([pc('B', -1)]))).toEqual(['Bb3'])
   })
 })
 
@@ -80,8 +104,7 @@ describe('a chord after another', () => {
       first: spell(first ?? []),
       second: spell(second ?? []),
       by: Math.abs(
-        chromaticValue(second?.[0] ?? DEFAULT_REGISTER) -
-          chromaticValue(first?.[0] ?? DEFAULT_REGISTER),
+        chromaticValue(second?.[0] ?? ORIGIN) - chromaticValue(first?.[0] ?? ORIGIN),
       ),
     }
   }
@@ -118,7 +141,7 @@ describe('a chord after another', () => {
       for (const b of ['C', 'D', 'E', 'F', 'G', 'A', 'B']) {
         const [first, second] = voiceChords([[pc(a)], [pc(b)]])
         const opened = second?.[0]
-        const from = chromaticValue(first?.[0] ?? DEFAULT_REGISTER)
+        const from = chromaticValue(first?.[0] ?? ORIGIN)
         expect(opened, `${a} to ${b}`).toBeDefined()
         if (opened === undefined) continue
 
@@ -144,7 +167,7 @@ describe('a chord after another', () => {
       [pc('D'), pc('F')],
       [pc('C'), pc('E')],
     ])
-    const opens = line.map((chord) => chromaticValue(chord[0] ?? DEFAULT_REGISTER))
+    const opens = line.map((chord) => chromaticValue(chord[0] ?? ORIGIN))
     for (const [index, open] of opens.slice(1).entries()) {
       expect(Math.abs(open - (opens[index] as number))).toBeLessThanOrEqual(6)
     }

@@ -2,9 +2,7 @@ import type { FiguredBassAttempt } from '@/lib/db/attemptQuestion'
 import type { AttemptFilter } from '@/lib/db/progress'
 import { figureKey, parseFigureKey, type Figure } from '@/lib/music/figuredBass'
 import { isKeySignatureId } from '@/lib/music/keySignature'
-import { parsePitch, pitchKey } from '@/lib/music/pitch'
-
-import { DEFAULT_REGISTER } from '@/lib/music/voicing'
+import { parsePitch, pitchKey, type Pitch } from '@/lib/music/pitch'
 
 import {
   describeEvent,
@@ -53,7 +51,7 @@ export function thoroughbassQuestion(
   // The same reference the generator threaded when it built the question, or
   // the chords would come back voiced differently from the ones that were on
   // the page — a row disagreeing with the notation it produced.
-  let near = DEFAULT_REGISTER
+  let near: Pitch | undefined
   for (const [index, text] of basses.entries()) {
     const bass = parsePitch(text)
     if (bass === undefined) return undefined

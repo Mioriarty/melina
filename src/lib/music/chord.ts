@@ -7,7 +7,7 @@ import {
 } from './interval'
 import { chromaticValue, type Pitch } from './pitch'
 import { TONIC_CHOICES, tonicKey, parseTonicKey, type PitchClass } from './scale'
-import { defaultRegister, voiceChord } from './voicing'
+import { voiceChord } from './voicing'
 
 /**
  * Chords — the four triads and the five sevenths.
@@ -231,7 +231,7 @@ export function chordPitches(
 ): readonly Pitch[] | undefined {
   const voicing = chordVoicing(chord)
   if (voicing === undefined) return undefined
-  return voiceChord(voicing, defaultRegister(clef), clef)
+  return voiceChord(voicing, undefined, clef)
 }
 
 /** Whether every note of the chord lands where the staff can show it. */

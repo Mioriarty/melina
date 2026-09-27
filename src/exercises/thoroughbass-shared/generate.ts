@@ -21,7 +21,7 @@ import {
 import type { PitchClass } from '@/lib/music/scale'
 import { dealEvenly, randomPick, type Random } from '@/lib/utils/seededRandom'
 
-import { DEFAULT_REGISTER, voiceChords } from '@/lib/music/voicing'
+import { voiceChords } from '@/lib/music/voicing'
 
 /** One bass note and everything standing under and over it. */
 export interface BassEvent {
@@ -164,7 +164,7 @@ export function describeEvent(
   keySignature: KeySignatureId,
   figures: readonly Figure[],
   /** Where the chord before this event began, so its chords follow on. */
-  near: Pitch = DEFAULT_REGISTER,
+  near: Pitch | undefined = undefined,
 ): BassEvent | undefined {
   const notes: (readonly PitchClass[])[] = []
   for (const figure of figures) {
@@ -189,7 +189,7 @@ export function buildEvent(
   random: Random,
   keySignature: KeySignatureId,
   wanted: string,
-  near: Pitch = DEFAULT_REGISTER,
+  near: Pitch | undefined = undefined,
 ): BassEvent | undefined {
   const asked = parseWanted(wanted)
   if (asked === undefined) return undefined
@@ -211,7 +211,7 @@ function placeOn(
   bass: Pitch,
   keySignature: KeySignatureId,
   asked: readonly Figure[],
-  near: Pitch,
+  near: Pitch | undefined,
 ): BassEvent | undefined {
   const written: Figure[] = []
   let previous: readonly PitchClass[] | undefined
@@ -257,7 +257,7 @@ export function buildQuestion(
   const events: BassEvent[] = []
   // The reference runs the whole length of the question, so a bass line's
   // chords follow one another the way a suspension's two halves do.
-  let near = DEFAULT_REGISTER
+  let near: Pitch | undefined
   for (const figure of wanted) {
     const event = buildEvent(random, keySignature, figure, near)
     if (event === undefined) return undefined

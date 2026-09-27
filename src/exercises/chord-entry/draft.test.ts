@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { diatonicValue, pitchKey } from '@/lib/music/pitch'
 import type { PitchClass } from '@/lib/music/scale'
 
-import { OPENING_OCTAVE } from '@/lib/music/voicing'
+import { openingPitch } from '@/lib/music/voicing'
 import { LETTERS } from '@/lib/music/pitch'
 
 import type { ChordDraft } from '@/exercises/chord-entry/draft'
@@ -166,8 +166,18 @@ describe('what the keyboard shows', () => {
   it('opens the row where an opening chord opens', () => {
     const draft = emptyChordDraft([3])
     for (const wanted of everyLetter) {
-      expect(placedPitch(draft, wanted)?.octave, wanted.letter).toBe(OPENING_OCTAVE)
+      expect(placedPitch(draft, wanted), wanted.letter).toEqual(openingPitch(wanted))
     }
+  })
+
+  it('opens by the clef the chord is written on', () => {
+    // The bug: the draft voiced every clef from the treble register, so an E
+    // pressed first on a bass staff landed on E4, two ledger lines up.
+    const draft = emptyChordDraft([4])
+    expect(placedPitch(draft, note('E'), 'bass')).toEqual(openingPitch(note('E'), 'bass'))
+    expect(
+      pitchKey(placedPitch(draft, note('E'), 'bass') ?? openingPitch(note('C'))),
+    ).toBe('E2')
   })
 
   it('climbs as the chord fills, because the notes stack upward', () => {
@@ -182,8 +192,8 @@ describe('what the keyboard shows', () => {
     // the only true thing left for it to say.
     const draft = place(place(emptyChordDraft([3]), note('B')), note('D'))
     expect(canPlace(draft, note('B'))).toBe(false)
-    expect(shows(draft, note('B'))).toBe('B4')
-    expect(shows(draft, note('D'))).toBe('D5')
+    expect(shows(draft, note('B'))).toBe('B3')
+    expect(shows(draft, note('D'))).toBe('D4')
   })
 
   it('still answers once every chord is written', () => {

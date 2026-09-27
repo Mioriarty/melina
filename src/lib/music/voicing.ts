@@ -1,11 +1,5 @@
 import { getClef, type ClefId } from './clef'
-import {
-  chromaticValue,
-  diatonicValue,
-  octaveFromDiatonicValue,
-  pitch,
-  type Pitch,
-} from './pitch'
+import { chromaticValue, diatonicValue, type Pitch } from './pitch'
 import type { PitchClass } from './scale'
 
 /**
@@ -51,47 +45,36 @@ import type { PitchClass } from './scale'
  */
 
 /**
- * Where a chord opens on a given clef, when there is nothing before it to
- * follow.
+ * Where the first note of a chord goes when there is nothing before it to
+ * follow: the octave whose staff position lies nearest the clef's bottom line.
  *
- * **Computed from the clef's own staff rather than tabulated**, the same move
- * `isCleanScale` makes: the reference is the F nearest the middle line, which
- * puts the first note of a first chord in the octave that clef reads most
- * comfortably — whatever its letter, since `nearest` then has at most a
- * diminished fifth to travel.
+ * **Low on purpose.** A chord is built upward from its first note, one key at
+ * a time, so the opening note has to leave room for everything still to come:
+ * a close-position seventh chord spans a seventh above it. Anchored in the
+ * middle of the staff, a seventh chord opened on a high letter ran off the top
+ * and `ontoTheStaff` had to move the whole thing down an octave under the
+ * player's hands. From within three steps of the bottom line the top of a
+ * four-note chord stays on or just above the staff, in every clef.
+ *
+ * By staff position rather than by semitones, so there are exactly seven
+ * places and no ties to break: in the treble clef the opening notes run B3 to
+ * A4, in the bass clef D2 to C3.
  */
-export function defaultRegister(clef: ClefId = 'treble'): Pitch {
-  const { staffLowest, staffHighest } = getClef(clef)
-  const middle = Math.round(
-    (diatonicValue(staffLowest) + diatonicValue(staffHighest)) / 2,
-  )
-
-  // The two F's either side of the middle line; the nearer one is the anchor.
-  const anchor = diatonicValue(pitch('F', 0, 0))
-  const below = middle - ((((middle - anchor) % 7) + 7) % 7)
-  const above = below + 7
-  const step = middle - below <= above - middle ? below : above
-
-  return pitch('F', 0, octaveFromDiatonicValue(step))
+export function openingPitch(note: PitchClass, clef: ClefId = 'treble'): Pitch {
+  const { staffLowest } = getClef(clef)
+  const bottom = diatonicValue(staffLowest)
+  let placed: Pitch = { ...note, octave: staffLowest.octave }
+  while (diatonicValue(placed) > bottom + 3)
+    placed = { ...placed, octave: placed.octave - 1 }
+  while (diatonicValue(placed) < bottom - 3)
+    placed = { ...placed, octave: placed.octave + 1 }
+  return placed
 }
-
-/**
- * Where a chord sits when there is nothing before it to follow.
- *
- * The treble one, which is the staff a realised figure goes on. Kept as a
- * constant because it is also what the realising keyboard draws its keys in
- * before anything has been pressed.
- */
-export const DEFAULT_REGISTER: Pitch = defaultRegister('treble')
-
-/** The octave an opening chord begins in, whatever its lowest letter is. */
-export const OPENING_OCTAVE = 4
 
 /**
  * The octave of `note` that lies closest to `reference`.
  *
- * Ties go upward. Only a plain B ties against the default register, and
- * upward is what keeps the opening row of keys ascending.
+ * Ties go upward.
  */
 function nearest(reference: Pitch, note: PitchClass): Pitch {
   const target = chromaticValue(reference)
@@ -165,20 +148,22 @@ function ontoTheStaff(chord: readonly Pitch[], clef: ClefId): readonly Pitch[] {
 /**
  * A chord, placed.
  *
- * `near` is where the chord before it began. Without one the chord opens in
- * the default register, which is what a first chord does. `clef` is only the
+ * `near` is where the chord before it began. Without one the chord opens
+ * where `openingPitch` puts it, which is what a first chord does. `clef` is only the
  * staff it has to fit on — it never changes the shape, only whether the whole
  * chord is moved bodily by an octave to be showable.
  */
 export function voiceChord(
   notes: readonly PitchClass[],
-  near: Pitch = DEFAULT_REGISTER,
+  near: Pitch | undefined = undefined,
   clef: ClefId = 'treble',
 ): readonly Pitch[] {
   const first = notes[0]
   if (first === undefined) return []
 
-  const placed: Pitch[] = [nearest(near, first)]
+  const placed: Pitch[] = [
+    near === undefined ? openingPitch(first, clef) : nearest(near, first),
+  ]
   for (const note of notes.slice(1)) {
     placed.push(above(placed[placed.length - 1] as Pitch, note))
   }
@@ -196,7 +181,7 @@ export function voiceChord(
  */
 export function voiceChords(
   chords: readonly (readonly PitchClass[])[],
-  near: Pitch = DEFAULT_REGISTER,
+  near: Pitch | undefined = undefined,
   clef: ClefId = 'treble',
 ): readonly (readonly Pitch[])[] {
   const voiced: (readonly Pitch[])[] = []
