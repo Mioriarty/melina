@@ -5,7 +5,7 @@
  * fifty of them as text in a terminal is a fast one, and it is where the block
  * weights actually get tuned. Run with:
  *
- *     npx vite-node scripts/progressions.ts -- [count]
+ *     npm run progressions -- [count]
  */
 import { createRandom } from '../src/lib/utils/seededRandom'
 import { eventFigure, eventStufe, type HarmonicEvent } from '../src/lib/music/harmony'
@@ -19,7 +19,8 @@ import {
 } from '../src/lib/music/progression'
 import { tonicKey } from '../src/lib/music/scale'
 import { voiceProgression } from '../src/lib/music/satb'
-import { satzFindings, VOICES } from '../src/lib/music/voiceLeading'
+import { VOICES } from '../src/lib/music/satbVoicing'
+import { satzFindings } from '../src/lib/music/voiceLeading'
 import { pitchKey } from '../src/lib/music/pitch'
 
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII']
