@@ -9,7 +9,7 @@ The name comes from the toki pona word for melody.
 |                        |                                                    |
 | ---------------------- | -------------------------------------------------- |
 | `npm run dev`          | dev server                                         |
-| `npm run build`        | typecheck + production build                       |
+| `npm run build`        | typecheck + production build + SPA fallback        |
 | `npm run preview`      | serve the production build                         |
 | `npm run typecheck`    | `tsc -b`                                           |
 | `npm run lint`         | oxlint                                             |
@@ -23,98 +23,100 @@ The name comes from the toki pona word for melody.
 ## Architecture
 
 **The curriculum registry is the single source of truth.** `src/config/curriculum.ts`
-defines every category and exercise. The top navigation, the homescreen map and the
-routes all derive from it. **Never hardcode a category or exercise list in a
-component** — add it to the registry and the UI follows. The registry holds ids,
-icons and status only; titles and blurbs are translated (see below).
+defines every category, exercise and guide. The top navigation, the homescreen
+path and the routes all derive from it. **Never hardcode a category or exercise
+list in a component** — add it to the registry and the UI follows. The registry
+holds ids, icons and status only; titles and blurbs are translated.
 
 Five config files, deliberately separate:
 
-- `config/curriculum.ts` — _what_ melina teaches (content)
-- `config/pathLayout.ts` — _where things sit_ on the homescreen (composition)
+- `config/curriculum.ts` — _what_ melina teaches
+- `config/pathLayout.ts` — _where things sit_ on the homescreen
 - `config/musicMarks.ts` — decorative notation geometry
-- `config/features.ts` — _what is switched on_ (feature flags)
+- `config/features.ts` — _what is switched on_ (one flag per category)
 - `config/exerciseComponents.ts` — which exercises have a real implementation
 
 An exercise lives in `src/exercises/<name>/` and is reached through
-`exerciseComponents.ts`; anything absent falls back to the placeholder page, so a
-module can be registered in the curriculum long before it is built.
+`exerciseComponents.ts`; anything absent falls back to the placeholder page, so
+a module can be registered long before it is built. Every module is registered
+from day one so the path shows the whole journey; only flagged-on modules are
+reachable. Tests enforce that every category has a flag and vice versa.
 
-Every module is registered from day one so the path shows the whole journey; only
-flagged-on modules are reachable. Enabling a module is a one-line change in
-`features.ts`. Tests enforce that every category has a flag and vice versa.
+**State lives in Dexie** (`src/lib/db/`), not in React. There is no server and
+no account. Bump the version and add a `.stores()` block to migrate; never edit
+an existing version in place or installed clients will not upgrade.
 
-**State lives in Dexie** (`src/lib/db/`), not in React. There is no server and no
-account — everything is local. Bump the version and add a `.stores()` block to
-migrate; never edit an existing version in place or installed clients will not
-upgrade.
+Settings parsers are **defensive**: an unknown id is dropped, a list that comes
+back empty falls back to the default, and old stored shapes keep reading (scale
+degree settings stored as bare numbers read back as steps in the tonic's own
+octave). Every parser is fed its own output in tests.
 
 ## Internationalisation — `src/lib/i18n/` and `src/locales/`
 
-English and German, through i18next and `react-i18next`. **No user-visible string
-is written in a component.** `src/locales/<lang>/<namespace>.json` holds every one
-of them, bundled into the app rather than fetched — a language that only arrives
-over the network is a language that is missing on a train.
+English and German, through i18next and `react-i18next`. **No user-visible
+string is written in a component.** `src/locales/<lang>/<namespace>.json` holds
+every one, bundled rather than fetched — a language that only arrives over the
+network is missing on a train.
 
-Namespaces map to areas of the app so a string can be found from where it appears:
-`common`, `path`, `curriculum`, `levels`, `exercise`, `music`, `settings`,
-`progress`.
+Namespaces map to areas of the app: `common`, `path`, `curriculum`, `levels`,
+`exercise`, `music`, `settings`, `progress`, `guide`.
 
 Three kinds of key:
 
-- **Written by hand** in the JSON, read with `t('exercise:round.question')`.
-- **Derived from a registry id.** `curriculum.ts` and `difficulty.ts` build these
-  (`categoryTitleKey`, `exerciseShortKey`, `difficultyTitleKey`, …) so a rename in
-  the registry moves the key with it and nothing spells the mapping out twice.
-- **Music vocabulary**, reached through the `useMusicNames` hook.
+- **Written by hand**, read with `t('exercise:round.question')`.
+- **Derived from a registry id.** `curriculum.ts` and `difficulty.ts` build
+  these (`categoryTitleKey`, `exerciseShortKey`, `difficultyTitleKey`, …) so a
+  rename in the registry moves the key with it.
+- **Music vocabulary**, through the `useMusicNames` hook.
 
-**`lib/music` and `lib/audio` carry no display strings at all.** A clef, a key
-signature, an interval quality and a pitch letter are all named differently in
-German — B♭ major is "B-Dur", the note English calls B is H, and the quality
-inflects ("reine Quinte", not "Rein Quinte") — so none of it survives a sentence
-assembled from English parts. The data files keep ids and arithmetic; the names
-live in the `music` namespace and are read through `useMusicNames`, which is a
-hook so the labels re-render when the language changes.
+**`lib/music` and `lib/audio` carry no display strings.** Clefs, keys, interval
+qualities and pitch letters are named differently in German — B♭ major is
+"B-Dur", English B is H, and qualities inflect ("reine Quinte") — so no sentence
+can be assembled from English parts. Data files keep ids and arithmetic; names
+live in the `music` namespace and are read through `useMusicNames`, a hook so
+labels re-render when the language changes.
 
-The chosen language is a Dexie setting (`UI_LANGUAGE`), not React state, so it
-survives a reload and reaches every screen. `null` means "never chose one", which
-is different from choosing English: it lets the browser's own preference keep
-deciding. `main.tsx` reads it before the first paint so a German browser does not
-flash German at someone who picked English, and `useLanguage` (called once, in
-`AppShell`) keeps i18next and `document.documentElement.lang` in step afterwards.
+**A sentence with markup in it is a sentence a translator can break.**
+`locales.test.ts` checks placeholders but cannot check that a `<0>` survived, so
+links go on a line of their own, and a list of changed degrees is a list of
+names rather than a sentence built from parts.
 
-`locales.test.ts` is the guard that makes adding a language safe: a missing key
-does not crash — i18next quietly falls back — so it walks every namespace and
-insists the languages hold exactly the same keys with exactly the same
-placeholders, then checks that every key built at runtime from a registry id
-actually resolves.
+The chosen language is a Dexie setting (`UI_LANGUAGE`). `null` means "never
+chose", which lets the browser keep deciding — different from choosing English.
+`main.tsx` reads it before first paint; `useLanguage` (called once, in
+`AppShell`) keeps i18next and `document.documentElement.lang` in step.
 
-The PWA manifest and the `<meta name="description">` in `index.html` stay English:
-both are read at build and install time, before any of this runs.
+`locales.test.ts` makes adding a language safe: a missing key does not crash —
+i18next quietly falls back — so it insists every language holds exactly the
+same keys with the same placeholders, and that every key built at runtime from
+a registry id resolves.
+
+The PWA manifest and `<meta name="description">` stay English: both are read
+before any of this runs.
 
 ## Style
 
 - TypeScript strict, plus `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes`.
   No `any`. No non-null `!` without a comment justifying it.
-- `verbatimModuleSyntax` is on: type-only imports must use `import type`.
-- `erasableSyntaxOnly` is on: no enums, no constructor parameter properties.
-- Named exports everywhere except route/page components (which are default exports
-  so they can be lazily loaded later).
+- `verbatimModuleSyntax`: type-only imports use `import type`.
+- `erasableSyntaxOnly`: no enums, no constructor parameter properties.
+- Named exports everywhere except route/page components (default exports, so
+  they can be lazily loaded).
 - Function components and hooks only. Props interface named `XProps`, colocated.
 - Absolute imports via `@/`. No barrel files — they defeat tree-shaking.
-- A file that exports a component should export _only_ components, so React Fast
-  Refresh keeps working. Put helpers in a sibling module (see
-  `ui/Button.tsx` → `ui/buttonClasses.ts`).
+- A file exporting a component exports _only_ components, so Fast Refresh
+  works. Helpers go in a sibling module (`input/Switch.tsx` →
+  `input/switchClasses.ts`).
 - PascalCase component files, camelCase utilities.
-- Prettier and its Tailwind class-order plugin are authoritative. Do not hand-sort.
+- Prettier and its Tailwind class-order plugin are authoritative.
 
 ## Design system
 
 Light theme only. One accent colour, otherwise paper and ink.
 
-**Never write a raw hex value or an arbitrary colour in a component.** All colour,
-type and easing tokens live in the `@theme` block of `src/styles/index.css`; add a
-token there rather than inlining a value.
+**Never write a raw hex value or an arbitrary colour in a component.** All
+colour, type and easing tokens live in the `@theme` block of
+`src/styles/index.css`.
 
 | token                             | value                             |                                       |
 | --------------------------------- | --------------------------------- | ------------------------------------- |
@@ -124,2556 +126,913 @@ token there rather than inlining a value.
 | `accent`                          | `#0d6e6e`                         | 6.1:1 on paper, 6.2:1 white-on-accent |
 | `correct` / `wrong`               | `#3f7a34` / `#b3261e`             | feedback                              |
 
-`correct` is deliberately warm-shifted so it never reads as "a lighter accent" next
-to teal chrome. **Feedback must never rely on colour alone** — always colour plus
-icon plus motion.
+`correct` is warm-shifted so it never reads as "a lighter accent" next to teal
+chrome. **Feedback never relies on colour alone** — colour plus icon plus motion.
 
-Headings are EB Garamond, body and UI are Inter. Garamond runs light on screen, so
-display sizes are bumped and tracked tighter than a stock scale (`text-display`,
-`text-title`, `text-heading`). Fonts are self-hosted and Latin-subset only — a
-Google Fonts link would break offline, and the other subsets quadruple the precache.
+Headings are EB Garamond, body and UI Inter. Garamond runs light on screen, so
+display sizes are bumped and tracked tighter (`text-display`, `text-title`,
+`text-heading`). Fonts are self-hosted and Latin-subset only — a Google Fonts
+link breaks offline, and other subsets quadruple the precache.
 
-Icons are Ionicons via `react-icons/io5`, behind `ui/Icon.tsx`. Add icons to the
-explicit `ICONS` map there. **Never `import * as`** from `react-icons` — it defeats
-tree-shaking and pulls in the whole set.
-
-## The homescreen path
-
-One vertically scrolling column of stations, serpentining side to side — the
-whole curriculum as a single journey. There is no map, no zoom, no drag and no
-list toggle; scrolling is the browser's own, which is what keeps it usable with
-a keyboard, a screen reader and a thumb without special cases.
-
-**The path opens with an explainer, and then braids.** Modes and Minor stands
-alone at the top of the scales column and is joined to scale reading and to
-nothing else — not over the middle, which would read as the way in to the whole
-path and claim it comes before intervals too. It cannot go _into_ the right
-column instead: the two columns would no longer have their rows level, which is
-the thing the braid exists for. `GUIDE_DROP` is the room it takes, and
-`BRAID_TOP` is where the braid starts under it.
-
-Below that, intervals run down the left, scales down the right, reading above
-hearing on both, and the two tracks join at the station below. Read across and it is the two subjects; read down and it is the
-two ways of knowing one. Single file would have had to claim that scale reading
-comes after interval hearing, which is true of neither the music nor the player.
-
-So the route is a **graph, not a chain**: `PATH_EDGES` names every join, and
-`CONNECTORS` is built from it. Joining consecutive nodes instead zig-zags
-through all four braided stations, which is exactly the ordering the braid
-exists to deny. `PATH_NODES` still runs strictly downhill, because it is the
-order the page is read in, not the order the exercises are done in.
-
-The braid is **staggered, not level** — `BRAID_STAGGER` (70px) between the two
-columns against a `BRAID_DROP` of 260px from reading to hearing. The small
-offset is what makes the eye join the vertical pairs rather than the rows, and
-it keeps the four stations running downhill. Every _joined_ pair spans a normal
-station gap; every _consecutive_ pair in the braid is far tighter. The one that
-cannot be tight is the second track's join into the merge: below about 150px a
-connector has no room left between the label it leaves and the medallion it
-arrives at, and it draws as a stub or inverts entirely.
-
-Two stations standing side by side is new, and it is what sets `INTERVAL_X` and
-`SCALE_X` at 26 and 74 rather than either side of centre: two labels each want
-`min(10.5rem, 42vw)`, which on a 320px screen is most of the column between
-them. `pathLayout.test.ts` checks every pair of stations close enough in y to
-stand level, at every supported width.
-
-**Spacing is uneven but bounded.** A constant rhythm reads as a list rather
-than as a journey, which is why no two single-file gaps are the same; but the
-column is read by thumb and grows every time a module ships, so the gaps are
-also held between `CONNECTOR_LEAVE + CONNECTOR_ARRIVE` — below which a join has
-no room between the label it leaves and the medallion it arrives at — and a
-ceiling. The ceiling is what stops the path sprawling one coordinate at a time,
-which is exactly how it grew the first time.
-
-`position.y` is the centre of a station's **medallion**, not of its whole node
-box. The label hangs below and is excluded from the anchor, because connectors
-are drawn from `position.y` — centring the whole box instead pushed every
-medallion up by half a label (a different amount per node, depending on whether
-the title wrapped) and left the dashed route touching nothing.
-`MEDALLION_SIZE` lives in `pathLayout.ts` and is consumed by `PathNode`, so the
-geometry cannot drift apart again.
-
-Station labels are `min(10.5rem, 42vw)` wide so a title near the edge of the
-column is never clipped on a narrow screen; `pathLayout.test.ts` checks this
-across viewports from 320px up.
-
-The decoration layer is deliberately **unclipped**. Splats are meant to bleed
-off the sides of the column and past the ends of the path — the only thing that
-should ever crop one is the edge of the viewport, which the scroll container
-already handles. Clipping them to the column cut them along a hard straight
-edge, very visible on wide screens. Because nothing clips them, parallax depth
-has to stay small, or drift would push a splat well past the last station and
-add dead scroll.
-
-Positions in `config/pathLayout.ts` mix units on purpose: **x is a percentage of
-the column width, y is absolute pixels.** That keeps the serpentine's
-proportions identical on a phone and a desktop while labels stay at their
-natural size. Connectors are drawn in one SVG with a `0 0 100 PATH_HEIGHT`
-viewBox and `preserveAspectRatio="none"` so its coordinate space _is_ that
-mixed space; strokes are marked `vector-effect="non-scaling-stroke"` so the
-horizontal stretch does not smear the dashes.
-
-Decorations (ink splats, scattered notation) are placed one per horizontal
-band, on the opposite side of the column from the nearest station. Both rules
-exist because plain rejection sampling clumped everything into the bottom half
-and dropped four fermatas next to each other. Beside the braid there is no
-opposite side — both edges are taken — so notation goes down the channel
-between the two tracks instead. Splats still bleed off the edges there, which
-is their whole character and reads fine at 6% opacity behind a label. Splats are generated by
-`lib/utils/splat.ts` rather than authored, seeded so they are identical on every
-launch.
-
-Parallax is driven by a single `--scroll` custom property that `PathView`
-publishes once per animation frame; the decoration layer reads it in CSS. Never
-re-render React on scroll.
-
-## Deployment
-
-GitHub Pages, from `.github/workflows/deploy.yml` on every push to `main`. The
-site is a **project page**, so it is served from `/melina/`, not from a domain
-root, and two things depend on that:
-
-- `base` is `/melina/` for `vite build` only — dev and Vitest stay at `/`, which
-  is why route assertions in tests can keep using bare `/train/...` paths. The
-  router's basename comes from `import.meta.env.BASE_URL`, never from a
-  hardcoded string. `VITE_BASE_PATH` overrides it.
-- Pages serves `404.html` for any path with no file behind it, so
-  `scripts/spa-fallback.mjs` copies `index.html` there after the build. Without
-  it, every deep link and every refresh inside an exercise is a dead end on the
-  first visit — the service worker's `navigateFallback` only covers later ones.
-
-The PWA manifest deliberately omits `start_url` and `scope`; vite-plugin-pwa
-fills both from `base`. Hardcoding `/` there installed an app that opened on a
-blank page.
+Icons are Ionicons via `react-icons/io5`, behind `ui/Icon.tsx`, added to its
+explicit `ICONS` map. **Never `import * as`** from `react-icons`.
 
 ## Accessibility
 
-- Every interactive element is keyboard-reachable, and focus is always visible.
-- Unplayable stations are `aria-disabled` **buttons**, not `div`s, so the whole
-  path can be explored and a screen reader says why a station cannot be entered.
-- Icon-only buttons need an `aria-label`; `ui/Icon` takes a `label` prop for it.
+- Every interactive element is keyboard-reachable, focus always visible.
+- Unplayable stations are `aria-disabled` **buttons**, so a screen reader says
+  why a station cannot be entered.
+- Icon-only buttons need an `aria-label`; `ui/Icon` takes a `label` prop.
 - Touch targets are at least 44px.
-- **Anything pressable moves under a press**, not only under a hover: a touch
-  screen has no hover, so a control whose only feedback is `hover:` gives a
-  thumb nothing back. The notation is the largest button in the app and needs
-  this most.
-- **All animation is gated on `useReducedMotion`.** Parallax and draw-in must
-  fully switch off when the OS asks.
+- **Anything pressable moves under a press**, not only under hover — a touch
+  screen has no hover. The notation is the largest button in the app.
+- **All animation is gated on `useReducedMotion`.** Parallax and draw-in fully
+  switch off when the OS asks.
+
+## Deployment
+
+GitHub Pages, from `.github/workflows/deploy.yml` on every push to `main`. It is
+a **project page** served from `/melina/`:
+
+- `base` is `/melina/` for `vite build` only — dev and Vitest stay at `/`, so
+  route assertions use bare `/train/...` paths. The router's basename comes from
+  `import.meta.env.BASE_URL`, never a hardcoded string. `VITE_BASE_PATH`
+  overrides it.
+- Pages serves `404.html` for any path with no file, so
+  `scripts/spa-fallback.mjs` copies `index.html` there after the build —
+  otherwise every deep link and refresh is a dead end on the first visit.
+- The manifest omits `start_url` and `scope`; vite-plugin-pwa fills both from
+  `base`. Hardcoding `/` installed an app that opened on a blank page.
+
+The precache is about **1.1 MB**. Verovio (~7 MB) and the samples are cached at
+runtime; if the precache jumps to ~8 MB the lazy-engraver wiring is broken.
 
 ## Testing
 
-Vitest with jsdom. `src/test/setup.ts` stubs `matchMedia` and `ResizeObserver` and swaps in
-`fake-indexeddb`; it also clears the Dexie tables between tests and fails any
+Vitest with jsdom. `src/test/setup.ts` stubs `matchMedia` and `ResizeObserver`,
+swaps in `fake-indexeddb`, clears the Dexie tables between tests and fails any
 test that logs a React error.
 
-Render smoke tests (`src/App.test.tsx`) exist because a clean typecheck is not
-evidence the app runs: an earlier version typechecked perfectly and crashed on
-first paint, because a library's declared return type did not match what it
-actually returned. Keep them.
+- **Render smoke tests** (`src/App.test.tsx`) stay: a clean typecheck is not
+  evidence the app runs — a library's declared return type once did not match
+  what it returned, and the app crashed on first paint.
+- **Round-trip wherever a fact can be round-tripped.** `modeOf` reads a scale
+  back to its mode, `onsetsOf` a bar back to its impacts, `readChord` a stack
+  back to its chord, and the settings parsers and attempt rows are fed their
+  own output. A generator is checked against the model, not against a fixture.
+- **Assert properties, not lists.** `catalog.test.ts` enforces that hearable
+  intervals are one per semitone count, so a well-meant addition fails loudly
+  instead of making a question unanswerable.
+- **Levels are data**, so `shared/difficulties.test.ts` checks every preset
+  names real ids, is named in every language, round-trips through its parser
+  unchanged, and generates a **full** round.
+- **Mixture tests.** Where a level declares weights, the generator's realised
+  output is measured against them (`generate.test.ts` in rhythmic and melodic
+  dictation) — a weight right on paper and never reaching a bar does nothing.
+- **The real engraver runs only in the node environment**
+  (`// @vitest-environment node`): the `*Verovio.test.ts` suites and the other
+  notation tests in `lib/notation/`, because jsdom cannot instantiate 7 MB of
+  WebAssembly. They carry the assertions nothing structural can make — whether
+  an accidental is drawn, that asked and revealed engrave to the same size,
+  that a bar being typed into does not move, that no key clips its note
+  (`degreeClearance.test.ts`, measured from glyph outlines, not fonts).
 
-`config/pathLayout.test.ts` guards the composition itself — that every category
-is on the path exactly once, that it runs strictly downhill, that spacing stays
-uneven, that the decoration samplers place their full count, that connectors
-start and end on the stations they join, and that no label overflows the column
-at any supported width. The last two are regression guards for real bugs.
+### Looking at it — `npm run shot`
 
-**Where a fact can be checked by round-tripping it, it is.** `modeOf` reads a
-scale back to the mode that spelled it, `onsetsOf` reads a written bar back to
-the impacts that produced it, and the settings parsers are fed their own output —
-each one checks the generator against the model rather than against a fixture
-somebody typed. Prefer this over asserting a list: `catalog.test.ts` enforces the
-_property_ that hearable intervals are one per semitone count, so a well-meant
-addition fails loudly instead of quietly making a question unanswerable.
-
-Two suites run in the **node environment** (`// @vitest-environment node`):
-`verovio.test.ts` and `rhythmVerovio.test.ts`, because jsdom cannot instantiate
-7 MB of WebAssembly. They are the only place the real engraver runs, so they
-carry the assertions nothing structural can make — that an accidental is drawn
-or not drawn, that asking and revealing a question engrave to the same size, and
-that a bar being typed into does not move.
-
-## Looking at it — `npm run shot`
-
-**jsdom draws nothing, and that is a real hole.** A change to the notation can
-typecheck, pass every test and still be illegible on the page: a page in the
-wrong units renders every example equally wrong, so asked still matches
-revealed, nothing overflows, and every stage of typing is identical. The
-thoroughbass page shipped at a tenth of its proper size with fifteen green
-assertions over it. Some things have to be looked at.
+**jsdom draws nothing.** A notation change can pass every test and still be
+illegible: a page in the wrong units renders every example equally wrong, so
+comparisons all agree. The thoroughbass page shipped at a tenth of its size
+with fifteen green assertions over it.
 
 ```
 npm run dev
 npm run shot -- /train/thoroughbass/realizing out.png --click "Triads"
 ```
 
-`scripts/shot.mjs` drives **Playwright's cached `chrome-headless-shell`** over
-the DevTools protocol, using node's own `WebSocket`. There is nothing to
-install and nothing added to `package.json`'s dependencies: the browser is
-already on disk under `~/Library/Caches/ms-playwright`, and
-`npx playwright install chromium --only-shell` puts it there if it is not.
-Driving CDP directly rather than depending on Playwright itself is what keeps
-it that way.
+`scripts/shot.mjs` drives Playwright's cached `chrome-headless-shell` over CDP
+with node's own `WebSocket` — nothing to install or add to `package.json`
+(`npx playwright install chromium --only-shell` if it is missing).
 
-- `--click` takes the visible text of a button and may be repeated. It is what
-  gets past the level list and into a round, since a level starts one in the
-  same tap. It matches an **accessible name on a descendant** as well as
-  text, because an icon-only button — the ✓ on the figure keyboard, backspace —
-  says nothing in its text at all. **Engraved notation is not part of the
-  name**: a Verovio render is `<text>` and a stylesheet to the DOM, so a
-  keyboard key drawing a note answered to almost any letter asked of it, and
-  `--click "F"` pressed the C.
+- `--click` presses a button by visible text or by an **accessible name on a
+  descendant** (icon-only buttons), repeatable. Engraved notation is not part
+  of the name. A level starts a round in the same tap.
+- `--size WxH`, `--wait` (default 1200ms, for the engraver), `--origin` when
+  Vite picked another port, `--scroll`, `--scale`.
 
-- `--size WxH` is the viewport and `--wait` the settle time after each click.
-  The default of 1200ms is for the engraver: it is 7 MB of WebAssembly and the
-  first render waits for it.
-- `--origin` when Vite has picked a different port, which it does whenever 5173
-  is already taken.
-- `--scroll` scrolls the page's own scroll container first, for anything read in
-  more than one screenful, and `--scale` drops the pixel ratio for a very tall
-  viewport such as the whole path.
+Do it after anything that changes what is drawn, at **phone width** — that is
+where notation and keyboard compete and layouts give out.
 
-Worth doing after anything that changes what is drawn, and worth doing at a
-phone width rather than a desktop one — the notation and the keyboard compete
-for the same few hundred pixels, and that is where a layout gives out.
+## The homescreen path
+
+One vertically scrolling column of stations, serpentining side to side. No map,
+no zoom, no drag, no list toggle; scrolling is the browser's own, which keeps it
+usable by keyboard, screen reader and thumb without special cases.
+
+### Stations
+
+`stations()` in `curriculum.ts` derives the stops: a category with built
+exercises contributes **one station per exercise** (reading and hearing are
+different games), one with nothing built a single locked station. Guides
+(`GuideDef`) are emitted **before** their category's exercises. A `Station`
+carries `kind`, `titleKey` and `blurbKey`.
+
+An **explainer node is a different shape**, not only a colour — a rounded
+square with an accent hairline against the filled circle of an exercise — so it
+survives a colour-blind reader. Its overline says "Read first". Dashed borders
+are taken by `next` and `locked`.
+
+### The route is a graph
+
+`PATH_EDGES` names every join and `CONNECTORS` is built from it; joining
+consecutive nodes would zig-zag through braided stations and claim an order the
+braid exists to deny. `PATH_NODES` runs strictly downhill because it is the
+reading order, not the doing order. `orderedPathNodes` sorts by `position.y`,
+not by the registry, so keyboard focus walks down the page.
+
+From the top:
+
+- **The scales guide** stands alone at the head of the scales column, joined to
+  scale reading only — joined over the middle it would read as the way in to
+  the whole path. `GUIDE_DROP` is its room, `BRAID_TOP` where the braid starts.
+- **Braid one:** intervals down the left, scales down the right, reading above
+  hearing on both. Read across it is two subjects; read down, two ways of
+  knowing one.
+- **Braid two:** rhythmic dictation and scale degrees side by side, both
+  merging into melodic dictation — the thing that needs both. It sits left of
+  centre to leave the right free for thoroughbass.
+- **Braid three:** the chords guide, then chord hearing (left) and reading
+  (right) side by side, both merging into chord writing. The sides are forced:
+  every consecutive pair down the column has to cross the middle.
+- **Harmony:** the voice-leading guide, cadence writing, bass dictation — an
+  even number of stations so nothing below changes side — then the planned
+  categories to the daily round.
+- **Thoroughbass is an island**: its guide and two exercises, joined to each
+  other and to nothing else, beside the main line. It is a subject taken up
+  alongside the journey, not a stage of it. So the guarding property is that
+  `PATH_EDGES` has **exactly two components**, which still catches a station
+  joined to nothing and the island being wired back into the line.
+
+### Geometry
+
+`position.y` is the centre of a station's **medallion**, not its node box —
+connectors are drawn from it, and the label (variable height) hangs below.
+`MEDALLION_SIZE` lives in `pathLayout.ts` and is consumed by `PathNode`.
+
+Positions mix units on purpose: **x is a percentage of the column width, y is
+absolute pixels**, keeping the serpentine's proportions on any width while
+labels stay natural size. Connectors live in one SVG with viewBox
+`0 0 100 PATH_HEIGHT` and `preserveAspectRatio="none"`, strokes
+`vector-effect="non-scaling-stroke"`.
+
+Braids are **staggered**: `BRAID_STAGGER` (70px) between the columns against a
+`BRAID_DROP` (225px) from reading to hearing, so the eye pairs vertically and
+everything still runs downhill. **Two stations that stand level cannot also be
+joined** — below about 150px of drop a connector has no room between label and
+medallion and draws as a stub or inverts. Two stations side by side is also why
+the braid columns sit at `INTERVAL_X`/`SCALE_X` = 26/74: two labels of
+`min(10.5rem, 42vw)` must fit on a 320px screen.
+
+**Spacing is uneven but bounded**: a constant rhythm reads as a list, so no two
+single-file gaps are equal; but gaps stay between
+`CONNECTOR_LEAVE + CONNECTOR_ARRIVE` and a ceiling, or the column sprawls.
+
+Positions are hand-placed by station id, so shipping an exercise means adding a
+coordinate; an unplaced station falls back to the end and a test asserts that
+never happens. `pathLayout.test.ts` guards all of it: every category on the
+path once, strictly downhill, uneven spacing (skipping pairs that
+`standLevel`), no joined pair level, connectors ending on their stations, full
+decoration counts, no label overflowing at any width from 320px.
+
+### Decoration
+
+Splats and notation are placed one per horizontal band, on the side opposite
+the nearest station (beside a braid, notation goes down the channel between the
+tracks). Splats come from `lib/utils/splat.ts`, seeded so they are identical on
+every launch. The layer is **unclipped** — splats bleed off the column and only
+the viewport crops them — so parallax depth stays small or drift adds dead
+scroll. Parallax reads a single `--scroll` custom property that `PathView`
+publishes once per frame; **never re-render React on scroll.**
 
 ## Music theory — `src/lib/music/`
 
-Ids and arithmetic only — every name a player reads is translated. See
-**Internationalisation**.
+Ids and arithmetic only — every name is translated.
 
-**A pitch is a spelling, not a frequency.** `Pitch` carries a letter, an alteration
-and an octave, and everything runs on two independent axes: `diatonicValue` (letter
-position) and `chromaticValue` (semitones). That is what makes C→D♭♭ a diminished
-second and C→C a perfect unison, when both span zero semitones. Never collapse a
-pitch to a MIDI number and expect intervals to survive it.
+**A pitch is a spelling, not a frequency.** `Pitch` carries letter, alteration
+and octave, and everything runs on two axes: `diatonicValue` (letter position)
+and `chromaticValue` (semitones). That is what makes C→D♭♭ a diminished second
+and C→C a unison at the same zero semitones. Never collapse to MIDI and expect
+intervals to survive.
 
-Two rules the model enforces, both discovered by the round-trip test rather than
-reasoned out in advance:
+- **An interval cannot span negative semitones** — the general rule that rules
+  out the diminished unison and doubly-diminished second. No special cases.
+- The **diminished second is real** (zero semitones) and telling it from a
+  unison is taught, so it must never be simplified away.
+- `transpose` returns `undefined` rather than inventing a triple accidental;
+  callers retry with another root.
 
-- **An interval cannot span negative semitones.** This rules out the diminished
-  unison, the doubly-diminished unison and the doubly-diminished second. It is
-  the general rule; do not re-add a special case for unisons.
-- The **diminished second is real** and spans exactly zero semitones. Telling it
-  from a perfect unison is a thing the app teaches, so it must never be
-  "simplified" away.
+The catalog (`catalog.ts`) orders qualities smallest-first — d, m, P, M, A —
+and the keyboard gives each a fixed column.
 
-`transpose` returns `undefined` rather than inventing a triple accidental; callers
-retry with a different root.
+### Scales — `scale.ts`
 
-The catalog (`catalog.ts`) orders qualities smallest-first — d, m, P, M, A — and
-the keyboard gives each one a fixed column so a quality never moves between rows.
+**A mode is stored as the interval from its tonic to each degree**, never as
+semitones, which is why B♭ dorian comes out B♭ C D♭ E♭ F G A♭. `scalePitches`
+walks the letters through `transpose`. Which tonics a mode may use is
+**computed**: `isCleanScale` rejects anything past a double accidental, so no
+exception list is kept. `modeOf` reads a run back to its mode.
 
-**A mode is stored as the interval from its tonic to each degree** (`scale.ts`),
-never as a list of semitones — that is what makes B♭ dorian come out as B♭ C D♭ E♭
-F G A♭ rather than B♭ C C♯ D♯. `scalePitches` walks the letters and lets
-`transpose` work out each accidental, so it returns `undefined` for a scale that
-would need a triple accidental instead of inventing one.
+**Harmonic and melodic minor share the list and are not modes** —
+`ModeDef.degree` is absent, and three rules follow:
 
-Which tonics a mode may stand on is **computed, not tabulated**: `isCleanScale`
-spells the scale and rejects anything past a double accidental, so A♭ locrian
-(B double flat) and G♯ lydian (F triple sharp) drop out on their own and a new
-mode needs no one to work the exceptions out again. `modeOf` reads a run of
-pitches back to the mode that spelled it, which is how the generator is checked
-rather than trusted.
-
-**Harmonic and melodic minor live in the same list and are not modes.** The
-seven are one set of notes read from seven starting points; these two raise a
-degree no rotation raises, so `ModeDef.degree` is absent for them and no key
-signature spells them. That cost the model nothing — a raised seventh is one
-stored interval, and the augmented second in harmonic minor is what two of them
-already say — but it needed three rules stated once each:
-
-- `signatureMode` says what a scale is **written under**: itself for a mode,
-  the natural minor for these two. `keySignatureFor` searches on that rather
-  than hunting for a signature that cannot exist, and the raised degrees then
-  print an accidental, which is how the scale has always been written down.
-- `isCleanScale` asks the same of the scale it is written under. D♭ melodic
-  minor spells perfectly well — raising the sixth is what turns B𝄫 into B♭ —
-  but D♭ minor is not a key anybody writes, so the pairing drops out there
-  rather than arriving at the staff with no key to be in.
-- **Melodic minor only goes up** (`ASCENDING_ONLY_MODE_IDS`). Coming down the
-  convention lowers the sixth and seventh again, which is aeolian note for
-  note, so a descending one is a question with two right answers — the same
-  rule `HEARABLE_INTERVAL_KEYS` states for intervals. `MELODY_MODE_IDS` is the
-  other half of it: a melody moves both ways, so scale degrees and melodic
-  dictation are never offered it, while harmonic minor is a key like any other
-  and goes everywhere.
+- `signatureMode` says what a scale is written under: itself for a mode, the
+  natural minor for these two. The raised degrees print accidentals.
+- `isCleanScale` checks the scale it is written under, so D♭ melodic minor
+  drops out (D♭ minor is not a written key).
+- **Melodic minor only goes up** (`ASCENDING_ONLY_MODE_IDS`): descending it is
+  aeolian, a question with two right answers. `MELODY_MODE_IDS` keeps it out of
+  anything with a line that moves both ways (scale degrees, melodic dictation).
 
 ### Scale degrees — `degree.ts`
 
-**A degree names the step of the mode it is in**, so an accidental on one means
-only "this is not the note the scale has there": C♯ in A aeolian is `#3`. That
-is the classical reading rather than the jazz one, and it falls straight out of
-`scale.ts` — the seven names keep their meaning in every mode.
+**A degree names the step of the mode it is in**; an accidental means only
+"not the note the scale has there" (C♯ in A aeolian is `#3`) — the classical
+reading, not the jazz one.
 
-**The vocabulary a question draws on is notes, not names.** A degree plus an
-alteration is a _spelling_, and spellings are not what anyone hears: ♯1 and ♭2
-are one sound under two names, so a question wanting one and refusing the other
-is unanswerable however well you listen. Worse, ♯3 in a major key _is_ the
-fourth — a second name for a note that already has a plainer one. `degreeNotes`
-therefore collects by sounding pitch, each note once, carrying the names it can
-go by; `nameMelody` chooses which to print and `degreesSoundEqual` marks by
-sound. Grading on the printed spelling fails a listener for something there was
-nothing to hear.
+**A degree carries an octave**, an offset from the tonic's own: `1` is the
+tonic, `1'` the octave above, `7_` the seventh below. Stored `'` up and `_`
+down — not the Helmholtz comma, because `degreesKey` joins a melody with
+commas. `stepIndex`/`stepAt`/`stepRange` treat degree-plus-octave as one ladder.
+A degree keeps its meaning wherever it sits: the fifth below is still _the
+fifth_.
 
-**A level's outermost degrees are its range.** A level offering the first five
-is asking about the notes from the tonic up to the fifth, so a flattened tonic
-sits below everything it teaches and a raised fifth above — neither belongs to
-it, however the keyboard spells them. Reading the range off the degrees rather
-than tabulating it means adding a degree widens the level on its own, and it is
-what keeps a raised seventh out of a major key, where it is not a seventh at all
-but the octave.
+**The vocabulary is notes, not names.** ♯1 and ♭2 are one sound, and ♯3 in
+major _is_ the fourth. `stepNotes` collects by sounding pitch, each note once
+with every name it can go by; `nameMelody` picks which to print and
+`degreesSoundEqual` grades by sound. **A level's outermost steps are its
+range**: a flattened lowest step or raised highest one is outside it, which is
+also what keeps a raised seventh (the octave) out of a major key.
 
-**A degree carries an octave.** `octave` is an offset from the tonic's own, so
-`1` is the tonic and `1'` the octave above it, and scale degree identification —
-which never leaves that first octave — simply never sets it. That is what lets
-melodic dictation reach a fifth below its tonic and an octave above, with the
-fifth below still being _the fifth_: a degree keeps its meaning wherever it
-sits. `stepRange(low, high)` walks the ladder between two of them, and the run
-it returns is both the vocabulary a melody draws on and the keys on the
-keyboard. The stored form marks the octave `'` up and `_` down — not the
-Helmholtz comma, because `degreesKey` joins a melody with commas and a
-separator that appears inside a value is a format that cannot be read back.
-
-Which name gets printed follows the line: a note the scale has takes the
-scale's own name, and one from outside it is raised where the melody carries on
-up and lowered where it turns back down. **Unless one of the two cannot be
-written**: across an octave boundary the "equally true" names stop being equally
-writable — in B♭ mixolydian the note under the octave is ♯7 (A♮) or ♭1′ (B𝄫),
-and no direction of line makes a double flat the right way to write A. So
-`nameMelody` drops the spellings needing a _double_ accidental and lets the
-direction decide among what is left.
-
-Only doubles, deliberately. Keeping the smallest printed accidental instead is a
-different and worse rule: in F♯ major it turns a rising ♯4 — B♯, the
-conventional spelling of an ascending chromatic note — into C♮, purely because a
-natural is less ink than a sharp. Choosing between two single accidentals is
-exactly what the direction is for.
-
-The keyboard is unaffected — every
-degree stays pressable, including the ones that never generate, because a
-player reaching for ♭1 should find it rather than a dead key.
+`nameMelody`: a scale note takes the scale's name; a chromatic note is raised
+where the line goes on up and lowered where it turns down — **unless one
+spelling needs a double accidental**, which drops out first (in B♭ mixolydian
+the note under the octave is A♮, not B𝄫). Only doubles: choosing between two
+single accidentals is what direction is for.
 
 ### Rhythm — `meter.ts`, `rhythm.ts`, `rhythmCells.ts`
 
 **A rhythm is a set of impacts and nothing else.** A snare hit has no audible
-length, so you cannot hear whether a note was held or stopped and followed by a
-rest: note values and rests are an _engraving_ decision, never a fact about the
-rhythm. They are not generated, not stored and not graded, which is what makes
-`sameRhythm` — the same impacts in the same places — the whole of being correct.
+length, so note values and rests are engraving decisions — never generated,
+stored or graded. `sameRhythm` is the whole of being correct.
 
-**`TICKS_PER_BEAT` is 60 because that is LCM(4, 3, 5).** Sixteenths, triplets
-and quintuplets all land on whole numbers, so a rhythm compares with `===`,
-stores as a plain string and never rounds. Every exactness claim above rests on
-that one number.
+**`TICKS_PER_BEAT` is 60 = LCM(4, 3, 5)**: sixteenths, triplets and
+quintuplets land on whole numbers, so rhythms compare with `===` and never round.
 
-Metre is **only `n/4`**. 6/8 and 12/8 are not "six beats" and "twelve beats" but
-two and four _dotted_ beats, which changes what a beat is rather than how many
-there are; they need their own grouping and are left out rather than
-half-supported.
+Metre is **only `n/4`**; compound metres change what a beat is and are left out
+rather than half-supported.
 
-**A note may not cross a boundary stronger than the one it starts on.** That
-single sentence is `maxDurationAt`, and it reproduces the familiar 4/4 table
-exactly — whole note on beat 1, half on beat 3, quarter on 2 and 4, eighth on
-the "and" — while generalising to 3/4 and 5/4 with nobody tabulating them.
-`metricLevel` ranks the boundaries (barline, beat group, beat, eighth,
-sixteenth, finer) and **smaller is stronger**. 4/4 is two halves rather than four
-equal beats, which is exactly why beat 3 may carry a half note; `BEAT_GROUPS`
-holds that per metre, since 5/4 has to be 3 + 2 or 2 + 3 and the choice belongs
-in a table rather than in an argument at every call site.
+**A note may not cross a boundary stronger than the one it starts on** —
+`maxDurationAt`, which reproduces the 4/4 table and generalises to 3/4 and 5/4.
+`metricLevel` ranks boundaries (smaller is stronger); `BEAT_GROUPS` says how a
+bar groups (4/4 is two halves, 5/4 is 3+2 or 2+3).
 
-**A bar is built one beat at a time.** A `RhythmCell` is a division of the beat
-plus which of its parts are struck, and that one idea buys three things at once:
-tuplets need no mechanism (a triplet is `division: 3`), no rhythm ever needs a
-tie because a cell cannot cross a beat, and the results come out idiomatic —
-rolling a coin per grid point across a whole bar reaches "the second and third
-sixteenth only", which is a valid set of impacts and not a rhythm anyone would
-write. No two cells may describe the same impacts, or a group would quietly
-weigh more than its weight claims.
+**A bar is built one beat at a time** from `RhythmCell`s — a division of the
+beat plus which parts are struck. Tuplets need no mechanism, no rhythm needs a
+tie, and results are idiomatic. No two cells may describe the same impacts.
+Levels weight cell **groups** and pick uniformly within one, so a group's weight
+does not depend on how many patterns it holds.
 
-Cells are grouped and a level weights the **groups**, picking uniformly within
-one, so `sixteenth: 3` means three parts sixteenths however many patterns that
-group happens to hold. Weighting each cell instead would silently make the
-larger groups heavier.
-
-**`minOnsets` is held in view while a bar is built, never enforced by throwing
-a finished one away.** Drawing bars until one clears the floor sounds
-equivalent and is not: a bar survives that test in proportion to how densely it
-happened to be drawn, so the levels quietly got a different mixture from the
-one they declare. It halved every `hold` — 25% of the beats of Beats down to
-13%, which made **half** of that level's bars four identical quarter notes —
-and in Off the Beat it pushed plain eighths past the offbeats the level is
-named for. Topping a thin bar up afterwards leans the same way, since what it
-adds is downbeats. So a cell is refused only where taking it would put the
-floor out of reach for the beats that remain, and every other beat comes from
-the weights untouched. `generate.test.ts` measures the realized mixture against
-the declared one for every shipped level, which is the only way this is visible
-at all.
-
-**The floor is an absolute count, so a level mixing metres is read against its
-shortest bar.** Three impacts is nothing in 5/4 and forces a subdivision into
-every bar of 2/4. A floor at or above the beat count means every beat must be
-struck, which is not a floor but a demand for saturation: it is what made Beats
-(3 in a four-beat bar) unable to deliver the held notes it declares, since one
-held beat was all it could ever allow. Keep `minOnsets` well under the number
-of beats in the shortest metre a level offers.
+**`minOnsets` is held in view while building, never enforced by rejection.**
+Redrawing bars until one clears the floor skews the mixture towards dense bars
+(it once made half of a level's bars four quarter notes). A cell is refused only
+where taking it would put the floor out of reach. The floor is absolute, so keep
+it well under the beat count of the shortest metre a level offers.
 
 ### A phrase — `phrase.ts`
 
-**A phrase is a list of bars, not a long bar.** One stretch of ticks would have
-been fewer lines and would have cost the thing that makes melodic dictation
-possible: a bar is the unit every existing function already understands.
-`buildBar` fills one, `notateRhythm` spells one, `maxDurationAt` knows what a
-note may cross inside one. Keeping the bar whole is why going from one to four
-of them changed none of them — `barRhythm(phrase, i)` hands a bar to anything
-built for a single bar and it works unchanged.
+**A phrase is a list of bars, not a long bar.** `barRhythm(phrase, i)` hands a
+bar to everything built for one. There are still **no ties**: a barline is the
+strongest boundary, so a sound running past it is written as a note then a rest
+— the same sound under legato playback. `rhythmDivision` labels a bar by what it
+asks of the player (a bar with one triplet is a triplet bar).
 
-**That is also why there are still no ties.** A note may not cross a boundary
-stronger than the one it starts on, and the barline is the strongest there is,
-so `maxDurationAt` already refuses it. A sound running past a barline is written
-as a note and then a rest in the next bar — exactly what one bar already does
-for any gap a single value cannot span. Since impacts are the whole of what is
-graded, and playback rings every note until the next impact, the two spell the
-same sound and nothing is lost.
+### Melodic contour — `contour.ts`
 
-`rhythmDivision` labels a bar by **what it asks of the player**, not by its
-shortest note: a bar with one triplet in it is a triplet bar even where a
-sixteenth elsewhere is shorter, because "you keep missing triplets" is the
-finding the label exists to make possible.
+The next note of a melody is drawn against a weight that falls with distance.
+Two shapes: **`steady`** — one spread at every note — and **`paced`** — **the
+time to the next note sets the spread** (a sixteenth steps, a half note may
+leap), an exponential whose width is a power of the gap. Fixed properties:
+**every interval keeps a non-zero weight** (`floor`), the curve is
+**symmetrical**, and a **repeated note is notched down** hard. The constants
+are meant to be turned; tests assert the properties, and
+`melodic-dictation/generate.test.ts` measures what comes out. The rhythm is
+generated before the pitches because `paced` needs the note lengths.
 
 ### Chords — `chord.ts`
 
-**A chord is a stack of thirds above a root, spelled.** Nine of them: four
-triads and five sevenths, which is exactly the list every German Hochschule
-surveyed asks for — UdK's own paper names Dur, Moll, übermäßig, D7 and the
-ganz- and halbverminderte Septakkorde.
-
-Each quality is stored as **the interval from the root to each member**, never
-as semitones, which is the same shape `DEGREE_QUALITIES` has in `scale.ts` and
-is there for the same reason: it makes B♭ half-diminished come out B♭ D♭ F♭ A♭
-rather than B♭ C♯ E G♯. `chordNotes` walks `transpose`, so a spelling needing a
-triple accidental comes back `undefined` instead of being invented.
-
-This is a **sibling** of `figuredBass.ts`, not a replacement. That file is right
-to need no chord model — a figure is interval arithmetic above a bass — and
-root, quality and inversion are none of what a figure says. They are what
-_naming_ a chord says, which is the same subject read from the other end.
-
-**Inversion is which member is lowest; Lage is which is highest.** Everything
-between them fills in cyclically, and that is what makes Lage an answer axis of
-its own without four voices and without doubling a note: root-position C–E–G is
-Quintlage and root-position C–G–E′ is Terzlage, both with the root in the bass.
-`closePosition` is the Lage that stacking straight up would give, which is what
-a level with the row switched off always asks for.
-
-**A chord may need one double accidental and never two.** A diminished seventh
-above C _is_ B𝄫 — count the thirds and the seventh has to be a B of some kind —
-so refusing doubles outright would refuse the chord on half the roots it
-actually lives on. What is refused is a chord wanting two at once, which is
-always respelled instead. `isCleanChord` computes that from the spelling rather
-than tabulating it, exactly as `isCleanScale` does, and the writing keyboard's
-accidental switches stack to a double for precisely this chord.
-
-**Two chords have no audible inversion, and it is computed rather than known.**
-`isSymmetric` asks whether the chord's semitone pattern maps onto itself under
-rotation, which is true of the augmented triad and the fully diminished seventh
-and nothing else. `hearableInversions` therefore returns root position alone for
-them, and a hearing round neither generates nor asks for any other — the same
-rule `HEARABLE_INTERVAL_KEYS` states for intervals, and for the same reason: a
-question whose answer cannot be heard is not a hard question but an unanswerable
-one. Reading is untouched, because there the root can be seen.
-
-`readChord` reads a written stack back to the chord that spelled it, which is
-the round trip `modeOf` plays on the scale generator and `onsetsOf` on the
-rhythm one: the generator is checked against the model rather than trusted.
-`chord.test.ts` also holds the **property** that every answer a hearing round
-can ask for has a sound of its own, so a well-meant addition fails loudly
-instead of quietly making a question unanswerable.
-
-`inversionFigure` is the one table there is — `5/3`, `6`, `6/4`, `7`, `6/5`,
-`4/3`, `2` — because the abbreviation is a convention rather than arithmetic,
-the same reason `STACKS` is a table. It deliberately carries **no accidentals**:
-the first inversion of a C augmented triad is figured `6/♯3` over its E and is
-still a first inversion, and asking `figuredBass.ts` would have produced the
-second thing while looking like the first.
-
-## Notation — `src/lib/notation/` and `src/components/notation/`
-
-**Print an accidental only when it differs from the key signature.** `@accid` is
-written and drawn; `@accid.ges` is gestural and silent. In D major an F♯ takes
-`accid.ges` and prints nothing, while an F♮ takes `accid` and prints a natural.
-Getting this backwards produces notation that reads perfectly and means something
-else, which no type checker will catch — `verovio.test.ts` asserts it end to end by
-counting drawn glyphs.
-
-Verovio is **~7 MB of WebAssembly embedded in JavaScript**, not a separate `.wasm`
-file. It must stay lazy: dynamic `import()` only, from a `React.lazy` route, in its
-own named Rollup chunk, excluded from the Workbox precache by `globIgnores` and
-cached at runtime instead. If precache jumps from its usual ~990 KiB to ~8 MB,
-that wiring has been broken. Leland ships inside the wasm; `setResourcePath` is a no-op on web.
-
-The question generator anchors a note's accidental to the key signature ~78% of the
-time. Picking uniformly at random is what produced F♭ in D major and A♯♯ in C major
-— valid spellings that no one would ever write.
-
-**A double sharp is `x`, not `ss`.** MEI has both and they draw differently: `ss`
-is two separate sharp signs, which is what Verovio drew for months. A double flat
-_is_ two flats, so `ff` is right. Written and gestural accidentals are separate MEI
-data types with separate lists — the gestural list has no `x` — so they are two
-maps in `mei.ts` and must not be merged.
-
-**A harmonic unison is written as two successive noteheads, not as a chord.** Both
-noteheads want the same spot on the staff, so stacked, C→C♯ and C♯→C♯ engrave as
-_the same picture_: one sharp against two touching noteheads. Side by side each
-note carries its own accidental. The rule lives in `harmonicIntervalMei` rather
-than in an exercise, because it is engraving, not gameplay. Anything spanning two
-staff positions still stacks — including the diminished second, which has to go on
-looking like a second.
-
-**A note that has not been revealed is engraved, in its place, and not
-drawn** — `@visible="false"`, which Verovio emits as `visibility="hidden"` on
-the whole note group, so the accidental and the stem go with it. The hearing
-exercises rely on this: leaving the unheard notes out instead re-engraves a
-different piece of music, so the staff narrows and the note already on screen
-slides across the moment the answer arrives. `verovio.test.ts` renders each
-question asked and revealed and insists the two are the same size.
-
-**A scale is always keyless** (`scaleMei` writes the signature itself rather than
-taking one). A mode is read from the accidentals in front of its notes, and under a
-signature F♯ mixolydian looks exactly like G major.
-
-**How airy the notation looks is note spacing, not staff size** —
-`SCALE_NOTE_SPACING` in `lib/notation/verovio.ts` is the dial. The reason is
-that the page only ever scales an engraved SVG _down_ to fit its column: a
-staff wider than the column is fitted to exactly that width whatever size it
-was drawn at, so for anything that overflows, staff size changes nothing you
-can see. Eight notes always span the column, and spacing decides how large the
-notes are within it. Widening it therefore spreads the notes _and_ shrinks the
-staff, in the same space on screen — which is the effect, not a side effect.
-
-Scales ship at 0.3 against Verovio's default of 0.25, which takes the staff
-from 104px to 89px in a 375px phone's column; the table in `verovio.ts` carries
-the measured alternatives, because the value is meant to be turned. The scale is
-steeper than it looks: 0.6 is already four times as wide as 0.25, and the
-engraver refuses anything above 1.0. Nothing asserts the exact number — the
-tests only check a scale gets more room than the default and still fills its
-column.
-
-Staff size therefore only matters for an interval, which is two notes wide and
-never overflows. `DEFAULT_STAFF_SIZE` came down from 126 to **110** for exactly
-that reason: at 126 a two-note staff stood 258px tall on a desktop while a scale
-beside it stood 166px and a bar of rhythm 113px, so the notation was largest in
-the exercise showing the least of it. Because a scale is fitted to the column at
-every supported width, the same change provably leaves it alone — at both 126 and
-110 it renders 343×91 on a 375px phone — and a rhythm is fitted the same way in
-every metre but 2/4.
-
-Spacing is applied per render rather than once at startup, since one toolkit is
-shared by the whole app. `renderMei` sets the options immediately before the
-render they belong to, and everything from there to `renderToSVG` is
-synchronous, so no other render can interleave and pick up the wrong spacing.
-
-**A chord is one stack of noteheads on a keyless staff.** Keyless for the reason
-a scale is: the quality is read off the accidentals in front of the notes, and a
-key signature would answer half the question before it is asked. The hearing
-question engraves the chord and hides it with `@visible="false"` rather than
-leaving it out, so the staff is the same size before and after the answer.
-`CHORD_ANSWER_PROFILE` is the fixed page the _writing_ direction needs — the
-widest chord in the vocabulary engraves 41% wider than an empty bar, so without
-it the staff would shrink under the player's hands as accidentals arrived.
-Reading and hearing need no profile at all.
-
-### A phrase on the page — `melodicPhraseMei`, `melodicPhraseProfile`
-
-A five-line staff under a key signature, one `<measure>` per bar, each note
-taking its pitch from a list zipped against the note-symbols of `notateRhythm`.
-Three things are load-bearing and two of them are invisible when wrong, so
-`melodicVerovio.test.ts` pins all three:
-
-- **`measureAccidentals` resets at every barline.** It exists for precisely this
-  and had only ever seen one measure: `melodyMei` writes the whole of scale
-  degrees' answer as a single measure, so reusing it would have run one
-  accidental state across the entire phrase and printed a note bare that reads
-  as the pitch before it.
-- **The system breaks are encoded** — an `<sb/>` per system under
-  `breaks: 'encoded'`. Verovio otherwise breaks by what fits, so a half-written
-  phrase sits on one system and jumps to two the moment a bar fills, halving the
-  staff under the player's hands. That is the failure the fixed page exists to
-  stop, arriving by another door.
-- **The page reserves one system of the worst case**, not the whole phrase. The
-  reserve is what a player might still type — every beat of the bar divided into
-  a quintuplet, each note carrying a double accidental, under a seven-sharp
-  signature — and two of those side by side come out around 1300 units wide,
-  which a 375px phone scales to a staff of some 35px. So **one bar to a
-  system**, and a phrase is read down the page.
-
-The width is checked twice, and the second check is the one that bites. Nothing
-running off the page is the obvious test and it is not enough: Verovio _fits_ a
-system to the width it is given, so a page that is too narrow produces notation
-with no room between the notes rather than notation hanging off the edge —
-invisible to any measurement of where the ink stops. So the reserve is also
-compared against what the same music wants when it sizes its own page.
-
-`SCORE_BOX` has a sibling, `PHRASE_SCORE_BOX`, a little taller: two stacked
-systems at the single-staff ceiling come out around half the height one staff
-gets, which is the wrong way round for the thing that is _more_ to read.
-
-### Writing a rhythm down — `rhythmNotation.ts`
-
-This is the **spelling** half of a rhythm; `lib/music/rhythm.ts` holds the facts.
-Nothing decided here is ever graded. What it must be instead is readable and
-**stable**: the same impacts always spell the same way, and reading the impacts
-back off the spelling returns exactly what went in. `rhythmNotation.test.ts`
-asserts that round trip over every rhythm the generator can produce — the same
-trick `modeOf` plays on the scale generator.
-
-**There are no ties**, which is affordable only because tuplets are beat-local,
-and it is what keeps the keyboard down to one row of note values. There is no
-dotted sixteenth either: it is 22.5 ticks, and every impact is a whole number of
-them, so no gap can ever call for one.
-
-**A rhythm is engraved to a fixed page, not fitted to its content.** Every other
-example is engraved to its own width and then scaled down to the column — which
-is exactly wrong for a bar being typed into, because each keystroke widens the
-content, the column scales it down harder, and the staff shrinks under the
-player's hands. `rhythmProfile` pins `pageWidth` and `pageHeight` instead, so a
-note already placed never moves. Three things make it work: `breaks: 'auto'`
-(under `breaks: 'none'` Verovio ignores the width), a pinned height (left alone
-it grew the moment a beam appeared), and `rhythmMei` padding the unentered end
-of the bar with `<space>` so the measure keeps its full duration.
-
-**The padding cannot start inside a half-typed tuplet, and the tuplet has to
-finish the job itself.** `padding` writes plain values, every one of them a
-whole number of sixteenths from the barline — and a bracket leaves the write
-head nowhere near that: one triplet eighth in is 20 ticks, and nothing it can
-write would ever land on the grid again. So it wrote nothing, the measure came
-out short of its own duration, and Verovio — justifying the system to fill the
-fixed page — spread what little was there across the whole staff. One triplet
-eighth sat at 41% of the page and two at 30% and 63%, snapping back to 18% and
-28% the instant the third arrived: the bar opened out and closed again under
-the player's hands. `tupletSpaces` covers that stretch from _inside_ the
-bracket, in the units it borrows, so the write head `padding` is then asked
-about is always on a beat. `RhythmSymbol` gained a `space` kind for it —
-engraved in its place and drawn as nothing at all, never graded and never an
-impact, which is the same trick the unheard notes of a hearing question play
-with `@visible="false"`.
-
-**The page width is per metre.** It has to hold the densest bar the keyboard can
-produce — every sixteenth of every beat — since that is what a player might type
-whatever the question was. Sizing for the worst case in 5/4 and reusing it in
-2/4 would draw every 2/4 bar in the left third of a box twice as wide as it
-needs, halving the staff on a phone. Note spacing stays at the default here:
-widening it stretches the densest bar as much as the sparsest, so the page grows
-to match and the staff ends up smaller for no gain.
-
-A rhythm staff is **one line with a percussion clef** — there are no pitches to
-place — and stems point down so a bar filling with beams cannot push the line
-around.
-
-### A staff sized for the worst case has to be filled
-
-Both answer staves reserve a **fixed page** so the box and the staff size
-cannot move while an answer is typed — and the reserve is the widest thing that
-could ever be written into it: sixteen sixteenths, or a melody under seven
-accidentals with one on every note. A typical question uses about half of that,
-so the music sat hard against the left edge with an empty staff beside it.
-
-The page cannot simply shrink — the reserve is what a player may still type —
-so the system is stretched to fill it instead (`FILL_THE_PAGE`). Verovio leaves
-the _last_ system unjustified when it falls short of `minLastJustification` of
-the page, which is right for the final line of a piece and wrong for every
-example here, where the only system there is _is_ the last one.
-
-**What that costs is different for the two exercises.** A melody has one event
-per slot from the first keypress — `<space>` for the rest — so justification
-lands every note on exactly the same x at every stage, and nothing is given up.
-A rhythm has no fixed event count, since four sixteenths can replace one
-quarter, so its notes do shift as the bar fills. That is deliberate: how wide a
-finished bar will be is not knowable while it is being written, and a bar
-huddled in one corner of a staff reads worse than one that moves. The box and
-the staff size still never change, which was the jarring half.
-
-### An accidental holds until the barline
-
-`melodyMei` decides what to print against **what is currently in force on that
-staff position**, not against the key signature. The signature only says what
-stands before anything else has happened; after that, a printed accidental
-governs every later note on its own line or space, and its own octave alone.
-
-Getting this wrong is invisible to a type checker and nearly invisible on the
-page — a note silently inherits the accidental before it and reads as a
-different pitch. A B major melody touching A𝄪 and then A♯ drew the second one
-bare, so it read as another A𝄪, a whole tone out. Taking back a double
-accidental needs the cancelling glyph rather than a plain one: ♮♯, which MEI
-writes `ns` and SMuFL draws as a single character.
-
-This lives in `melodyMei` alone. An interval is two notes that may share a
-staff position deliberately — a harmonic unison is written as two noteheads
-each carrying its own accidental — and a scale is keyless, with every
-alteration printed by design. Both would be _wrong_ under barline rules, which
-is why the rule is not in `accidentalAttributes` where every caller would get
-it.
-
-### Engraved text takes the app's serif
-
-Verovio writes `font-family="Times, serif"` onto the inner `<svg>` of every
-render. `Score` overrides it with one `[&_svg]:font-serif` class, and every
-Verovio render in the app goes through `Score`, so that is the whole mechanism.
-
-It rests on two properties of Verovio's output, neither obvious and neither ours
-to control, so `rhythmVerovio.test.ts` pins both:
-
-- The font is a **presentation attribute**, which the cascade ranks below every
-  author rule — a plain class beats it with no `!important`. Emitted as
-  `style="…"` it would not budge.
-- **The only real `<text>` is staff labels.** Noteheads, rests, clefs, time
-  signatures and tuplet numbers are all glyph outlines, so restyling text cannot
-  reach the notation and turn it into type.
-
-Verovio still _lays the label out_ with Times metrics — it indents the system by
-exactly the width it measures, leaving no slack — so a swapped face that ran
-wider would be clipped by the inner `<svg>`, which has no `overflow`. EB Garamond
-is narrower than Times for both labels (0.99 and 0.97 of the width, against a
-1.15 ceiling), so there is room; a much longer label, or a change of face, is
-what would spend it.
-
-**The keyboard draws real Leland glyphs**, extracted from Verovio by
-`npm run glyphs` into `components/notation/glyphs.ts` and committed. Leland
-ships inside the wasm rather than as a font file, so there is nothing to subset,
-and the keyboard has to draw before the engraver has finished downloading. They
-were drawn by hand first and the rests gave that away: a quarter rest is a shape
-you cannot approximate and an eighth rest is not a "7". `NoteGlyph` places them
-from measured boxes, the way notation anchors them — a notehead's origin is its
-left edge, a rest's is the line it hangs from.
-
-## Audio — `src/lib/audio/`
-
-Sampled, not synthesised: ear training is about timbre as much as pitch, and a
-sine wave teaches you to recognise a sine wave. `smplr` streams **one instrument
-per kind of question** — a Steinway (`SplendidGrandPiano`) for anything pitched,
-and a drum kit for rhythm. **What a question is played on is not one of the
-things melina asks anyone to decide**: there is no instrument setting, no
-instrument in the stored settings, and no level that differs only by timbre.
-
-The kit is the LinnDrum (`LM-2`) rather than the TR-808, because its drums are
-sampled acoustic ones — the snare has a real transient and a short decay, so
-adjacent sixteenths stay separate instead of smearing. **Samples are named one
-by one, never by group**: smplr resolves a bare `snare` to whichever variation
-comes first in the manifest, and on the 808 that is the one with tone and snap
-wound to zero, which measures as a kick and sounds like one. The count-in uses
-sidesticks — a click, plainly not a drum being struck.
-
-Two rules the browser imposes, both easy to get wrong:
-
-- **An AudioContext must be created and resumed inside a user gesture.** That
-  gesture is the "Start round" tap, which calls `unlockAudio()`. Do this in the
-  handler itself, not in an effect afterwards.
-- A context can be **suspended again** whenever a tab is backgrounded, so
-  `playSequence` resumes defensively before every note.
-
-`playMelody` is the first question in the app that needs **two instruments at
-once** — a piano for the notes and the kit's sidesticks to count the bar in —
-and they share the one list of scheduled notes, because a melody and its own
-count-in are never wanted separately. It is also the most expensive preload
-there is, and still a preload: the exercise plays by itself the moment a
-question appears.
-
-`playInterval`, `playScale` and `playChord` are all thin wrappers over
-`playSequence`, which schedules a run of notes; a gap of zero is what makes an
-interval harmonic and is the same arithmetic that makes a chord a block. A
-scale is played faster and shorter than an interval — eight notes at interval pace
-is a series of separate notes rather than a scale, and a chord struck on its own
-rings longer than either, because there is nothing before or after it to place it
-against. `playChord` is what a guide's engraved example needs, where the chord is
-being shown rather than asked about; the hearing exercise goes through
-`playStruck` instead, because there whether the notes arrive together or one at a
-time is the difficulty axis its levels are built on.
-
-`playStruck` sounds a figured bass, and **when each note sounds is not decided
-in `engine.ts`**: `chordSchedule` is pure arithmetic over the question, the same
-split `playRhythm` makes with `rhythmSchedule`, so playback is checkable without
-a network or an AudioContext. It is not a small thing to get right — a question
-can carry several chords, and striking them all at once is a cluster rather than
-a reading, which is what it did at first. Two rules live there: **chords follow
-one another**, because a bass line is a succession and a suspension is a held
-chord and its resolution; and **a held bass is struck once**, ringing under both
-of its chords, because re-striking it would say the bass had moved, which is the
-one thing a suspension is defined by not doing.
-
-`playRhythm` counts a bar and then plays one. When everything sounds is pure
-arithmetic in `rhythmSchedule.ts`, deliberately kept out of `engine.ts` so it can
-be checked without a network or an AudioContext — otherwise the scheduling would
-be the one part of playback nothing could test. Whether the click keeps going
-under the bar being asked about (`MetronomeMode`) is a real difficulty axis
-rather than a preference: counted in and then left alone, you have to hold the
-pulse yourself, which is most of what rhythmic dictation is.
-
-**`instrument.stop()` does not stop what has not started yet.** smplr registers
-a voice only when its scheduler dispatches the note, ~200ms ahead, so stopping
-the instrument silences what is already sounding and leaves the rest of a scale,
-the second note of a melodic interval and a whole bar of drums queued to fire on
-time. The stop function `start` returns is the only handle that also drops a note
-from that queue, so the engine keeps one per scheduled note and `stopPlayback`
-calls all of them. It is synchronous for the same reason: called from a click or
-an effect cleanup, anything deferred to a promise can land after the _next_
-question has scheduled itself and cut that off instead.
-
-Nothing outlives the question it belongs to. `usePlayback` stops on unmount and
-whenever `sound` is rebound — which is every question change, and every move to
-the summary or the levels screen — and the replay control stops before it plays,
-inside the gesture, so it is pressable at any moment rather than only between
-sounds.
-
-Sample requests are cached at runtime (`melina-samples`), never precached — the
-piano is tens of megabytes, and a round of reading may never ask for it. `smplr`
-itself is a small lazy chunk and _is_ precached, so only the samples need the
-network. The drum kit is a few hundred kilobytes rather than tens of megabytes,
-which is why rhythmic dictation preloads it up front and passes `loadDrums` to
-`usePlayback`: without that it would quietly pull down the whole piano to play a
-snare.
-
-The player type is imported from smplr rather than declared by hand, so an
-upstream API change is a type error. Declaring it structurally hid the fact that
-`output.setVolume` had been deprecated in favour of `output.volume`.
-
-## The path is made of stations, not categories
-
-`stations()` in `config/curriculum.ts` derives the homescreen stops: a category
-with **built exercises contributes one station per exercise**, and one with
-nothing built yet contributes a single locked station for itself. Interval
-Reading and Interval Hearing are different games, so they get separate stops
-rather than one that has to guess which you meant.
-
-A station carries `titleKey` and `blurbKey`, not a title — the words come from
-`curriculum.json`.
-
-**The third braid merges too, and it is on the main line.** Chord Reading and
-Chord Hearing stand side by side — the two ways of knowing one chord, neither
-of them first — and Chord Writing sits below with both edges arriving at it,
-because writing one down needs both. Its guide stands at the head of the braid,
-since the names are a convention and a convention has to be told.
-
-Reading sits **right** and hearing **left**, which is forced rather than chosen:
-the route comes off the thoroughbass island on the right and every consecutive
-pair down the column has to cross the middle, or the path starts drifting one
-way. `pathLayout.test.ts` holds that, and it has no slack left.
-
-Adding a braid _below_ the merge is also what made the uneven-spacing guard
-measure the stagger between two level stations as though it were a gap — which
-is the case its own comment anticipated when it refused to find the merge by
-index. It now skips pairs that `standLevel` says stand side by side, and a
-second guard says that no two joined stations may stand level at all, which is
-the geometric rule the braid has always rested on.
-
-**The second braid merges.** Rhythmic Dictation and Scale Degrees stand side by
-side — the _when_ and the _what_, learnable in either order — and Melodic
-Dictation sits below them with both edges arriving at it, because it is the
-thing that needs both. It is the first station since the top of the path with
-two edges arriving, which is what the graph in `PATH_EDGES` exists to express.
-
-It sits **left of centre rather than on it**, to leave the right of the column
-free — which is where thoroughbass now stands.
-
-**The harmony run is a guide and two exercises**, and it went in as **two**
-stations on purpose: an even number leaves the parity of everything below it
-alone, so nothing under it had to change side and only the y coordinates moved.
-The explainer stands at its head for the reason the figured bass one does — a
-setting is marked against a list of prohibitions, and a player who was never
-shown the list is not being asked a hard question but an unfair one.
-
-**The path is in two pieces, and that is deliberate.** The journey runs from
-Interval Reading down to the daily round; thoroughbass sits beside it, its two
-stations joined to each other and to nothing else. Nothing leads in and nothing
-leads out, so the main route runs straight past it from Melodic Dictation to
-Harmonic Prediction. Drawing it into the line would claim it has to be done
-after melodic dictation and before harmony, which is true of neither: it is a
-subject you can take up alongside the journey rather than a stage of it.
-
-So "reach every station from the top" is no longer the property that guards the
-graph. What replaced it is that `PATH_EDGES` has **exactly two components** —
-the journey, and that pair — which still catches the thing the walk was for, a
-station left joined to nothing at all, and now also catches the island being
-quietly wired back into the line.
-
-Within the island the two are a chain rather than a braid, and the geometry is
-why: a braided pair stands level, and **two stations that stand level cannot
-also be joined**. Below about 150px of drop a connector has no room left between
-the label it leaves and the medallion it arrives at, and it draws as a stub or
-inverts entirely. So a pair either stands side by side with nothing between
-them, or runs downhill with a connector. `pathLayout.test.ts` catches this the
-moment a coordinate tries.
-
-`orderedPathNodes` sorts by `position.y`, **not** by the curriculum. The
-registry lists hearing before reading and the path puts reading first, so
-following the registry would tab a keyboard from the third station to the first
-and back down again. Layout owns the order things are walked in.
-
-Positions in `pathLayout.ts` are hand-placed by **station id**, so shipping an
-exercise means adding a coordinate. `orderedPathNodes` falls back to the end of
-the path for an unplaced station so nothing can silently vanish, and
-`pathLayout.test.ts` asserts the fallback is never actually reached.
-
-## Exercises — `src/exercises/`
-
-Twelve exercises — two reading/hearing pairs, one reading/writing pair, one
-trio, and three that stand alone — and the folders say which is which:
-
-- `shared/` is **exercise-agnostic**. The levels → setup → round → summary state
-  machine (`useRound`), the levels screen, the round screen, the summary, the
-  setup chips and the playable score all live here, generic over what is being
-  asked and what answers it. It must never learn what an interval or a mode is.
-- `interval-shared/` and `scale-shared/` bind that machinery to one subject: a
-  generator, a `RoundRules` object (how to build a round, what counts as right,
-  what to write into the attempt log), and thin round-screen and summary
-  wrappers that supply the right keyboard and the right names.
-- `interval-reading/`, `interval-hearing/`, `scale-reading/`, `scale-hearing/`
-  hold only what differs: settings, levels, a setup screen, and the component
-  that decides what notation to show.
-- `rhythm-dictation/` has no pair. It binds the same machinery to rhythms and
-  then supplies its own round screen, because the staff is where its _answer_
-  goes rather than where the question is.
-- `dictation-shared/` is what the two dictation exercises genuinely share: the
-  draft being typed into, and `buildBar`. Neither was written twice — the draft
-  moved here and grew two things when melodic dictation arrived, and the bar
-  builder moved untouched.
-- `melodic-dictation/` is the two halves at once, and is described below.
-- `thoroughbass-shared/`, `thoroughbass-figuring/` and `thoroughbass-realizing/`
-  are the third pair, and the first where the pair is reading and _writing_
-  rather than reading and hearing. See **Thoroughbass** below.
-- `chord-shared/`, `chord-reading/`, `chord-hearing/` and `chord-writing/` are
-  the first **three**: the same fact read, heard and written. See **Chords**
-  below.
-- `harmony-shared/` and `bass-dictation/` are the first exercise that hears a
-  whole _progression_ rather than a chord. The generator, the four-part setting,
-  the playback schedule, the settings and the attempt row live in the shared
-  folder because every harmony exercise after this one reads them; the exercise
-  folder holds the levels, the round screen and the setup. See **Harmony**.
-- `cadence-writing/` is the second exercise on that shared folder, and the first
-  anywhere here whose answer is **not compared against anything**: a cadence has
-  a dozen right settings, so it is marked by which rules were broken. It is also
-  what turned `harmony-shared/SetupScreen.tsx` into a shared screen — _which
-  progressions_ is the same question wherever one is heard or written, so it
-  takes a **patch** rather than a whole settings object and the exercise's own
-  sections arrive as `children`. See **Kadenz aussetzen**.
-- `chord-entry/` is what thoroughbass realising and chord writing genuinely
-  share — the draft a chord is pressed into — the way `dictation-shared/` is
-  what the two dictations share. `ChordKeyboard` reads it, and `voicing.ts`
-  moved to `lib/music/` when a second exercise needed it, because where a note
-  sits is a fact about music rather than about either exercise.
-- `satb-entry/` is `chord-entry/`'s sibling rather than its replacement: there a
-  chord is a _set_ of notes and `voiceChord` places them, here which voice sings
-  which note is the answer and the octave is half of what is graded. See **The
-  answer surface**.
-
-Within a pair, reading and hearing differ only in what notation they show and
-whether there is a play button beside it, so anything else belongs one level up.
-When a third pair arrives, generalise `shared/` rather than copying a sibling.
-
-**Rhythmic dictation is the exercise that says which parts of `shared/` are
-really generic**, and it fits without changing any of them: `useRound`,
-`RoundScreen`, `RoundSummary`, `LevelsScreen` and `usePlayback` all took it as
-written. What it needed instead were three escape hatches, each earned —
-`RoundScreen` takes a whole `score` node for a screen whose notation is not the
-question, `RoundSummary` groups by a caller-supplied label because a bar has no
-name to group by, and `usePlayback` takes the instrument to preload. Prefer that
-shape over widening a shared component's idea of what a question is.
-
-**A string read by a shared screen may not name what only one exercise asks
-about.** The Custom row said "choose the clefs, keys and intervals" and the
-play button was labelled "Play the interval again" — on screens that ask about
-modes. `ScaleExercise.test.tsx` walks the levels, settings and round screens
-and fails on the word "interval", in visible text _and_ in accessible names,
-because an icon-only button says nothing in its text.
-
-**Levels are the landing screen**, not the settings form. Each exercise defines
-a `difficulties.ts` of named presets, and picking one starts a round in the same
-tap — the presets exist so that practising is one tap rather than a trip through
-six sets of checkboxes. Custom is last and opens the full settings screen. They
-are levels, not a difficulty ladder: "Descending" is not harder than "Flat Keys",
-it is a different weakness.
-
-A preset is an id and a settings object; its name and one-line description live in
-`levels.json` under `<group>.<id>`, where the group names the _exercise_
-(`scale-reading`), not the kind — interval reading and scale reading are both
-"reading" and share nothing else.
-
-Levels are data, so `shared/difficulties.test.ts` checks what types cannot — that
-every preset names real clefs, keys, intervals, modes and tonics, is named and
-described in every language, round-trips through the defensive settings parser
-unchanged, and actually generates a **full** round. A level too narrow to place
-its intervals, or whose modes will not spell on any of its tonics, would
-otherwise serve a short round in silence.
-
-`staffOnly` narrows a clef to its five lines, removing ledger lines entirely —
-the difference between reading an interval and counting lines above the staff.
-Because that range is barely more than an octave, `generateRound` retries
-without it rather than dropping a wide interval from the round.
-
-**Hearing offers only intervals that sound different from one another** —
-`HEARABLE_INTERVAL_KEYS` in `lib/music/catalog.ts`. Spelling is inaudible: an
-augmented second _is_ a minor third to the ear, a diminished second _is_ a
-perfect unison. Offering both names for one sound makes a question unanswerable
-however well you listen, so the set holds exactly one interval per semitone
-count. Six semitones has no plain spelling, so the tritone is the augmented
-fourth and the diminished fifth is dropped. `catalog.test.ts` enforces the
-uniqueness property rather than the list, so a well-meant addition fails loudly.
-Reading is unaffected — there the spelling is on the page to be read.
-
-**The affordance is a mark on the staff, not a caption under it.** A line
-reading "tap the notes to hear them" spent a whole row of the screen on
-something learnt once, and on a short screen that row came out of the
-notation's height — the scarcest thing on the round screen. A faint speaker in
-the corner of the staff says it where the thing it describes already is, sits
-over the notation rather than beside it, and still carries the two states the
-caption did: the samples arriving, and playback having failed. Everything above
-the staff is tighter on a small screen for the same reason — the prompt is read
-once per question and gives up its air before the notation gives up any height.
-
-**The staff is bounded by the room left for it, never by a slice of the
-viewport alone** — `SCORE_BOX` in `exercises/shared/scoreBox.ts`. A
-`max-h-[Ndvh]` cap cannot know what the prompt above and the feedback below
-have taken, and on a screen where the remainder came out under that fraction
-the notation grew past its box: because the column centres its children, it
-spilled from _both_ ends at once, swallowing the prompt at the top and being
-painted over by the Next button at the bottom. The height has to come down the
-flex chain instead — `h-full` on the box so its height is definite, `min-h-0`
-on every ancestor so they may shrink, `items-stretch` on the row so the box is
-given the height rather than centred at its content's. Only then does the
-SVG's own `max-h-full` mean anything; without a definite parent it resolves to
-nothing and the drawing sizes the box that was supposed to size it.
-
-**The notation is the play button.** Pressing the staff sounds it, rather
-than a control beside it — the notation _is_ what is being played. It is
-pressable only when every note is on screen: a hearing question at any time,
-a reading question once its answer is out, since before that the sound would
-answer it. Rhythmic dictation is the one exception, and the reason is the
-same rule read backwards: there the staff is where the answer is going, and
-pressing your own half-finished answer to hear the question would be
-backwards, so its replay control stands on its own above the bar. A muted caption under the staff carries the affordance and doubles
-as the place that says the samples are downloading or that playback failed;
-its height is reserved either way, so revealing an answer does not move the
-staff. `usePlayback` holds the whole of it — the gesture the AudioContext
-needs, the status, and the failure that has to leave a round playable in
-silence.
-
-Reading exercises fetch their samples on that first press rather than up
-front. The piano is tens of megabytes and most reading rounds never ask for
-it; a hearing exercise preloads, because it plays by itself.
-
-**Nothing advances by itself, not even a right answer.** A correct one used
-to move on after three quarters of a second, which read as brisk and quietly
-took away the thing the reveal exists for: on a reading or a writing question
-the staff becomes pressable only when the answer is out, so that moment is the
-_first_ one at which the music can be heard at all, and a screen that leaves on
-its own spends it. Knowing what you wrote and hearing it are different things,
-and the second is most of why you wrote it down. So both verdicts wait to be
-dismissed and the difference between them is what is said rather than how long
-it stays — which is also what left `reducedMotion` with nothing to gate on a
-round screen, since there is no longer a duration to switch off.
-
-**The frame around the notation is the same whether or not it is pressable**,
-and that is load-bearing rather than tidiness. It used not to be: a plain score
-was a direct child of the stretching row, so a box capped below the room
-available sat at the _top_ of it, while the button branch centred its contents
-and took a little width for its own padding. Since a reading question's play
-button appears only when the answer does, the notation **shifted and resized at
-the exact moment the answer arrived**. Nothing showed it up while one staff was
-ever on screen at a time; two staves side by side made it obvious, one drawn
-higher and larger than the other. jsdom has no layout engine, so what
-`PlayableScore.test.tsx` holds instead is the thing that decided it: both
-branches wrap the score in one shared frame, and the button may only add hover
-and press feedback on top.
-
-`PlayDirection` (`harmonic | ascending | descending`) decides three things at
-once: how the interval is played, how it is engraved, and **which note is on
-screen before the answer**. The note heard first is the note shown first, so a
-descending interval reveals its upper note and everything else its lower one —
-that rule lives in `leadingNote()` and nowhere else. Scales follow the same rule
-through `firstNote()`: ascending starts on the tonic, descending on the octave
-above it. There is no harmonic option for a scale — eight notes at once is a
-cluster.
-
-**Every mode sounds different from every other**, so scale hearing needs no
-equivalent of `HEARABLE_INTERVAL_KEYS`; `scale.test.ts` asserts that property
-rather than assuming it. What scale hearing has instead is which modes are set
-_against_ each other: lydian alone is unmistakable, lydian beside ionian is one
-raised note. Melodic minor is the one that comes close, and what holds it apart
-is the direction it is asked in rather than leaving it out — `modeDirections`
-drops it from a descending round entirely rather than turning it round quietly,
-because the direction is what the attempt log records and what a level's own
-accuracy filter looks for.
-
-On a keyless staff **the tonic decides how much ink is on the page** — B♭ locrian
-prints seven accidentals in eight notes — which is why tonics are a setting and a
-level axis of their own.
-
-### Writing the answer — rhythmic dictation
-
-The first exercise where the answer is **written rather than chosen**, and so
-the first with no fixed set of answers at all.
-
-**The draft is the keys that were pressed, not the impacts they imply.** The
-staff has to show what the player wrote — someone who enters a quarter rest
-should see a quarter rest — so `RhythmDraft` keeps the entries and derives the
-impacts for grading. Only the impacts are graded, which is why choosing a rest
-over a held note can never be wrong.
-
-**The bar answers itself when it is exactly full.** There is no confirm key:
-every key that would overflow the bar is disabled instead, so the only press
-left is the one that completes it, and backspace covers everything before that.
-The submit rides on the shared screen's `onAnswer`, which is what gives it the
-same answer timing every other exercise is measured with.
-
-The keyboard is **modes, not keys**: sixteenth-through-whole times note-or-rest
-times plain-or-dotted is thirty keys, and thirty keys is a form rather than an
-instrument. Rest and dotted **mean exactly the next key** and switch themselves
-off once a value is entered, so half a bar cannot come out as rests because a
-switch was still down. The tuplet switch is not one of them — a bracket changes
-how long a value lasts, so it belongs to the draft, which is the thing that
-knows where the beat boundaries are, and it stays on until its beat is full.
-
-**The beat is what ends a bracket, not the division changing.** A bracket is
-beat-local, so two triplets in a row are two brackets that both say `3`;
-gathering the draft's entries by division alone ran them together into one
-node, and what came out was six notes under a single beam and a single `3` —
-a sextuplet, which is not what was typed and not what was heard. `draftNodes`
-closes a run at its own beat for that reason. The generated answer never had
-the bug, because `notateRhythm` spells a tuplet beat at a time by
-construction.
-
-A level's `cellWeights` does two jobs with one field: a group at `0` is not in
-the level at all, and the rest are relative likelihoods. That is deliberate —
-"which subdivisions" and "how often" are the same question, and splitting them
-into a list and a table would let the two disagree.
-
-### Melodic dictation — the culmination of the two beside it
-
-Hear a phrase, see its first note, write down the rest. **Nothing underneath it
-was new**: the bar builder, the degree model, the round machinery, the playback
-hook and the attempt log all took it as written, and what it needed instead were
-three widenings, each earned — a degree gained an octave, a rhythm gained bars,
-and `RoundSummary`'s `answerName` was given the whole answer rather than only
-what was chosen.
-
-**Correctness is two independent facts.** The impacts are in the right places,
-bar by bar (`samePhrase`), and the notes are the right notes **by sound**
-(`sameSounds`). Everything the player had to decide that could not be heard —
-how a rhythm was spelled, how a note was spelled — is a decision that cannot
-cost them the answer. `♯4` and `♭5` are one note, and so are a held quarter and
-a quarter followed by a rest.
-
-**That second one is only true because playback is legato.** Every note rings
-until the next impact begins. A half note that damped where a quarter-and-a-rest
-did not would make the spelling audible, and a player could then be marked right
-for writing down something other than what they heard. `melodyDurations` is that
-rule, and `rhythmSchedule.test.ts` holds it — including across a barline, which
-is the case that lets the tie go.
-
-**The first note's pitch is given as a placeholder, not as a note.** It is drawn
-greyed on the staff, the way a form field shows what goes in it, and the first
-thing typed replaces it. The draft itself starts empty, so the player writes
-every note including the first.
-
-Only the pitch. An earlier version seeded the draft with the leading symbol of
-the answer's own spelling and locked it against backspace, which gave away the
-note's _length_ as well — and the length is exactly the thing there is to hear.
-A draft entry is a written value, so there was no way to seed one without
-saying how long it was; a placeholder on the staff is not an entry, and can say
-one without the other. It is a plain quarter note whatever the answer is.
-
-Marked by `@type="placeholder"`, which Verovio copies into the rendered
-element's `class`, so how faint it is stays in the styling rather than being a
-colour written into the MEI. **Faded with `opacity`, not coloured** — see
-`placeholderClasses.ts`. Verovio ships its own stylesheet inside every render
-containing `#<id> path { stroke: currentColor }`, an _ID_ selector that beats
-any class rule of ours, and a stem is a `<path>` with no stroke of its own; so
-setting `stroke` on the note group reached the noteheads and left every stem
-full black. Opacity is not a property that rule touches, and it is what "greyed
-out" means here anyway: the ink of a real note, faded.
-
-**Ledger lines need a second rule, because they are a second element.** Verovio
-draws them as `<g class="ledgerLines">` inside the _staff_, a sibling of the
-layer rather than a child of the note that needs them, so nothing scoped to the
-note can reach them. Fading every ledger line on the staff is exact rather than
-approximate only because of when it is applied: while the placeholder is
-showing it is the only note there, so every ledger line drawn belongs to it.
-Once anything is written the rule comes off, or a wrong answer would show its
-own ledger lines — and the correct answer's — faded.
-
-Beat one of bar one is still always struck — the placeholder needs somewhere to
-stand — and a phrase still has more than one impact, now because a one-note
-phrase is not a melody rather than because the hint would have answered it.
-
-### How far a melody leaps — `lib/music/contour.ts`
-
-A generator that draws each note independently of the last produces a line that
-jumps about, which is neither musical nor, for dictation, honest: the difficulty
-would come from the leaps rather than from the degrees or the subdivisions the
-level names. So the next note is drawn against a weight that falls away with
-distance from the last one. **Two shapes**, and a level picks one:
-
-- **`steady`** — one spread of intervals, the same at every note. Steps common,
-  thirds ordinary, wide leaps rare, and the rhythm has no say.
-- **`paced`** — **the time to the next note sets the spread.** A quick note
-  steps; a long one may leap. The weight is an exponential centred on the last
-  note whose _width_ is a power of the gap in beats, so a long gap is the same
-  shape smeared out rather than a different shape.
-
-Paced is how melodies are actually written and actually sung — a run of
-sixteenths that leaps a seventh at every note is unsingable and unhearable,
-while the same leap after a half note is ordinary. Steady is kept because it is
-a _harder_ line to hear rather than a worse one, and Leaps is the level for it.
-
-Measured, the curve is about 2 semitones wide at a sixteenth and 9 at a half
-note; the table in `contour.ts` carries the rest, and the constants are meant to
-be turned. Three properties are not: **every interval keeps a non-zero weight**
-(a `floor`, because an exponential underflows at a small width and a wide leap,
-and a level whose far notes could never be drawn is quietly narrower than it
-says), the curve is **symmetrical** (which way a line goes is decided
-elsewhere), and a **repeated note is notched down** — legal, since the rhythm
-tells two notes on one pitch apart, but a line that keeps sitting still is not
-asking anything. The notch has to be deep because the pool is _notes_ rather
-than intervals: the nearest neighbours in a diatonic range are a semitone or two
-away, and at a short gap the curve has barely fallen by then.
-
-`contour.test.ts` asserts the properties rather than the numbers, and
-`melodic-dictation/generate.test.ts` measures the melodies that actually come
-out — the same reasoning as rhythmic dictation's mixture test, since a weight
-that is right on paper and never reaches a bar is a weight that does nothing.
-
-**It is also explained in the app**, at `/guide/melodic-shape`, reached from the
-question mark in the corner of the Melodic shape setting — one line of hint
-cannot explain a probability model. See below.
-
-**The rhythm is generated before the pitches, and that ordering is load-bearing
-now**: `paced` needs to know how long each note has, which is a fact about the
-bars.
-
-**The vocabulary is a contiguous run of scale steps**, `low` to `high`, and the
-run _is_ the keyboard: one key per step. A range rather than a set because a
-melody moves through its range rather than picking out of it, and because two
-ends is one thing to choose where a set is seven. It caps the key count
-structurally — `MAX_STEPS` is 13 — and it reuses `stepNotes`, so a melody is
-still drawn as **notes rather than names** and can never be asked to distinguish
-two spellings of one sound.
-
-**Two bars ship and four do not.** One bar to a system is what keeps the staff
-the size rhythmic dictation's is, so four bars is four systems, and four systems
-in the room the notation gets on a phone is smaller than anyone can read. It
-stays a Custom setting rather than a level that looks fine on a desk.
-
-The keyboard is three rows, and the middle one is what makes writing a melody
-one press per note. The switches on top mean the next key only — the two
-accidentals, the dot, the tuplet brackets. **The note value is a mode that
-stays**: a bar of eighths is eight presses of the same length, and a value that
-let go after every note would double the work of writing anything down. Then the
-notes, one key per step, plus a rest.
-
-**Each pitch key draws the note that pressing it would write**, at the armed
-value and dots — arm a dotted half and the keys become dotted halves. That is
-what makes the value row legible without reading it: the mode is visible in the
-thing it modifies rather than only in the switch that set it. `MiniStaff` holds
-its last picture rather than blanking while the new one engraves, because
-redrawing a whole row on a value change otherwise flickers under the hand that
-just pressed it.
-
-**The armed value falls back rather than going dead.** Three beats into a bar of
-four with a half note armed, nothing on the bottom row could be pressed; instead
-the largest value that _does_ fit is used for this press, and the player's own
-choice returns the moment there is room for it again. The row highlights what
-will actually be written, since that is the honest thing for it to say. A
-keyboard where every key is grey and nothing says why is the worst of the
-available behaviours.
-
-The summary is the one place the two halves separate again. Grading is a single
-verdict, but a melody can be right in its rhythm and wrong in its notes or the
-reverse, and "you had the rhythm" is the most useful thing there is to read
-back — which is why `answerName` sees the question as well as the answer.
-
-### Thoroughbass — a figure is not a chord
-
-Two exercises, mirroring each other: **Figuring** (`thoroughbass/figuring`, in
-German _beziffern_) shows a bass note with the chord above it and asks for the
-figure; **Realising** (`thoroughbass/realizing`, _aussetzen_) shows the figure
-and asks for the chord. The first reading-and-**writing** pair rather than a
-reading-and-hearing one, which is why the braid metaphor still holds — a figure
-and the chord it stands for are one fact read from either end.
-
-Ground truth is Grove's article on Thoroughbass, and every rule below that is
-quoted comes from it.
+**A chord is a stack of thirds above a root, spelled**: four triads and five
+sevenths — the list German Hochschulen ask for. Qualities are stored as
+intervals from the root, so B♭ half-diminished is B♭ D♭ F♭ A♭. A sibling of
+`figuredBass.ts`, not a replacement: a figure is arithmetic above a bass; root,
+quality and inversion are what _naming_ says.
+
+**Inversion is which member is lowest; Lage is which is highest**; the rest
+fills in cyclically. `closePosition` is the Lage stacking straight up gives.
+
+**A chord may need one double accidental, never two** (C°7 _is_ B𝄫);
+`isCleanChord` computes it. **The augmented triad and fully diminished seventh
+have no audible inversion**: `isSymmetric` computes that from the semitone
+pattern, and `hearableInversions` offers root position alone for them.
+`readChord` reads a stack back. `inversionFigure` is the one table (`5/3`, `6`,
+`6/4`, `7`, `6/5`, `4/3`, `2`) and carries no accidentals.
+
+### Where a chord's notes sit — `voicing.ts`
+
+The one place that decides, read by staff, verdict and keyboard alike.
+
+- **Close position**: each note at the lowest place above the one before, in
+  the order given — so the player shapes the chord by press order, and a Lage is
+  voiced by handing its top member last.
+- **A chord after another sits nearest to it**: its first (lowest) note goes at
+  the octave closest to where the previous chord began. A close chord is
+  positioned entirely by its lowest note, so this is the whole of the voice
+  leading, and a 4–3 resolves by a step.
+- **An opening chord starts low** (`openingPitch`): the first note goes at the
+  octave within three staff steps of the clef's bottom line — B3–A4 treble,
+  D2–C3 bass — so a close seventh chord built upward stays on the staff. Opened
+  mid-staff, a chord had to be moved down an octave while it was being typed.
+- `ontoTheStaff` moves a whole chord by an octave only if it would leave the
+  clef's range.
+
+**A note already on the staff never moves when the next one arrives**, which is
+why the anchor is the first note rather than the chord's centre. `voiceChords`
+threads the reference along a succession, and **everything that builds a
+question uses it**, including reading a row back out of the attempt log.
+
+### Figured bass — `figuredBass.ts`
+
+Ground truth is Grove's article on Thoroughbass.
 
 **A figure is interval arithmetic above a bass, read through a key signature**
-— never the name of a chord. `6` does not mean "first inversion"; it means _a
-sixth above this bass, spelled as the key spells it_. That single sentence is
-why `lib/music/figuredBass.ts` needs **no chord model at all**: no root, no
-quality, no inversion, no roman numeral. Resolution is a walk up the letters
-from the bass, asking `alterationInKey` what each one is — the same shape
-`degree.ts` already has, where a degree names a note in a mode and a figure
-names a note above a bass. Roots and inversions belong to harmonic _analysis_,
-which is a different subject, and admitting them would double the model for
-nothing.
-
-**A question is a bass line, and one chord is a line of length one** — the same
-move `phrase.ts` made. A `BassEvent` holds a bass note and a _list_ of figures,
-so a suspension (`4–3`, two figures under one bass note) grows one field and
-continuation lines grow another. Neither is built; both are already expressible,
-which is what the shape is for.
-
-**Two things a figure leaves out, and both are computed rather than tabulated
-twice.** `STACKS` is the one table there is — the complete sonorities a written
-figure abbreviates — and it is a table because the convention _is_ a convention,
-not something arithmetic can recover: Grove states it case by case. Everything
-else falls out of it. `expandFigure` picks the first stack containing every
-number written, so a bare `6` reads as 6/3 and a lone accidental reads as a
-plain triad with an altered third. `canonicalFigures` runs it backwards.
-
-**Grading is canonical, not merely correct.** A figure that resolves to the
-right notes is not enough — writing `6/3` under a plain first inversion is
-exactly what "a wholesome rule forbids … any Figure not absolutely necessary"
-is about, and learning the omissions is most of learning to figure at all. Two
-consequences:
-
-- It accepts a **set**, because two forms are genuinely current for the third
-  inversion: Grove blesses the bare `2` while `4/2` is the standard modern
-  spelling. Accepting both is not the same as accepting a redundant figure.
-- The full form becomes legitimate for a figure that **follows another on the
-  same bass note**, which is a fact about the question rather than a setting.
-  `afterAnother` carries it.
-
-**A line carrying an accidental is always written**, whatever the abbreviation
-would drop, and that one rule is where the bare `♯` comes from: a plain triad
-abbreviates to nothing at all, so an altered third leaves only its sign behind.
-The bare accidental therefore needs no key of its own on the keyboard and no
-special case in the model — it is what an armed accidental with no digit after
-it already means.
-
-**`♯` and `♭` shift a semitone from what the key gives, not absolutely.** Grove's
-own example settles it: with the signature of G major and an E♭ bass, `♭5` is
-B♭, taken down from the B♮ the signature spells. `♮` is the exception — it asks
-for the natural note whatever the key says — which is also why a `♮` in a key
-that already spells the note natural is _not_ a figure, and the generator
-refuses to produce one.
-
-**The property that makes figuring answerable** is that no written figure ever
-stands for two different chords over the same bass; under canonical-required
-grading, a chord admitting two figurings is a question with two right answers
-and one of them marked wrong. `figuredBass.test.ts` enforces it as a property
-over every figure and key the levels offer, the same way `catalog.test.ts` does
-for hearable intervals. It holds only because a pitch here is a spelling: `♯5`
-over C is G♯ and `♭6` is A♭, one sound under two written notes, and the staff
-says which.
-
-**The generator derives each question's figure from its notes**, not the other
-way round. A level names a figure to aim for, that figure is resolved against a
-bass, and the question then asks for whatever `preferredFigure` says the
-conventional spelling of those notes is — so a question can never ask for
-something grading would reject. The bass is drawn from the notes of the key,
-which is the whole of keeping a sonority sensible: a figure with no accidental
-resolves to what the signature spells, so nothing from nowhere can come out, and
-no table of which figure suits which degree is needed.
-
-**A figure cannot need more than a double accidental.** The key alters a letter
-by at most one and the figure shifts it by at most one more, so unlike
-`transpose` there is no "retry with another root" here and no level can be
-quietly narrower than it says. Discovered by the test, not reasoned out first.
-
-**Correctness in the realising direction is the set of pitch classes above the
-bass, and nothing more** — octave, order and spacing are the player's, because
-the figure genuinely underdetermines them. `voiceChord` is the single place that
-decides where the notes actually sit, read by both the staff and the verdict so
-the two cannot disagree about what was written.
-
-**A close-position chord is positioned entirely by its lowest note**, and that
-one fact is the whole of the voice leading: a chord's first note — which is
-therefore its lowest — goes at the octave nearest to where the chord before it
-began, so moving that note the least moves the chord the least. No matching of
-voices is needed, and it comes out right for every suspension because the third
-comes first in the stack and the third is usually the common tone.
-
-It used to place every chord from one fixed floor, strictly above it, which went
-wrong twice over. A 4–3 leapt an octave **upward** instead of resolving by a
-semitone — the B of the resolution could not sit on a B floor, so it jumped —
-and a lone triad's register depended on which letter happened to be lowest, so a
-chord over G sat a sixth above one over C and two questions in a row were drawn
-in quite different places for no reason a player could see.
-
-**Anchoring on the first note rather than on the chord's centre is deliberate.**
-Centring reads better and would move notes already on the staff, because the
-player builds a chord one key at a time and the app cannot know what is still to
-come. Anchoring settles the octave on the first press and nothing afterwards
-unsettles it.
-
-`voiceChords` threads the reference along a whole succession, and **everything
-that builds a question has to use it** — the generator, and the way back out of
-the attempt log. Reading a row back without it rebuilds the same notes in
-different places, which is a row disagreeing with the notation it produced; the
-round-trip test catches exactly that.
-
-**A wrong chord is not replaced by the right one.** Swapping one for the other
-says you were wrong and says nothing else; what is worth seeing is which note
-moved, and that needs both on the page at once. `GrandStaffScore` takes an
-`answer` and draws the two side by side, each named under its own staff. They
-are separate renders rather than two measures of one, because the first measure
-of a system starts after the clef and the signature — two measures are not
-evenly split, so a caption row under them would not line up with what it names.
-
-The play button goes on the right-hand one only. Realising sounds nothing while
-the question is up, since the chord _is_ the answer, so after a wrong one the
-thing the player has not yet heard is the chord that was wanted; two play
-buttons side by side would be two ways of asking which.
-
-### A suspension is two figures under one bass note
-
-Span rather than vocabulary, and the model was built for it: a `BassEvent`
-holds a _list_ of figures, so the shape did not change. Three things did.
-
-**A figure following another writes only the line that moved.** `4 3` is 5/4
-then 5/3, and the second is written `3` because the 5 did not go anywhere.
-Without that rule the resolution would have to be written as an unfigured bass,
-which is not something a dash can be followed by. `canonicalFigures` takes a
-`previous` and puts that difference form first; the ordinary spellings stay
-accepted, so writing the resolution out in full is right but not what gets
-printed. It is also what refuses a suspension that does not suspend: a chord
-that moved nothing has no difference form, so it cannot come out as the figure
-that was asked for and the generator tries another bass.
-
-**A bare `4` is a suspended fourth, not a six-four.** Grove is explicit — "4 3
-is always understood to mean 5/4 then 5/3 … in contradistinction to 6/4 then
-5/3" — so `[5, 4]` has to be found before `[6, 4]`, which a written `6/4` still
-reaches because the first of them holds no 6. `[8, 5, 3]` is there for the same
-reason: a ninth resolves into its octave, and the 8 lands on the bass's own
-letter, which is exactly what it means.
-
-**A chord per figure, not per bass note.** `chords` is parallel to `figures` and
-`notes`, one whole note or two halves in the measure, and the realising draft
-counts its slots per _figure_ and flattens them across the bass notes. The page
-is sized by how many chords are drawn rather than how many bass notes there
-are — sized for one, the measure came out so tight that the first chord of a
-suspension was drawn over the clef.
-
-**2–3 is deliberately absent.** It is the one suspension in which the _bass_ is
-the dissonance and resolves downward, so it cannot be written under a single
-held bass note: it needs a bass that moves, which is a bass line and not a
-suspension. Faking it with a stationary bass would teach the wrong thing.
-
-The verdict line has to check **every** figure under the bass. Checking the
-first alone calls a suspension whose resolution went wrong a spelling slip,
-when the player has written a different second chord.
-
-### A bass line is the same question, several times over
-
-`events` was in the model from the start and nothing underneath had to change
-for it: `buildQuestion` already looped, `thoroughbassMei` already wrote one
-measure per bass note, the figuring draft already finished one bass note at a
-time, and the realising draft already flattened its slots. What it needed was a
-setting, two levels, and a look at whether it reads.
-
-**Four bass notes fit on a desk and not on a phone.** The staff is fitted to the
-column, so every bass note added takes width from the ones already there — the
-same call melodic dictation made about its fourth bar, and the same answer:
-`EVENT_COUNTS` goes to four, the levels stop at three.
-
-**Barlines stay invisible between them.** A figured bass here is a succession of
-sonorities rather than a piece of music, and a reader tells a suspension from a
-line by the bass: one bass note under two chords against two bass notes under
-one each.
-
-**The rule of the octave is not this.** A bass line here is a succession of
-figures to read, not a progression — the rule of the octave is a tabulated
-convention about which figure belongs on which degree of a scalewise bass, which
-is a different kind of content and is not built.
-
-**A row keeps the bass line and the figures and nothing else.** The chord is
-what the figure resolves to, so storing it would be a second copy that could
-disagree. There is no clef either — a grand staff is not in one — and `root`
-and `figure` are facets only where there is a single bass note, so a line of
-several drops out of every filter naming either, exactly as a rhythm drops out
-of every filter that asks about pitch.
-
-### The grand staff and the figures — `thoroughbassMei`, `thoroughbassProfile`
-
-Three things are load-bearing and all three are pinned by
-`thoroughbassVerovio.test.ts`, because in each case Verovio gets it wrong
-_quietly_ — the MEI validates, the render succeeds, and the thing is simply not
-on the page.
-
-- **The brace is a `<grpSym>` child, not a `@symbol` on the `<staffGrp>`.** The
-  attribute form is accepted and draws nothing.
-- **An accidental inside a figure must be the character**, `♯`, not
-  `<accid accid="s"/>`, which is accepted and then dropped.
-- **`@extender` draws no line**, in context or alone. MEI has it on an `<f>`
-  for exactly this and Verovio accepts it; nothing comes out. So the dash that
-  joins a suspension's two figures — `4 – 3`, which is what the keyboard's dash
-  key types and therefore has to be visible — is **part of the figure's text**,
-  appended by `figureLines` when another figure follows under the same bass.
-  The test asserts the engraver's silence, so it starts failing on the day
-  Verovio grows a real extender and this can stop faking it.
-
-  A true Verlängerungszeichen, held across a _moving_ bass, is still out of
-  reach for the same reason — and that is what blocks continuation lines, rather
-  than anything in the model.
-
-**A figure is centred under its bass note by moving the text, because Verovio
-will not do it.** It offers no option for the horizontal placement of a
-`<harm>`, and where it puts one depends on how the harm was anchored: by
-`@startid` it puts the _left edge_ of the text on the notehead's **centre**,
-and by a timestamp it puts that left edge on the note's own left edge. Neither
-is centred, they are 101 units apart, and a question carrying a suspension
-beside a plain bass note used one of each — so its figures were visibly out of
-line with one another.
-
-So **every figure is anchored by timestamp**, which is what a suspension needs
-anyway, and `centreFigures` then re-anchors the text: `text-anchor="middle"` at
-the notehead's middle, which lets the browser do the measuring and comes out
-exact for a figure of any width. Only `<text x>` moves; nothing is re-engraved.
-**What is centred is the figure, not the text** — `4 – 3` writes a dash running
-toward the chord it resolves into, so centring all of that would drag the `4`
-off to the left of its own note, and a continuing line is pushed half a dash
-further right instead.
-
-Both of the numbers that takes are **measured, not derived**: half a notehead is
-0.747 staff gaps and half of what the dash adds is 0.842, read off `getBBox()`
-in a real browser, because the width of a drawn glyph is nowhere in the SVG — a
-notehead is a `<use>` of a symbol and a figure is `<text>`, and neither carries
-one. `figureAlignment.test.ts` therefore cannot check that anything is centred.
-What it holds instead is everything the measurement rested on, so that the day
-the engraver's placement changes the numbers are taken again rather than
-quietly wrong.
-
-**One measure per bass note**, so there is no metre to declare and no bar to
-fill: a figured bass here is a succession of sonorities rather than a piece of
-music, and a time signature would be drawn on the page. Accidentals go through
-`accidentalAttributes` rather than `measureAccidentals`, and that is right
-rather than a shortcut — the barline rule is about successive notes on one
-staff, and here every measure holds one sonority per staff.
-
-**Verovio draws a figure's accidental as a character in the Leipzig font, which
-no browser has.** `<f>♯6</f>` comes out as
-`<tspan font-family="Leipzig">U+EA66</tspan>` — the SMuFL _figured-bass_ sharp,
-which is the right glyph, with nothing to render it with. Only
-`smuflTextFont: 'embedded'` inlines the font, and it is worth knowing the cost
-because the number is surprising: a render with plain digits is 6.7 KB and the
-first accidental takes it to **65 KB** — the whole text font, not a subset, so
-one accidental and three cost the same. The price is paid per render and only by
-a figure that carries one. The fix, when it is worth doing, is the trick
-`npm run glyphs` already uses for Leland: lift the font out at build time,
-self-host it, and switch to `linked`.
-
-**The brace is drawn outside the system it joins**, at x = -432 in a render's
-own units. Against the app's usual page margin of 12 that lands at -312 and the
-inner `<svg>`, which has no `overflow`, clips it away — leaving three short
-strokes at the left edge that read as a rendering fault. This is the only
-profile that moves `pageMarginLeft`, and the page width carries the same amount
-again so the music is not narrowed.
-
-**`pageWidth` and `pageHeight` are a tenth of the viewBox units a render
-reports.** Calibrating by reading a natural size off the viewBox and feeding it
-straight back in makes a page ten times too big: the music is drawn in one
-corner, the column scales the whole sheet down to fit, and the staff comes out a
-tenth of the size it should be — not subtly wrong but illegible. **Nothing that
-compares one render against another can see it**, because every render is
-equally wrong: asked and revealed match, nothing overflows, every stage of
-typing is identical. That is why the profile is checked against a bar of rhythm,
-which is known to be right, and not only against itself.
-
-A grand staff is two staves and a row of figures, so it takes `PHRASE_SCORE_BOX`
-rather than `SCORE_BOX`. Under a single staff's share of the screen it left a
-third of its own box empty with the notation shrunk to fit the rest.
-
-### A cursor for the chord being written
-
-A question can carry several chords — two under one bass note for a suspension,
-one under each of several for a line — and both keyboards fill them strictly in
-order. Which one the next press goes into is otherwise something the player has
-to work out by counting how much of the staff is already full, so the chord in
-hand is given a band of its own behind the music: the chord above, the bass
-below and the figure under that, all in one column.
-
-**It is drawn into the render rather than over it.** An HTML overlay would have
-to be positioned against an SVG the column has already scaled down to fit,
-which is a measurement this app deliberately never makes; a `<rect>` in the
-engraver's own coordinate space is placed once and then scales with everything
-else, exactly and for free. `Score` takes a `decorate` hook for it, applied to
-the markup rather than inside the render — so a decoration that changes on
-every keypress does not re-engrave the page each time.
-
-**Where the chords are can only be read back off the render**, because only the
-engraver knows where it put them. Three things make that a reading rather than
-a guess, and `scoreCursor.test.ts` pins all three against the real toolkit: an
-authored `xml:id` survives into the SVG as the element's `id`, so
-`thoroughbassMei` names every sonority `chord<event>-<position>` and every
-figure `figure<event>-<position>`; a measure's own staff lines give its width,
-which is the one piece of geometry that is there whatever has or has not been
-written; and **nothing moves while the answer is typed**, because the page is a
-fixed size and the system is stretched to fill it. `renderGeometry.ts` holds what
-both this and `centreFigures` need: the staff-line gap, which is the unit
-everything on a staff is measured in, and the half-notehead above.
-
-The two are composed in the app — the figures are centred in every render and
-the band is drawn only while a press is still to come — and **neither has to
-run first.** `centreFigures` keeps the engraver's own x in `data-engraved-x`
-when it moves a text, because the band reads those same figures to find a chord
-that has not been written yet, and the place the text was moved to is not
-recoverable from it: a continuing line was pushed further than a plain one. A
-test pins that the band lands identically either way, since otherwise placing
-the first note of a chord would make it jump.
-
-That last one is what lets the anchor be read off different things at different
-moments without the band moving. A bass note carrying several chords anchors
-them by timestamp, and Verovio lays their figures out at the timestamp too, so
-a chord and its figure come out at **exactly** the same x — which is what
-covers the realising direction, where the chords are empty until they are
-written. A bass note carrying one chord is anchored on the bass note instead,
-and not for want of anything better: a lone figure is anchored by `@startid`
-and so is offset from the note rather than aligned to it, and a plain triad is
-figured by writing nothing at all, so there may be no figure there to find.
-
-**Every band is the same width** — the closest two chords on the page ever
-come — so it reads as one thing moving rather than as a highlight that keeps
-changing shape, and it can never reach into its neighbour. **There is no band
-at all when a question has one chord**: a cursor marking the only place there
-is tells the player nothing they did not know. The first band is the one
-exception to the equal width, and it is held off the clef, which it otherwise reaches back over and appears to select: the
-distance from a measure's edge to its first note is the engraver's ordinary
-padding everywhere but the first measure, where it is the clef and the key
-signature as well, so the other measures are measured and the same allowance
-given to the first.
-
-**The band draws a stroke of no width rather than no stroke.** Every render
-carries a stylesheet of Verovio's own containing `#<id> rect { stroke:
-currentColor }` — an _ID_ selector, which beats both a class of ours and a
-presentation attribute — so the band cannot be told to have no outline at all.
-It can be told to draw one no pixels wide, which that rule says nothing about.
-The same trap as the placeholder note's stems, reached by another door.
-
-### The two keyboards
-
-**`FigureKeyboard` is a telephone pad.** The grid is the point: everyone already
-knows where the 6 is, so the layout costs nothing to learn, and the row under it
-falls where a phone's `* 0 #` does. Accidentals across the top as one-shot
-switches, `1`–`9` in the grid, then `—`, `✓`, `⌫`.
-
-**The grammar is two keys and it is the written notation itself.** A digit adds
-a line to the column being typed, so `6` then `4` is the column `6/4`; the dash
-closes that column and opens the next one under the same bass note, so `4` `—`
-`3` is `4 – 3`. That mapping is one-to-one with what a figured bass looks like on
-paper, which is the best property an entry keyboard can have — and it is why
-suspensions will need a generator and a level rather than any new UI. The same
-dash is the continuation line when the time comes: pressed under a _new_ bass
-note it means "carry the figure over", which is the meaning the horizontal line
-already has.
-
-A column is drawn highest-first however it was typed, which removes a whole
-class of wrong answers that would have been about typing rather than harmony.
-
-**This is the one keyboard in the app with a confirm key, and the reason is that
-the no-confirm rule's own justification does not carry.** That rule is earned by
-a bar being exactly fillable, so that the only press left is the one that
-completes it. A figure has no such bound — one line, two, three — and inventing
-a fake one would be worse than a confirm key. `✓` means _that is the figure_;
-and because a plain triad is written by writing nothing, "no figure at all" is
-not a key to hunt for but simply pressing done straight away. `1` stays live
-though it is never canonical, under the same no-dead-keys rule as `♭1`. There is
-no zero, and that never bites: two-digit figures are only the historical `10`–`14`
-reduplications, which are reading-only.
-
-**`ChordKeyboard` is the scale degree keyboard with the mode taken out.** One
-key per note of the key, each drawing the note it means, and the two one-shot
-accidentals. There is no tonic and no mode here — only a key signature and a
-bass — so the seven letters are spelled by `alterationInKey` and the switches
-shift from there, which means it needs no scale-degree machinery at all. Labels
-are note names rather than degree numbers, because a figured bass is read as
-intervals above its bass and not as degrees of a key. It autosubmits when the
-chord is full and keeps the no-confirm-key rule, which is the honest difference
-from its sibling.
-
-**Each key draws the note that pressing it would write, octave and all.** What
-you see is what you get: the row is a preview of the chord being built, so the
-second note of a close-position chord is drawn above the first and a
-suspension's resolution is drawn where the resolution goes.
-
-`placedPitch` answers it, and it answers by running the **same** `voiceChords`
-the staff runs, over the draft the press would produce. That is the whole of
-why it can be trusted: two answers to where a note sits — one for the key and
-one for the staff — is two answers that can disagree, and the player is who
-would find out.
-
-So the faces climb as a chord fills, and a chord that has to be moved bodily to
-fit the staff takes the row with it. That is the cost of the principle and it
-is worth paying: a key saying `C` when what arrives is a `C` an octave higher
-is a key that has to be learnt rather than read. The keys themselves never move
-— seven letters in seven places — and only what is drawn on them changes.
-
-Two kinds of key cannot be pressed and still have to say something. A note
-already in the chord shows **where it already sits**, which is the only true
-thing left for it to say; and once every chord is written, a key shows where
-its note would open a chord after the last one, so the row fades rather than
-emptying at the moment of answering — a key that loses its picture there
-resizes under the hand that just pressed it.
-
-The row before anything is pressed is still `OPENING_OCTAVE`, because
-`DEFAULT_REGISTER` is chosen so an opening chord lands there whatever its
-lowest letter is. That is now a consequence rather than a rule.
-
-### The levels, and the ladder they climb
-
-Both directions share one list, because reading a figure and writing one are the
-same ladder climbed from opposite ends. The levels move one axis at a time, the
-figures or the keys, never both.
-
-**The list comes in two runs rather than two stations.** An exercise whose
-vocabulary outgrows one list has not become two subjects, and the path is what
-you practise — so the division belongs inside the node. `Difficulty` carries a
-`section`, `levelRuns` groups consecutive levels by it, and a list with no
-sections renders exactly as it always did, with no heading at all, which is
-every exercise but thoroughbass. Numbering stays continuous across the runs: it
-is the level's place in the exercise, not in its section, and it is also the
-index its accuracy is looked up by.
-
-Within a run the rule at the top of `difficulty.ts` still holds — these are
-weaknesses, not rungs. Between the runs the order is honest, because nothing in
-the second is legible until the first is.
-
-There are **two axes and they are not the same axis**, which is the thing worth
-keeping straight when this grows: the _vocabulary_ (which figures) and the
-_span_ (how many bass notes, and how many figures under one). Suspensions,
-passing notes and continuation lines are all span, not vocabulary, which is why
-they are not simply "harder figures".
-
-**The vocabulary grew a long way before the model had to.** Every altered figure
-— `♯6`, `♭6`, `6/♯4`, `6/♭5`, `♯5`, `♭5`, and the three shapes an augmented
-sixth is written with — is an accidental on a stack that already existed, so
-`STACKS` did not change for any of them. Only the ninths needed new entries, and
-they go **last** so that nothing above them changes meaning: a bare `9` finds
-the first stack holding a 9, and `9/7` the first holding both.
-
-A figure's canonical form is worth checking rather than assuming when a level
-names one. `♯4` alone is _not_ canonical — the conventional way to write those
-notes is `6/♯4` — and a level naming the wrong spelling would pin its accuracy
-filter on a figure no row ever stores.
-
-And there is **no figure `11` or `13`** — Grove figures an eleventh `7/4/2` and a
-thirteenth `7/6/4`; those are chord names from functional harmony rather than
-thoroughbass signs.
-
-**Each compound figure ships in one spelling only, and the model is the reason.**
-A number names a letter, so 9 and 2 name the same one: `7/4/2` and `9/7/4` are
-the same three notes, differing only in which octave the second is written in —
-and register is exactly what a figure does not say. Offering both would make a
-chord that two canonical figures answer, which is a question with two right
-answers and one of them marked wrong. The same goes for the thirteenth's
-`9/7/6/4` against `7/6/4/2`. What enforces it is simply that no stack holds the
-second spelling, so it cannot be expanded and therefore cannot be asked for.
-
-**The historical numerals are read and never asked for, for the same reason.**
-`10`–`14` mean the third, fourth, fifth, sixth and seventh _in the octave
-above_, so a `13` names the same letter as a `6` and a `10` the same letter as a
-`3` — a `10/5/3` is not even three notes, since the 10 and the 3 are one note
-written twice. Grading one against the other would mark a player wrong for an
-octave nobody wrote down. They belong to the guide, along with the stroke
-through a figure, which is another way of writing `♯6` and `♯4` and not another
-meaning.
-
-Grove is ambiguous in exactly one place that matters, and it should not be
-guessed at: its augmented-sixth example ("signature of G major, E♭ bass — the
-Italian by `6`") only works if that `6` is raised.
-
-### Chords — one fact from three sides
-
-Three exercises rather than a pair, and the third is what makes it worth
-saying: **Reading** names a chord you can see, **Hearing** names one you
-cannot, and **Writing** puts one on the staff from its name alone. Reading and
-hearing braid; writing needs both and merges below them.
-
-**One question type serves all three.** `ChordQuestion` carries the chord, the
-clef, the direction and the placed notes, and `ChordRoundSpec` adds the two
-things the _exercise_ fixes rather than the level — `byEar` and `namesRoot`.
-Everything else is settings, which is what lets one level list serve all three,
-the way thoroughbass's serves its two directions.
-
-**Only reading asks for the root.** A chord sounding on its own says nothing
-about which absolute note it is built on, so hearing asking would be asking
-something there is nothing to hear. Writing is told the root, because the name
-is the question.
-
-**`asks` is carried on the question, not worked out beside it.** It says which
-rows the verdict reads, and it is per-quality, because a symmetric chord has no
-audible inversion. `keyboardRows` is the separate, round-level answer to which
-rows the _keyboard_ draws — and the two have to be separate: a row that appeared
-for some questions and not others would tell the player it was an augmented
-triad before they had named it. So the row stays on the screen and stops being
-required the moment the quality is chosen, which is a thing to learn rather than
-a tell.
-
-**The naming keyboard has no confirm key**, and it earns that the way rhythmic
-dictation does rather than by copying it: each row admits one choice, so the
-answer is exactly fillable and the press that fills the last row is the press
-that answers. Its short position labels are **size-independent** (`1st`,
-`1. Umk.`) because the row is pressable before a quality has been chosen — a
-triad's first inversion is the Sextakkord and a seventh chord's the
-Quintsextakkord, so a face that knew which would relabel itself under the hand.
-The full name and the figure arrive underneath once the quality says which.
-
-**Writing reuses thoroughbass's answer surface whole** — `ChordKeyboard`,
-`ChordDraft`, `voiceChord`, autosubmit when the chord is full. What it needed
-was one thing: a **double accidental**, because C°7 is B𝄫 and a chord that could
-be read and not written back would be half an exercise. That is one more press
-on a switch that already existed, off by default so a figured bass keeps its
-±1.
-
-**Writing grades the notes, the bass, and the top only where a Lage was named.**
-Where it was not, the prompt never said what belongs on top, and failing someone
-for C–G–E′ when it asked for "root position" would be failing them for something
-that was never asked — the same principle as grading a melody by sound. The
-middle notes are free in every case, because nothing in the prompt fixes them.
-
-**A wrong chord is not replaced by the right one**: the two are drawn side by
-side, and the play button goes on the right-hand one only, which is the rule
-realising a figured bass already follows.
-
-**Playback is a level axis, not a control** — and **only hearing has it**.
-Whether a chord arrives as a block or as an arpeggio is a real difficulty where
-the chord _is_ the question, and nothing at all where it has already been
-identified on the page or written down: there, pressing the staff confirms a
-chord you already know, and the block is what you confirm it against. So
-`chordSpec` forces `harmonic` for reading and writing, and their setup screens
-do not offer the choice.
-
-Forced in the spec rather than at the playback call, because the direction is
-also what the attempt log records — overriding it at the last moment would have
-left every reading row claiming an arpeggio nobody heard, and a level's own
-accuracy filter looking for it. `chordSpec` is the single place a level's
-settings and an exercise's fixed facts meet, which is what keeps the generator,
-the filter and the tests from disagreeing about what a round is.
-
-It is `PlayDirection`, reused whole with its translations: `harmonic` is the
-block and `ascending`/`descending` the arpeggios. An arpeggio
-**accumulates**, every note ringing until the last arrives, so what stands at
-the end is the chord; damping each note as the next came would make it a melody
-of the members rather than an easier way to hear the chord. `schedule.ts` is
-pure arithmetic over the question, kept out of `engine.ts` for the reason
-`rhythmSchedule.ts` is.
-
-The levels run in **three sections** — triads, sevenths, positions — and move
-one axis at a time. Clefs widen with them and the C-clefs arrive only at the
-top, which is the level meant to be uncomfortable.
-
-## Harmony — `lib/music/key.ts`, `harmony.ts`, `satzmodell.ts`, `progression.ts`
-
-**A progression is a stack of named blocks, not a chain of chords**, and that
-is the whole of what makes one _meaningful_. A generator that picks chords one
-at a time produces progressions that arrive nowhere, contain no technique
-anybody has a name for, and — worst for an app — carry no label, so nothing
-downstream can say what the player just heard.
-
-Four layers, and the line between the first two is the design:
-
-- **Key** (`key.ts`) — a tonic and a mode. **Minor is stored as `aeolian`**,
-  the natural minor, and the raised degrees come from the chords. That is not a
-  simplification but the notation: no signature raises a seventh, so a minor
-  key is written under the natural minor's and the leading note is printed in
-  front of the note that carries it. Storing harmonic minor as the key instead
-  would raise the seventh everywhere, including where the music lowers it.
-- **`ChordSpec`** — the _plan_. A scale step, a quality, an inversion; nothing
-  in it is a pitch. This is what the Satzmodelle are written in.
-- **`HarmonicEvent`** — the _fact_. The sonority as spelled pitch classes over
-  a bass, and how long it lasts. Key-independent, doubling-free, octave-free.
-- **`Satz`** (`satb.ts`) — four spelled pitches per event.
-
-**The plan generates downward and every reading derives upward.** From an event
-you get the figure (`preferredFigure`, unchanged), the Stufe (`readChord`,
-unchanged) and the function symbol (a table). That is Karlsruhe's own exam task
-— _"entweder in Generalbassziffern oder in Funktionszeichen oder in
-Stufenzeichen"_ — falling out of one model rather than three implementations
-that could disagree.
-
-**One convention table in the whole functional layer**: `RAISED_DEGREES` says
-the fifth and seventh degrees of a minor key raise the seventh scale degree
-wherever their stack contains it. One rule, and four chords come out right at
-once — V major, V7 a dominant seventh, vii° diminished, vii°7 fully diminished,
-the last because the natural sixth is already where a diminished seventh wants
-it. Everything else is computed by reading the stack back.
-
-**A sequence stays in the mode** (`ChordSpec.plain`). Inside a Quintfallsequenz
-the chord on the fifth degree of a minor key is a passing `v`, not the
-dominant; raising its third puts an F♯ beside the F♮ of the chord after it,
-which is a cross-relation and an audible fault. The leading note belongs to a
-real dominant — a cadence, a prolongation or an applied chord — and every one
-of those says so.
+— never a chord name. `6` means a sixth above this bass, spelled as the key
+spells it; resolution walks up the letters asking `alterationInKey`. No roots,
+qualities or Roman numerals.
+
+**A question is a bass line**: a `BassEvent` holds a bass note and a _list_ of
+figures, so a suspension is two figures under one held bass, and a line is
+several events.
+
+`STACKS` is the one table — the complete sonorities a written figure
+abbreviates (a convention, not arithmetic). `expandFigure` takes the first stack
+containing every number written; `canonicalFigures` runs it backwards. Order
+matters: `[5, 4]` before `[6, 4]` (a bare `4` is a suspended fourth), ninths
+last. Each compound figure has **one** spelling in `STACKS` (`7/4/2`, not
+`9/7/4`), because a number names a letter and register is what a figure does not
+say. `10`–`14` are read in the guide and never asked for.
+
+**Grading is canonical, not merely correct** — "a wholesome rule forbids any
+Figure not absolutely necessary". It accepts a set where two forms are current
+(`2` and `4/2`), the full form when a figure follows another on the same bass
+(`afterAnother`), and a figure following another writes only the line that moved
+(`4 3`, via `previous`). **A line carrying an accidental is always written**,
+which is where the bare `♯` comes from.
+
+**`♯` and `♭` shift a semitone from what the key gives; `♮` asks for the natural
+note** — so a `♮` on an already-natural note is not a figure.
+
+**No written figure stands for two chords over one bass**, enforced as a
+property. **The generator derives each question's figure from its notes**
+(`preferredFigure`), so it can never ask for something grading would reject; a
+bass is drawn from the key's notes. A figure needs at most a double accidental,
+by construction. **2–3 is absent**: the bass is the dissonance and moves, which
+is a bass line, not a suspension.
+
+## Harmony — `key.ts`, `harmony.ts`, `satzmodell.ts`, `progression.ts`
+
+**A progression is a stack of named blocks, not a chain of chords** — so it
+arrives somewhere, uses techniques with names, and carries a label saying what
+was heard. Four layers:
+
+- **Key** (`key.ts`) — tonic and mode. **Minor is stored as `aeolian`**; the
+  raised degrees come from the chords, as in the notation.
+- **`ChordSpec`** — the plan: step, quality, inversion, beats. No pitches.
+- **`HarmonicEvent`** — the fact: spelled pitch classes over a bass, and a
+  length in ticks.
+- **`Satz`** (`satbVoicing.ts`) — four spelled pitches per event.
+
+**The plan generates downward; every reading derives upward**: figure
+(`preferredFigure`), Stufe (`readChord`), function symbol (a table) — one model,
+not three. **One convention table**: `RAISED_DEGREES` raises the seventh scale
+degree in V and vii of minor, which gets V, V7, vii° and vii°7 right at once.
+**A sequence stays in the mode** (`ChordSpec.plain`): a passing `v` in a
+Quintfall must not raise its third into a cross-relation.
 
 ### The backwards walk
 
-**The destination is chosen first.** A cadence is picked and everything is
-prepended in front of it until the target length is reached. Harmony is
-goal-directed, and _"what may precede a dominant"_ has a short confident answer
-where _"what may follow a tonic"_ has a long weak one — so `PRECEDENTS` is
-smaller, better motivated, and every progression arrives somewhere by
-construction rather than by luck.
+**The destination is chosen first**: a cadence is picked and blocks are
+prepended until the length is reached — "what may precede a dominant" has a
+short confident answer. A single chord is a block of length one
+(`FREE_BLOCKS`); `freeWeight` is how often the walk reaches for them, and the
+analysis records `frei`. **One table**, `PRECEDENTS`, is both transition weights
+and adjacency rule. Two mechanisms express the literature: **fixed schemas** and
+**transposition sequences** — widening the vocabulary is rows, never code. **A
+walk that runs out of moves is refused**, not shortened; the caller draws again.
 
-The walk is over **blocks**, and **a single chord is a block of length one**
-(`FREE_BLOCKS`) — so one loop covers the named Satzmodelle and a plain
-chord-by-chord Markov walk at once, and `freeWeight` is how hard it reaches for
-the short ones. Not every progression should be a textbook example; what makes
-the free stretches honest is that they run backwards through the same table the
-blocks join by, and that the analysis records `frei` rather than claiming a
-technique.
-
-**One table serves both jobs.** `PRECEDENTS` is the walk's transition weights
-_and_ what decides whether one block may stand before another. Two tables would
-be two things that could disagree about one question.
-
-Two mechanisms express the whole literature: a **fixed schema** (a stored run of
-chords relative to a starting degree — cadences, prolongations, approaches and
-the Romanesca family are all this shape) and a **transposition sequence** (a
-unit, a step, a repeat count — Quintfall, Monte, Fonte, Fauxbourdon, the
-Konsekutiven). Widening the vocabulary is therefore **rows, never code**.
-
-**A walk that ran out of moves is a failed progression, not a shorter one.**
-With no free chords to fall back on, the blocks that fit the remaining budget
-can simply run out; handing that back gave four chords where the level said
-six. It is refused and the caller draws again. The opening tonic is part of the
-length and whether it is _needed_ is not knowable until the walk has run — a
-sequence placed on the first degree arrives there on its own — so the walk runs
-twice at most and the pass that actually starts on the tonic is kept.
-
-### A progression is stored as a figured bass
-
-The best property in the model. `preferredFigure` and `figurePitches` are exact
-inverses and already round-trip tested, so a bass line and a figure line are the
-whole of what a progression needs:
+### Stored as a figured bass
 
 ```
 bass    "C,F,G,G,C"
 figures ",,6/4-5/3,"      ← ',' bass notes · '-' successive figures · '/' lines
 ```
 
-— literally `thoroughbass-shared`'s own separators. The chords, the Stufen, the
-functions, the four voices and the correct answer are all derived on the way
-back out, so **a row cannot disagree with itself**, and the chromatic
-sonorities cost nothing: a German sixth is `♯6/5` over a flattened sixth, which
-is a stack `STACKS` already holds.
+`preferredFigure` and `figurePitches` are exact inverses, so bass plus figures
+is all a progression needs; chords, Stufen, functions, voices and the answer are
+derived. **The analysis is the one thing stored and not derived** — whether
+`I–IV–V–I` is a cadence or the tail of a sequence is a reading.
+`constraintsOf` places a span's voicing constraints by the span's own `from`.
 
-**The analysis is the one thing stored and not derived.** `I–IV–V–I` may be a
-cadence or the tail of a sequence, and telling those apart is itself a future
-exercise, so the _reading_ has to be recorded rather than recovered. Neither
-string derives the other, which is why keeping both is not the redundancy the
-attempt log otherwise refuses.
+### Four parts — `satbVoicing.ts` → `voiceLeading.ts` → `satb.ts`
 
-`constraintsOf` places each span's voicing constraints by that span's own
-`from`. Walking the list and counting events instead skipped `frei` — which is
-not in `BLOCKS` — and shifted every index after it, putting a cadence's "tonic
-in the soprano" on the wrong chord until the voicing search could find nothing
-legal at all and reading the row back returned nothing.
+A line, not a cycle: `satbVoicing.ts` is vocabulary (`VoiceId`, `Voicing`,
+`SATB_RANGES`, `Move`, `motionBetween`), `voiceLeading.ts` the rules, `satb.ts`
+the search and its pricing (`CHORALE_WEIGHTS`, `voicingCost`, `transitionCost`).
 
-### Four parts — `satbVoicing.ts`, `voiceLeading.ts` and `satb.ts`
+**`voiceLeading.ts` is written once and read three times**: as a filter the
+generator searches through, as a **grader** returning findings over a finished
+`Satz`, and as the **list** the guide walks. Every rule is a row in
+`VOICE_LEADING_RULES` with id, kind, severity and a `check` returning the voices
+at fault. `RuleKind` separates _a different chord_ (`wrong-note`,
+`incomplete-chord`, always in force) from the Satzfehler a level may select
+(`SELECTABLE_RULE_IDS`). Every findings function takes a `RuleSet`;
+`undefined` means all, which is what the generator passes — a level's selection
+never makes the app's own writing worse. Tests voice every level's progressions
+and insist the grader finds nothing.
 
-**Three modules in a line, and the line is what keeps it out of a cycle.**
-`satbVoicing.ts` is the vocabulary — `VoiceId`, `Voicing`, `SATB_RANGES`,
-`Satz`, `Move`, `motionBetween`, `contextOf` — and decides nothing.
-`voiceLeading.ts` holds the rules. `satb.ts` generates through them and owns the
-pricing (`Weights`, `CHORALE_WEIGHTS`, `voicingCost`, `transitionCost`), because
-the search is the only thing that reads it.
+**Voicing is a shortest path**: Viterbi over (event, voicing) nodes, with an
+exact branch and bound (`contourFloor` is measured, not assumed). The soprano
+is shaped by `leapWeight` from `contour.ts`, and `voicingCost` pulls each voice
+towards the middle of its compass. `SATB_RANGES` are chorale ranges, not the
+staff ranges in `clef.ts`.
 
-**`voiceLeading.ts` is written once and read three times.** Run as a filter it
-is what `satb.ts` generates through — an edge that breaks a rule is an edge that
-does not exist, and a preference is a weight. Run as a detector over a finished
-`Satz` it is a **grader**, returning a list of findings rather than a verdict,
-which is what cadence writing is marked by and the one thing melina's round
-machinery had never had. Run as a **list** it is the vocabulary the writing
-exercises and their guide are built out of.
+**`npm run progressions`** prints Stufen, figures, voices and analysis for many
+progressions at once — the fast loop for tuning block weights.
 
-Building it that way round is why the generator can be trusted: `satb.test.ts`
-and `difficulties.test.ts` voice every level's progressions and insist the
-grader finds **nothing**. A generator checked against its own grader is the move
-`modeOf` makes on the scale generator and `readChord` on the chord one.
+## Notation — `src/lib/notation/` and `src/components/notation/`
 
-**Every rule is a row in `VOICE_LEADING_RULES`**, and that is what changed when
-the exercises arrived. They used to be paragraphs inside two long functions,
-which is fine for a filter and useless for everything else: a rule written that
-way cannot be named, cannot be explained, and cannot be switched off. Each entry
-carries its id, its kind and its severity plus a `check` that returns only the
-voices at fault; the framework builds the `Finding`. Adding a rule is a row, and
-so is teaching the guide about it, since `/guide/voice-leading` walks the same
-list.
+Verovio is **~7 MB of WebAssembly embedded in JavaScript**. It stays lazy:
+dynamic `import()` from a `React.lazy` route, its own Rollup chunk, excluded
+from the precache by `globIgnores` and cached at runtime. Leland ships inside
+the wasm.
 
-Two lines are drawn across that list and neither is decoration:
+Every render goes through **`Score`**, which is where app-wide fixes live:
+`[&_svg]:font-serif` swaps Verovio's `Times, serif` for EB Garamond (a
+presentation attribute, so a class beats it; the only real `<text>` is staff
+labels and figures, and Garamond is narrower than Times so labels are not
+clipped), and a `decorate` hook applies markup changes without re-engraving.
 
-- **`RuleKind` separates the chord from the writing.** `wrong-note` and
-  `incomplete-chord` say the setting is a _different chord_, not a badly written
-  one, so they are always in force and no level may switch them off.
-  `SELECTABLE_RULE_IDS` is the rest — the Satzfehler proper.
-- **Every findings function takes a `RuleSet`, and `undefined` means all of
-  them.** That is what `transitionCost` passes, so the generator is held to
-  every rule whatever a level has switched off: a level's selection says what a
-  _player_ is marked on and can never make the app's own writing worse.
+Rules the engraver will not enforce, each pinned by a node-environment test:
 
-`MoveCase` carries the six voice pairs measured once, because splitting one loop
-into four parallel rules is what makes them nameable and the search asks about
-tens of thousands of transitions per progression.
+- **Print an accidental only when it differs from what is in force.** `@accid`
+  is drawn, `@accid.ges` silent. In a melody (`melodyMei`) **an accidental
+  holds until the barline** on its own line or space and octave, and taking back
+  a double needs ♮♯ (`ns`). Intervals and scales are exempt: a harmonic unison
+  is two noteheads each with its own accidental, and a scale is keyless.
+  `measureAccidentals` resets at every barline.
+- **A double sharp is `x`, not `ss`** (two sharps); `ff` is right. Written and
+  gestural accidentals are separate MEI types with separate maps in `mei.ts`.
+- **A harmonic unison is two successive noteheads**, not a chord — stacked,
+  C→C♯ and C♯→C♯ engrave identically. Anything spanning two positions stacks.
+- **A hidden note is engraved and not drawn** (`@visible="false"`), so asking
+  and revealing produce the same page and nothing slides.
+- **Scales and chords are keyless**: a mode or quality is read off the
+  accidentals, and a signature would answer half the question.
+- The question generator anchors an accidental to the key signature ~78% of
+  the time; uniform picks produced F♭ in D major.
 
-The rule list is the standard Stimmführung inventory — ranges, spacing,
-crossing, overlap, doubling, omission, the four motions, leading-note and
-seventh resolution, dissonance preparation. `SATB_RANGES` are **chorale ranges,
-not the staff ranges in `clef.ts`**: those are geometry, these are what a voice
-can sing.
+### Size
 
-**Voicing is a shortest path, not a greedy walk.** Choosing each chord by what
-is cheapest from the one before is how a generator paints itself into a corner:
-the locally tidy choice leaves the next chord with no legal move. So the whole
-progression is solved at once — nodes are (event, voicing), edges are the legal
-transitions, and Viterbi finds the globally cheapest path. A **branch and bound**
-cuts most of the work and is _exact_ rather than a beam, which is why
-`contourFloor` is measured rather than assumed: under `steady` the contour term
-goes negative, and a bound that skipped a term with no floor would stop being
-sound.
+**The page only ever scales an engraved SVG down to fit its column**, so for
+anything that overflows, staff size changes nothing visible and **note
+spacing** is the dial: `SCALE_NOTE_SPACING` (0.3; the default is 0.25, the
+engraver refuses >1.0 — alternatives are tabled in `verovio.ts`). Staff size
+(`DEFAULT_STAFF_SIZE`, 95) matters only for what never overflows, like a
+two-note interval. `renderMei` sets options immediately before its render, and
+everything to `renderToSVG` is synchronous, so renders cannot interleave.
 
-**The soprano is a first-class objective, not a by-product.** A search that only
-minimised motion leaves the top voice sitting still, so the line is shaped by
-`leapWeight` from `contour.ts` — the same curve that shapes a melody in melodic
-dictation, its likelihood turned into a cost by taking the negative log.
+**A staff being typed into is engraved to a fixed page**, not fitted to its
+content, or it shrinks under the player's hands. A profile pins `pageWidth` and
+`pageHeight` (needing `breaks: 'auto'`), the unentered remainder is padded with
+`<space>`, and the page is sized for the **worst case** the keyboard could
+produce. **That worst case is then stretched to fill** (`FILL_THE_PAGE`,
+`minLastJustification: 0`), or a typical answer huddles at the left. A melody
+has one event per slot, so its notes never move; a rhythm's do shift as the bar
+fills, which is accepted — the box and staff size never change.
 
-**Register is a preference and nothing else stated it.** The ranges say what is
-singable, not where a part usually sits, so a search counting only motion put
-the bass at B3 under a tenor on the same note. `voicingCost` pulls each voice
-toward the middle of its own compass, which is what makes the texture sound like
-a chorus rather than four lines that happened to be legal.
+**`pageWidth`/`pageHeight` are a tenth of the viewBox units a render reports.**
+Calibrating from the viewBox makes a page ten times too big, and nothing that
+compares renders against each other can see it — so profiles are checked
+against a bar of rhythm known to be right.
 
-`CHORALE_WEIGHTS` is meant to be turned, as `PACED_CONTOUR` is. A second idiom —
-the modal Kantionalsatz the UdK paper offers — is a second table here and not a
-second algorithm.
+**The staff is bounded by the room left for it**, never by a viewport slice:
+`SCORE_BOX` / `PHRASE_SCORE_BOX` in `exercises/shared/scoreBox.ts`, with `h-full`
+on the box, `min-h-0` on every ancestor and `items-stretch` on the row, so the
+SVG's `max-h-full` has a definite parent. Without that the notation sizes the
+box and spills over the prompt and the Next button.
 
-### A four-part setting on the page — `satbMei.ts`, `satbProfile`
+### Rhythm on the page — `rhythmNotation.ts`
 
-**Two voices to a staff, and that was new here.** Every other engraving in
-melina puts one `<layer>` on a staff; a chorale needs two, upper stems up and
-lower stems down, or the lines cannot be read apart. `satbVerovio.test.ts` pins
-what actually comes out, because each way it fails is silent: the MEI validates,
-the render succeeds, and the thing is not on the page.
+The spelling half of a rhythm: readable and **stable**, and reading impacts back
+off the spelling returns what went in, over every generatable rhythm. No ties,
+no dotted sixteenth (22.5 ticks). One-line staff, percussion clef, stems down.
+The page width is **per metre** (the densest bar in 5/4 would halve a 2/4
+staff); note spacing stays default. **A half-typed tuplet pads itself**
+(`tupletSpaces`, the `space` symbol kind), because padding after it could never
+land on the grid, and a short measure made the justified bar open and close
+under the player's hands. A beat, not a change of division, closes a bracket
+(`draftNodes`) — two triplets are two brackets, not a sextuplet.
 
-**One measure per bass note.** A suspension is two sonorities over one bass, and
-the bass is written once and held — striking it again would say it had moved,
-which is the one thing a suspension is defined by not doing. So the upper voices
-carry two notes where the bass carries one, exactly as `thoroughbassMei` splits
-a measure. Barlines are invisible throughout: a generated progression is a
-succession of sonorities rather than a piece of music.
+### A phrase on the page — `melodicPhraseMei`
 
-Under the staff go three rows of `<harm>` — figures, Stufen, functions. Verovio
-has no notion of "the third analysis row" and nothing in the markup says they
-must not collide; that they come out at distinct heights is a fact the test
-pins.
+A five-line staff, one `<measure>` per bar, **one bar to a system** with
+encoded `<sb/>` breaks (Verovio otherwise re-breaks as a bar fills). The page
+reserves one system of the worst case — a quintuplet per beat, a double
+accidental per note, seven sharps. The reserve is also compared against what
+the music wants on its own page, because Verovio _fits_ a too-narrow page by
+squeezing, which no ink-extent check sees. Two bars ship; four is a Custom
+setting, since four systems on a phone is unreadable.
 
-**The page is fixed and reserved for the _revealed_ version.** A question opens
-as a blank grand staff and the answer arrives carrying three rows of text under
-it; sized to the content, the staff would shrink by a third at the moment the
-player looked at it.
+### The grand staff and figures — `thoroughbassMei`
 
-Every number in `satbProfile` is **measured against the widest thing the
-exercise can print**, which is not the music but the labels. Sizing it from the
-music alone shipped a page too narrow for two chords, and the way that failed is
-worth remembering: under `breaks: 'auto'` Verovio wraps to a second system, the
-fixed page height leaves no room, and the overflow lands on a page that is never
-rendered. **Chords vanish, with no error and nothing hanging off an edge to
-notice.** `pageWidth` and `pageHeight` are a tenth of the viewBox units a render
-reports, which is the other trap, so the profile is checked against a bar of
-rhythm that is known to be right.
+- The brace is a `<grpSym>` child, not `@symbol`.
+- An accidental in a figure is the character `♯`, not `<accid>`.
+- `@extender` draws nothing, so a suspension's dash is part of the figure's
+  text (`figureLines`); the test asserts the silence so it fails the day
+  Verovio grows a real extender. Continuation lines wait on the same thing.
+- **Figures are anchored by timestamp and then centred** by `centreFigures`
+  (`text-anchor="middle"` at the notehead's middle, keeping the engraver's x in
+  `data-engraved-x`); the half-notehead and half-dash offsets are measured
+  constants in `renderGeometry.ts`, and `figureAlignment.test.ts` pins what the
+  measurement rests on.
+- **A figure's accidental needs `smuflTextFont: 'embedded'`** (Leipzig is not a
+  browser font); the embed costs ~60 KB per render that has one.
+- The brace draws at x ≈ −432, so this profile widens `pageMarginLeft` or it is
+  clipped.
+- One measure per bass note, invisible barlines, no time signature.
+
+**The chord cursor** is a `<rect>` drawn into the render (via `decorate`), not
+an HTML overlay, so it scales with the engraving. Positions are read back off
+the render (`scoreCursor.ts`): authored `xml:id`s survive as element ids, a
+measure's staff lines give its width, and nothing moves while typing. Every band
+is the same width, there is none when a question has one chord, and the first is
+held off the clef. It draws `stroke-width: 0` rather than no stroke, because
+Verovio's own `#id rect { stroke: currentColor }` beats any class.
+
+### A four-part setting — `satbMei.ts`, `satbProfile`
+
+Two layers to a staff (upper stems up, lower down), one measure per bass note
+with a held bass written once, and three `<harm>` rows under it — figures,
+Stufen, functions. The page is fixed and sized for the **revealed** version,
+measured against the widest labels: sized from the music alone it wrapped under
+`breaks: 'auto'` and **chords silently vanished** onto an unrendered page.
+
+### The placeholder note
+
+Melodic dictation's first-note hint is `@type="placeholder"`, faded with
+**`opacity`, not colour** (`placeholderClasses.ts`) — Verovio's `#id path
+{ stroke: currentColor }` beats any class, so stroke never reaches stems.
+Ledger lines are a separate `<g class="ledgerLines">` in the staff, faded
+wholesale only while the placeholder is the only note.
+
+### The keyboard's glyphs
+
+The keyboards draw real Leland glyphs extracted by `npm run glyphs` into
+`components/notation/glyphs.ts`, because they must draw before the engraver
+downloads. `NoteGlyph` places them from measured boxes. `MiniStaff` (a pitch on
+a key) renders through Verovio with `cropToStaff`, and holds its last picture
+while re-engraving so a row does not flicker.
+
+## Audio — `src/lib/audio/`
+
+Sampled, not synthesised — a sine wave teaches you to recognise a sine wave.
+`smplr` provides a Steinway (`SplendidGrandPiano`) for anything pitched and the
+LinnDrum (`LM-2`) for rhythm. **What a question is played on is not a setting.**
+Drum samples are named one by one (a bare `snare` resolves to whatever comes
+first in the manifest); the count-in uses sidesticks.
+
+- **An AudioContext must be created and resumed inside a user gesture** —
+  `unlockAudio()` in the tap handler itself, not an effect.
+- A context can be suspended again when a tab is backgrounded, so playback
+  resumes defensively before every note.
+- **`instrument.stop()` does not stop notes not yet dispatched** (smplr
+  schedules ~200ms ahead), so the engine keeps each note's own stop function and
+  `stopPlayback` calls them all, **synchronously** — a deferred stop can land
+  after the next question has scheduled itself.
+- Nothing outlives its question: `usePlayback` stops on unmount and whenever
+  `sound` is rebound, and replay stops before it plays.
+
+**When things sound is pure arithmetic outside `engine.ts`** —
+`rhythmSchedule.ts`, `chordSchedule`, `harmony-shared/schedule.ts` — so it is
+testable without a network or an AudioContext. Rules there:
+
+- **Legato**: every melody note rings until the next impact
+  (`melodyDurations`), which is what makes a held note and a note-plus-rest the
+  same answer.
+- Chords of a figured bass **follow one another**, and **a held bass is struck
+  once** — restriking says it moved.
+- An arpeggiated chord **accumulates**, every note ringing to the end.
+- **Harmony**: the key-establishing cadence (I–IV–V7–I) is quarter notes at a
+  fixed `ESTABLISH_TEMPO` (80) whatever the question's tempo, because it is
+  heard before every question; the question plays at its level's tempo (64,
+  80 or 100).
+- `MetronomeMode` (whether the click continues under the bar) is a real
+  difficulty axis, not a preference.
+
+`playInterval`, `playScale` and `playChord` wrap `playSequence`; a gap of zero
+makes an interval harmonic. `playMelody` shares one note list between the piano
+and the count-in. The player type is imported from smplr, so upstream API
+changes are type errors.
+
+Samples are cached at runtime (`melina-samples`), never precached; `smplr`
+itself is a small precached chunk. Hearing exercises preload the piano; reading
+exercises fetch it on first press; rhythmic dictation passes `loadDrums` to
+`usePlayback` so it does not pull the piano for a snare.
+
+## Exercises — `src/exercises/`
+
+Fourteen exercises. The folders say which share what:
+
+- `shared/` is **exercise-agnostic** and must never learn what an interval or a
+  mode is: the `useRound` state machine, `LevelsScreen`, `RoundScreen`,
+  `RoundSummary`, setup controls, `PlayableScore`, `usePlayback`, `SCORE_BOX`.
+- `interval-shared/` + `interval-reading/`, `interval-hearing/`
+- `scale-shared/` + `scale-reading/`, `scale-hearing/`
+- `scale-degrees/` — hear a tonic triad and a short melody, write it as degrees.
+- `rhythm-dictation/`, `melodic-dictation/`, sharing `dictation-shared/` (the
+  bar draft, `buildBar`, and `DegreeDraft`, which bass dictation also writes
+  into).
+- `thoroughbass-shared/` + `thoroughbass-figuring/`, `thoroughbass-realizing/`
+- `chord-shared/` + `chord-reading/`, `chord-hearing/`, `chord-writing/`
+- `harmony-shared/` + `bass-dictation/`, `cadence-writing/` (the harmony setup
+  screen is shared, taking a settings **patch** and the exercise's own sections
+  as `children`).
+- `chord-entry/` — the draft a chord is pressed into (thoroughbass realising,
+  chord writing); `satb-entry/` — its sibling where which voice sings which
+  note is the answer.
+
+A subject folder supplies a generator, a `RoundRules` (build a round, what is
+right, what to log) and thin wrappers. Within a pair, only what differs lives in
+the exercise folder. **Prefer an escape hatch on a shared component over
+widening its idea of a question** — `RoundScreen` takes a whole `score` node,
+`RoundSummary` groups by a caller-supplied label, `usePlayback` takes the
+instrument to preload.
+
+**A string read by a shared screen may not name what one exercise asks about**
+— `ScaleExercise.test.tsx` fails on the word "interval" in visible text _and_
+accessible names.
+
+### The round
+
+**Levels are the landing screen.** Each exercise has a `difficulties.ts` of
+presets; picking one starts a round in the same tap. Custom is last and opens
+the full settings screen. They are **weaknesses, not rungs**. Names and blurbs
+live in `levels.json` under `<exercise-group>.<id>`. A list may come in
+**sections** (`Difficulty.section`, grouped by `levelRuns`) with continuous
+numbering.
+
+**"Change settings" returns to where the settings were chosen**:
+`useRound.changeSettings` goes to Custom after a round started from Custom
+(kept across Play again) and to the levels after one a level started.
+
+`?screen=setup` on an exercise URL restores the Custom screen after a trip to a
+guide — settings survive in Dexie, the visible screen is React state.
+
+**Nothing advances by itself**, not even a right answer: the reveal is the
+first moment a reading or writing question's music can be heard.
+
+**The notation is the play button**, pressable only once every note is on
+screen (a hearing question at once, a reading question after the reveal). The
+affordance is `PlayMark`, a faint speaker in the staff's corner, which also
+shows loading and failure. Where the staff holds the _answer_ — rhythmic
+dictation, scale degrees — replay is its own control above it. **The frame
+around the notation is identical whether or not it is pressable**, or the staff
+shifts at the moment the answer arrives.
+
+**A wrong answer is not replaced by the right one**: both are drawn side by
+side, each named, with the play button on the right-hand one.
+
+**An answer written rather than chosen submits itself when exactly full**:
+keys that would overflow are disabled, so the last possible press answers. Only
+`FigureKeyboard` has a confirm key, because a figure has no fixed length.
+
+### Intervals and scales
+
+`PlayDirection` (`harmonic | ascending | descending`) decides playback,
+engraving, and **which note is shown first** (`leadingNote()`, `firstNote()`).
+`staffOnly` narrows a clef to its five lines; the generator retries without it
+rather than drop a wide interval.
+
+**Hearing offers only intervals that sound different** —
+`HEARABLE_INTERVAL_KEYS`, one per semitone count (the tritone is the augmented
+fourth). Every mode sounds different from every other (asserted); melodic minor
+is dropped from descending rounds by `modeDirections`. On a keyless staff **the
+tonic decides how much ink there is**, so tonics are a level axis.
+
+### Scale degrees
+
+A tonic triad, then a short melody with no rhythm. **Steps are octave-specific**:
+a level names steps as degree keys (`7_`, `1`, `1'`), `DEGREE_STEP_CHOICES`
+runs from the fifth below the tonic to its octave, and the keyboard has one key
+per step, each drawing its note in its own octave. Grading is by sounding pitch,
+so the seventh below and the seventh above are different answers. A level
+reaching below the tonic places the key so those steps fit the clef too.
+
+Only the first level opens every melody on the tonic (`startOnTonic`); the
+triad is anchor enough. The summary groups misses by **the first degree that
+went wrong**, compared by sound.
+
+### Rhythmic dictation
+
+**The draft is the keys pressed, not the impacts** — a player who writes a rest
+should see a rest — and only impacts are graded. The keyboard is **modes, not
+keys**: rest and dotted are one-shot and mean the next key; the tuplet switch
+belongs to the draft and holds until its beat is full. A level's `cellWeights`
+both admits (`0` = absent) and weights a group.
+
+### Melodic dictation
+
+Hear a phrase, write it down. **Correctness is two facts**: impacts right bar
+by bar (`samePhrase`) and notes right **by sound** (`sameSounds`). The first
+note's pitch is a **placeholder on the staff**, not a draft entry, so its
+length is not given away. Beat one of bar one is always struck.
+
+The vocabulary is a **contiguous run of steps**, `low` to `high` (`MAX_STEPS`
+13), and the run _is_ the keyboard. Three rows: one-shot switches; **the note
+value, a mode that stays** (and falls back to the largest value that fits rather
+than going dead); the pitch keys, **each drawing the note that pressing it would
+write** at the armed value. The summary separates rhythm from notes.
+
+### Thoroughbass
+
+**Figuring** shows the chord and asks for the figure; **Realising** shows the
+figure and asks for the chord. Correct realising is **the set of pitch classes
+above the bass** — octave and spacing are the player's; `voiceChord` places
+them for staff and verdict alike. A row keeps bass and figures only. The verdict
+checks every figure under a bass. Three bass notes is the most a level asks for
+— a fourth fits a desk, not a phone.
+
+**`FigureKeyboard` is a telephone pad**: accidentals as one-shot switches,
+`1`–`9`, then `—`, `✓`, `⌫`. A digit adds a line to the column, the dash opens
+the next column under the same bass (`4 — 3`), and a column draws
+highest-first however it was typed. "No figure" is pressing ✓ straight away.
+
+**`ChordKeyboard`** is seven letter keys spelled by `alterationInKey`, plus
+one-shot accidentals (which stack to a double for chord writing). **Each key
+draws the note pressing it would write, octave and all**, computed by
+`placedPitch` through the same `voiceChords` the staff runs — two answers to
+where a note sits could disagree. A note already in the chord shows where it
+sits; once every chord is written, keys show where a new chord would open.
+
+The levels share one list in two runs; vocabulary (which figures) and span
+(bass notes, figures per note) are separate axes. A level naming a figure must
+name its canonical form (`6/♯4`, not `♯4`).
+
+### Chords
+
+**One question type serves reading, hearing and writing**; `ChordRoundSpec`
+adds what the exercise fixes (`byEar`, `namesRoot`), and `chordSpec` is the one
+place a level's settings meet those facts. Only reading asks for the root.
+**`asks` is carried on the question** (a symmetric chord asks no inversion),
+while `keyboardRows` is per round — a row appearing per question would give the
+quality away.
+
+`ChordNameKeyboard` has no confirm key (one choice per row) and
+size-independent position labels. Writing reuses `ChordKeyboard` and grades the
+notes, the bass, and the top only where a Lage was named. **Playback is a level
+axis only for hearing**; `chordSpec` forces `harmonic` for reading and writing,
+because the direction is what the attempt log records.
 
 ### Bass dictation — `harmony/bass`
 
-Hear a four-part progression, write down its bass as scale degrees. The smallest
-exercise the model can carry, and deliberately so: it exists to make the
-generator **audible and judgeable**.
+Hear a four-part progression, write the bass as scale degrees, **without an
+octave** (the octave is the voicing search's, not the harmony's). A cadence is
+played first to fix the key, built and voiced like any progression. The summary
+groups misses by **the cadence the progression closed with**.
 
-**The bass is answered without an octave**, and that is a decision rather than a
-shortcut — which octave the bass sits in is a fact about the voicing the search
-settled on, not about the harmony, so asking for it would grade the player on
-something the question never posed. `bassTonic` then picks the octave the
-_drawing_ uses, per key, so the seven degrees stay inside the bass staff
-whatever the tonic is.
+### Cadence writing — `harmony/cadence`
 
-**A cadence is played first to fix the key**, which Münster's own ear-training
-paper does for the same reason: writing a bass as scale degrees without one asks
-the player to find the tonic first, which is a different and much harder
-question. It is built from the same `buildEvents` and voiced by the same search,
-so it cannot come out in a different idiom from the question it introduces.
-
-`DegreeDraft` moved from `scale-degrees/` to `dictation-shared/` when this
-became the second exercise writing an answer as a run of degrees — the move
-`voicing.ts` made into `lib/music` for the same reason.
-
-The summary groups misses by **the cadence the progression closed with**, which
-is the payoff of storing the analysis: "you keep missing the Trugschluss" is a
-finding a player can act on, where anything derivable from the notes alone could
-only say "you keep missing the third chord".
-
-**`npm run progressions` prints generated harmony as text** — Stufen, figures
-and the four voices, with the analysis under each. Judging a harmony generator
-by ear through the UI is a slow loop; judging fifty of them in a terminal is a
-fast one, and it is where the block weights actually get tuned.
-
-### Kadenz aussetzen — `harmony/cadence`
-
-Karlsruhe's Aufgabe 6: a bass line with its figures, an opening Lage named above
-it, and four parts to write out. **The first exercise here whose answer is not
-compared against anything.** A cadence can be set a dozen ways, all of them
-correct, so the verdict is which rules the setting broke — which is what
-`voiceLeading.ts` was built as a grader for, one exercise before there was
-anything to grade.
-
-Nothing underneath it was new. `buildEvents`, `generateProgression`,
-`voiceProgression`, `useRound`, `RoundScreen` and `HarmonyAttempt` all took it
-as written, and the widenings it needed were four, each earned.
-
-**The prompt outranks the block's own soprano.** `eroeffnung-tonika` asks for
-the root on top, which _is_ Oktavlage — a good default for a progression that
-will be heard, and exactly the thing a written exam varies. `cadenceConstraints`
-replaces it rather than respecting it, and it is one function because two
-callers need it: the generator, and the way back out of the attempt log. A row
-rebuilt under different constraints would disagree with the notation it
-produced.
-
-**Three kinds of thing are checked and they are not the same kind.** The chords,
-always — a voice singing a note the chord does not contain has written a
-different cadence rather than a bad one. The Lage, always, and deliberately
-**not** a rule in the registry: it is what the prompt asked for, and a `Satz`
-cannot carry the question that produced it, so making it a rule would mean a
-grader that had to be told what was asked. Then the Satzfehler the level named —
-of which **only an error fails**, because a wide leap or a Querstand is
-somewhere a line may legitimately want to go and a marker weighs those rather
-than counting them.
-
-**A level names which rules it marks**, and the families of rule are genuinely
-not a ladder: doubling the leading note is not a harder mistake than a parallel
-fifth, it is a different one, and the player who keeps making one is usually not
-the player who keeps making the other. So the list runs by family — Parallels,
-Spacing, Doubling, Resolutions — which is what makes these weaknesses rather
-than rungs better than any other list in the app.
-
-**The row is `HarmonyAttempt` with one field.** The Lage is the only part of the
-question the chords cannot recover, and it becomes the **`top`** facet chord
-questions already have: `{ top: '1' }` means every question about a Terzlage in
-either exercise, the way `{ root: 'Eb' }` already spans intervals and scales.
-
-**Nothing sounds until the answer is in**, because the setting _is_ the answer;
-afterwards the staff sounds what the player wrote rather than what the search
-would have written. No model answer is drawn at all — a wrong chord is normally
-shown beside the right one here, and that rule does not carry where there is no
-right one to show.
-
-### The answer surface — `satb-entry/` and `SatbKeyboard`
-
-`satb-entry/draft.ts` is `chord-entry/`'s sibling, not its replacement, and the
-difference is what the question asked. A figure underdetermines its voicing, so
-that draft collects a **set** and lets `voiceChord` place it; here _which voice
-sings which note_ is the answer and where each one sits is most of what is
-graded — spacing, crossing and overlap are all facts about octaves. So a slot is
-a voice of a chord and it holds a `Pitch`.
-
-Which voices are given and which are written belongs to the **question**:
-cadence writing gives the bass and asks for the three above it bottom up, and a
-chorale harmonisation will give the soprano and ask for the other three in the
-same shape. There is no confirm key — a setting is exactly fillable, so the
-press that completes the last chord is the press that answers.
-
-**Seven letter keys, so the octave is the app's to choose**, and `placedPitch`
-chooses it the way a singer would: follow this voice from the chord before, and
-in the first chord stack from the voice below. A voice's compass never spans two
-octaves, so a letter names two pitches at most — which is what makes one
-one-shot switch for _the other octave_ unambiguous. Without that switch the
-tenor could never open wide of the bass, no spacing could ever be wrong, and
-half of what the exercise is about would quietly vanish.
-
-The opening default was the middle of the voice's own compass once. That is A3
-for the tenor, two ledger lines above the bass staff, and every key drew a note
-hanging in the air over its own staff — the thing `npm run shot` exists to
-catch.
-
-**Each key draws the note pressing it would write, on that voice's staff and
-with that voice's stem.** `VOICE_PARTS` says which once and `satbMei` engraves
-from the same table, so a key cannot come to look unlike the note it puts down.
-The stem only halves the four voices, so the voice is named beside the switches
-too. The accidentals are **always offered, never per question**: switches that
-appeared only where one was needed would announce a borrowed chord before the
-player had written a note.
-
-**The findings are text, and the room they take is reserved.** A parallel fifth
-is a relation between two voices across two chords, and a bracket drawn round
-four noteheads says where to look without saying what is wrong — the name of the
-fault is the thing to learn. The list is `shrink-0` beside a `flex-1` score box,
-so every line of it comes straight out of the notation: its height is reserved
-whether or not there is anything in it, the way the play caption under a staff
-already is, and it is capped at three lines because every line is a line the
-notation does not get.
-
-## Guides — `src/pages/MelodyShapePage.tsx` and `components/explain/`
-
-A setting whose meaning takes a picture gets a page, reached from a question
-mark in the corner of its section — `SetupSection` takes an `action` for it.
-Corner rather than a line under the hint, so it is there the first time you meet
-the setting and invisible every time after.
-
-**A guide that has to be read before the exercise makes sense gets a station of
-its own.** There are four of them now — figured bass, the modes, the chords,
-whose names are a convention nothing in the exercise can teach you (a first
-inversion is a Sextakkord because that is what it has always been called), and
-**voice leading**, which is the strongest case of the four: cadence writing
-marks a setting against a list of prohibitions, and failing someone for a
-parallel fifth nobody ever mentioned is exactly the unfairness these pages
-exist to undo. Its table walks `VOICE_LEADING_RULES` rather than repeating it,
-so a rule cannot be added to the model without being explained, and its six
-examples are one clean setting with a single voice moved —
-`VoiceLeadingPage.test.ts` holds each to showing **exactly** the fault it claims
-and no other, so the detector and the page that explains it are proved by one
-test rather than two that could drift apart.
-Everything on that page is `chord.ts` evaluated, so it cannot come to describe
-something the app no longer does, and `ChordsPage.test.ts` holds the examples to
-`isCleanChord` — the same bar a question has to clear — so the guide can never
-print a chord the exercise would refuse to ask for.
-
-That is a different thing from contextual help, and the melodic shape
-page is the one that is not: it explains a single setting to somebody already in
-the exercise, and there a question mark in the corner is exactly where it should
-be. The other two are stations. The figured bass page explains a _convention_
-that nothing in the exercise can teach you, because canonical-required grading
-marks you wrong for a figure it never told you not to write; the modes page
-carries the vocabulary all three scale exercises are built on, and the shortcut
-for it is the kind of thing you are told once and then have.
-
-**A question mark on a settings screen is where nobody meets it first**, and on
-a levels-first exercise that screen is behind Custom — so a guide that matters
-before the first round is a stop on the path as well. Both of them keep their
-question mark too: `?from=` says which exercise opened it, and with no `?from=`
-at all it came from the path and returns there.
-
-**Every engraved example is playable**, by the rule the round screens already
-follow: the notation is the play button. A page explaining what a Sextakkord
-is, or what `♭5` resolves to, or how lydian differs from ionian, is describing
-a _sound_, and a reader who can only look at it is being asked to take the
-whole page on trust. There is nothing to give away here as there is in a
-reading question, so an example is pressable from the moment it is drawn.
-
-`components/explain/PlayableExample.tsx` is the wrapper, and it **wraps the
-staff rather than replacing it**: the caller passes the classes the `Score`
-already carried, so the button adds nothing to the layout but
-`position: relative`. That matters most in the figured bass guide, where the
-height has to come down a definite chain or the staff sizes the box that was
-supposed to size it. `PlayMark` — the speaker in the corner, and the two
-states it turns into — moved to `components/notation/` when a second thing
-needed it, and its strings moved with it from the `exercise` namespace to
-`common`.
-
-Each example holds its own `usePlayback`, so **what it is built from has to be
-memoised**: the hook hangs its silence on the sound's identity changing, so a
-closure rebuilt every render would stop the note it had just started. An
-example is the same chord for as long as it is on the page, which is the
-honest reason to compute it once.
-
-**A figured bass pair is the comparison made audible.** The printed half
-sounds its bass alone, because a bass alone is what is printed; the played
-half sounds the whole chord. That cost no new code — `chordSchedule` strikes
-the bass of an event whose chords are empty and nothing else — and it is what
-`FiguredBassPage.test.ts` pins, since the claim is about which notes each half
-asks for rather than about anything on the page.
-
-Guides are registered in the curriculum — `GuideDef`, on the category they
-serve — and `stations()` emits them **before** that category's exercises. They
-are deliberately not `ExerciseDef`s: there is no round, no settings and no
-accuracy, and everything that walks the exercises (the routes, the feature
-flags, the attempt log) keeps working without learning about them. A `Station`
-carries `kind`, and that is what `PathNode` draws from.
-
-**An explainer node is a different shape, not only a different colour** — a
-rounded square on paper with a solid accent hairline, against the filled accent
-circle an exercise gets, so the difference survives a colour-blind reader and a
-greyscale screenshot. The dashed borders were already spoken for by `next` and
-`locked`. Its overline says what it _is_ ("Read first") rather than whether it
-is unlocked, because there is nothing to unlock and no progress to make.
-
-**Two ways in means two ways back.** `?from=` on the guide's URL says which
-exercise opened it, and with no `?from=` at all it came from the path and
-returns there. An unrecognised value is treated as the path rather than trusted
-into a route.
-
-**The figures are computed from the model, never drawn to match it.**
-`contourSeries.ts` evaluates `contour.ts` itself, and `ContourFigures.tsx` plots
-what comes back, so turning a constant moves the pictures with it and the page
-cannot come to describe something the app no longer does. That is the whole
-reason `contourCurve` is exported: the bare curve is what the drawing needs,
-and a second copy of the formula in a chart is a copy that can go stale.
-`MelodyShapePage.test.ts` asserts the _shape_ of what the figures say — a leap
-grows likelier with the gap, a repeat is damped at every gap — so the page fails
-rather than lies if the model changes underneath it.
-
-The drawings keep their aspect ratio, unlike the path's connectors: a dot has to
-stay a dot, and `preserveAspectRatio="none"` turned every marker into an
-ellipse. Strokes are still non-scaling, so a line is the same thickness on a
-phone and a desktop.
-
-**The figured bass guide links the article it takes its rules from**, which is
-the app's only link out of itself. A citation the reader cannot follow is one
-they have to take on trust, and that page asks a good deal on trust already. It
-carries the icon that says it leaves, opens in a new tab without handing that
-tab a reference back, and will not work offline — the honest cost of citing
-something that lives elsewhere.
-
-It is a **separate translated line** rather than a link inside the sentence.
-`locales.test.ts` checks that the two languages hold the same `{{placeholders}}`
-and cannot check that a `<0>` survived a translation, so a sentence with markup
-in it is a sentence a translator can quietly break.
-
-A guide lives on a **headerless route**, like the exercises it is read from, and
-carries its own back link. Reached from a setting, that link returns to
-`?screen=setup`, because the settings survive the trip in Dexie but _which
-screen was showing_ is React state and does not — without it, reading the
-explainer costs the player their place and drops them on the level list.
-
-### The figured bass guide is built around examples, not prose
-
-`FiguredBassPage` runs: what a figured bass _is_ (what is printed beside what is
-played), then counting up from the bass, then the key signature deciding which
-note that lands on, then what the figure leaves out, then the accidentals. Each
-of those is a thing you can only really see, so each has a staff under it, and
-the staves come from `figurePitches` and `voiceChord` — the same two functions
-the exercises grade against.
-
-The examples are built by `describeEvent` — the same function the generator
-assembles a question with — so where the notes sit and how many chords a bass
-note carries are the exercise's own answers rather than a second set kept in
-step by hand. It is also what lets an example be a **suspension**: `4-3` is two
-figures under one held bass note, drawn as one staff with the chord moving over
-a bass that stays put. Two staves side by side would be two questions, which is
-what it was at first and what made the section say nothing.
-
-**Which bass and key each example uses is data, in `figuredBassExamples.ts`, and
-that is not tidiness.** A page that teaches "a figure writes only what is not
-obvious" and then draws `♭5/3` — with a 3 the rule it has just stated says not
-to write — is worse than no page, and nothing about the types would say so. The
-examples are held to `canonicalFigures` by test, so **the guide can never print
-a figure the exercise would mark wrong**. That shipped once and the test now
-names the offending example.
-
-The examples use `THOROUGHBASS_EXAMPLE_PROFILE` rather than the exercise's
-profile: the fixed page exists so a staff cannot move while an answer is typed
-into it, and nothing is typed into an example, so it shrinks to the music
-instead. Their box carries a **definite height** and `items-stretch`, because
-`Score` puts `max-h-full` on the SVG and against an indefinite parent that
-resolves to nothing — the staff then sizes the box that was supposed to size it
-and prints straight over the caption, which is exactly what it did the first
-time.
-
-Guides have their own `guide` translation namespace rather than living in
-`exercise`: a page is an area of the app, which is what a namespace is for.
-
-### The modes guide is the model read against major and minor
-
-`/guide/scales` writes the nine scales out and gives the shortcut for
-remembering them. It is **a stop on the path**, at the head of the scales
-column, because they are the vocabulary all three scale exercises are built on
-— and it is also the question mark in the corner of the **Modes** setting on
-all three of them, with `?from=` saying which to return to.
-
-**All nine are drawn on C.** It is the one thing that makes them comparable:
-the tonic never moves, so the only difference from one staff to the next is the
-accidentals — which is exactly what the shorthand under it names. Each on its
-own white-note tonic the seven modes would all print nothing at all, and the
-page would be seven identical rows of notes.
-
-**The two minor scales get a section of their own**, not two more cards in the
-list. They are not rotations of the major scale, and what there is to say about
-them — where the raised degrees come from, why no signature spells them, and
-why melodic minor only goes up — is said about no mode. Their card says
-"a minor scale of its own, not a mode" where a mode's says which degree it
-begins on, which is `ModeDef.degree` being absent rather than a second list.
-
-**The shortcut is computed, not written down.** A mode is stored as the
-interval from its tonic to each degree, so two modes differ exactly where those
-intervals differ, and "lydian is major with an augmented fourth" is the
-difference between two rows of `DEGREE_QUALITIES` rather than a mnemonic
-somebody typed. So is `1 2 ♭3 4 5 6 ♭7`: the sign is how far that degree sits
-from the major scale's, and `ModesPage.test.ts` checks the two cannot drift
-apart by adding the sign back on.
-
-**Which of major and minor a mode is read against is computed too**, and it has
-to be — saying dorian is minor with a major sixth rather than major with a
-flattened third and seventh is the whole value of the shortcut. The rule is
-simply whichever is fewer changes away, and it comes out one-sided every time,
-with no tie anywhere for a preference to break. It sends **melodic minor to
-major** — one note, its third, against two from the minor it is named after —
-and the page prints that rather than making an exception for a scale whose name
-suggests the other reading.
-
-**The changed degrees are a list of interval names, not a sentence.** "Minor
-with a raised sixth" inflects in German and would need grammar this page has no
-business knowing, and `locales.test.ts` can hold two languages to the same
-placeholders but cannot tell that a translator broke a sentence assembled from
-parts. A list of names is the same fact with nothing in it to break — the same
-reasoning that keeps the figured bass guide's source link on a line of its own.
-
-## The attempt log — `src/lib/db/attemptQuestion.ts` and `progress.ts`
-
-Every answer is recorded, right or wrong. A row keeps **exactly enough to ask the
-question again and no more**: an interval is a lower note and an interval key
-(`C4` + `A4`), a scale is a tonic with its octave and a mode (`Bb3` + `dorian`),
-plus the clef, key signature and direction. A rhythm is a metre, its impacts as
-ticks (`4/4` + `0,60,90,120`) and the tempo it went by at — the impacts _are_ the
-rhythm, and how the bar was spelled on the page is decided again by
-`notateRhythm`, so a row can never disagree with the notation it produces. What
-those imply is never stored — the upper note, the eight pitches of a scale, the
-note values of a bar, and the answer that would have been correct are all derived
-on the way back out, so a row cannot disagree with itself.
-
-Nothing about the _level_ is stored either. `staffOnly` narrowed the range the
-generator drew from; whether the notes it chose need ledger lines is a fact about
-those notes, worked out again by `attemptFacets`.
-
-Reading it back goes through **one query with an open-ended filter**, not a
-per-exercise statistic. `accuracy(filter)` names any subset of the dimensions an
-answered question has and leaves the rest unconstrained: `{}` is every answer ever
-given, `{ format: 'hearing' }` everything heard rather than read, `{ root: 'Eb' }`
-every question built on an E♭ in any exercise, and a level's settings are simply a
-filter that names all of its dimensions at once (`intervalFilter`, `scaleFilter`).
-`category` and `format` are split out of the exercise id rather than stored, so
-they cannot disagree with it.
-
-The filter matches against the flat facets `attemptFacets` derives, which is what
-keeps `progress.ts` from knowing what an interval is — rhythmic dictation added
-`meter`, `tempo`, `division`, `offBeat` and `impacts` there and every existing
-query kept working, which was the design being tested. `root` is deliberately
-shared: an interval's lower note and a scale's tonic are the same dimension, and
-that is what lets one query span the whole app. A rhythm deliberately has **no**
-`root` — it is built on no note at all — so it drops out of every filter that
-asks about pitch, which is exactly the documented behaviour of a filter naming a
-dimension an attempt does not have.
-
-A melody row is the two vocabularies side by side — a rhythm's metre and
-impacts, a degree question's tonic, mode and degrees — and **nothing had to be
-invented for it**, which was the design being tested a third time. The impacts
-are kept bar by bar, because which bar a note fell in is part of the answer:
-`0,60|0,90` is not the melody `0,60,300,390`. Its facets are likewise both sets
-at once plus `bars` and `span`, so every query that already existed reaches it:
-`{ root: 'Eb' }` meant "every question built on an E♭" before melodies existed
-and did not have to learn that they now do.
-
-A chord row is four small facts — root, quality, inversion and Lage — plus the
-clef and how it was played, and **nothing had to be invented for it**, which was
-the design being tested a fourth time: `root`, `clef` and `direction` already
-meant what they mean, so `{ root: 'Eb' }` reached chords without being told they
-exist. The notes, where they sit and the answer that would have been right are
-all `chord.ts` applied to the row. `close` — whether the chord stands straight
-up from its bass — is derived exactly as `staffOnly` is, which is what lets a
-level with the Lage switched off count only the chords it could actually have
+A figured bass and a named opening Lage; write the upper three parts. **The
+answer is not compared against anything** — it is marked by which rules it
+broke: the chords always, the Lage always (from the question, not a rule), and
+the Satzfehler the level names, of which **only errors fail**. A level names
+rule families (parallels, spacing, doubling, resolutions) — weaknesses, not
+rungs. `cadenceConstraints` lets the prompt's Lage outrank a block's own
+soprano, for both generator and attempt read-back. Nothing sounds until the
+answer is in; then the staff sounds what the player wrote. No model answer is
 drawn.
 
-A rhythm level filters on metre and tempo, the dimensions it actually pins, and
-**not** on its cell weights: weights shape what comes up rather than bounding it,
-so a level cannot claim the bars it happened not to draw.
+`SatbKeyboard`: seven letter keys, with `placedPitch` following each voice from
+the chord before, and one one-shot **other octave** switch (a voice's compass
+spans under two octaves). Keys draw on their voice's staff with its stem
+(`VOICE_PARTS`, shared with `satbMei`). Accidentals are always offered. The
+findings are text, in a `shrink-0` list capped at three lines with its height
+reserved.
 
-The levels screen shows a level's accuracy beside it, but only past
-`ACCURACY_MINIMUM` (15) matching answers — below that the figure moves seven
-points on the next question, which misleads rather than informs, so nothing is
-shown at all rather than a number with a caveat. `LevelsScreen` takes an
-`accuracyFilter` per level rather than a percentage, so the shared screen still
-never learns what its levels are made of. The visible figure is `aria-hidden`
-and a spoken form beside it says what was measured and over how many answers: a
-bare "82%" inside a button reads as "82% of what?".
+## Guides — `src/pages/*Page.tsx` and `components/explain/`
 
-Accuracy is measured over the **last `ACCURACY_WINDOW` (100) matching answers**,
-newest first, so it says where the player is now rather than averaging in a bad
-week from months ago. `rate` is `undefined` and not `0` when nothing matched:
-never practised and never right are different things, and a screen that renders
-0% for the first is lying. The window walks backwards over `[exerciseId+ts]` and
-stops as soon as it is full, so the usual query reads a hundred rows however long
-the log has grown.
+Five: **melodic shape** (`/guide/melodic-shape`, contextual help from a
+setting's question mark), and four **stations** that must be read before their
+exercises make sense — **modes** (`/guide/scales`), **figured bass**,
+**chords** and **voice leading**. Stations also keep their question mark;
+`?from=` says which exercise opened a guide (an unknown value is the path), and
+returning to a setting goes to `?screen=setup`. Guides are `GuideDef`s, not
+`ExerciseDef`s — no round, settings or accuracy — on headerless routes with
+their own back link, and use the `guide` namespace.
 
-## Progress — `src/pages/ProgressPage.tsx` and `lib/db/history.ts`
+**Guides are computed from the model, never drawn to match it**, and tested so
+they cannot describe what the app no longer does:
 
-Reached from the **streak button at the right of the header**, the mirror of the
-settings button at the left. Neither is a station: the path is what you
-practise, and the chrome is what you look at. Progress was a registered
-category once; it was removed rather than left as a locked station claiming "in
-development" for a screen that exists.
+- `contourSeries.ts` evaluates `contour.ts`; `MelodyShapePage.test.tsx` asserts
+  the shape of what the figures say.
+- Figured bass examples come from `describeEvent` with bass/key data in
+  `figuredBassExamples.ts`, held to `canonicalFigures` — the guide can never
+  print a figure the exercise would mark wrong.
+- The modes page draws all nine on C, and the shorthand (`1 2 ♭3 4 5 6 ♭7`,
+  and which of major/minor a mode is read against — whichever is fewer changes)
+  is computed from `DEGREE_QUALITIES`.
+- Chord examples are held to `isCleanChord`.
+- The voice-leading table walks `VOICE_LEADING_RULES`, and each example shows
+  **exactly** its one fault by the real detector.
 
-Nothing new is stored. A streak, a total and every breakdown on the screen are
-facts _about_ the attempt log, recomputed from it — a counter kept alongside
-would be a second copy that could drift out of step with the answers it claims
-to summarise. `history.ts` is therefore pure functions over rows, and the page
-reads the log once and slices it in memory rather than running a dozen queries
-over the same rows.
+**Every engraved example is playable** through `PlayableExample`, which wraps
+the staff without changing its layout. Its sound must be **memoised** — the
+playback hook stops on identity change. A figured bass pair sounds the bass
+alone for the printed half and the chord for the played half. Examples use
+non-fixed profiles (nothing is typed into them) inside a box of definite height.
 
-The one exception is `practiceDays`, which walks the `ts` index with `eachKey`
-and never touches a row: the header draws a streak on **every** screen, and
-loading a year of practice to render one small number is a cost that only grows.
+The figured bass guide links Grove — the app's only external link — on its own
+translated line, with the leaving icon and no opener reference.
 
-**A streak survives until a whole day passes without practice.** Practise on
-Monday and Tuesday morning still reads 1 — greyed, because today is untouched —
-and only Wednesday resets it. Counting only days with practice in them empties
-the number every midnight, which reads as punishment for not having practised
-before breakfast. The flame is filled and accent-coloured once today has an
-answer in it and a grey outline until then: filled against outline carries the
-state as well as the colour does, because a state a colour-blind player cannot
-see is not a state.
+## The attempt log — `lib/db/attemptQuestion.ts` and `progress.ts`
 
-**A day is the local day**, never UTC. A session at 23:30 belongs to that
-evening, and shifting it forward would break a streak someone had earned.
-`shiftDay` walks by calendar date rather than by adding 24 hours, so a daylight
-saving boundary does not swallow a day.
+Every answer is recorded, right or wrong. **A row keeps exactly enough to ask
+the question again**: an interval is a lower note and an interval key, a scale a
+tonic and mode, a rhythm a metre, impacts and tempo, a melody its impacts bar by
+bar (`0,60|0,90`) plus tonic, mode and degrees, a chord root, quality, inversion
+and Lage, a progression its bass, figures and analysis. Everything implied —
+upper notes, spellings, note values, voicings, the right answer — is derived on
+the way out, so a row cannot disagree with itself or its notation. Nothing about
+the level is stored; `staffOnly` and `close` are derived facets.
 
-The chart stacks two scales rather than overlaying them — accuracy across the
-upper band, volume as bars along the bottom. One axis cannot carry a percentage
-and a count at once, and the questions are genuinely different: a bad day at
-forty answers and a bad day at four look identical on a line alone. Empty days
-are drawn as gaps and the accuracy line breaks across them, because a week off
-is the most informative shape a practice chart has. Columns are real `<button>`s
-overlaid on the SVG, so the chart is reachable by keyboard and announces what it
-holds instead of relying on a hover tooltip.
+**One query with an open-ended filter**: `accuracy(filter)` names any subset of
+the flat facets `attemptFacets` derives and leaves the rest open — `{}` is
+everything, `{ root: 'Eb' }` every question built on E♭ in any exercise. A
+level's settings are a filter naming its bounded dimensions (weights shape what
+comes up and are not a filter). `category` and `format` are split from the
+exercise id. A dimension an attempt lacks (a rhythm has no `root`) excludes it.
 
-**The heatmap is a picture, not a control.** Half a year of squares across a
-phone is a ten-pixel target, which fails the 44px rule and any thumb; picking a
-day belongs to the chart, whose columns are the full height of the plot. The
-grid carries one accessible summary rather than a hundred and eighty
-announcements, and a `title` gives a mouse the same detail for free. Its range
-must start on a Monday — the grid fills column by column, so the range's own
-start is what puts a day in its weekday row.
+The levels screen shows accuracy only past `ACCURACY_MINIMUM` (15) matching
+answers, over the last `ACCURACY_WINDOW` (100), newest first, walking
+`[exerciseId+ts]` backwards. `rate` is `undefined`, not `0`, when nothing
+matched. The visible figure is `aria-hidden` beside a spoken form saying what
+was measured.
 
-Breakdowns go through `groupBy(rows, dimension)`, which groups on the same flat
-facets the accuracy filter matches on. It knows nothing about music, so `root`
-puts an interval's lower note and a scale's tonic in one list, and a derived
-dimension like `staffOnly` groups exactly as readily as a stored one. The page
-currently lists `interval`, `mode`, `clef`, `keySignature` and `root`; the rhythm
-facets are derived and queryable but not yet shown, and adding one is a row on
-this page rather than anything new underneath it. Lists are
-ordered **weakest first**: a list you read from the top tells you what to
-practise next, and the strengths are still there at the other end.
+## Progress — `ProgressPage.tsx` and `lib/db/history.ts`
+
+Reached from the streak button at the right of the header, mirroring settings
+at the left; neither is a station. **Nothing new is stored**: streaks, totals
+and breakdowns are pure functions over the log, read once and sliced in memory.
+`practiceDays` walks the `ts` index with `eachKey` and never loads a row, since
+the header draws a streak on every screen.
+
+- **A streak survives until a whole day passes without practice**; today
+  untouched shows it greyed. The flame is filled and accent once today has an
+  answer, a grey outline until then.
+- **A day is the local day**; `shiftDay` walks by calendar date, so daylight
+  saving does not swallow one.
+- The chart stacks accuracy (line, broken across empty days) over volume (bars).
+  Columns are real `<button>`s.
+- The heatmap is a picture, not a control (ten-pixel targets fail 44px), with
+  one accessible summary; its range starts on a Monday.
+- Breakdowns use `groupBy(rows, dimension)` on the same facets, **weakest
+  first**; the page lists `interval`, `mode`, `clef`, `keySignature` and `root`.
+
+## Settings
+
+One setting, the interface language, reached from the top bar only.
 
 ## Not yet built
 
-Everything after Harmony — harmonic prediction, harmonic completion,
-counterpoint, the daily round — is still a placeholder page. Figured bass used
-to be a planned exercise under harmonic completion; it is its own category now,
-because reading a figure and writing one are two exercises rather than one.
+Harmonic prediction, harmonic completion, counterpoint and the daily round are
+placeholders, as are interval singing, two-voice dictation and unfigured bass.
 
-**The chorale is the next thing the four-part machinery is for**, and most of it
-is already here: `satb-entry`'s draft takes which voices are given as a
-parameter precisely so a chorale can give the soprano and ask for the other
-three, `voiceLeading.ts` grades any `Satz`, and `SatbKeyboard` is voice-agnostic.
-What it wants is public-domain chorale melodies, a generator that harmonises one
-rather than inventing a progression, and — for the modal Kantionalsatz the UdK
-paper offers as the alternative — a _second rule set_ rather than a flag on this
-one.
-
-The harmony model is deliberately ahead of the exercises standing on it. Three
-things it is built for and does not yet do:
-
-- **Harmoniefremde Töne.** Durchgänge, Wechselnoten and Antizipationen are a
-  layer over a finished setting — a `HarmonicEvent` carries `ticks` so they have
-  somewhere to go — and nothing generates into it. Suspensions do ship, because
-  a Vorhalt is _figured_ and therefore harmony rather than ornament.
-- **The wide block table.** Romanesca, Folia, Lamentobass, the Oktavregel, the
-  5–6 and 7–6 Konsekutiven, the augmented sixths and modal mixture are all
-  expressible in the two mechanisms `satzmodell.ts` already has. They are rows,
-  not code — and worth writing only once the core has been listened to.
-- **Modulation.** A block may change key; none does.
-
-Settings holds one setting — the interface language. Like Progress it is
-reached only from the top bar and has no station on the path, because neither
-is something you practise.
+- **The chorale is next for the four-part machinery**: `satb-entry` already
+  takes which voices are given, `voiceLeading.ts` grades any `Satz`, and
+  `SatbKeyboard` is voice-agnostic. It needs public-domain melodies, a
+  harmoniser, and — for a modal Kantionalsatz — a second rule set.
+- **Harmoniefremde Töne** would be a layer over a finished setting
+  (`HarmonicEvent.ticks` leaves room); only figured suspensions ship.
+- **More blocks** — Romanesca, Folia, Lamentobass, Oktavregel, 5–6/7–6,
+  augmented sixths, mixture — are rows in `satzmodell.ts`, not code.
+- **Modulation**: a block may change key; none does.
+- A true continuation line waits on Verovio drawing `@extender`.
+- A figure's accidental could self-host the Leipzig font (as `npm run glyphs`
+  does for Leland) instead of embedding it per render.
