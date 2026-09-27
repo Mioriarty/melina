@@ -254,7 +254,7 @@ describe('the chord summary', () => {
         <ChordSummary
           answers={answers}
           onPlayAgain={() => undefined}
-          onChangeSettings={() => undefined}
+          changeSettings={{ custom: false, onPress: () => undefined }}
         />
       </MemoryRouter>,
     )
@@ -282,7 +282,7 @@ describe('the chord summary', () => {
         <WritingSummary
           answers={answers}
           onPlayAgain={() => undefined}
-          onChangeSettings={() => undefined}
+          changeSettings={{ custom: false, onPress: () => undefined }}
         />
       </MemoryRouter>,
     )

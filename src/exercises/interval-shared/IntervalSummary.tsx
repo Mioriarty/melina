@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
-import type { Answered } from '@/exercises/shared/round'
+import type { Answered, ChangeSettings } from '@/exercises/shared/round'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { intervalKey, type Interval } from '@/lib/music/interval'
 
@@ -10,14 +10,14 @@ import type { IntervalQuestion } from './generate'
 export interface IntervalSummaryProps {
   answers: readonly Answered<IntervalQuestion, Interval>[]
   onPlayAgain: () => void
-  onChangeSettings: () => void
+  changeSettings: ChangeSettings
 }
 
 /** The shared summary, naming intervals. */
 export function IntervalSummary({
   answers,
   onPlayAgain,
-  onChangeSettings,
+  changeSettings,
 }: IntervalSummaryProps) {
   const { t } = useTranslation('exercise')
   const names = useMusicNames()
@@ -36,7 +36,7 @@ export function IntervalSummary({
       }
       allCorrect={t('summary.allCorrect.intervals')}
       onPlayAgain={onPlayAgain}
-      onChangeSettings={onChangeSettings}
+      changeSettings={changeSettings}
     />
   )
 }

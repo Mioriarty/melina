@@ -256,7 +256,8 @@
     "thisRound": "Diese Runde",
     "questionLabel": "{{subject}} · {{clef}}",
     "playAgain": "Noch einmal üben",
-    "changeSettings": "Einstellungen ändern"
+    "changeSettings": "Einstellungen ändern",
+    "changeDifficulty": "Schwierigkeit ändern"
   },
   "scales": {
     "reading": {

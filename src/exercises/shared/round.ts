@@ -28,6 +28,20 @@ export type Phase<TQuestion, TAnswer> =
   | { name: 'revealed'; index: number; answer: Answered<TQuestion, TAnswer> }
   | { name: 'summary' }
 
+/**
+ * The summary's way back to choosing what to practise.
+ *
+ * One value rather than a callback and a flag, so the button's label and
+ * where it goes cannot disagree: a round a level started says "Change
+ * difficulty" and returns to the levels, one started from Custom says "Change
+ * settings" and returns to the Custom screen.
+ */
+export interface ChangeSettings {
+  /** Whether the round was started from the Custom screen. */
+  custom: boolean
+  onPress: () => void
+}
+
 /** Mid-round phases, which are the ones a round screen ever sees. */
 export type ActivePhase<TQuestion, TAnswer> = Extract<
   Phase<TQuestion, TAnswer>,

@@ -148,7 +148,7 @@ export default function ChordHearingExercise() {
       <ChordSummary
         answers={round.answers}
         onPlayAgain={() => round.start()}
-        onChangeSettings={round.changeSettings}
+        changeSettings={round.changeSettings}
       />
     )
   }

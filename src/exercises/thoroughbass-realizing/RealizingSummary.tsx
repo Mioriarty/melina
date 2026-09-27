@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
-import type { Answered } from '@/exercises/shared/round'
+import type { Answered, ChangeSettings } from '@/exercises/shared/round'
 import type { ThoroughbassQuestion } from '@/exercises/thoroughbass-shared/generate'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { figureText } from '@/lib/notation/figureNotation'
@@ -12,7 +12,7 @@ import type { RealizingAnswer } from './rules'
 export interface RealizingSummaryProps {
   answers: readonly Answered<ThoroughbassQuestion, RealizingAnswer>[]
   onPlayAgain: () => void
-  onChangeSettings: () => void
+  changeSettings: ChangeSettings
 }
 
 /**
@@ -26,7 +26,7 @@ export interface RealizingSummaryProps {
 export function RealizingSummary({
   answers,
   onPlayAgain,
-  onChangeSettings,
+  changeSettings,
 }: RealizingSummaryProps) {
   const { t } = useTranslation('exercise')
   const names = useMusicNames()
@@ -61,7 +61,7 @@ export function RealizingSummary({
       }
       allCorrect={t('summary.allCorrect.realizing')}
       onPlayAgain={onPlayAgain}
-      onChangeSettings={onChangeSettings}
+      changeSettings={changeSettings}
     />
   )
 }

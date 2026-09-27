@@ -169,7 +169,8 @@ describe('useRound', () => {
       act(() => result.current.start())
       finish(result)
 
-      act(() => result.current.changeSettings())
+      expect(result.current.changeSettings.custom).toBe(true)
+      act(() => result.current.changeSettings.onPress())
       expect(result.current.phase).toEqual({ name: 'setup' })
     })
 
@@ -178,7 +179,8 @@ describe('useRound', () => {
       act(() => result.current.start(SPEC))
       finish(result)
 
-      act(() => result.current.changeSettings())
+      expect(result.current.changeSettings.custom).toBe(false)
+      act(() => result.current.changeSettings.onPress())
       expect(result.current.phase).toEqual({ name: 'levels' })
     })
 
@@ -190,7 +192,8 @@ describe('useRound', () => {
       act(() => result.current.start())
       finish(result)
 
-      act(() => result.current.changeSettings())
+      expect(result.current.changeSettings.custom).toBe(true)
+      act(() => result.current.changeSettings.onPress())
       expect(result.current.phase).toEqual({ name: 'setup' })
     })
 
@@ -203,7 +206,8 @@ describe('useRound', () => {
       act(() => result.current.start(SPEC))
       finish(result)
 
-      act(() => result.current.changeSettings())
+      expect(result.current.changeSettings.custom).toBe(false)
+      act(() => result.current.changeSettings.onPress())
       expect(result.current.phase).toEqual({ name: 'levels' })
     })
   })

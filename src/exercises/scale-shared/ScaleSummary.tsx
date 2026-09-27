@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
-import type { Answered } from '@/exercises/shared/round'
+import type { Answered, ChangeSettings } from '@/exercises/shared/round'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import type { ModeId } from '@/lib/music/scale'
 
@@ -10,14 +10,14 @@ import type { ScaleQuestion } from './generate'
 export interface ScaleSummaryProps {
   answers: readonly Answered<ScaleQuestion, ModeId>[]
   onPlayAgain: () => void
-  onChangeSettings: () => void
+  changeSettings: ChangeSettings
 }
 
 /** The shared summary, naming modes. */
 export function ScaleSummary({
   answers,
   onPlayAgain,
-  onChangeSettings,
+  changeSettings,
 }: ScaleSummaryProps) {
   const { t } = useTranslation('exercise')
   const names = useMusicNames()
@@ -36,7 +36,7 @@ export function ScaleSummary({
       }
       allCorrect={t('summary.allCorrect.scales')}
       onPlayAgain={onPlayAgain}
-      onChangeSettings={onChangeSettings}
+      changeSettings={changeSettings}
     />
   )
 }

@@ -1,6 +1,6 @@
 import type { ChordQuestion } from '@/exercises/chord-shared/generate'
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
-import type { Answered } from '@/exercises/shared/round'
+import type { Answered, ChangeSettings } from '@/exercises/shared/round'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { chordSize, memberAt } from '@/lib/music/chord'
 import { tonicKey } from '@/lib/music/scale'
@@ -11,7 +11,7 @@ import type { WritingAnswer } from './rules'
 export interface WritingSummaryProps {
   answers: readonly Answered<ChordQuestion, WritingAnswer>[]
   onPlayAgain: () => void
-  onChangeSettings: () => void
+  changeSettings: ChangeSettings
 }
 
 /**
@@ -25,7 +25,7 @@ export interface WritingSummaryProps {
 export function WritingSummary({
   answers,
   onPlayAgain,
-  onChangeSettings,
+  changeSettings,
 }: WritingSummaryProps) {
   const { t } = useTranslation('exercise')
   const names = useMusicNames()
@@ -50,7 +50,7 @@ export function WritingSummary({
       chipTitle={asked}
       allCorrect={t('chord.summary.allCorrect')}
       onPlayAgain={onPlayAgain}
-      onChangeSettings={onChangeSettings}
+      changeSettings={changeSettings}
     />
   )
 }

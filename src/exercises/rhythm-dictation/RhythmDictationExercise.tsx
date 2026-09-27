@@ -138,7 +138,7 @@ export default function RhythmDictationExercise() {
       <RhythmSummary
         answers={round.answers}
         onPlayAgain={() => round.start()}
-        onChangeSettings={round.changeSettings}
+        changeSettings={round.changeSettings}
       />
     )
   }

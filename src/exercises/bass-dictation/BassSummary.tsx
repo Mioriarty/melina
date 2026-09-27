@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { bassDegrees, type HarmonyQuestion } from '@/exercises/harmony-shared/generate'
 import type { BassAnswer } from '@/exercises/harmony-shared/rules'
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
-import type { Answered } from '@/exercises/shared/round'
+import type { Answered, ChangeSettings } from '@/exercises/shared/round'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import type { Degree } from '@/lib/music/degree'
 import { cadenceOf } from '@/lib/music/progression'
@@ -21,14 +21,10 @@ import { cadenceOf } from '@/lib/music/progression'
 export interface BassSummaryProps {
   answers: readonly Answered<HarmonyQuestion, BassAnswer>[]
   onPlayAgain: () => void
-  onChangeSettings: () => void
+  changeSettings: ChangeSettings
 }
 
-export function BassSummary({
-  answers,
-  onPlayAgain,
-  onChangeSettings,
-}: BassSummaryProps) {
+export function BassSummary({ answers, onPlayAgain, changeSettings }: BassSummaryProps) {
   const { t } = useTranslation('exercise')
   const names = useMusicNames()
 
@@ -46,7 +42,7 @@ export function BassSummary({
       chipTitle={(answer) => line(bassDegrees(answer.question.progression) ?? [])}
       allCorrect={t('harmony.summary.allCorrect')}
       onPlayAgain={onPlayAgain}
-      onChangeSettings={onChangeSettings}
+      changeSettings={changeSettings}
     />
   )
 }

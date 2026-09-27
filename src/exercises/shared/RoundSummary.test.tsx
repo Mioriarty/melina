@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
 
 import { RoundSummary } from './RoundSummary'
-import type { Answered } from './round'
+import type { Answered, ChangeSettings } from './round'
 
 /**
  * What just happened, and what to do about it.
@@ -32,7 +32,11 @@ function answered(
   }
 }
 
-function summary(answers: readonly Answered<Question, string>[], onPlayAgain = vi.fn()) {
+function summary(
+  answers: readonly Answered<Question, string>[],
+  onPlayAgain = vi.fn(),
+  changeSettings: ChangeSettings = { custom: false, onPress: vi.fn() },
+) {
   render(
     <MemoryRouter>
       <RoundSummary
@@ -43,7 +47,7 @@ function summary(answers: readonly Answered<Question, string>[], onPlayAgain = v
         chipTitle={({ question }) => `${question.subject} · ${question.clef}`}
         allCorrect="Nothing left to fix here."
         onPlayAgain={onPlayAgain}
-        onChangeSettings={vi.fn()}
+        changeSettings={changeSettings}
       />
     </MemoryRouter>,
   )
@@ -53,6 +57,24 @@ function summary(answers: readonly Answered<Question, string>[], onPlayAgain = v
 const workOn = () => within(screen.getByRole('list', { name: 'What to work on' }))
 
 describe('RoundSummary', () => {
+  it('offers another level after a round a level started', () => {
+    const onPress = vi.fn()
+    summary([answered('a', 'a')], vi.fn(), { custom: false, onPress })
+
+    fireEvent.click(screen.getByRole('button', { name: /Change difficulty/ }))
+    expect(onPress).toHaveBeenCalledOnce()
+    expect(screen.queryByRole('button', { name: /Change settings/ })).toBeNull()
+  })
+
+  it('offers the settings again after a Custom round', () => {
+    const onPress = vi.fn()
+    summary([answered('a', 'a')], vi.fn(), { custom: true, onPress })
+
+    fireEvent.click(screen.getByRole('button', { name: /Change settings/ }))
+    expect(onPress).toHaveBeenCalledOnce()
+    expect(screen.queryByRole('button', { name: /Change difficulty/ })).toBeNull()
+  })
+
   it('states the score once', () => {
     summary([answered('a', 'a'), answered('b', 'b'), answered('c', 'x')])
 

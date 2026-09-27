@@ -131,7 +131,7 @@ export default function ScaleHearingExercise() {
       <ScaleSummary
         answers={round.answers}
         onPlayAgain={() => round.start()}
-        onChangeSettings={round.changeSettings}
+        changeSettings={round.changeSettings}
       />
     )
   }

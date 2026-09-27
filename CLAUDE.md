@@ -798,9 +798,11 @@ live in `levels.json` under `<exercise-group>.<id>`. A list may come in
 **sections** (`Difficulty.section`, grouped by `levelRuns`) with continuous
 numbering.
 
-**"Change settings" returns to where the settings were chosen**:
-`useRound.changeSettings` goes to Custom after a round started from Custom
-(kept across Play again) and to the levels after one a level started.
+**The summary returns to where the settings were chosen**, and says which:
+`useRound.changeSettings` is one `ChangeSettings` value (`custom` plus
+`onPress`), so the label and the target cannot disagree. After a round a level
+started it reads "Change difficulty" and goes to the levels; after a Custom
+round (kept across Play again) it reads "Change settings" and goes to Custom.
 
 `?screen=setup` on an exercise URL restores the Custom screen after a trip to a
 guide — settings survive in Dexie, the visible screen is React state.

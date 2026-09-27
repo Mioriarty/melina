@@ -1,5 +1,5 @@
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
-import type { Answered } from '@/exercises/shared/round'
+import type { Answered, ChangeSettings } from '@/exercises/shared/round'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { chordSize, memberAt } from '@/lib/music/chord'
 import { tonicKey } from '@/lib/music/scale'
@@ -11,7 +11,7 @@ import type { ChordAnswer } from './rules'
 export interface ChordSummaryProps {
   answers: readonly Answered<ChordQuestion, ChordAnswer>[]
   onPlayAgain: () => void
-  onChangeSettings: () => void
+  changeSettings: ChangeSettings
 }
 
 /**
@@ -30,7 +30,7 @@ export interface ChordSummaryProps {
 export function ChordSummary({
   answers,
   onPlayAgain,
-  onChangeSettings,
+  changeSettings,
 }: ChordSummaryProps) {
   const { t } = useTranslation('exercise')
   const names = useMusicNames()
@@ -71,7 +71,7 @@ export function ChordSummary({
       chipTitle={wanted}
       allCorrect={t('chord.summary.allCorrect')}
       onPlayAgain={onPlayAgain}
-      onChangeSettings={onChangeSettings}
+      changeSettings={changeSettings}
     />
   )
 }

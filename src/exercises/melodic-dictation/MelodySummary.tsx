@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
-import type { Answered } from '@/exercises/shared/round'
+import type { Answered, ChangeSettings } from '@/exercises/shared/round'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { samePhrase } from '@/lib/music/phrase'
 import { sameSounds } from '@/lib/music/pitch'
@@ -15,7 +15,7 @@ import type { MelodyAnswer } from './rules'
 export interface MelodySummaryProps {
   answers: readonly Answered<MelodyQuestion, MelodyAnswer>[]
   onPlayAgain: () => void
-  onChangeSettings: () => void
+  changeSettings: ChangeSettings
 }
 
 /** The finest division anywhere in the phrase, which is what it asked for. */
@@ -47,7 +47,7 @@ function division(question: MelodyQuestion) {
 export function MelodySummary({
   answers,
   onPlayAgain,
-  onChangeSettings,
+  changeSettings,
 }: MelodySummaryProps) {
   const { t } = useTranslation('exercise')
   const names = useMusicNames()
@@ -79,7 +79,7 @@ export function MelodySummary({
       }
       allCorrect={t('summary.allCorrect.melody')}
       onPlayAgain={onPlayAgain}
-      onChangeSettings={onChangeSettings}
+      changeSettings={changeSettings}
     />
   )
 }

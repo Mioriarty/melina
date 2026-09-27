@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
-import type { Answered } from '@/exercises/shared/round'
+import type { Answered, ChangeSettings } from '@/exercises/shared/round'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { degreePitch, type Degree } from '@/lib/music/degree'
 import { chromaticValue } from '@/lib/music/pitch'
@@ -12,7 +12,7 @@ import type { DegreeQuestion } from './generate'
 export interface DegreeSummaryProps {
   answers: readonly Answered<DegreeQuestion, readonly Degree[]>[]
   onPlayAgain: () => void
-  onChangeSettings: () => void
+  changeSettings: ChangeSettings
 }
 
 /**
@@ -53,7 +53,7 @@ function firstMiss({
 export function DegreeSummary({
   answers,
   onPlayAgain,
-  onChangeSettings,
+  changeSettings,
 }: DegreeSummaryProps) {
   const { t } = useTranslation('exercise')
   const names = useMusicNames()
@@ -75,7 +75,7 @@ export function DegreeSummary({
       }
       allCorrect={t('summary.allCorrect.degrees')}
       onPlayAgain={onPlayAgain}
-      onChangeSettings={onChangeSettings}
+      changeSettings={changeSettings}
     />
   )
 }

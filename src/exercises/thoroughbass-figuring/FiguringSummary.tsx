@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
-import type { Answered } from '@/exercises/shared/round'
+import type { Answered, ChangeSettings } from '@/exercises/shared/round'
 import type { ThoroughbassQuestion } from '@/exercises/thoroughbass-shared/generate'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { figureText } from '@/lib/notation/figureNotation'
@@ -11,7 +11,7 @@ import type { FiguringAnswer } from './rules'
 export interface FiguringSummaryProps {
   answers: readonly Answered<ThoroughbassQuestion, FiguringAnswer>[]
   onPlayAgain: () => void
-  onChangeSettings: () => void
+  changeSettings: ChangeSettings
 }
 
 const printed = (question: ThoroughbassQuestion) =>
@@ -28,7 +28,7 @@ const printed = (question: ThoroughbassQuestion) =>
 export function FiguringSummary({
   answers,
   onPlayAgain,
-  onChangeSettings,
+  changeSettings,
 }: FiguringSummaryProps) {
   const { t } = useTranslation('exercise')
   const names = useMusicNames()
@@ -59,7 +59,7 @@ export function FiguringSummary({
       }
       allCorrect={t('summary.allCorrect.figuring')}
       onPlayAgain={onPlayAgain}
-      onChangeSettings={onChangeSettings}
+      changeSettings={changeSettings}
     />
   )
 }

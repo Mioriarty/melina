@@ -1,10 +1,10 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import type { AttemptQuestion } from '@/lib/db/attemptQuestion'
 import { recordAttempt } from '@/lib/db/attempts'
 import { createRandom, type Random } from '@/lib/utils/seededRandom'
 
-import type { Answered, Phase } from './round'
+import type { Answered, ChangeSettings, Phase } from './round'
 
 /**
  * The levels → setup → round → summary state machine.
@@ -52,12 +52,10 @@ export interface RoundController<TSpec, TQuestion, TAnswer> {
   toLevels: () => void
   /**
    * Back to wherever this round's settings were chosen: the Custom screen for
-   * a round started from it, the level list for a round a level started.
-   * What the summary's "Change settings" means — after a Custom round,
-   * landing on the level list would mean opening Custom again to change one
-   * thing.
+   * a round started from it, the level list for a round a level started —
+   * and which of the two, so the summary can say so.
    */
-  changeSettings: () => void
+  changeSettings: ChangeSettings
 }
 
 export function useRound<TSpec, TQuestion, TAnswer>(
@@ -127,8 +125,11 @@ export function useRound<TSpec, TQuestion, TAnswer>(
 
   const toSetup = useCallback(() => setPhase({ name: 'setup' }), [])
   const toLevels = useCallback(() => setPhase({ name: 'levels' }), [])
-  const changeSettings = useCallback(
-    () => setPhase(custom ? { name: 'setup' } : { name: 'levels' }),
+  const changeSettings = useMemo<ChangeSettings>(
+    () => ({
+      custom,
+      onPress: () => setPhase(custom ? { name: 'setup' } : { name: 'levels' }),
+    }),
     [custom],
   )
 

@@ -4,7 +4,7 @@ import { Link } from 'react-router'
 import { Icon } from '@/components/ui/Icon'
 import { cn } from '@/lib/utils/cn'
 
-import type { Answered } from './round'
+import type { Answered, ChangeSettings } from './round'
 
 export interface RoundSummaryProps<TQuestion, TAnswer> {
   answers: readonly Answered<TQuestion, TAnswer>[]
@@ -44,7 +44,7 @@ export interface RoundSummaryProps<TQuestion, TAnswer> {
   /** Where to go next when nothing was missed. Exercise-specific advice. */
   allCorrect: string
   onPlayAgain: () => void
-  onChangeSettings: () => void
+  changeSettings: ChangeSettings
 }
 
 /**
@@ -67,7 +67,7 @@ export function RoundSummary<TQuestion, TAnswer>({
   chipTitle,
   allCorrect,
   onPlayAgain,
-  onChangeSettings,
+  changeSettings,
 }: RoundSummaryProps<TQuestion, TAnswer>) {
   const { t } = useTranslation(['exercise', 'common'])
 
@@ -192,11 +192,13 @@ export function RoundSummary<TQuestion, TAnswer>({
           </button>
           <button
             type="button"
-            onClick={onChangeSettings}
+            onClick={changeSettings.onPress}
             className="flex min-h-12 items-center justify-center gap-2 rounded-full border border-rule bg-paper-raised font-medium text-ink transition-colors hover:border-accent hover:text-accent"
           >
-            <Icon name="options" size={18} />
-            {t('exercise:summary.changeSettings')}
+            <Icon name={changeSettings.custom ? 'options' : 'list'} size={18} />
+            {changeSettings.custom
+              ? t('exercise:summary.changeSettings')
+              : t('exercise:summary.changeDifficulty')}
           </button>
         </div>
 

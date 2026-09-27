@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import type { CadenceQuestion } from '@/exercises/harmony-shared/generate'
 import { orderFindings } from '@/exercises/harmony-shared/findingText'
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
-import type { Answered } from '@/exercises/shared/round'
+import type { Answered, ChangeSettings } from '@/exercises/shared/round'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { getRule, type Finding } from '@/lib/music/voiceLeading'
 import { tonicKey } from '@/lib/music/scale'
@@ -39,13 +39,13 @@ function principal(answer: CadenceAnswered): Finding | 'lage' | undefined {
 export interface CadenceSummaryProps {
   answers: readonly CadenceAnswered[]
   onPlayAgain: () => void
-  onChangeSettings: () => void
+  changeSettings: ChangeSettings
 }
 
 export function CadenceSummary({
   answers,
   onPlayAgain,
-  onChangeSettings,
+  changeSettings,
 }: CadenceSummaryProps) {
   const { t } = useTranslation('exercise')
   const names = useMusicNames()
@@ -82,7 +82,7 @@ export function CadenceSummary({
       }}
       allCorrect={t('summary.allCorrect.cadence')}
       onPlayAgain={onPlayAgain}
-      onChangeSettings={onChangeSettings}
+      changeSettings={changeSettings}
     />
   )
 }

@@ -140,7 +140,7 @@ export default function IntervalHearingExercise() {
       <IntervalSummary
         answers={round.answers}
         onPlayAgain={() => round.start()}
-        onChangeSettings={round.changeSettings}
+        changeSettings={round.changeSettings}
       />
     )
   }

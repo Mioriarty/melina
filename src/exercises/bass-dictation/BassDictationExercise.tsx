@@ -129,7 +129,7 @@ export default function BassDictationExercise() {
       <BassSummary
         answers={round.answers}
         onPlayAgain={() => round.start()}
-        onChangeSettings={round.changeSettings}
+        changeSettings={round.changeSettings}
       />
     )
   }
