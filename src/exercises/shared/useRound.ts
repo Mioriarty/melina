@@ -50,6 +50,14 @@ export interface RoundController<TSpec, TQuestion, TAnswer> {
   next: () => void
   toSetup: () => void
   toLevels: () => void
+  /**
+   * Back to wherever this round's settings were chosen: the Custom screen for
+   * a round started from it, the level list for a round a level started.
+   * What the summary's "Change settings" means — after a Custom round,
+   * landing on the level list would mean opening Custom again to change one
+   * thing.
+   */
+  changeSettings: () => void
 }
 
 export function useRound<TSpec, TQuestion, TAnswer>(
@@ -60,11 +68,17 @@ export function useRound<TSpec, TQuestion, TAnswer>(
   const [phase, setPhase] = useState<Phase<TQuestion, TAnswer>>({ name: 'levels' })
   const [questions, setQuestions] = useState<readonly TQuestion[]>([])
   const [answers, setAnswers] = useState<readonly Answered<TQuestion, TAnswer>[]>([])
+  // A level starts a round with its own spec; the Custom screen starts one
+  // with none. "Play again" also passes none, and keeps whichever it was.
+  const [custom, setCustom] = useState(false)
 
   const start = useCallback(
     (override?: TSpec) => {
       const active = override ?? spec
       if (active === undefined) return
+
+      if (override !== undefined) setCustom(false)
+      else if (phase.name === 'setup') setCustom(true)
 
       const round = rules.generate(createRandom(Date.now() >>> 0), active)
       setQuestions(round)
@@ -73,7 +87,7 @@ export function useRound<TSpec, TQuestion, TAnswer>(
       // dropping the player into a round with no questions in it.
       setPhase((current) => (round.length === 0 ? current : { name: 'asking', index: 0 }))
     },
-    [rules, spec],
+    [phase.name, rules, spec],
   )
 
   const answer = useCallback(
@@ -113,6 +127,20 @@ export function useRound<TSpec, TQuestion, TAnswer>(
 
   const toSetup = useCallback(() => setPhase({ name: 'setup' }), [])
   const toLevels = useCallback(() => setPhase({ name: 'levels' }), [])
+  const changeSettings = useCallback(
+    () => setPhase(custom ? { name: 'setup' } : { name: 'levels' }),
+    [custom],
+  )
 
-  return { phase, questions, answers, start, answer, next, toSetup, toLevels }
+  return {
+    phase,
+    questions,
+    answers,
+    start,
+    answer,
+    next,
+    toSetup,
+    toLevels,
+    changeSettings,
+  }
 }

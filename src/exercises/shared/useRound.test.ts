@@ -152,6 +152,62 @@ describe('useRound', () => {
     expect(result.current.phase).toEqual({ name: 'levels' })
   })
 
+  describe('changing the settings after a round', () => {
+    function finish(result: ReturnType<typeof round>['result']) {
+      for (const question of ['a', 'b', 'c']) {
+        act(() => result.current.answer(question, 100))
+        act(() => result.current.next())
+      }
+      expect(result.current.phase).toEqual({ name: 'summary' })
+    }
+
+    it('returns to the Custom screen after a round started from it', () => {
+      // Landing on the level list instead meant opening Custom again to
+      // change the one thing the player wanted to change.
+      const { result } = round(SPEC)
+      act(() => result.current.toSetup())
+      act(() => result.current.start())
+      finish(result)
+
+      act(() => result.current.changeSettings())
+      expect(result.current.phase).toEqual({ name: 'setup' })
+    })
+
+    it('returns to the level list after a round a level started', () => {
+      const { result } = round(SPEC)
+      act(() => result.current.start(SPEC))
+      finish(result)
+
+      act(() => result.current.changeSettings())
+      expect(result.current.phase).toEqual({ name: 'levels' })
+    })
+
+    it('remembers where the round came from across Play again', () => {
+      const { result } = round(SPEC)
+      act(() => result.current.toSetup())
+      act(() => result.current.start())
+      finish(result)
+      act(() => result.current.start())
+      finish(result)
+
+      act(() => result.current.changeSettings())
+      expect(result.current.phase).toEqual({ name: 'setup' })
+    })
+
+    it('forgets Custom once a level is picked', () => {
+      const { result } = round(SPEC)
+      act(() => result.current.toSetup())
+      act(() => result.current.start())
+      finish(result)
+      act(() => result.current.toLevels())
+      act(() => result.current.start(SPEC))
+      finish(result)
+
+      act(() => result.current.changeSettings())
+      expect(result.current.phase).toEqual({ name: 'levels' })
+    })
+  })
+
   it('logs the question and the answer, right or wrong', async () => {
     // The substrate every statistic is read from. A silently broken log costs
     // nothing today and everything the day that screen is built.

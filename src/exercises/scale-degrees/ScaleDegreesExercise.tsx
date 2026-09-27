@@ -124,7 +124,7 @@ export default function ScaleDegreesExercise() {
       <DegreeSummary
         answers={round.answers}
         onPlayAgain={() => round.start()}
-        onChangeSettings={round.toLevels}
+        onChangeSettings={round.changeSettings}
       />
     )
   }

@@ -130,7 +130,7 @@ export default function ThoroughbassFiguringExercise() {
       <FiguringSummary
         answers={round.answers}
         onPlayAgain={() => round.start()}
-        onChangeSettings={round.toLevels}
+        onChangeSettings={round.changeSettings}
       />
     )
   }
