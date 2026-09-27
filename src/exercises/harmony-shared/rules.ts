@@ -2,17 +2,13 @@ import type { RoundRules } from '@/exercises/shared/useRound'
 import { degreesKey, degreesSoundEqual, type Degree } from '@/lib/music/degree'
 
 import { harmonyAttempt } from './attempt'
-import {
-  bassDegrees,
-  generateRound,
-  type HarmonyQuestion,
-  type HarmonyRoundSpec,
-} from './generate'
+import { generateRound, type HarmonyQuestion, type HarmonyRoundSpec } from './generate'
+import { BASS_LINE, type LineDef } from './lines'
 
-/** The bass line, written as scale degrees. */
-export type BassAnswer = readonly Degree[]
+/** A voice of the progression, written as scale degrees. */
+export type LineAnswer = readonly Degree[]
 
-export function bassAnswerKey(answer: BassAnswer): string {
+export function lineAnswerKey(answer: LineAnswer): string {
   return degreesKey(answer)
 }
 
@@ -25,18 +21,31 @@ export function bassAnswerKey(answer: BassAnswer): string {
  * it matters more than usual, because the leading note of a dominant is a
  * raised seventh and the note a semitone below it is a flattened first —
  * different names, one sound.
+ *
+ * Whether the octave counts is the line's own business: the bass's steps all
+ * sit in the tonic's octave, so for it the comparison is by pitch class.
  */
-export function isBassCorrect(chosen: BassAnswer, question: HarmonyQuestion): boolean {
-  const wanted = bassDegrees(question.progression)
+export function isLineCorrect(
+  line: LineDef,
+  chosen: LineAnswer,
+  question: HarmonyQuestion,
+): boolean {
+  const wanted = line.answer(question)
   if (wanted === undefined) return false
 
   const { key } = question.progression
-  return degreesSoundEqual({ ...key.tonic, octave: 4 }, key.mode, chosen, wanted)
+  return degreesSoundEqual(line.tonic(key), key.mode, chosen, wanted)
 }
 
-export const BASS_RULES: RoundRules<HarmonyRoundSpec, HarmonyQuestion, BassAnswer> = {
-  generate: generateRound,
-  isCorrect: isBassCorrect,
-  attempt: harmonyAttempt,
-  answerKey: bassAnswerKey,
+export function lineRules(
+  line: LineDef,
+): RoundRules<HarmonyRoundSpec, HarmonyQuestion, LineAnswer> {
+  return {
+    generate: generateRound,
+    isCorrect: (chosen, question) => isLineCorrect(line, chosen, question),
+    attempt: harmonyAttempt,
+    answerKey: lineAnswerKey,
+  }
 }
+
+export const BASS_RULES = lineRules(BASS_LINE)

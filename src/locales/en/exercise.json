@@ -434,11 +434,19 @@
   "harmony": {
     "replay": "Play again",
     "scoreLabel": {
-      "draft": "The bass line you have written so far, in {{key}}",
+      "draft": {
+        "bass": "The bass line you have written so far, in {{key}}",
+        "soprano": "The soprano line you have written so far, in {{key}}",
+        "blank": "A progression in {{key}}, hidden until you answer"
+      },
       "revealed": "The progression in four parts, in {{key}}, with its figures, Stufen and functions"
     },
     "summary": {
-      "allCorrect": "Every bass line right."
+      "allCorrect": {
+        "bass": "Every bass line right.",
+        "soprano": "Every soprano line right.",
+        "stufen": "Every chord named."
+      }
     },
     "cadence": {
       "levelsBlurb": "Write a cadence out in four parts, beginning in the Lage the prompt names.",

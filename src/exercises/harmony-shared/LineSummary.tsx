@@ -1,7 +1,5 @@
 import { useTranslation } from 'react-i18next'
 
-import { bassDegrees, type HarmonyQuestion } from '@/exercises/harmony-shared/generate'
-import type { BassAnswer } from '@/exercises/harmony-shared/rules'
 import { keyChip } from '@/exercises/shared/keyChip'
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
 import type { Answered, ChangeSettings } from '@/exercises/shared/round'
@@ -9,6 +7,10 @@ import { useMusicNames } from '@/hooks/useMusicNames'
 import type { Degree } from '@/lib/music/degree'
 import { keyPitch } from '@/lib/music/key'
 import { cadenceOf } from '@/lib/music/progression'
+
+import type { HarmonyQuestion } from './generate'
+import type { LineDef } from './lines'
+import type { LineAnswer } from './rules'
 
 /**
  * What was missed, grouped by the Satztechnik it was missed in.
@@ -20,17 +22,23 @@ import { cadenceOf } from '@/lib/music/progression'
  * chord", which is no use to anybody.
  */
 
-export interface BassSummaryProps {
-  answers: readonly Answered<HarmonyQuestion, BassAnswer>[]
+export interface LineSummaryProps {
+  line: LineDef
+  answers: readonly Answered<HarmonyQuestion, LineAnswer>[]
   onPlayAgain: () => void
   changeSettings: ChangeSettings
 }
 
-export function BassSummary({ answers, onPlayAgain, changeSettings }: BassSummaryProps) {
+export function LineSummary({
+  line,
+  answers,
+  onPlayAgain,
+  changeSettings,
+}: LineSummaryProps) {
   const { t } = useTranslation('exercise')
   const names = useMusicNames()
 
-  const line = (degrees: readonly Degree[]) =>
+  const written = (degrees: readonly Degree[]) =>
     degrees.map((degree) => names.degreeShort(degree)).join(' ')
 
   return (
@@ -40,7 +48,7 @@ export function BassSummary({ answers, onPlayAgain, changeSettings }: BassSummar
       subjectName={(answer) =>
         names.technique(cadenceOf(answer.question.progression) ?? 'frei')
       }
-      answerName={(answer) => line(answer.chosen)}
+      answerName={(answer) => written(answer.chosen)}
       chipLabel={({ question }) => {
         const { key } = question.progression
         return {
@@ -48,8 +56,8 @@ export function BassSummary({ answers, onPlayAgain, changeSettings }: BassSummar
           sub: keyChip(names, keyPitch(key), key.mode).main,
         }
       }}
-      chipTitle={(answer) => line(bassDegrees(answer.question.progression) ?? [])}
-      allCorrect={t('harmony.summary.allCorrect')}
+      chipTitle={(answer) => written(line.answer(answer.question) ?? [])}
+      allCorrect={t(`harmony.summary.allCorrect.${line.voice}`)}
       onPlayAgain={onPlayAgain}
       changeSettings={changeSettings}
     />

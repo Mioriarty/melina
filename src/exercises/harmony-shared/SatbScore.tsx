@@ -7,7 +7,6 @@ import type { PlaybackStatus } from '@/exercises/shared/usePlayback'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { getKeySignature } from '@/lib/music/keySignature'
 import { keySignatureOf } from '@/lib/music/key'
-import type { HarmonicEvent } from '@/lib/music/harmony'
 import type { Pitch } from '@/lib/music/pitch'
 import { tonicKey } from '@/lib/music/scale'
 import type { VoiceId } from '@/lib/music/satbVoicing'
@@ -24,35 +23,29 @@ import type { HarmonyQuestion } from './generate'
  * **The staff is where the answer goes, so the replay control stands on its
  * own** — the same exception rhythmic dictation makes. Everywhere else in
  * melina the notation *is* the play button, because the notation is what is
- * being played; here it is the player's own half-written bass line, and
- * pressing that to hear the question would be backwards.
+ * being played; here it is the player's own half-written line, and pressing
+ * that to hear the question would be backwards.
  *
- * While the question is open only the bass is drawn, and only as far as it has
- * been written. The other three voices are **engraved in place and not drawn**,
- * so the staff is exactly the size it will be when the answer arrives and
- * nothing moves at the moment the player looks at it.
+ * While the question is open only the voice being written is drawn, and only
+ * as far as it has been written. The others are **engraved in place and not
+ * drawn**, so the staff is exactly the size it will be when the answer arrives
+ * and nothing moves at the moment the player looks at it.
  */
 
-const UPPER: readonly VoiceId[] = ['soprano', 'alto', 'tenor']
 const ALL: readonly VoiceId[] = ['soprano', 'alto', 'tenor', 'bass']
 
-/**
- * Which bass note each event belongs to — a held one shares the one before it.
- *
- * The player writes one degree per *bass note*, not per sonority, so a
- * suspension's two chords both read from the same slot of the draft.
- */
-function bassSlots(events: readonly HarmonicEvent[]): readonly number[] {
-  return events.map(
-    (_, index) =>
-      events.slice(0, index + 1).filter((event) => event.held !== true).length - 1,
-  )
+/** A voice as far as the player has written it. */
+export interface WrittenLine {
+  voice: VoiceId
+  pitches: readonly Pitch[]
+  /** Which of `pitches` each event of the setting shows — see `LineDef.slots`. */
+  slots: readonly number[]
 }
 
 export interface SatbScoreProps {
   question: HarmonyQuestion
-  /** The bass notes written so far. */
-  written: readonly Pitch[]
+  /** The voice being written. Absent, the staff stays blank until the reveal. */
+  written?: WrittenLine
   revealed: boolean
   onPlay: () => void
   status: PlaybackStatus
@@ -73,7 +66,6 @@ export function SatbScore({
   const signature = keySignatureOf(key) ?? '0'
   const keyName = names.scaleName(tonicKey(key.tonic), key.mode)
 
-  const slots = bassSlots(satz.events)
   const events: SatbEvent[] = satz.events.map((event, index) => {
     const voicing = satz.voicings[index]
     if (voicing === undefined)
@@ -87,12 +79,19 @@ export function SatbScore({
       }
     }
 
-    const entered = written[slots[index] ?? 0]
+    const entered =
+      written === undefined ? undefined : written.pitches[written.slots[index] ?? 0]
     return {
-      voicing: entered === undefined ? voicing : { ...voicing, bass: entered },
+      voicing:
+        written === undefined || entered === undefined
+          ? voicing
+          : { ...voicing, [written.voice]: entered },
       ticks: event.ticks,
       ...(event.held === true ? { held: true } : {}),
-      hide: entered === undefined ? ALL : UPPER,
+      hide:
+        written === undefined || entered === undefined
+          ? ALL
+          : ALL.filter((voice) => voice !== written.voice),
     }
   })
 
@@ -141,7 +140,9 @@ export function SatbScore({
           label={
             revealed
               ? t('harmony.scoreLabel.revealed', { key: keyName })
-              : t('harmony.scoreLabel.draft', { key: keyName })
+              : t(`harmony.scoreLabel.draft.${written?.voice ?? 'blank'}`, {
+                  key: keyName,
+                })
           }
         />
       </div>

@@ -9,50 +9,44 @@ import {
   removeLast,
   type DegreeDraft,
 } from '@/exercises/dictation-shared/degreeDraft'
-import { SatbScore } from '@/exercises/harmony-shared/SatbScore'
-import {
-  bassDegrees,
-  bassLength,
-  bassTonic,
-  type HarmonyQuestion,
-} from '@/exercises/harmony-shared/generate'
-import type { BassAnswer } from '@/exercises/harmony-shared/rules'
 import { RoundScreen } from '@/exercises/shared/RoundScreen'
 import type { ActivePhase } from '@/exercises/shared/round'
 import type { PlaybackStatus } from '@/exercises/shared/usePlayback'
-import { degreePitch, stepRange, type Degree } from '@/lib/music/degree'
+import { degreePitch, type Degree } from '@/lib/music/degree'
 import { keySignatureOf } from '@/lib/music/key'
 import type { Pitch } from '@/lib/music/pitch'
 
-/** A bass is answered without an octave, so the keyboard is the seven degrees. */
-const SEVEN = stepRange({ number: 1, alteration: 0 }, { number: 7, alteration: 0 })
+import type { HarmonyQuestion } from './generate'
+import type { LineDef } from './lines'
+import type { LineAnswer } from './rules'
+import { SatbScore } from './SatbScore'
 
 /**
- * Hear a progression, write down its bass.
+ * Hear a progression, write down one of its voices.
  *
- * **The bass line answers itself on its last note**, the way a bar of rhythm
- * and a melody do: there is no confirm key, every key goes dead once the line
- * is as long as the one that was played, and backspace covers everything
- * before that.
+ * **The line answers itself on its last note**, the way a bar of rhythm and a
+ * melody do: there is no confirm key, every key goes dead once the line is as
+ * long as the one that was played, and backspace covers everything before
+ * that.
  *
- * The degrees are drawn in the **bass clef** and in the octave a bass actually
- * sings in — see `bassTonic`, which picks it per key so the seven of them stay
- * inside the staff. Which octave the real bass took is not part of the answer,
- * so the keys only have to say which note, not where.
+ * The keys are drawn in the voice's own clef and register — `LineDef.tonic`
+ * picks the octave per key so every step the keyboard offers stays readable.
  */
 
-export interface BassRoundScreenProps {
-  phase: ActivePhase<HarmonyQuestion, BassAnswer>
+export interface LineRoundScreenProps {
+  line: LineDef
+  phase: ActivePhase<HarmonyQuestion, LineAnswer>
   total: number
   question: HarmonyQuestion
   onPlay: () => void
   playStatus: PlaybackStatus
-  onAnswer: (chosen: BassAnswer, ms: number) => void
+  onAnswer: (chosen: LineAnswer, ms: number) => void
   onNext: () => void
   onQuit: () => void
 }
 
-export function BassRoundScreen({
+export function LineRoundScreen({
+  line,
   phase,
   total,
   question,
@@ -61,27 +55,25 @@ export function BassRoundScreen({
   onAnswer,
   onNext,
   onQuit,
-}: BassRoundScreenProps) {
+}: LineRoundScreenProps) {
   const { t } = useTranslation('exercise')
-  const [draft, setDraft] = useState<DegreeDraft>(() =>
-    emptyDraft(bassLength(question.progression)),
-  )
+  const [draft, setDraft] = useState<DegreeDraft>(() => emptyDraft(line.length(question)))
 
   const revealed = phase.name === 'revealed'
   const { key } = question.progression
-  const tonic = bassTonic(key)
+  const tonic = line.tonic(key)
 
   const written = draft.degrees
     .map((degree) => degreePitch(tonic, key.mode, degree))
     .filter((pitch): pitch is Pitch => pitch !== undefined)
 
-  const correct: readonly Degree[] = bassDegrees(question.progression) ?? []
+  const correct: readonly Degree[] = line.answer(question) ?? []
 
   return (
     <RoundScreen
       phase={phase}
       total={total}
-      prompt={t('round.prompt.bass')}
+      prompt={t(`round.prompt.${line.voice}`)}
       correct={correct}
       onAnswer={onAnswer}
       onNext={onNext}
@@ -89,7 +81,11 @@ export function BassRoundScreen({
       score={
         <SatbScore
           question={question}
-          written={written}
+          written={{
+            voice: line.voice,
+            pitches: written,
+            slots: line.slots(question.satz.events),
+          }}
           revealed={revealed}
           onPlay={onPlay}
           status={playStatus}
@@ -98,10 +94,10 @@ export function BassRoundScreen({
       keyboard={(binding) => (
         <DegreeKeyboard
           draft={draft}
-          steps={SEVEN}
+          steps={line.steps(key)}
           tonic={tonic}
           mode={key.mode}
-          clef="bass"
+          clef={line.clef}
           keySignature={keySignatureOf(key) ?? '0'}
           alterations
           state={binding.state}

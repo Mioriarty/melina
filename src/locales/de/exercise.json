@@ -434,11 +434,19 @@
   "harmony": {
     "replay": "Nochmal hören",
     "scoreLabel": {
-      "draft": "Die bisher geschriebene Basslinie, in {{key}}",
+      "draft": {
+        "bass": "Die bisher geschriebene Basslinie, in {{key}}",
+        "soprano": "Die bisher geschriebene Sopranstimme, in {{key}}",
+        "blank": "Eine Akkordfolge in {{key}}, verdeckt bis zur Antwort"
+      },
       "revealed": "Die Harmoniefolge vierstimmig, in {{key}}, mit Bezifferung, Stufen und Funktionen"
     },
     "summary": {
-      "allCorrect": "Jede Basslinie richtig."
+      "allCorrect": {
+        "bass": "Jede Basslinie richtig.",
+        "soprano": "Jede Sopranstimme richtig.",
+        "stufen": "Jeder Akkord richtig benannt."
+      }
     },
     "cadence": {
       "levelsBlurb": "Setze eine Kadenz vierstimmig aus und beginne in der angegebenen Lage.",
