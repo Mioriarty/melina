@@ -48,6 +48,7 @@ import {
 import {
   DEFAULT_SETTINGS as DEGREE_DEFAULTS,
   DEGREE_SETTINGS,
+  DEGREE_STEP_CHOICES,
 } from '@/exercises/scale-degrees/settings'
 import { SCALE_HEARING_DIFFICULTIES } from '@/exercises/scale-hearing/difficulties'
 import { SCALE_HEARING_SETTINGS } from '@/exercises/scale-hearing/settings'
@@ -614,7 +615,7 @@ describe('scale-degrees settings', () => {
       for (const clef of settings.clefs)
         expect(isClefId(clef), `${id}: ${clef}`).toBe(true)
       for (const degree of settings.degrees) {
-        expect(DEGREE_NUMBERS, `${id}: ${degree}`).toContain(degree)
+        expect(DEGREE_STEP_CHOICES, `${id}: ${degree}`).toContain(degree)
       }
     }
   })
@@ -662,9 +663,10 @@ describe('scale-degrees settings', () => {
         expect(settings.clefs, id).toContain(question.clef)
         expect(question.degrees.length, id).toBe(settings.melodyLength)
         for (const degree of question.degrees) {
-          expect(settings.degrees, `${id}: degree ${degree.number}`).toContain(
-            degree.number,
-          )
+          // By its plain step: an altered note is named from a step the
+          // level offers, raised or lowered.
+          const plain = degreeKey({ ...degree, alteration: 0 })
+          expect(settings.degrees, `${id}: degree ${plain}`).toContain(plain)
           if (!settings.alterations) expect(degree.alteration, id).toBe(0)
         }
       }

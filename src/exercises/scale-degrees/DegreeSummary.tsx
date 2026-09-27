@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
 import type { Answered } from '@/exercises/shared/round'
 import { useMusicNames } from '@/hooks/useMusicNames'
-import { degreePitch, degreesKey, type Degree } from '@/lib/music/degree'
+import { degreePitch, type Degree } from '@/lib/music/degree'
 import { chromaticValue } from '@/lib/music/pitch'
 import { tonicKey } from '@/lib/music/scale'
 
@@ -57,17 +57,20 @@ export function DegreeSummary({
 }: DegreeSummaryProps) {
   const { t } = useTranslation('exercise')
   const names = useMusicNames()
+  // Printed the way the keys are labelled, so a step below the tonic reads
+  // `↓7` here as it does on the keyboard rather than as its storage key.
+  const melody = (degrees: readonly Degree[]) => degrees.map(names.degreeShort).join(' ')
 
   return (
     <RoundSummary
       answers={answers}
       subjectKey={(answer) => names.degreeShort(firstMiss(answer))}
       subjectName={(answer) => names.degree(firstMiss(answer))}
-      answerName={({ chosen }) => degreesKey(chosen)}
+      answerName={({ chosen }) => melody(chosen)}
       chipTitle={({ question }) =>
         t('degrees.summary.questionLabel', {
           key: names.scaleName(tonicKey(question.tonic), question.mode),
-          degrees: degreesKey(question.degrees),
+          degrees: melody(question.degrees),
         })
       }
       allCorrect={t('summary.allCorrect.degrees')}

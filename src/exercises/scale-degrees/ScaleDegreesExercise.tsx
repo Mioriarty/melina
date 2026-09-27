@@ -12,7 +12,7 @@ import { degreeFilter } from './attempt'
 import { DEGREE_DIFFICULTIES } from './difficulties'
 import { DegreeRoundScreen } from './DegreeRoundScreen'
 import { DegreeSummary } from './DegreeSummary'
-import { allowedDegrees, type DegreeRoundSpec } from './generate'
+import { allowedSteps, type DegreeRoundSpec } from './generate'
 import { SetupScreen } from './SetupScreen'
 import { DEGREE_SETTINGS, type DegreeSettings } from './settings'
 import { useDegreeRound } from './useDegreeRound'
@@ -41,7 +41,7 @@ export default function ScaleDegreesExercise() {
   )
 
   const round = useDegreeRound(spec, EXERCISE_ID)
-  const numbers = useMemo(() => (spec === undefined ? [] : allowedDegrees(spec)), [spec])
+  const steps = useMemo(() => (spec === undefined ? [] : allowedSteps(spec)), [spec])
 
   const current =
     round.phase.name === 'asking' || round.phase.name === 'revealed'
@@ -138,7 +138,7 @@ export default function ScaleDegreesExercise() {
       phase={round.phase}
       total={round.questions.length}
       question={question}
-      numbers={numbers}
+      steps={steps}
       alterations={settings.alterations}
       onPlay={play}
       playStatus={audio.status}

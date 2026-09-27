@@ -285,27 +285,6 @@ export function stepNotes(
     })
 }
 
-/**
- * The same, for a level that names degree *numbers* within one octave.
- *
- * Scale degree identification offers a set rather than a range — a level on
- * the tonic triad is 1, 3 and 5 with 2 and 4 left out — so it names what it
- * wants and the bound still comes from the outermost of them.
- */
-export function degreeNotes(
-  tonic: Pitch,
-  mode: ModeId,
-  numbers: readonly number[],
-  alterations: readonly DegreeAlteration[],
-): readonly DegreeNote[] {
-  return stepNotes(
-    tonic,
-    mode,
-    numbers.map((number) => ({ number, alteration: 0 })),
-    alterations,
-  )
-}
-
 /** Whether a note is one the mode itself has, rather than one from outside it. */
 export function isScaleNote(note: DegreeNote): boolean {
   return note.names.some((name) => name.alteration === 0)

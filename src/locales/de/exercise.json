@@ -81,7 +81,7 @@
     },
     "degrees": {
       "title": "Stufen",
-      "hint": "Welche Stufen vorkommen dürfen. Drei Töne um den Grundton sind eine andere Übung als alle sieben."
+      "hint": "Welche Stufen vorkommen dürfen, jede in ihrer eigenen Oktave: ↓ liegt unter dem Grundton, ↑ eine Oktave darüber. Drei Töne um den Grundton sind eine andere Übung als alle sieben."
     },
     "alterations": {
       "title": "Außerhalb der Tonart",

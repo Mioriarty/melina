@@ -1,17 +1,22 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  DEGREE_NUMBERS,
   degreeKey,
   degreePitch,
   keySignatureFor,
+  parseDegreeKey,
+  stepIndex,
 } from '@/lib/music/degree'
 import { chromaticValue, comparePitch, pitchKey } from '@/lib/music/pitch'
 import { MODE_IDS, TONIC_KEYS, scalePitches, tonicKey } from '@/lib/music/scale'
 import { createRandom } from '@/lib/utils/seededRandom'
 
 import { generateRound, type DegreeRoundSpec } from './generate'
-import { DEFAULT_SETTINGS } from './settings'
+import { DEGREE_RULES } from './rules'
+import { DEFAULT_SETTINGS, DEGREE_STEP_CHOICES } from './settings'
+
+const FIRST_FIVE = ['1', '2', '3', '4', '5']
+const WHOLE_SCALE = [...FIRST_FIVE, '6', '7']
 
 const SEEDS = [1, 2, 3, 7, 11, 101]
 
@@ -60,7 +65,7 @@ describe('every question it builds', () => {
     modes: [...MODE_IDS],
     tonics: [...TONIC_KEYS],
     clefs: ['treble', 'bass', 'alto', 'tenor'],
-    degrees: [...DEGREE_NUMBERS],
+    degrees: [...DEGREE_STEP_CHOICES],
     alterations: true,
     startOnTonic: false,
     melodyLength: 5,
@@ -101,10 +106,10 @@ describe('every question it builds', () => {
     }
   })
 
-  it('keeps the melody inside the octave above the tonic', () => {
-    // The decision that makes a degree and a pitch the same thing, so an answer
-    // is never ambiguous and the staff always draws the note that was meant.
-    for (const question of questions) {
+  it('keeps a one-octave level inside the octave above the tonic', () => {
+    // A bare step is in the tonic's own octave, so a level naming no other
+    // never strays below the tonic or past its octave.
+    for (const question of everyQuestion({ ...WIDE, degrees: WHOLE_SCALE })) {
       const scale = scalePitches(question.tonic, question.mode)
       const octave = scale?.[7]
       expect(octave).toBeDefined()
@@ -126,12 +131,14 @@ describe('every question it builds', () => {
     // below everything a level teaches and a raised top degree above it — and
     // in a major key that raised seventh is not a seventh at all, it is the
     // octave, which is why it used to draw as a double sharp.
-    for (const degrees of [[1, 2, 3, 4, 5], [...DEGREE_NUMBERS]]) {
+    for (const degrees of [FIRST_FIVE, WHOLE_SCALE, ['7_', ...FIRST_FIVE]]) {
+      const steps = degrees.map((key) => parseDegreeKey(key) as never)
+      const rungs = steps.map(stepIndex)
       for (const question of everyQuestion(spec({ degrees, alterations: true }))) {
-        const edge = (number: number) =>
-          degreePitch(question.tonic, question.mode, { number, alteration: 0 })
-        const lowest = edge(Math.min(...degrees))
-        const highest = edge(Math.max(...degrees))
+        const edge = (rung: number) =>
+          degreePitch(question.tonic, question.mode, steps[rungs.indexOf(rung)] as never)
+        const lowest = edge(Math.min(...rungs))
+        const highest = edge(Math.max(...rungs))
         expect(lowest).toBeDefined()
         expect(highest).toBeDefined()
 
@@ -185,16 +192,31 @@ describe('every question it builds', () => {
 
 describe('what a level bounds', () => {
   it('asks only the degrees it offers', () => {
-    for (const degrees of [
-      [1, 3, 5],
-      [1, 2, 3, 4, 5],
-    ]) {
+    for (const degrees of [['1', '3', '5'], FIRST_FIVE, ['6_', '7_', ...FIRST_FIVE]]) {
       for (const question of everyQuestion(spec({ degrees }))) {
         for (const degree of question.degrees) {
-          expect(degrees, degreeKey(degree)).toContain(degree.number)
+          expect(degrees).toContain(degreeKey(degree))
         }
       }
     }
+  })
+
+  it('puts a step below the tonic below it, in the octave it names', () => {
+    // Octave-specific: the leading note under the tonic is not the seventh
+    // above it, and a level offering one must never draw the other.
+    const below = everyQuestion(spec({ degrees: ['7_', '1', '2', '3'], melodyLength: 4 }))
+    let seen = 0
+    for (const question of below) {
+      question.degrees.forEach((degree, index) => {
+        if (degree.number !== 7) return
+        seen += 1
+        expect(degreeKey(degree)).toBe('7_')
+        expect(chromaticValue(question.pitches[index] as never)).toBeLessThan(
+          chromaticValue(question.tonic),
+        )
+      })
+    }
+    expect(seen).toBeGreaterThan(0)
   })
 
   it('leaves the key alone unless the level allows otherwise', () => {
@@ -215,7 +237,7 @@ describe('what a level bounds', () => {
       expect(question.degrees[0]).toEqual({ number: 1, alteration: 0 })
     }
 
-    const free = everyQuestion(spec({ startOnTonic: false, degrees: [1, 2, 3, 4, 5] }))
+    const free = everyQuestion(spec({ startOnTonic: false, degrees: FIRST_FIVE }))
     expect(free.some((q) => q.degrees[0]?.number !== 1)).toBe(true)
   })
 
@@ -230,6 +252,25 @@ describe('what a level bounds', () => {
       expect(narrow.tonics).toContain(tonicKey(question.tonic))
       expect(question.clef).toBe('bass')
     }
+  })
+})
+
+describe('grading', () => {
+  it('is octave-specific: the seventh below is not the seventh above', () => {
+    const [question] = generateRound(
+      createRandom(3),
+      spec({ degrees: ['7_', ...WHOLE_SCALE], melodyLength: 2 }),
+    )
+    expect(question).toBeDefined()
+    if (question === undefined) return
+
+    const asked = [...question.degrees]
+    const moved = asked.map((degree) => ({
+      ...degree,
+      octave: (degree.octave ?? 0) + 1,
+    }))
+    expect(DEGREE_RULES.isCorrect(asked, question)).toBe(true)
+    expect(DEGREE_RULES.isCorrect(moved, question)).toBe(false)
   })
 })
 

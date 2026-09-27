@@ -4,7 +4,6 @@ import {
   DEGREE_ALTERATIONS,
   DEGREE_NUMBERS,
   degreeKey,
-  degreeNotes,
   degreeOctave,
   degreePitch,
   degreesKey,
@@ -19,6 +18,7 @@ import {
   stepRange,
   tonicTriad,
   type Degree,
+  type DegreeAlteration,
 } from './degree'
 import { alterationInKey } from './keySignature'
 import { parsePitch, pitchKey, type Pitch } from './pitch'
@@ -45,6 +45,20 @@ const spell = (
   const pitch = degreePitch(p(tonic), mode, degree)
   return pitch === undefined ? undefined : pitchKey(pitch)
 }
+
+/** Plain steps in the tonic's own octave, the way a one-octave level names them. */
+const degreeNotes = (
+  tonic: Pitch,
+  mode: Parameters<typeof degreePitch>[1],
+  numbers: readonly number[],
+  alterations: readonly DegreeAlteration[],
+) =>
+  stepNotes(
+    tonic,
+    mode,
+    numbers.map((number) => ({ number, alteration: 0 })),
+    alterations,
+  )
 
 describe('degree keys', () => {
   it('writes an accidental only where there is one', () => {
@@ -123,7 +137,7 @@ describe('the note a degree names', () => {
   })
 })
 
-describe('degreeNotes', () => {
+describe('stepNotes within one octave', () => {
   const notes = (
     tonic: string,
     mode: Parameters<typeof degreePitch>[1],
@@ -528,17 +542,6 @@ describe('stepNotes across octaves', () => {
   it('reaches below the tonic when the range does', () => {
     const notes = stepNotes(p('C4'), 'ionian', stepRange(step(5, -1), step(1, 0)), [0])
     expect(notes.map((note) => note.semitones)).toEqual([-5, -3, -1, 0])
-  })
-
-  it('agrees with degreeNotes over one octave', () => {
-    const range = stepNotes(
-      p('Eb4'),
-      'aeolian',
-      stepRange(step(1, 0), step(5, 0)),
-      DEGREE_ALTERATIONS,
-    )
-    const set = degreeNotes(p('Eb4'), 'aeolian', [1, 2, 3, 4, 5], DEGREE_ALTERATIONS)
-    expect(range).toEqual(set)
   })
 })
 

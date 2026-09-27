@@ -81,7 +81,7 @@
     },
     "degrees": {
       "title": "Degrees",
-      "hint": "Which steps of the scale may come up. Three notes around the tonic is a different exercise from all seven."
+      "hint": "Which steps of the scale may come up, each in its own octave: ↓ is below the tonic, ↑ the octave above. Three notes around the tonic is a different exercise from all seven."
     },
     "alterations": {
       "title": "Outside the key",

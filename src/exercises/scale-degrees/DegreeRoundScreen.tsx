@@ -22,8 +22,8 @@ export interface DegreeRoundScreenProps {
   phase: ActivePhase<DegreeQuestion, readonly Degree[]>
   total: number
   question: DegreeQuestion
-  /** The degree numbers this level offers. */
-  numbers: readonly number[]
+  /** The steps this level offers, each with its octave. */
+  steps: readonly Degree[]
   alterations: boolean
   onPlay: () => void
   playStatus: PlaybackStatus
@@ -48,7 +48,7 @@ export function DegreeRoundScreen({
   phase,
   total,
   question,
-  numbers,
+  steps,
   alterations,
   onPlay,
   playStatus,
@@ -93,7 +93,7 @@ export function DegreeRoundScreen({
       keyboard={(binding) => (
         <DegreeKeyboard
           draft={draft}
-          numbers={numbers}
+          steps={steps}
           tonic={question.tonic}
           mode={question.mode}
           clef={question.clef}

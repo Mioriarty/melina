@@ -182,6 +182,10 @@
       "title": "Whole Scale",
       "blurb": "All seven degrees, including the sixth and seventh."
     },
+    "below-the-tonic": {
+      "title": "Below the Tonic",
+      "blurb": "The first five, and the sixth and seventh underneath the tonic rather than above it."
+    },
     "minor": {
       "title": "Minor",
       "blurb": "The same seven degrees heard against a minor chord instead."

@@ -20,9 +20,12 @@ import type { BassAnswer } from '@/exercises/harmony-shared/rules'
 import { RoundScreen } from '@/exercises/shared/RoundScreen'
 import type { ActivePhase } from '@/exercises/shared/round'
 import type { PlaybackStatus } from '@/exercises/shared/usePlayback'
-import { DEGREE_NUMBERS, degreePitch, type Degree } from '@/lib/music/degree'
+import { degreePitch, stepRange, type Degree } from '@/lib/music/degree'
 import { keySignatureOf } from '@/lib/music/key'
 import type { Pitch } from '@/lib/music/pitch'
+
+/** A bass is answered without an octave, so the keyboard is the seven degrees. */
+const SEVEN = stepRange({ number: 1, alteration: 0 }, { number: 7, alteration: 0 })
 
 /**
  * Hear a progression, write down its bass.
@@ -95,7 +98,7 @@ export function BassRoundScreen({
       keyboard={(binding) => (
         <DegreeKeyboard
           draft={draft}
-          numbers={DEGREE_NUMBERS}
+          steps={SEVEN}
           tonic={tonic}
           mode={key.mode}
           clef="bass"

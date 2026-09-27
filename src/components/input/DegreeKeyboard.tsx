@@ -6,7 +6,13 @@ import { Icon } from '@/components/ui/Icon'
 import { canAppend, type DegreeDraft } from '@/exercises/dictation-shared/degreeDraft'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import type { ClefId } from '@/lib/music/clef'
-import { degreePitch, type Degree, type DegreeAlteration } from '@/lib/music/degree'
+import {
+  degreeKey,
+  degreeOctave,
+  degreePitch,
+  type Degree,
+  type DegreeAlteration,
+} from '@/lib/music/degree'
 import type { KeySignatureId } from '@/lib/music/keySignature'
 import type { Pitch } from '@/lib/music/pitch'
 import type { ModeId } from '@/lib/music/scale'
@@ -18,7 +24,7 @@ import { Switch } from './Switch'
 /**
  * The scale degree keyboard.
  *
- * One key per degree, each showing **the note it means** over its number. The
+ * One key per step, each showing **the note it means** over its number. The
  * note is the whole reason the key is worth drawing: a degree is an abstraction
  * until you can see where it sits, and the same "3" is a different place on the
  * staff in every key. The staves carry no clef and no signature — the staff
@@ -29,7 +35,12 @@ import { Switch } from './Switch'
  * on the rhythm keyboard: they mean the next key, not a mode to remember and
  * turn back off. They are absent entirely on a level that stays in the key.
  *
- * On a desktop the whole thing can be typed: **1 to 7** enter a degree, **+**
+ * **A step carries its octave**, so the seventh below the tonic and the
+ * seventh above it are two keys, drawn in two places, and pressing one is not
+ * an answer for the other.
+ *
+ * On a desktop the whole thing can be typed: **1 to 7** enter a degree — the
+ * one in the tonic's own octave where a level offers it twice — **+**
  * and **-** raise and lower the next one, and backspace takes one back. The
  * number is already printed on the key, so the shortcut is the label — there is
  * nothing extra to learn or to put on screen.
@@ -37,8 +48,8 @@ import { Switch } from './Switch'
 
 export interface DegreeKeyboardProps {
   draft: DegreeDraft
-  /** The degree numbers this level offers, in order. */
-  numbers: readonly number[]
+  /** The plain steps this level offers, low to high, each with its octave. */
+  steps: readonly Degree[]
   /** The key the melody is in, which is what the notes on the keys are drawn from. */
   tonic: Pitch
   mode: ModeId
@@ -53,7 +64,7 @@ export interface DegreeKeyboardProps {
 
 export function DegreeKeyboard({
   draft,
-  numbers,
+  steps,
   tonic,
   mode,
   clef,
@@ -80,9 +91,9 @@ export function DegreeKeyboard({
 
   /** One path for a mouse and for the keyboard, so the two cannot drift. */
   const press = useCallback(
-    (number: number) => {
+    (step: Degree) => {
       if (revealed || full) return
-      const degree: Degree = { number, alteration }
+      const degree: Degree = { ...step, alteration }
       // A degree whose altered form would need a triple accidental cannot be
       // written, so it is not enterable either way.
       if (degreePitch(tonic, mode, degree) === undefined) return
@@ -129,15 +140,18 @@ export function DegreeKeyboard({
       }
 
       const number = Number(event.key)
-      if (Number.isInteger(number) && numbers.includes(number)) {
+      const matching = steps.filter((step) => step.number === number)
+      const step =
+        matching.find((candidate) => degreeOctave(candidate) === 0) ?? matching[0]
+      if (step !== undefined) {
         event.preventDefault()
-        press(number)
+        press(step)
       }
     }
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [canAlter, draft.degrees.length, numbers, onRemove, press, revealed, toggle])
+  }, [canAlter, draft.degrees.length, steps, onRemove, press, revealed, toggle])
 
   return (
     <div
@@ -186,8 +200,8 @@ export function DegreeKeyboard({
       </div>
 
       <div className="flex flex-wrap justify-center gap-1.5">
-        {numbers.map((number) => {
-          const degree: Degree = { number, alteration }
+        {steps.map((step) => {
+          const degree: Degree = { ...step, alteration }
           const pitch = degreePitch(tonic, mode, degree)
           // A degree whose altered form would need a triple accidental cannot
           // be written, so its key goes dead rather than lying about it.
@@ -195,11 +209,11 @@ export function DegreeKeyboard({
 
           return (
             <button
-              key={number}
+              key={degreeKey(step)}
               type="button"
               disabled={!allowed}
               aria-label={names.degree(degree)}
-              onClick={() => press(number)}
+              onClick={() => press(step)}
               className={answerKeyClasses(
                 { showCorrect: false, showWrong: false, revealed },
                 'h-auto min-w-16 flex-col gap-1.5 px-3 py-2.5 disabled:opacity-35',

@@ -1,17 +1,18 @@
 import { getClef, type ClefId } from '@/lib/music/clef'
 import {
-  DEGREE_NUMBERS,
-  degreeNotes,
   degreePitch,
   isScaleNote,
   keySignatureFor,
   nameMelody,
+  parseDegreeKey,
+  stepIndex,
+  stepNotes,
   type Degree,
   type DegreeAlteration,
   type DegreeNote,
 } from '@/lib/music/degree'
 import type { KeySignatureId } from '@/lib/music/keySignature'
-import type { Pitch } from '@/lib/music/pitch'
+import { chromaticValue, diatonicValue, type Pitch } from '@/lib/music/pitch'
 import {
   fittingOctaves,
   isCleanScale,
@@ -31,7 +32,7 @@ import { dealEvenly, randomPick, type Random } from '@/lib/utils/seededRandom'
  */
 
 export interface DegreeQuestion {
-  /** With its octave: the melody sits in the octave above this. */
+  /** With its octave: every step of the melody is counted from this. */
   tonic: Pitch
   mode: ModeId
   clef: ClefId
@@ -49,8 +50,12 @@ export interface DegreeRoundSpec {
   /** Tonic keys, e.g. `Bb`. */
   tonics: readonly string[]
   clefs: readonly ClefId[]
-  /** Which degree numbers may appear. A level may offer only the first five. */
-  degrees: readonly number[]
+  /**
+   * Which steps may appear, as degree keys with their octave: `1` is the
+   * tonic, `7_` the seventh *below* it and `1'` the octave above. A level may
+   * offer only the first five, or the first five and the leading note beneath.
+   */
+  degrees: readonly string[]
   /** Whether a note may be raised or lowered out of the scale. */
   alterations: boolean
   /** How many notes the melody has. */
@@ -87,9 +92,26 @@ export function allowedTonics(spec: DegreeRoundSpec): readonly PitchClass[] {
     .filter((tonic): tonic is PitchClass => tonic !== undefined)
 }
 
-/** The degree numbers a spec offers, in order and without strays. */
-export function allowedDegrees(spec: DegreeRoundSpec): readonly number[] {
-  return DEGREE_NUMBERS.filter((number) => spec.degrees.includes(number))
+/**
+ * The steps a spec offers, low to high, plain and without strays.
+ *
+ * **Octave-specific**, and that is the point: the seventh below the tonic and
+ * the seventh above it are different notes to hear and different keys to
+ * press, and a melody that dips under its tonic to the leading note is as
+ * ordinary as one that climbs to the fifth.
+ */
+export function allowedSteps(spec: DegreeRoundSpec): readonly Degree[] {
+  const seen = new Set<number>()
+  return spec.degrees
+    .map(parseDegreeKey)
+    .filter((step): step is Degree => step !== undefined && step.alteration === 0)
+    .filter((step) => {
+      const rung = stepIndex(step)
+      if (seen.has(rung)) return false
+      seen.add(rung)
+      return true
+    })
+    .sort((a, b) => stepIndex(a) - stepIndex(b))
 }
 
 export function allowedAlterations(spec: DegreeRoundSpec): readonly DegreeAlteration[] {
@@ -97,17 +119,29 @@ export function allowedAlterations(spec: DegreeRoundSpec): readonly DegreeAltera
 }
 
 /**
- * Where a key can sit so the whole octave above its tonic is on the staff.
+ * Where a key can sit so its tonic's octave, and every step the level reaches
+ * outside it, is on the staff.
  *
- * The melody never leaves that octave, so this is the whole of the range
- * question — and it is the same one a scale asks, so it is the same helper.
+ * The octave above the tonic always has to fit — that is the same question a
+ * scale asks, so it is the same helper — and a level reaching below the tonic
+ * or past its octave then narrows that further by its outermost steps.
  */
 function placements(
   mode: ModeId,
   clefId: ClefId,
   tonics: readonly PitchClass[],
+  steps: readonly Degree[],
 ): readonly Pitch[] {
   const clef = getClef(clefId)
+  const onStaff = (pitch: Pitch | undefined) =>
+    pitch !== undefined &&
+    chromaticValue(pitch) >= chromaticValue(clef.lowest) &&
+    chromaticValue(pitch) <= chromaticValue(clef.highest) &&
+    diatonicValue(pitch) >= diatonicValue(clef.lowest) &&
+    diatonicValue(pitch) <= diatonicValue(clef.highest)
+
+  const lowest = steps[0]
+  const highest = steps[steps.length - 1]
 
   return tonics
     .filter((tonic) => isCleanScale(tonic, mode))
@@ -117,6 +151,11 @@ function placements(
         octave,
       })),
     )
+    .filter(
+      (tonic) =>
+        (lowest === undefined || onStaff(degreePitch(tonic, mode, lowest))) &&
+        (highest === undefined || onStaff(degreePitch(tonic, mode, highest))),
+    )
     .filter((tonic) => keySignatureFor(tonic, mode) !== undefined)
 }
 
@@ -124,7 +163,7 @@ function placements(
  * One melody, as a run of notes.
  *
  * **Notes, not names.** What is drawn here is sounding pitches — see
- * `degreeNotes` — so the melody cannot contain a note the level does not
+ * `stepNotes` — so the melody cannot contain a note the level does not
  * reach, nor one whose only name is a spelling of a note it already has. The
  * names are chosen afterwards, once the whole line is known and its direction
  * can decide them.
@@ -140,7 +179,7 @@ function buildMelody(
   mode: ModeId,
   spec: DegreeRoundSpec,
 ): readonly DegreeNote[] | undefined {
-  const offered = degreeNotes(tonic, mode, allowedDegrees(spec), allowedAlterations(spec))
+  const offered = stepNotes(tonic, mode, allowedSteps(spec), allowedAlterations(spec))
   const plain = offered.filter(isScaleNote)
   if (plain.length === 0) return undefined
 
@@ -185,7 +224,7 @@ export function buildQuestion(
   // the question rather than dropping it from the round.
   for (let attempt = 0; attempt < 12; attempt += 1) {
     const clef = randomPick(random, spec.clefs as [ClefId, ...ClefId[]])
-    const options = placements(mode, clef, tonics)
+    const options = placements(mode, clef, tonics, allowedSteps(spec))
     const [first, ...rest] = options
     if (first === undefined) continue
 
@@ -196,7 +235,7 @@ export function buildQuestion(
 
     const degrees = nameMelody(tonic, mode, notes)
     const pitches = degrees.map((degree) => degreePitch(tonic, mode, degree))
-    // `degreeNotes` only ever collects degrees that spell, so this cannot
+    // `stepNotes` only ever collects degrees that spell, so this cannot
     // fail — it is here so the type says so rather than an assertion.
     if (!pitches.every((pitch): pitch is Pitch => pitch !== undefined)) continue
 
@@ -218,7 +257,7 @@ export function generateRound(random: Random, spec: DegreeRoundSpec): DegreeQues
   if (
     modes.length === 0 ||
     allowedTonics(spec).length === 0 ||
-    allowedDegrees(spec).length === 0 ||
+    allowedSteps(spec).length === 0 ||
     spec.clefs.length === 0 ||
     spec.melodyLength < 1
   ) {

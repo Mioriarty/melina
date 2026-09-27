@@ -182,6 +182,10 @@
       "title": "Ganze Tonleiter",
       "blurb": "Alle sieben Stufen, samt Sexte und Septime."
     },
+    "below-the-tonic": {
+      "title": "Unter dem Grundton",
+      "blurb": "Die ersten fünf, dazu die Sexte und Septime unter dem Grundton statt darüber."
+    },
     "minor": {
       "title": "Moll",
       "blurb": "Dieselben sieben Stufen, aber gegen einen Mollakkord gehört."

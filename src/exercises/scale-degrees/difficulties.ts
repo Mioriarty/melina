@@ -13,12 +13,15 @@ import { DEFAULT_SETTINGS, type DegreeSettings } from './settings'
  * notes from outside the key come last of all. Only the very first level opens
  * every melody on the tonic.
  */
+const FIRST_FIVE: readonly string[] = ['1', '2', '3', '4', '5']
+const WHOLE_SCALE: readonly string[] = [...FIRST_FIVE, '6', '7']
+
 export const DEGREE_DIFFICULTIES: readonly Difficulty<DegreeSettings>[] = [
   {
     id: 'tonic-and-fifth',
     settings: {
       ...DEFAULT_SETTINGS,
-      degrees: [1, 3, 5],
+      degrees: ['1', '3', '5'],
       tonics: [...NATURAL_TONIC_KEYS],
       melodyLength: 3,
       // The only level that hands over the first note. A melody opening on
@@ -31,7 +34,7 @@ export const DEGREE_DIFFICULTIES: readonly Difficulty<DegreeSettings>[] = [
     id: 'first-five',
     settings: {
       ...DEFAULT_SETTINGS,
-      degrees: [1, 2, 3, 4, 5],
+      degrees: FIRST_FIVE,
       tonics: [...NATURAL_TONIC_KEYS],
       melodyLength: 3,
     },
@@ -40,8 +43,19 @@ export const DEGREE_DIFFICULTIES: readonly Difficulty<DegreeSettings>[] = [
     id: 'whole-scale',
     settings: {
       ...DEFAULT_SETTINGS,
-      degrees: [1, 2, 3, 4, 5, 6, 7],
+      degrees: WHOLE_SCALE,
       melodyLength: 3,
+    },
+  },
+  {
+    // Steps are octave-specific, so the sixth and seventh *under* the tonic
+    // are their own keys: the leading note below is where half of all tunes
+    // start, and it is a different note to hear from the seventh above.
+    id: 'below-the-tonic',
+    settings: {
+      ...DEFAULT_SETTINGS,
+      degrees: ['6_', '7_', ...FIRST_FIVE],
+      melodyLength: 4,
     },
   },
   {
@@ -49,7 +63,7 @@ export const DEGREE_DIFFICULTIES: readonly Difficulty<DegreeSettings>[] = [
     settings: {
       ...DEFAULT_SETTINGS,
       modes: ['aeolian'],
-      degrees: [1, 2, 3, 4, 5, 6, 7],
+      degrees: WHOLE_SCALE,
       melodyLength: 4,
     },
   },
@@ -58,7 +72,7 @@ export const DEGREE_DIFFICULTIES: readonly Difficulty<DegreeSettings>[] = [
     settings: {
       ...DEFAULT_SETTINGS,
       modes: ['harmonicMinor'],
-      degrees: [1, 2, 3, 4, 5, 6, 7],
+      degrees: WHOLE_SCALE,
       melodyLength: 4,
     },
   },
@@ -66,7 +80,7 @@ export const DEGREE_DIFFICULTIES: readonly Difficulty<DegreeSettings>[] = [
     id: 'longer-melodies',
     settings: {
       ...DEFAULT_SETTINGS,
-      degrees: [1, 2, 3, 4, 5, 6, 7],
+      degrees: WHOLE_SCALE,
       melodyLength: 6,
       clefs: ['treble', 'bass'],
     },
@@ -75,7 +89,7 @@ export const DEGREE_DIFFICULTIES: readonly Difficulty<DegreeSettings>[] = [
     id: 'outside-the-key',
     settings: {
       ...DEFAULT_SETTINGS,
-      degrees: [1, 2, 3, 4, 5, 6, 7],
+      degrees: WHOLE_SCALE,
       alterations: true,
       melodyLength: 4,
     },
@@ -93,7 +107,7 @@ export const DEGREE_DIFFICULTIES: readonly Difficulty<DegreeSettings>[] = [
         'aeolian',
         'harmonicMinor',
       ],
-      degrees: [1, 2, 3, 4, 5, 6, 7],
+      degrees: WHOLE_SCALE,
       clefs: ['treble', 'bass', 'alto', 'tenor'],
       alterations: true,
       melodyLength: 5,

@@ -5,10 +5,15 @@ import { Icon } from '@/components/ui/Icon'
 import { SetupChip, SetupSection } from '@/exercises/shared/SetupControls'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { CLEFS } from '@/lib/music/clef'
-import { DEGREE_NUMBERS } from '@/lib/music/degree'
+import { parseDegreeKey } from '@/lib/music/degree'
 import { MELODY_MODE_IDS, TONIC_CHOICES, tonicKey } from '@/lib/music/scale'
 
-import { MELODY_LENGTHS, ROUND_LENGTHS, type DegreeSettings } from './settings'
+import {
+  DEGREE_STEP_CHOICES,
+  MELODY_LENGTHS,
+  ROUND_LENGTHS,
+  type DegreeSettings,
+} from './settings'
 
 export interface SetupScreenProps {
   settings: DegreeSettings
@@ -44,10 +49,12 @@ export function SetupScreen({ settings, onChange, onStart, onBack }: SetupScreen
     onChange({ ...settings, [field]: next })
   }
 
-  function toggleDegree(number: number) {
-    const next = settings.degrees.includes(number)
-      ? settings.degrees.filter((item) => item !== number)
-      : [...settings.degrees, number].sort((a, b) => a - b)
+  function toggleDegree(key: string) {
+    const next = DEGREE_STEP_CHOICES.filter((choice) =>
+      choice === key
+        ? !settings.degrees.includes(key)
+        : settings.degrees.includes(choice),
+    )
 
     if (next.length === 0) return
     onChange({ ...settings, degrees: next })
@@ -82,16 +89,20 @@ export function SetupScreen({ settings, onChange, onStart, onBack }: SetupScreen
           hint={t('exercise:setup.degrees.hint')}
         >
           <div className="flex flex-wrap gap-2">
-            {DEGREE_NUMBERS.map((number) => (
-              <SetupChip
-                key={number}
-                selected={settings.degrees.includes(number)}
-                onClick={() => toggleDegree(number)}
-                label={names.degree({ number, alteration: 0 })}
-              >
-                {number}
-              </SetupChip>
-            ))}
+            {DEGREE_STEP_CHOICES.map((key) => {
+              const step = parseDegreeKey(key)
+              if (step === undefined) return null
+              return (
+                <SetupChip
+                  key={key}
+                  selected={settings.degrees.includes(key)}
+                  onClick={() => toggleDegree(key)}
+                  label={names.degree(step)}
+                >
+                  {names.degreeShort(step)}
+                </SetupChip>
+              )
+            })}
           </div>
         </SetupSection>
 
