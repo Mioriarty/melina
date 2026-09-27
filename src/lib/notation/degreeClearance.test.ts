@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { getClef, CLEFS, type ClefId } from '@/lib/music/clef'
-import { DEGREE_NUMBERS, degreePitch, keySignatureFor } from '@/lib/music/degree'
+import { degreePitch, keySignatureFor, stepRange } from '@/lib/music/degree'
 import type { KeySignatureId } from '@/lib/music/keySignature'
 import { comparePitch, pitchKey, type Pitch } from '@/lib/music/pitch'
 import { MODE_IDS, TONIC_CHOICES, fittingOctaves, isCleanScale } from '@/lib/music/scale'
@@ -37,9 +37,23 @@ function clearance(svg: string): number {
   return measureInk(svg).clearance
 }
 
-/** The lowest and highest note any degree can reach, per clef. */
+/**
+ * The lowest and highest note any degree can reach, per clef.
+ *
+ * Every step a level may offer — the fifth below the tonic up to its octave —
+ * on every tonic whose own octave fits, keeping each whose plain note lies on
+ * the clef's range, as the generator does, and then every alteration of it.
+ * A slight superset of what can come up, which is the safe side to err on.
+ */
+const STEPS = stepRange(
+  { number: 5, alteration: 0, octave: -1 },
+  { number: 1, alteration: 0, octave: 1 },
+)
+
 function extremes(clefId: ClefId): { lowest: Pitch; highest: Pitch } {
   const clef = getClef(clefId)
+  const inRange = (pitch: Pitch) =>
+    comparePitch(pitch, clef.lowest) >= 0 && comparePitch(pitch, clef.highest) <= 0
   let lowest: Pitch | undefined
   let highest: Pitch | undefined
 
@@ -51,9 +65,12 @@ function extremes(clefId: ClefId): { lowest: Pitch; highest: Pitch } {
         const root = { ...tonic, octave }
         if (keySignatureFor(root, mode) === undefined) continue
 
-        for (const number of DEGREE_NUMBERS) {
+        for (const step of STEPS) {
+          const plain = degreePitch(root, mode, step)
+          if (plain === undefined || !inRange(plain)) continue
+
           for (const alteration of [-1, 0, 1] as const) {
-            const pitch = degreePitch(root, mode, { number, alteration })
+            const pitch = degreePitch(root, mode, { ...step, alteration })
             if (pitch === undefined) continue
             if (lowest === undefined || comparePitch(pitch, lowest) < 0) lowest = pitch
             if (highest === undefined || comparePitch(pitch, highest) > 0) highest = pitch
