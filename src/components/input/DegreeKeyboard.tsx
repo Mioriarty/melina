@@ -81,6 +81,9 @@ export function DegreeKeyboard({
 
   const revealed = state === 'revealed'
   const full = !canAppend(draft)
+  // A voice's whole compass is a dozen keys, which at full size is three rows
+  // on a phone and eats the staff's height; narrower keys fit six to a row.
+  const dense = steps.length > 8
   /** Whether an accidental can be asked for at all, here and now. */
   const canAlter = alterations && !revealed && !full
 
@@ -216,7 +219,9 @@ export function DegreeKeyboard({
               onClick={() => press(step)}
               className={answerKeyClasses(
                 { showCorrect: false, showWrong: false, revealed },
-                'h-auto min-w-16 flex-col gap-1.5 px-3 py-2.5 disabled:opacity-35',
+                dense
+                  ? 'h-auto min-w-12 flex-col gap-1 px-2 py-2 disabled:opacity-35'
+                  : 'h-auto min-w-16 flex-col gap-1.5 px-3 py-2.5 disabled:opacity-35',
               )}
             >
               {pitch !== undefined && (
@@ -224,7 +229,7 @@ export function DegreeKeyboard({
                   pitch={pitch}
                   clef={clef}
                   keySignature={keySignature}
-                  className="h-14 sm:h-16"
+                  className={dense ? 'h-12 sm:h-14' : 'h-14 sm:h-16'}
                 />
               )}
               <span className="text-[0.8125rem] font-semibold">

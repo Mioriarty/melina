@@ -228,7 +228,8 @@
       "figuring": "Wie wird dieser Akkord beziffert?",
       "realizing": "Schreibe den Akkord zur Bezifferung",
       "bass": "Schreibe die Basslinie auf.",
-      "cadence": "Setzen Sie diese Kadenz vierstimmig aus"
+      "cadence": "Setzen Sie diese Kadenz vierstimmig aus",
+      "soprano": "Schreibe die Sopranstimme auf."
     }
   },
   "score": {

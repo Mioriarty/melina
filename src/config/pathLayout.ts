@@ -180,11 +180,12 @@ export const PATH_NODES: readonly PathNodePosition[] = [
   // them is not being asked a hard question but an unfair one.
   { stationId: 'guide/voice-leading', x: 30, y: 2670 },
   { stationId: 'harmony/cadence', x: 68, y: 2900 },
-  { stationId: 'harmony/bass', x: 32, y: 3150 },
-  { stationId: 'harmonic-prediction', x: 66, y: 3360 },
-  { stationId: 'harmonic-completion', x: 34, y: 3620 },
-  { stationId: 'counterpoint', x: 68, y: 3855 },
-  { stationId: 'daily', x: 32, y: 4145 },
+  { stationId: 'harmony/soprano', x: 26, y: 3140 },
+  { stationId: 'harmony/bass', x: 50, y: 3390 },
+  { stationId: 'harmonic-prediction', x: 68, y: 3600 },
+  { stationId: 'harmonic-completion', x: 34, y: 3865 },
+  { stationId: 'counterpoint', x: 68, y: 4100 },
+  { stationId: 'daily', x: 32, y: 4390 },
 ]
 
 /**
@@ -223,7 +224,9 @@ export const PATH_EDGES: readonly PathEdge[] = [
   { from: 'chords/hearing', to: 'chords/writing' },
   { from: 'chords/writing', to: 'guide/voice-leading' },
   { from: 'guide/voice-leading', to: 'harmony/cadence' },
+  { from: 'harmony/cadence', to: 'harmony/soprano' },
   { from: 'harmony/cadence', to: 'harmony/bass' },
+  { from: 'harmony/soprano', to: 'harmonic-prediction' },
   { from: 'harmony/bass', to: 'harmonic-prediction' },
   // **Thoroughbass is off the path, joined only to itself.** Nothing leads
   // into it and nothing leads out, so `PATH_EDGES` has exactly two components

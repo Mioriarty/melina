@@ -5,7 +5,15 @@ import type { Key } from '@/lib/music/key'
 import type { Pitch } from '@/lib/music/pitch'
 import type { VoiceId } from '@/lib/music/satbVoicing'
 
-import { bassDegrees, bassLength, bassTonic, type HarmonyQuestion } from './generate'
+import {
+  bassDegrees,
+  bassLength,
+  bassTonic,
+  sopranoDegrees,
+  sopranoSteps,
+  sopranoTonic,
+  type HarmonyQuestion,
+} from './generate'
 
 /**
  * One voice of a progression, written down as scale degrees.
@@ -59,4 +67,20 @@ export const BASS_LINE: LineDef = {
   answer: (question) => bassDegrees(question.progression),
   length: (question) => bassLength(question.progression),
   slots: bassSlots,
+}
+
+/**
+ * **The soprano is answered with its octave**: a tune's highest note is part of
+ * the tune, and the leading note under the tonic is not the one above it. So
+ * the keys are every step of its compass, and every sonority is a note to
+ * write, a suspension's resolution included.
+ */
+export const SOPRANO_LINE: LineDef = {
+  voice: 'soprano',
+  clef: 'treble',
+  tonic: sopranoTonic,
+  steps: sopranoSteps,
+  answer: sopranoDegrees,
+  length: (question) => question.satz.events.length,
+  slots: (events) => events.map((_, index) => index),
 }

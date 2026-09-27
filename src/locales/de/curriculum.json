@@ -116,6 +116,11 @@
           "title": "Kadenzen aussetzen",
           "short": "Kadenzen",
           "blurb": "Setze eine Kadenz vierstimmig aus und beginne in der angegebenen Lage."
+        },
+        "soprano": {
+          "title": "Soprandiktat",
+          "short": "Sopran",
+          "blurb": "Höre eine vierstimmige Harmoniefolge und schreibe ihren Sopran in Stufen auf, samt Oktave."
         }
       }
     },

@@ -3,7 +3,7 @@ import { degreesKey, degreesSoundEqual, type Degree } from '@/lib/music/degree'
 
 import { harmonyAttempt } from './attempt'
 import { generateRound, type HarmonyQuestion, type HarmonyRoundSpec } from './generate'
-import { BASS_LINE, type LineDef } from './lines'
+import { BASS_LINE, SOPRANO_LINE, type LineDef } from './lines'
 
 /** A voice of the progression, written as scale degrees. */
 export type LineAnswer = readonly Degree[]
@@ -49,3 +49,4 @@ export function lineRules(
 }
 
 export const BASS_RULES = lineRules(BASS_LINE)
+export const SOPRANO_RULES = lineRules(SOPRANO_LINE)

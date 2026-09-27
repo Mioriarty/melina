@@ -157,6 +157,7 @@ const ALL_GROUPS: readonly NamedLevels[] = [
   { group: 'chord-hearing', levels: CHORD_DIFFICULTIES },
   { group: 'chord-writing', levels: CHORD_DIFFICULTIES },
   { group: 'harmony-bass', levels: BASS_DIFFICULTIES },
+  { group: 'harmony-soprano', levels: BASS_DIFFICULTIES },
   { group: 'harmony-cadence', levels: CADENCE_DIFFICULTIES },
 ]
 

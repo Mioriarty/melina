@@ -116,6 +116,11 @@
           "title": "Cadence Writing",
           "short": "Cadences",
           "blurb": "Set a cadence in four parts, beginning in the Lage you are given."
+        },
+        "soprano": {
+          "title": "Soprano Dictation",
+          "short": "Soprano",
+          "blurb": "Hear a progression in four parts and write down its soprano, octave and all."
         }
       }
     },

@@ -228,7 +228,8 @@
       "figuring": "How is this chord figured?",
       "realizing": "Write the chord the figure asks for",
       "bass": "Write down the bass line.",
-      "cadence": "Set this cadence in four parts"
+      "cadence": "Set this cadence in four parts",
+      "soprano": "Write down the soprano line."
     }
   },
   "score": {
