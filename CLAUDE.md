@@ -232,9 +232,12 @@ usable by keyboard, screen reader and thumb without special cases.
 
 `stations()` in `curriculum.ts` derives the stops: a category with built
 exercises contributes **one station per exercise** (reading and hearing are
-different games), one with nothing built a single locked station. Guides
-(`GuideDef`) are emitted **before** their category's exercises. A `Station`
-carries `kind`, `titleKey` and `blurbKey`.
+different games), one with nothing built a single locked station. A planned
+exercise of a built category has no station unless it is `announced` — then it
+stands locked where the route already needs it (chorale dictation, which three
+dictations merge into). Only `stations()` reads the flag. Guides (`GuideDef`)
+are emitted **before** their category's exercises. A `Station` carries `kind`,
+`titleKey` and `blurbKey`.
 
 An **explainer node is a different shape**, not only a colour — a rounded
 square with an accent hairline against the filled circle of an exercise — so it
@@ -263,9 +266,13 @@ From the top:
 - **Braid three:** the chords guide, then chord hearing (left) and reading
   (right) side by side, both merging into chord writing. The sides are forced:
   every consecutive pair down the column has to cross the middle.
-- **Harmony:** the voice-leading guide, cadence writing, bass dictation — an
-  even number of stations so nothing below changes side — then the planned
-  categories to the daily round.
+- **Harmony:** the voice-leading guide, then cadence writing on the centre
+  line, which **splits three ways**: soprano dictation (left) and Stufen
+  dictation (right) level with each other, bass dictation lower in the middle —
+  low enough not to stand level with either, or its label would meet theirs.
+  All three merge into chorale dictation (locked) straight under the bass, then
+  the planned categories to the daily round. A station on the centre line
+  leans neither way, which is what the alternation guard allows for.
 - **Thoroughbass is an island**: its guide and two exercises, joined to each
   other and to nothing else, beside the main line. It is a subject taken up
   alongside the journey, not a stage of it. So the guarding property is that
@@ -523,6 +530,10 @@ was heard. Four layers:
 (`preferredFigure`), Stufe (`readChord`), function symbol (a table) — one model,
 not three. **One convention table**: `RAISED_DEGREES` raises the seventh scale
 degree in V and vii of minor, which gets V, V7, vii° and vii°7 right at once.
+The function table (`FUNCTIONS`) is deliberately partial and returns
+`undefined` rather than inventing a symbol; a seventh chord reads as its
+triad's function plus 7 (`Sp7`, `s7`, `dP7`) **only where it is the scale's own
+seventh chord** — a dominant seventh on I is V7/IV, never `T7`.
 **A sequence stays in the mode** (`ChordSpec.plain`): a passing `v` in a
 Quintfall must not raise its third into a cross-relation.
 
@@ -574,7 +585,27 @@ towards the middle of its compass. `SATB_RANGES` are chorale ranges, not the
 staff ranges in `clef.ts`.
 
 **`npm run progressions`** prints Stufen, figures, voices and analysis for many
-progressions at once — the fast loop for tuning block weights.
+progressions at once — the fast loop for tuning block weights. It runs through
+`scripts/run.mjs`, which executes any TypeScript script with Vite's own
+`runnerImport` and the `@/` alias, so scripts can import from `src/` with
+nothing extra installed.
+
+### Naming a chord — `numeral.ts`
+
+A `Numeral` is what a player presses: a step of the key plus what the switches
+add — seventh, inversion, `of` (V of a degree), `plain` (the natural minor's `v`
+and `VII`, which sequences produce) and `neapolitan` (`♭II`). It resolves
+through the same `specChord` the generator builds with, and **is graded by
+sound** (`namesChord`): the same pitch classes, and the same bass where
+inversions are asked, so `V7/III` and `VII7` in natural minor — one chord — are
+both right. **A suspension is named by what it resolves to**
+(`bassNoteEvents`): the cadential six-four is V, as in Funktionstheorie and in
+the analysis rows. `numeralOf` finds a heard chord's name by _searching what the
+keyboard can type_, plainest first, and `numeral.test.ts` holds every chord the
+generator makes, in every key and every block, to having one — a question can
+never want a name there is no key for. `numeralText` prints both notations by
+building the chord and reading it back through `eventStufe`/`stufeFunction`,
+the same readings the analysis rows use.
 
 ## Notation — `src/lib/notation/` and `src/components/notation/`
 
@@ -758,7 +789,7 @@ exercises fetch it on first press; rhythmic dictation passes `loadDrums` to
 
 ## Exercises — `src/exercises/`
 
-Fourteen exercises. The folders say which share what:
+Sixteen exercises. The folders say which share what:
 
 - `shared/` is **exercise-agnostic** and must never learn what an interval or a
   mode is: the `useRound` state machine, `LevelsScreen`, `RoundScreen`,
@@ -767,13 +798,15 @@ Fourteen exercises. The folders say which share what:
 - `scale-shared/` + `scale-reading/`, `scale-hearing/`
 - `scale-degrees/` — hear a tonic triad and a short melody, write it as degrees.
 - `rhythm-dictation/`, `melodic-dictation/`, sharing `dictation-shared/` (the
-  bar draft, `buildBar`, and `DegreeDraft`, which bass dictation also writes
-  into).
+  bar draft, `buildBar`, and `DegreeDraft`, which the line dictations also
+  write into).
 - `thoroughbass-shared/` + `thoroughbass-figuring/`, `thoroughbass-realizing/`
 - `chord-shared/` + `chord-reading/`, `chord-hearing/`, `chord-writing/`
-- `harmony-shared/` + `bass-dictation/`, `cadence-writing/` (the harmony setup
-  screen is shared, taking a settings **patch** and the exercise's own sections
-  as `children`).
+- `harmony-shared/` + `bass-dictation/`, `soprano-dictation/`,
+  `stufen-dictation/`, `cadence-writing/`. The three dictations are one
+  `HarmonyDictation` page (levels, settings, playback, round wiring) given
+  their own rules, round screen and summary; the setup screen takes a settings
+  **patch** and the exercise's own sections as `children`.
 - `chord-entry/` — the draft a chord is pressed into (thoroughbass realising,
   chord writing); `satb-entry/` — its sibling where which voice sings which
   note is the answer.
@@ -920,12 +953,36 @@ notes, the bass, and the top only where a Lage was named. **Playback is a level
 axis only for hearing**; `chordSpec` forces `harmonic` for reading and writing,
 because the direction is what the attempt log records.
 
-### Bass dictation — `harmony/bass`
+### The harmony dictations — `harmony/bass`, `soprano`, `stufen`
 
-Hear a four-part progression, write the bass as scale degrees, **without an
-octave** (the octave is the voicing search's, not the harmony's). A cadence is
-played first to fix the key, built and voiced like any progression. The summary
-groups misses by **the cadence the progression closed with**.
+Three answers to one question: hear a four-part progression and write down its
+bass, its soprano, or the name of every chord. They share the progression
+levels (`harmony-shared/difficulties.ts`), with Stufen adding the inversion as
+a level axis. A cadence is played first to fix the key, built and voiced like
+any progression.
+
+**A line is a `LineDef`** (`lines.ts`): its clef, the tonic its keys count
+from, its steps, its answer and which note each chord shows; `LineRoundScreen`
+and `LineSummary` are written once for it.
+
+- **The bass is answered without an octave** — the octave is the voicing
+  search's, not the harmony's — one degree per bass note.
+- **The soprano is answered with its octave** (`lib/music/soprano.ts`): a
+  tune's register is part of it. Its keys are every step of the soprano's
+  compass (C4–G5), not the question's own range, which would give its
+  extremes away; that is a dozen keys, so `DegreeKeyboard` narrows its keys
+  past eight. One note per sonority, a suspension's resolution included.
+- **Stufen** are one `Numeral` per bass note on `StufenKeyboard`, whose keys
+  show the Stufe over its function and **draw what pressing them would write**
+  as switches are armed (`7`, `V/`, the inversion figures — one-shot, like the
+  accidentals). Eight keys in major, ten in minor (`v`/`V`, `VII`/`vii°`), plus
+  `♭II · sN`. The staff stays blank until the reveal; typed names sit in a row
+  of slots under it, marked on the reveal by icon, outline and colour.
+
+Line summaries group misses by **the cadence the progression closed with**;
+Stufen by **the first chord named wrong**. Whether inversions were asked rides
+on `HarmonyQuestion.inversions`, and a harmony row records what it asked
+(`asks`), so `correctAnswer` derives the right answer for each.
 
 ### Cadence writing — `harmony/cadence`
 
@@ -987,7 +1044,8 @@ Every answer is recorded, right or wrong. **A row keeps exactly enough to ask
 the question again**: an interval is a lower note and an interval key, a scale a
 tonic and mode, a rhythm a metre, impacts and tempo, a melody its impacts bar by
 bar (`0,60|0,90`) plus tonic, mode and degrees, a chord root, quality, inversion
-and Lage, a progression its bass, figures and analysis. Everything implied —
+and Lage, a progression its bass, figures and analysis (plus `asks` and
+`inversions` where a dictation asked for other than its bass). Everything implied —
 upper notes, spellings, note values, voicings, the right answer — is derived on
 the way out, so a row cannot disagree with itself or its notation. Nothing about
 the level is stored; `staffOnly` and `close` are derived facets.
@@ -1032,10 +1090,14 @@ One setting, the interface language, reached from the top bar only.
 ## Not yet built
 
 Harmonic prediction, harmonic completion, counterpoint and the daily round are
-placeholders, as are interval singing, two-voice dictation and unfigured bass.
+placeholders, as are interval singing, two-voice dictation, unfigured bass and
+chorale dictation (which already has its locked station, where the three
+harmony dictations merge).
 
-- **The chorale is next for the four-part machinery**: `satb-entry` already
-  takes which voices are given, `voiceLeading.ts` grades any `Satz`, and
+- **Chorale dictation** is every voice at once: the line dictations' `LineDef`
+  per voice and `SatbKeyboard` are most of it.
+- **Chorale harmonisation is next for the four-part machinery**: `satb-entry`
+  already takes which voices are given, `voiceLeading.ts` grades any `Satz`, and
   `SatbKeyboard` is voice-agnostic. It needs public-domain melodies, a
   harmoniser, and — for a modal Kantionalsatz — a second rule set.
 - **Harmoniefremde Töne** would be a layer over a finished setting
