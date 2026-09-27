@@ -1,7 +1,7 @@
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
 import type { Answered, ChangeSettings } from '@/exercises/shared/round'
 import { useMusicNames } from '@/hooks/useMusicNames'
-import { chordSize, memberAt } from '@/lib/music/chord'
+import { chordSize, inversionFigure, memberAt } from '@/lib/music/chord'
 import { tonicKey } from '@/lib/music/scale'
 import { useTranslation } from 'react-i18next'
 
@@ -68,6 +68,10 @@ export function ChordSummary({
       subjectKey={(answer) => answer.question.chord.quality}
       subjectName={(answer) => names.chordQuality(answer.question.chord.quality)}
       answerName={said}
+      chipLabel={({ question }) => ({
+        main: names.chordQualityShort(question.chord.quality),
+        sub: inversionFigure(question.chord.quality, question.chord.inversion),
+      })}
       chipTitle={wanted}
       allCorrect={t('chord.summary.allCorrect')}
       onPlayAgain={onPlayAgain}

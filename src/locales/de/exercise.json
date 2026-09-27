@@ -257,7 +257,11 @@
     "questionLabel": "{{subject}} · {{clef}}",
     "playAgain": "Noch einmal üben",
     "changeSettings": "Einstellungen ändern",
-    "changeDifficulty": "Schwierigkeit ändern"
+    "changeDifficulty": "Schwierigkeit ändern",
+    "chip": {
+      "correct": "{{question}}, richtig",
+      "wrong": "{{question}}, falsch"
+    }
   },
   "scales": {
     "reading": {
@@ -348,7 +352,8 @@
       "plain": "Bass {{bass}}, unbeziffert",
       "figured": "Bass {{bass}}, beziffert {{figure}}"
     },
-    "nothing": "gar nichts"
+    "nothing": "gar nichts",
+    "plainShort": "ohne"
   },
   "figuring": {
     "levelsBlurb": "Sieh einen Akkord über einem Bass und schreibe seine Bezifferung. Wähle ein Level oder stell es dir selbst ein.",

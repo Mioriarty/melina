@@ -2,10 +2,12 @@ import { useTranslation } from 'react-i18next'
 
 import { bassDegrees, type HarmonyQuestion } from '@/exercises/harmony-shared/generate'
 import type { BassAnswer } from '@/exercises/harmony-shared/rules'
+import { keyChip } from '@/exercises/shared/keyChip'
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
 import type { Answered, ChangeSettings } from '@/exercises/shared/round'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import type { Degree } from '@/lib/music/degree'
+import { keyPitch } from '@/lib/music/key'
 import { cadenceOf } from '@/lib/music/progression'
 
 /**
@@ -39,6 +41,13 @@ export function BassSummary({ answers, onPlayAgain, changeSettings }: BassSummar
         names.technique(cadenceOf(answer.question.progression) ?? 'frei')
       }
       answerName={(answer) => line(answer.chosen)}
+      chipLabel={({ question }) => {
+        const { key } = question.progression
+        return {
+          main: names.techniqueSymbol(cadenceOf(question.progression) ?? 'frei'),
+          sub: keyChip(names, keyPitch(key), key.mode).main,
+        }
+      }}
       chipTitle={(answer) => line(bassDegrees(answer.question.progression) ?? [])}
       allCorrect={t('harmony.summary.allCorrect')}
       onPlayAgain={onPlayAgain}

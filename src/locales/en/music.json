@@ -338,6 +338,13 @@
     "triplet": "Triplets",
     "quintuplet": "Quintuplets"
   },
+  "divisionsShort": {
+    "quarter": "Beat",
+    "eighth": "8th",
+    "sixteenth": "16th",
+    "triplet": "Trip",
+    "quintuplet": "Quin"
+  },
   "tuplets": {
     "3": "Triplet",
     "5": "Quintuplet"
@@ -584,35 +591,43 @@
     },
     "ganzschluss-vollkommen": {
       "label": "Perfect authentic cadence",
-      "short": "Perfect"
+      "short": "Perfect",
+      "symbol": "PAC"
     },
     "ganzschluss-unvollkommen": {
       "label": "Imperfect authentic cadence",
-      "short": "Imperfect"
+      "short": "Imperfect",
+      "symbol": "IAC"
     },
     "kadenz-quartsext": {
       "label": "Cadential six-four",
-      "short": "Cadential 6/4"
+      "short": "Cadential 6/4",
+      "symbol": "C6/4"
     },
     "halbschluss": {
       "label": "Half cadence",
-      "short": "Half"
+      "short": "Half",
+      "symbol": "HC"
     },
     "phrygischer-halbschluss": {
       "label": "Phrygian half cadence",
-      "short": "Phrygian"
+      "short": "Phrygian",
+      "symbol": "PHC"
     },
     "trugschluss": {
       "label": "Deceptive cadence",
-      "short": "Deceptive"
+      "short": "Deceptive",
+      "symbol": "DC"
     },
     "plagalschluss": {
       "label": "Plagal cadence",
-      "short": "Plagal"
+      "short": "Plagal",
+      "symbol": "PC"
     },
     "frei": {
       "label": "Free progression",
-      "short": "Free"
+      "short": "Free",
+      "symbol": "free"
     }
   }
 }

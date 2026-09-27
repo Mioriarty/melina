@@ -4,13 +4,13 @@ import { Link } from 'react-router'
 import { Icon } from '@/components/ui/Icon'
 import { cn } from '@/lib/utils/cn'
 
-import type { Answered, ChangeSettings } from './round'
+import type { Answered, ChangeSettings, ChipLabel } from './round'
 
 export interface RoundSummaryProps<TQuestion, TAnswer> {
   answers: readonly Answered<TQuestion, TAnswer>[]
   /**
-   * Short, stable label for what was asked — `M3`, `dor`. Groups the misses
-   * and labels the chips, so it has to fit in a very small square.
+   * Stable key for what was asked, which the misses are grouped by. Never
+   * shown — `chipLabel` is what the squares print.
    *
    * Given the whole answer rather than just the question, because what is worth
    * grouping by is not always a property of the question alone: a melody of
@@ -39,12 +39,25 @@ export interface RoundSummaryProps<TQuestion, TAnswer> {
    * *where* it went wrong, and "You answered chords 2–3" is not a sentence.
    */
   answerLabelKey?: string
-  /** Tooltip on a chip: what was asked, and in what context. */
+  /** What a square under "This round" prints: see `ChipLabel`. */
+  chipLabel: (answer: Answered<TQuestion, TAnswer>) => ChipLabel
+  /** A chip's full description: its tooltip, and what a screen reader says. */
   chipTitle: (answer: Answered<TQuestion, TAnswer>) => string
   /** Where to go next when nothing was missed. Exercise-specific advice. */
   allCorrect: string
   onPlayAgain: () => void
   changeSettings: ChangeSettings
+}
+
+/**
+ * The main line's size, stepped down by length so nothing leaves the square.
+ * Counted in code points, so `E♭` is two characters and not three.
+ */
+function mainSize(text: string): string {
+  const length = [...text].length
+  if (length <= 3) return 'text-[0.75rem]'
+  if (length <= 4) return 'text-[0.6875rem]'
+  return 'text-[0.5625rem]'
 }
 
 /**
@@ -64,6 +77,7 @@ export function RoundSummary<TQuestion, TAnswer>({
   subjectName,
   answerName,
   answerLabelKey = 'exercise:summary.youAnswered',
+  chipLabel,
   chipTitle,
   allCorrect,
   onPlayAgain,
@@ -164,20 +178,43 @@ export function RoundSummary<TQuestion, TAnswer>({
             {t('exercise:summary.thisRound')}
           </h2>
           <ol aria-labelledby="summary-this-round" className="flex flex-wrap gap-1.5">
-            {answers.map((answer, index) => (
-              <li
-                key={index}
-                title={chipTitle(answer)}
-                className={cn(
-                  'grid h-8 w-8 place-items-center rounded-lg text-[0.6875rem] font-semibold',
-                  answer.correct
-                    ? 'bg-correct/12 text-correct'
-                    : 'bg-wrong/12 text-wrong',
-                )}
-              >
-                {subjectKey(answer)}
-              </li>
-            ))}
+            {answers.map((answer, index) => {
+              const { main, sub } = chipLabel(answer)
+              const title = chipTitle(answer)
+              return (
+                <li
+                  key={index}
+                  title={title}
+                  className={cn(
+                    'flex h-10 w-10 flex-col items-center justify-center overflow-hidden rounded-lg leading-none whitespace-nowrap',
+                    // Not by colour alone: a miss is also outlined.
+                    answer.correct
+                      ? 'bg-correct/12 text-correct'
+                      : 'bg-wrong/12 text-wrong ring-1 ring-wrong/45 ring-inset',
+                  )}
+                >
+                  <span className="sr-only">
+                    {t(
+                      answer.correct
+                        ? 'exercise:summary.chip.correct'
+                        : 'exercise:summary.chip.wrong',
+                      { question: title },
+                    )}
+                  </span>
+                  <span aria-hidden className={cn('font-semibold', mainSize(main))}>
+                    {main}
+                  </span>
+                  {sub !== undefined && sub !== '' && (
+                    <span
+                      aria-hidden
+                      className="mt-0.5 text-[0.5625rem] font-medium opacity-80"
+                    >
+                      {sub}
+                    </span>
+                  )}
+                </li>
+              )
+            })}
           </ol>
         </section>
 

@@ -28,6 +28,7 @@ export function IntervalSummary({
       subjectKey={({ question }) => intervalKey(question.interval)}
       subjectName={({ question }) => names.interval(question.interval)}
       answerName={({ chosen }) => names.interval(chosen)}
+      chipLabel={({ question }) => ({ main: intervalKey(question.interval) })}
       chipTitle={({ question }) =>
         t('summary.questionLabel', {
           subject: names.interval(question.interval),

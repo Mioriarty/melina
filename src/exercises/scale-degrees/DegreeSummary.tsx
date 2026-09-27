@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
+import { keyChip } from '@/exercises/shared/keyChip'
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
 import type { Answered, ChangeSettings } from '@/exercises/shared/round'
 import { useMusicNames } from '@/hooks/useMusicNames'
@@ -67,6 +68,7 @@ export function DegreeSummary({
       subjectKey={(answer) => names.degreeShort(firstMiss(answer))}
       subjectName={(answer) => names.degree(firstMiss(answer))}
       answerName={({ chosen }) => melody(chosen)}
+      chipLabel={({ question }) => keyChip(names, question.tonic, question.mode)}
       chipTitle={({ question }) =>
         t('degrees.summary.questionLabel', {
           key: names.scaleName(tonicKey(question.tonic), question.mode),

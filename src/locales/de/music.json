@@ -338,6 +338,13 @@
     "triplet": "Triolen",
     "quintuplet": "Quintolen"
   },
+  "divisionsShort": {
+    "quarter": "Schlag",
+    "eighth": "8tel",
+    "sixteenth": "16tel",
+    "triplet": "Tri",
+    "quintuplet": "Quin"
+  },
   "tuplets": {
     "3": "Triole",
     "5": "Quintole"
@@ -584,35 +591,43 @@
     },
     "ganzschluss-vollkommen": {
       "label": "Vollkommener Ganzschluss",
-      "short": "Vollkommen"
+      "short": "Vollkommen",
+      "symbol": "GS"
     },
     "ganzschluss-unvollkommen": {
       "label": "Unvollkommener Ganzschluss",
-      "short": "Unvollkommen"
+      "short": "Unvollkommen",
+      "symbol": "uGS"
     },
     "kadenz-quartsext": {
       "label": "Kadenz-Quartsextakkord",
-      "short": "Quartsext"
+      "short": "Quartsext",
+      "symbol": "K6/4"
     },
     "halbschluss": {
       "label": "Halbschluss",
-      "short": "Halbschluss"
+      "short": "Halbschluss",
+      "symbol": "HS"
     },
     "phrygischer-halbschluss": {
       "label": "Phrygischer Halbschluss",
-      "short": "Phrygisch"
+      "short": "Phrygisch",
+      "symbol": "pHS"
     },
     "trugschluss": {
       "label": "Trugschluss",
-      "short": "Trugschluss"
+      "short": "Trugschluss",
+      "symbol": "TS"
     },
     "plagalschluss": {
       "label": "Plagalschluss",
-      "short": "Plagal"
+      "short": "Plagal",
+      "symbol": "PS"
     },
     "frei": {
       "label": "Freie Fortschreitung",
-      "short": "Frei"
+      "short": "Frei",
+      "symbol": "frei"
     }
   }
 }

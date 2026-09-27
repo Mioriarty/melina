@@ -82,8 +82,12 @@ export interface MusicNames {
   noteValue: (value: NoteValue, kind: 'note' | 'rest', dotted: boolean) => string
   /** A time signature, spoken: `four four`, `Vier Viertel`. */
   meter: (meter: TimeSignature) => string
+  /** A time signature as it is printed: `3/4`. */
+  meterFigure: (meter: TimeSignature) => string
   /** How finely a bar is divided, for a breakdown: `Triplets`. */
   division: (id: DivisionId) => string
+  /** The same in a few characters, for a summary square: `16th`, `16tel`. */
+  divisionShort: (id: DivisionId) => string
   /** A tuplet by its division: `Triplet`, `Quintuplet`. */
   tuplet: (division: number) => string
   /**
@@ -145,6 +149,11 @@ export interface MusicNames {
   technique: (id: string) => string
   /** Short enough for a chip: `Quintfall`. */
   techniqueShort: (id: string) => string
+  /**
+   * A cadence in a few characters, for a summary square: `PAC`, `TS`. Falls
+   * back to `techniqueShort` for anything that has none.
+   */
+  techniqueSymbol: (id: string) => string
   /** One of the four parts: `Tenor`, `Alt`. */
   voice: (id: VoiceId) => string
   /**
@@ -211,7 +220,9 @@ export function useMusicNames(): MusicNames {
       noteValue: (value, kind, dotted) =>
         t(`noteValues.${value}.${dotted ? 'dotted' : 'plain'}.${kind}`),
       meter: (meter) => t(`meters.${meter.beats}/${meter.unit}`),
+      meterFigure: (meter) => `${meter.beats}/${meter.unit}`,
       division: (id) => t(`divisions.${id}`),
+      divisionShort: (id) => t(`divisionsShort.${id}`),
       tuplet: (division) =>
         t(`tuplets.${division}`, { defaultValue: t('tupletFallback', { division }) }),
       degree: (degree) => {
@@ -261,6 +272,12 @@ export function useMusicNames(): MusicNames {
       techniqueShort: (id) =>
         t(`techniques.${id}.short`, {
           defaultValue: t(`techniques.${id}.label`, { defaultValue: id }),
+        }),
+      techniqueSymbol: (id) =>
+        t(`techniques.${id}.symbol`, {
+          defaultValue: t(`techniques.${id}.short`, {
+            defaultValue: t(`techniques.${id}.label`, { defaultValue: id }),
+          }),
         }),
       voice: (id) => t(`voices.${id}`),
       rule: (id) => t(`rules.${id}.label`),

@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
+import { keyChip } from '@/exercises/shared/keyChip'
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
 import type { Answered, ChangeSettings } from '@/exercises/shared/round'
 import { useMusicNames } from '@/hooks/useMusicNames'
@@ -73,6 +74,14 @@ export function MelodySummary({
         if (rhythm) return t('melody.summary.notesWrong')
         if (notes) return t('melody.summary.rhythmWrong')
         return t('melody.summary.bothWrong')
+      }}
+      chipLabel={({ question }) => {
+        // The key, and the metre under it unless a mode needs the room.
+        const key = keyChip(names, question.tonic, question.mode)
+        return {
+          main: key.main,
+          sub: key.sub ?? names.meterFigure(question.phrase.meter),
+        }
       }}
       chipTitle={({ question }) =>
         `${names.scaleName(tonicKey(question.tonic), question.mode)} ${names.meter(question.phrase.meter)}`

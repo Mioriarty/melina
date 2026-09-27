@@ -42,6 +42,10 @@ function summary(
       <RoundSummary
         answers={answers}
         subjectKey={({ question }) => question.subject}
+        chipLabel={({ question }) => ({
+          main: question.subject,
+          sub: question.clef.slice(0, 3),
+        })}
         subjectName={({ question }) => `the ${question.subject}`}
         answerName={({ chosen }) => `the ${chosen}`}
         chipTitle={({ question }) => `${question.subject} · ${question.clef}`}
@@ -127,7 +131,19 @@ describe('RoundSummary', () => {
     expect(chips.getAllByRole('listitem')).toHaveLength(3)
     // One chip per question, labelled by what was asked and titled with the
     // context it was asked in.
-    expect(chips.getByText('a').getAttribute('title')).toBe('a · treble')
+    const [first, second] = chips.getAllByRole('listitem')
+    expect(first?.getAttribute('title')).toBe('a · treble')
+    expect(within(first as HTMLElement).getByText('a')).toBeTruthy()
+    expect(within(first as HTMLElement).getByText('tre')).toBeTruthy()
+    expect(second?.getAttribute('title')).toBe('b · treble')
+  })
+
+  it('says whether each chip was right, not only by its colour', () => {
+    summary([answered('a', 'a'), answered('b', 'x')])
+
+    const chips = within(screen.getByRole('list', { name: 'This round' }))
+    expect(chips.getByText('a · treble, correct')).toBeTruthy()
+    expect(chips.getByText('b · treble, wrong')).toBeTruthy()
   })
 
   it('offers another round', () => {

@@ -818,6 +818,14 @@ dictation, scale degrees — replay is its own control above it. **The frame
 around the notation is identical whether or not it is pressable**, or the staff
 shifts at the moment the answer arrives.
 
+**The summary's "This round" squares print `chipLabel`, not `subjectKey`.**
+The key groups the misses and is never shown; the label is two short lines —
+`ø7` over `6/5`, `3/4` over `16th`, `PAC` over `Gm` — that have to fit a 40px
+square in both languages, so they are symbols and abbreviations from the
+`music` namespace (`meterFigure`, `divisionShort`, `techniqueSymbol`,
+`keyChip`). `chipTitle` is the full description, as tooltip and spoken text. A
+miss is outlined as well as red.
+
 **A wrong answer is not replaced by the right one**: both are drawn side by
 side, each named, with the play button on the right-hand one.
 

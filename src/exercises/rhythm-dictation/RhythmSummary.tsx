@@ -48,6 +48,10 @@ export function RhythmSummary({
       answerName={({ chosen }) =>
         t('rhythm.summary.impacts', { count: chosen.onsets.length })
       }
+      chipLabel={({ question }) => ({
+        main: names.meterFigure(question.rhythm.meter),
+        sub: names.divisionShort(rhythmDivision(question.rhythm)),
+      })}
       chipTitle={({ question }) => kindOf(question)}
       allCorrect={t('summary.allCorrect.rhythm')}
       onPlayAgain={onPlayAgain}

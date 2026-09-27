@@ -2,7 +2,7 @@ import type { ChordQuestion } from '@/exercises/chord-shared/generate'
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
 import type { Answered, ChangeSettings } from '@/exercises/shared/round'
 import { useMusicNames } from '@/hooks/useMusicNames'
-import { chordSize, memberAt } from '@/lib/music/chord'
+import { chordSize, inversionFigure, memberAt } from '@/lib/music/chord'
 import { tonicKey } from '@/lib/music/scale'
 import { useTranslation } from 'react-i18next'
 
@@ -47,6 +47,10 @@ export function WritingSummary({
       answerName={(answer) =>
         answer.chosen.map((note) => names.tonic(tonicKey(note))).join(' ')
       }
+      chipLabel={({ question }) => ({
+        main: names.chordQualityShort(question.chord.quality),
+        sub: inversionFigure(question.chord.quality, question.chord.inversion),
+      })}
       chipTitle={asked}
       allCorrect={t('chord.summary.allCorrect')}
       onPlayAgain={onPlayAgain}

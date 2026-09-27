@@ -56,6 +56,15 @@ export function RealizingSummary({
           .map((chord) => chord.map((note) => names.tonic(tonicKey(note))).join(' '))
           .join(', ')
       }
+      chipLabel={({ question }) => {
+        // The first bass note's figures, and how many more a line had.
+        const [first, ...rest] = question.events
+        const text = (first?.figures ?? []).map(figureText).join('–')
+        return {
+          main: text === '' ? t('thoroughbass.plainShort') : text,
+          ...(rest.length > 0 ? { sub: `+${rest.length}` } : {}),
+        }
+      }}
       chipTitle={({ question }) =>
         `${label(question)} · ${names.keyName(question.keySignature)}`
       }

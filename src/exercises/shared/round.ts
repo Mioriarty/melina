@@ -29,6 +29,19 @@ export type Phase<TQuestion, TAnswer> =
   | { name: 'summary' }
 
 /**
+ * What a square under "This round" says about its question.
+ *
+ * Two short lines rather than one, because one is rarely enough to recognise
+ * a question by: `ø7` over `6/5`, `3/4` over `16th`, `Es` over `Harm`. Each
+ * line has to fit a 40px square, so both are symbols and abbreviations —
+ * a few characters, never a word. The full description is `chipTitle`.
+ */
+export interface ChipLabel {
+  main: string
+  sub?: string
+}
+
+/**
  * The summary's way back to choosing what to practise.
  *
  * One value rather than a callback and a flag, so the button's label and

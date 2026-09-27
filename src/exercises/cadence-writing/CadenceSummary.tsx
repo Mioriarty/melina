@@ -2,9 +2,11 @@ import { useTranslation } from 'react-i18next'
 
 import type { CadenceQuestion } from '@/exercises/harmony-shared/generate'
 import { orderFindings } from '@/exercises/harmony-shared/findingText'
+import { keyChip } from '@/exercises/shared/keyChip'
 import { RoundSummary } from '@/exercises/shared/RoundSummary'
 import type { Answered, ChangeSettings } from '@/exercises/shared/round'
 import { useMusicNames } from '@/hooks/useMusicNames'
+import { keyPitch } from '@/lib/music/key'
 import { getRule, type Finding } from '@/lib/music/voiceLeading'
 import { tonicKey } from '@/lib/music/scale'
 
@@ -73,6 +75,13 @@ export function CadenceSummary({
       }}
       answerName={where}
       answerLabelKey="exercise:satb.summary.where"
+      chipLabel={({ question }) => {
+        const { key } = question.progression
+        return {
+          main: keyChip(names, keyPitch(key), key.mode).main,
+          sub: names.lageShort(question.lage),
+        }
+      }}
       chipTitle={(answer) => {
         const { key } = answer.question.progression
         return t('satb.summary.chipTitle', {

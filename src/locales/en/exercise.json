@@ -257,7 +257,11 @@
     "questionLabel": "{{subject}} · {{clef}}",
     "playAgain": "Practise again",
     "changeSettings": "Change settings",
-    "changeDifficulty": "Change difficulty"
+    "changeDifficulty": "Change difficulty",
+    "chip": {
+      "correct": "{{question}}, correct",
+      "wrong": "{{question}}, wrong"
+    }
   },
   "scales": {
     "reading": {
@@ -348,7 +352,8 @@
       "plain": "bass {{bass}}, unfigured",
       "figured": "bass {{bass}}, figured {{figure}}"
     },
-    "nothing": "nothing at all"
+    "nothing": "nothing at all",
+    "plainShort": "none"
   },
   "figuring": {
     "levelsBlurb": "See a chord over a bass and write its figure. Pick a level, or set it up yourself.",
