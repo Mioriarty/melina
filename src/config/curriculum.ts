@@ -21,6 +21,15 @@ export interface ExerciseDef {
   /** Shown on the exercise's own station. Falls back to the category icon. */
   icon?: IconName
   status: Status
+  /**
+   * A planned exercise that already has its station — locked until it is
+   * built, but standing where the path needs it. Ordinarily a planned exercise
+   * of a built category is simply absent from the path; this is for one the
+   * route is already drawn *into*, like the merge below the three harmony
+   * dictations. Only the path reads it: routes, flags and the attempt log
+   * still see a planned exercise.
+   */
+  announced?: true
 }
 
 /**
@@ -217,6 +226,15 @@ export const CATEGORIES: readonly CategoryDef[] = [
         id: 'stufen',
         icon: 'layers',
         status: 'ready',
+      },
+      {
+        // Where the three dictations above it meet: every voice at once, and
+        // the chords they make. Not built yet, and on the path already,
+        // because the route has to arrive somewhere.
+        id: 'chorale',
+        icon: 'albums',
+        status: 'planned',
+        announced: true,
       },
     ],
   },
@@ -453,9 +471,13 @@ export function stations(): readonly Station[] {
       status: guide.status,
     }))
 
+    const onPath = category.exercises.filter(
+      (exercise) => exercise.status === 'ready' || exercise.announced === true,
+    )
+
     return [
       ...guides,
-      ...built.map((exercise) => ({
+      ...onPath.map((exercise) => ({
         id: `${category.id}/${exercise.id}`,
         kind: 'exercise' as const,
         titleKey: exerciseTitleKey(category.id, exercise.id),

@@ -176,8 +176,17 @@ describe('path layout', () => {
     // hearing a chord was for.
     expect(joins('chords/writing', 'guide/voice-leading')).toBe(true)
     expect(joins('guide/voice-leading', 'harmony/cadence')).toBe(true)
-    expect(joins('harmony/cadence', 'harmony/bass')).toBe(true)
-    expect(joins('harmony/bass', 'harmonic-prediction')).toBe(true)
+    // Then the three dictations — soprano, bass and Stufen, three answers to
+    // one question — split from cadence writing and merge into the chorale,
+    // which is every voice at once. None of them leads to another.
+    for (const dictation of ['harmony/soprano', 'harmony/bass', 'harmony/stufen']) {
+      expect(joins('harmony/cadence', dictation), dictation).toBe(true)
+      expect(joins(dictation, 'harmony/chorale'), dictation).toBe(true)
+      expect(joins(dictation, 'harmonic-prediction'), dictation).toBe(false)
+    }
+    expect(joins('harmony/soprano', 'harmony/bass')).toBe(false)
+    expect(joins('harmony/bass', 'harmony/stufen')).toBe(false)
+    expect(joins('harmony/chorale', 'harmonic-prediction')).toBe(true)
     expect(joins('chords/writing', 'harmonic-prediction')).toBe(false)
     expect(joins('dictation/short-melodies', 'harmonic-prediction')).toBe(false)
 
@@ -323,7 +332,13 @@ describe('path layout', () => {
     for (let i = 1; i < PATH_NODES.length; i += 1) {
       const previous = PATH_NODES[i - 1]!
       const current = PATH_NODES[i]!
-      if (Math.sign(previous.x - 50) !== Math.sign(current.x - 50)) crossings += 1
+      // A station on the centre line leans neither way, so it cannot be where
+      // the path starts drifting — the merge below the harmony dictations
+      // stands straight under the bass it continues.
+      const centred = previous.x === 50 || current.x === 50
+      if (centred || Math.sign(previous.x - 50) !== Math.sign(current.x - 50)) {
+        crossings += 1
+      }
     }
     expect(crossings).toBeGreaterThanOrEqual(PATH_NODES.length - 3)
   })

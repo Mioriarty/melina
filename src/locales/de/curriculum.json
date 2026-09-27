@@ -126,6 +126,11 @@
           "title": "Stufendiktat",
           "short": "Stufen",
           "blurb": "Höre eine vierstimmige Harmoniefolge und benenne jeden Akkord, als Stufe und als Funktion."
+        },
+        "chorale": {
+          "title": "Choraldiktat",
+          "short": "Choral",
+          "blurb": "Höre einen vierstimmigen Choral und schreibe ihn ganz auf."
         }
       }
     },

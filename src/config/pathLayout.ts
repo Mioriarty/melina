@@ -179,14 +179,22 @@ export const PATH_NODES: readonly PathNodePosition[] = [
   // marked against a list of prohibitions, and a player who was never told
   // them is not being asked a hard question but an unfair one.
   { stationId: 'guide/voice-leading', x: 30, y: 2670 },
-  { stationId: 'harmony/cadence', x: 68, y: 2900 },
-  { stationId: 'harmony/soprano', x: 26, y: 3140 },
-  { stationId: 'harmony/stufen', x: 74, y: 3190 },
+  { stationId: 'harmony/cadence', x: 50, y: 2900 },
+  // **The harmony dictations split three ways and merge again.** The soprano,
+  // the bass and the Stufen are three answers to one question — what a
+  // progression is — learnable in any order, so they stand abreast rather than
+  // in a line: the two outer voices' readings level on either side, the bass a
+  // little lower in the middle, where it cannot stand level with either or its
+  // label would meet theirs. All three join chorale dictation below, which is
+  // every voice at once.
+  { stationId: 'harmony/soprano', x: 24, y: 3140 },
+  { stationId: 'harmony/stufen', x: 76, y: 3190 },
   { stationId: 'harmony/bass', x: 50, y: 3390 },
-  { stationId: 'harmonic-prediction', x: 68, y: 3600 },
-  { stationId: 'harmonic-completion', x: 34, y: 3865 },
-  { stationId: 'counterpoint', x: 68, y: 4100 },
-  { stationId: 'daily', x: 32, y: 4390 },
+  { stationId: 'harmony/chorale', x: 50, y: 3690 },
+  { stationId: 'harmonic-prediction', x: 68, y: 3910 },
+  { stationId: 'harmonic-completion', x: 34, y: 4175 },
+  { stationId: 'counterpoint', x: 68, y: 4410 },
+  { stationId: 'daily', x: 32, y: 4700 },
 ]
 
 /**
@@ -228,9 +236,10 @@ export const PATH_EDGES: readonly PathEdge[] = [
   { from: 'harmony/cadence', to: 'harmony/soprano' },
   { from: 'harmony/cadence', to: 'harmony/bass' },
   { from: 'harmony/cadence', to: 'harmony/stufen' },
-  { from: 'harmony/soprano', to: 'harmonic-prediction' },
-  { from: 'harmony/bass', to: 'harmonic-prediction' },
-  { from: 'harmony/stufen', to: 'harmonic-prediction' },
+  { from: 'harmony/soprano', to: 'harmony/chorale' },
+  { from: 'harmony/bass', to: 'harmony/chorale' },
+  { from: 'harmony/stufen', to: 'harmony/chorale' },
+  { from: 'harmony/chorale', to: 'harmonic-prediction' },
   // **Thoroughbass is off the path, joined only to itself.** Nothing leads
   // into it and nothing leads out, so `PATH_EDGES` has exactly two components
   // and the walk from the top of the column does not reach this one. That is

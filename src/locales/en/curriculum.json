@@ -126,6 +126,11 @@
           "title": "Roman Numeral Dictation",
           "short": "Numerals",
           "blurb": "Hear a progression in four parts and name every chord in it, as a Stufe and as a function."
+        },
+        "chorale": {
+          "title": "Chorale Dictation",
+          "short": "Chorale",
+          "blurb": "Hear a chorale in four parts and write all of it down."
         }
       }
     },
