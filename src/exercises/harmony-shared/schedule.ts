@@ -25,7 +25,13 @@ import type { HarmonyQuestion } from './generate'
 /** How long the last chord goes on ringing after the progression ends. */
 const TAIL = 1.4
 /** Silence between the establishing cadence and the question itself. */
-const GAP = 0.9
+const GAP = 0.8
+/**
+ * The establishing cadence's own tempo, in quarter notes. Fixed rather than
+ * the question's: it is heard before every question and only has to say
+ * where the tonic is.
+ */
+export const ESTABLISH_TEMPO = 80
 
 function secondsPerTick(tempo: number): number {
   return 60 / (tempo * TICKS_PER_BEAT)
@@ -77,6 +83,6 @@ export function harmonySchedule(question: HarmonyQuestion): readonly StruckNote[
   const { establish, satz, tempo } = question
   if (establish === undefined) return satzSchedule(satz, tempo)
 
-  const lead = satzSeconds(establish, tempo) + GAP
-  return [...satzSchedule(establish, tempo), ...satzSchedule(satz, tempo, lead)]
+  const lead = satzSeconds(establish, ESTABLISH_TEMPO) + GAP
+  return [...satzSchedule(establish, ESTABLISH_TEMPO), ...satzSchedule(satz, tempo, lead)]
 }

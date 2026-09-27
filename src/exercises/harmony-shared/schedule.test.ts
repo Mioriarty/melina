@@ -6,7 +6,7 @@ import { VOICES } from '@/lib/music/satbVoicing'
 import { BLOCKS } from '@/lib/music/satzmodell'
 
 import { buildQuestion, harmonySpec, type HarmonyQuestion } from './generate'
-import { harmonySchedule, satzSchedule, satzSeconds } from './schedule'
+import { ESTABLISH_TEMPO, harmonySchedule, satzSchedule, satzSeconds } from './schedule'
 import { DEFAULT_SETTINGS } from './settings'
 
 /**
@@ -102,12 +102,24 @@ describe('harmonySchedule', () => {
     const whole = harmonySchedule(asked)
     const cadence = satzSchedule(
       asked.establish as NonNullable<typeof asked.establish>,
-      asked.tempo,
+      ESTABLISH_TEMPO,
     )
 
     const opensAt = Math.min(...whole.slice(cadence.length).map((note) => note.at))
     const cadenceEnds = Math.max(...cadence.map((note) => note.at))
     expect(opensAt).toBeGreaterThan(cadenceEnds)
+  })
+
+  it('plays the cadence at its own brisk tempo, whatever the question is at', () => {
+    const slow = question()
+    const fast = { ...slow, tempo: 100 }
+    const establish = slow.establish as NonNullable<typeof slow.establish>
+    const count = satzSchedule(establish, ESTABLISH_TEMPO).length
+    const opening = (asked: HarmonyQuestion) => harmonySchedule(asked).slice(0, count)
+    expect(opening(fast)).toEqual(opening(slow))
+
+    // Four chords, three quarters and a half, at eighty to the minute.
+    expect(satzSeconds(establish, ESTABLISH_TEMPO)).toBeCloseTo((5 * 60) / 80)
   })
 
   it('leaves the cadence out when the level says so', () => {

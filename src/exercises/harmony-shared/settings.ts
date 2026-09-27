@@ -53,7 +53,7 @@ export function isFreedom(value: string): value is Freedom {
 
 export const CHORD_COUNTS: readonly number[] = [4, 5, 6, 7, 8]
 export const ROUND_LENGTHS = [6, 10, 15] as const
-export const TEMPOS: readonly number[] = [56, 72, 88]
+export const TEMPOS: readonly number[] = [64, 80, 100]
 
 export const CADENCE_CHOICES: readonly SatztechnikId[] = BLOCKS.filter(
   (block) => block.kind === 'cadence',
@@ -80,7 +80,7 @@ export const DEFAULT_SETTINGS: HarmonySettings = {
   blocks: ['tonika-prolongation', 'zwischendominante', 'quintfall'],
   freedom: 'mixed',
   establish: true,
-  tempo: 72,
+  tempo: 80,
   questionsPerRound: 6,
 }
 

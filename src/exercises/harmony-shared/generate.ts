@@ -98,12 +98,16 @@ export function progressionSpec(
  * Built from the same `buildEvents` and voiced by the same search as any other
  * progression, so it cannot come out in a different idiom from the question it
  * introduces.
+ *
+ * Quarter notes at `ESTABLISH_TEMPO`, whatever the question's own tempo: it is
+ * an orientation heard before every question, so it is kept brisk — at the
+ * question's pace it took longer than many of the progressions it introduced.
  */
 const ESTABLISHING: readonly ChordSpec[] = [
+  { degree: 1, inversion: 0, beats: 1 },
+  { degree: 4, inversion: 0, beats: 1 },
+  { degree: 5, inversion: 0, seventh: true, beats: 1 },
   { degree: 1, inversion: 0, beats: 2 },
-  { degree: 4, inversion: 0, beats: 2 },
-  { degree: 5, inversion: 0, seventh: true, beats: 2 },
-  { degree: 1, inversion: 0, beats: 4 },
 ]
 
 export function establishingCadence(key: Key): Satz | undefined {

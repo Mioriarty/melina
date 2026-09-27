@@ -45,7 +45,7 @@ export const BASS_DIFFICULTIES: readonly Difficulty<HarmonySettings>[] = [
     cadences: ['ganzschluss-vollkommen', 'halbschluss'],
     blocks: [],
     freedom: 'free',
-    tempo: 56,
+    tempo: 64,
   }),
   level('dur', 'diatonik', {
     keys: MAJOR,
@@ -148,7 +148,7 @@ export const BASS_DIFFICULTIES: readonly Difficulty<HarmonySettings>[] = [
       'doppeldominante',
       'neapolitaner',
     ],
-    tempo: 88,
+    tempo: 100,
     questionsPerRound: 10,
   }),
 ]
