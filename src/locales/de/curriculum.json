@@ -121,6 +121,11 @@
           "title": "Soprandiktat",
           "short": "Sopran",
           "blurb": "Höre eine vierstimmige Harmoniefolge und schreibe ihren Sopran in Stufen auf, samt Oktave."
+        },
+        "stufen": {
+          "title": "Stufendiktat",
+          "short": "Stufen",
+          "blurb": "Höre eine vierstimmige Harmoniefolge und benenne jeden Akkord, als Stufe und als Funktion."
         }
       }
     },

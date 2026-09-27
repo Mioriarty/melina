@@ -51,6 +51,7 @@ export type DifficultyGroup =
   | 'chord-writing'
   | 'harmony-bass'
   | 'harmony-soprano'
+  | 'harmony-stufen'
   | 'harmony-cadence'
 
 export function difficultyTitleKey(group: DifficultyGroup, id: string): string {

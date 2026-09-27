@@ -36,6 +36,9 @@ const EXERCISE_COMPONENTS: Record<string, ExerciseComponent> = {
     () => import('@/exercises/cadence-writing/CadenceWritingExercise'),
   ),
   'harmony/bass': lazy(() => import('@/exercises/bass-dictation/BassDictationExercise')),
+  'harmony/stufen': lazy(
+    () => import('@/exercises/stufen-dictation/StufenDictationExercise'),
+  ),
   'harmony/soprano': lazy(
     () => import('@/exercises/soprano-dictation/SopranoDictationExercise'),
   ),

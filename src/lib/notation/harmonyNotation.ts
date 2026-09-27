@@ -1,5 +1,14 @@
 import { inversionFigure } from '@/lib/music/chord'
-import type { FunctionSymbol, Stufe } from '@/lib/music/harmony'
+import {
+  appliedKey,
+  buildEvents,
+  eventStufe,
+  stufeFunction,
+  type FunctionSymbol,
+  type Stufe,
+} from '@/lib/music/harmony'
+import type { Key } from '@/lib/music/key'
+import { numeralSpec, type Numeral } from '@/lib/music/numeral'
 
 /**
  * Printing a Stufe and a function symbol.
@@ -81,4 +90,78 @@ export function functionText(symbol: FunctionSymbol): string {
   const seventh = symbol.seventh === true ? '7' : ''
 
   return `${base}${stroke}${parallel}${seventh}`
+}
+
+/** Riemann's sign for the Neapolitan: the minor subdominant with a minor sixth. */
+const NEAPOLITAN_FUNCTION = 'sN'
+
+/**
+ * A named chord in both notations at once: `{ stufe: 'V7/ii', func: '(D7)Sp' }`.
+ *
+ * Built by **building the chord and reading it back** — through `buildEvents`
+ * and the same `eventStufe` and `stufeFunction` the analysis rows under a
+ * setting are printed with — so a key on the keyboard and the row under the
+ * revealed answer can never name one chord two ways. `func` is empty where
+ * Funktionstheorie has no agreed symbol, as it is in those rows.
+ *
+ * An applied dominant is written the way both traditions write it: the
+ * dominant read in its own region, then what it is the dominant *of*. The
+ * dominant of the dominant has a name of its own, `DD`.
+ */
+export function numeralText(key: Key, numeral: Numeral): { stufe: string; func: string } {
+  if (numeral.of !== undefined) {
+    const region = appliedKey(key, numeral.of)
+    // The dominant itself, read in the region it belongs to.
+    const dominant =
+      region === undefined
+        ? undefined
+        : readNumeral(region, {
+            degree: 5,
+            inversion: numeral.inversion,
+            ...(numeral.seventh === true ? { seventh: true } : {}),
+          })
+    // What it is the dominant of, as the key names that chord — the natural
+    // seventh degree in minor, since that is the only one that is a region.
+    const target = readNumeral(key, {
+      degree: numeral.of,
+      inversion: 0,
+      ...(numeral.of === 7 ? { plain: true } : {}),
+    })
+    if (dominant === undefined || target === undefined) return { stufe: '', func: '' }
+
+    const seventh = numeral.seventh === true ? '7' : ''
+    const targetFunction = target.symbol === undefined ? '' : functionText(target.symbol)
+    return {
+      stufe: `${stufeText(dominant.stufe)}/${stufeText(target.stufe)}`,
+      func:
+        numeral.of === 5
+          ? `DD${seventh}`
+          : targetFunction === ''
+            ? ''
+            : `(D${seventh})${targetFunction}`,
+    }
+  }
+
+  const read = readNumeral(key, numeral)
+  if (read === undefined) return { stufe: '', func: '' }
+  return {
+    stufe: stufeText(read.stufe),
+    func:
+      numeral.neapolitan === true
+        ? NEAPOLITAN_FUNCTION
+        : read.symbol === undefined
+          ? ''
+          : functionText(read.symbol),
+  }
+}
+
+/** A chord that is not applied, built and read back. */
+function readNumeral(
+  key: Key,
+  numeral: Numeral,
+): { stufe: Stufe; symbol: FunctionSymbol | undefined } | undefined {
+  const [event] = buildEvents(key, numeralSpec(numeral)) ?? []
+  const stufe = event === undefined ? undefined : eventStufe(key, event)
+  if (stufe === undefined) return undefined
+  return { stufe, symbol: stufeFunction(key, stufe) }
 }

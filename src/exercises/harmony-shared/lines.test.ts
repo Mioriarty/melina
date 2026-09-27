@@ -1,19 +1,23 @@
 import { describe, expect, it } from 'vitest'
 
-import { degreeKey, degreePitch, stepIndex, type Degree } from '@/lib/music/degree'
+import { correctAnswer } from '@/lib/db/attemptQuestion'
+import {
+  degreeKey,
+  degreePitch,
+  degreesKey,
+  stepIndex,
+  type Degree,
+} from '@/lib/music/degree'
 import { KEY_KEYS } from '@/lib/music/key'
 import { comparePitch, pitchKey } from '@/lib/music/pitch'
 import { createRandom } from '@/lib/utils/seededRandom'
 
 import { HARMONY_DICTATION_DIFFICULTIES } from './difficulties'
-import {
-  generateRound,
-  harmonySpec,
-  sopranoSteps,
-  type HarmonyQuestion,
-} from './generate'
+import { sopranoSteps } from '@/lib/music/soprano'
+
+import { generateRound, harmonySpec, type HarmonyQuestion } from './generate'
 import { BASS_LINE, SOPRANO_LINE } from './lines'
-import { isLineCorrect } from './rules'
+import { BASS_RULES, isLineCorrect, SOPRANO_RULES } from './rules'
 
 /**
  * The voices a line dictation asks for.
@@ -127,6 +131,20 @@ describe('grading a line', () => {
       expect(BASS_LINE.length(asked)).toBe(
         asked.satz.events.filter((event) => event.held !== true).length,
       )
+    }
+  })
+})
+
+describe('the attempt log', () => {
+  it('derives the soprano a row asked for, and the bass', () => {
+    for (const question of ASKED.slice(0, 8)) {
+      const soprano = SOPRANO_RULES.attempt(question)
+      expect(soprano.kind === 'harmony' && soprano.asks).toBe('soprano')
+      expect(correctAnswer(soprano)).toBe(degreesKey(SOPRANO_LINE.answer(question) ?? []))
+
+      const bass = BASS_RULES.attempt(question)
+      expect(bass.kind === 'harmony' && bass.asks).toBeUndefined()
+      expect(correctAnswer(bass)).toBe(degreesKey(BASS_LINE.answer(question) ?? []))
     }
   })
 })

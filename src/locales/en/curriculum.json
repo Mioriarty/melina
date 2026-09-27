@@ -121,6 +121,11 @@
           "title": "Soprano Dictation",
           "short": "Soprano",
           "blurb": "Hear a progression in four parts and write down its soprano, octave and all."
+        },
+        "stufen": {
+          "title": "Roman Numeral Dictation",
+          "short": "Numerals",
+          "blurb": "Hear a progression in four parts and name every chord in it, as a Stufe and as a function."
         }
       }
     },

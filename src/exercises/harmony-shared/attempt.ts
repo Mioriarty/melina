@@ -40,7 +40,24 @@ export function harmonyAttempt(question: HarmonyQuestion): HarmonyAttempt {
     beats: stored?.beats ?? '',
     analysis: stored?.analysis ?? '',
     tempo: question.tempo,
+    ...(question.inversions === true ? { inversions: true } : {}),
   }
+}
+
+/**
+ * The same row, saying which voice or reading it asked for.
+ *
+ * The progression is the same whichever voice is being written, so the
+ * exercise adds this rather than the row being built differently — and
+ * `correctAnswer` reads it to know which answer the row was asking for.
+ */
+export function dictationAttempt(
+  asks: 'bass' | 'soprano' | 'stufen',
+): (question: HarmonyQuestion) => HarmonyAttempt {
+  return (question) => ({
+    ...harmonyAttempt(question),
+    ...(asks === 'bass' ? {} : { asks }),
+  })
 }
 
 /** The question a row was, rebuilt — the round trip the log's shape rests on. */
@@ -67,6 +84,7 @@ export function harmonyQuestion(
     satz,
     establish: establish ? establishingCadence(key) : undefined,
     tempo: attempt.tempo,
+    ...(attempt.inversions === true ? { inversions: true } : {}),
   }
 }
 

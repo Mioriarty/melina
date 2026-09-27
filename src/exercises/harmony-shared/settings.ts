@@ -23,6 +23,11 @@ export interface HarmonySettings {
   freedom: Freedom
   /** Whether a cadence is played first to fix the key. */
   establish: boolean
+  /**
+   * Whether a chord is named with its inversion. Only Stufen dictation asks
+   * it; the others ignore it.
+   */
+  inversions: boolean
   tempo: number
   questionsPerRound: number
 }
@@ -80,6 +85,7 @@ export const DEFAULT_SETTINGS: HarmonySettings = {
   blocks: ['tonika-prolongation', 'zwischendominante', 'quintfall'],
   freedom: 'mixed',
   establish: true,
+  inversions: false,
   tempo: 80,
   questionsPerRound: 6,
 }
@@ -130,6 +136,8 @@ export function parseHarmonySettings(value: unknown): HarmonySettings | undefine
     freedom: freedom ?? DEFAULT_SETTINGS.freedom,
     establish:
       typeof raw.establish === 'boolean' ? raw.establish : DEFAULT_SETTINGS.establish,
+    inversions:
+      typeof raw.inversions === 'boolean' ? raw.inversions : DEFAULT_SETTINGS.inversions,
     tempo: tempo ?? DEFAULT_SETTINGS.tempo,
     questionsPerRound: questions ?? DEFAULT_SETTINGS.questionsPerRound,
   }

@@ -213,6 +213,11 @@ export const CATEGORIES: readonly CategoryDef[] = [
         id: 'bass',
         status: 'ready',
       },
+      {
+        id: 'stufen',
+        icon: 'layers',
+        status: 'ready',
+      },
     ],
   },
   {

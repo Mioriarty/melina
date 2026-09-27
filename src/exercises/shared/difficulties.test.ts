@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { BASS_DIFFICULTIES } from '@/exercises/bass-dictation/difficulties'
+import { STUFEN_DIFFICULTIES } from '@/exercises/stufen-dictation/difficulties'
 import { CADENCE_DIFFICULTIES } from '@/exercises/cadence-writing/difficulties'
 import { CHORD_DIFFICULTIES } from '@/exercises/chord-shared/difficulties'
 import {
@@ -158,6 +159,7 @@ const ALL_GROUPS: readonly NamedLevels[] = [
   { group: 'chord-writing', levels: CHORD_DIFFICULTIES },
   { group: 'harmony-bass', levels: BASS_DIFFICULTIES },
   { group: 'harmony-soprano', levels: BASS_DIFFICULTIES },
+  { group: 'harmony-stufen', levels: STUFEN_DIFFICULTIES },
   { group: 'harmony-cadence', levels: CADENCE_DIFFICULTIES },
 ]
 

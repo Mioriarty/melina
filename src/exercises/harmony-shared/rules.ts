@@ -1,7 +1,7 @@
 import type { RoundRules } from '@/exercises/shared/useRound'
 import { degreesKey, degreesSoundEqual, type Degree } from '@/lib/music/degree'
 
-import { harmonyAttempt } from './attempt'
+import { dictationAttempt } from './attempt'
 import { generateRound, type HarmonyQuestion, type HarmonyRoundSpec } from './generate'
 import { BASS_LINE, SOPRANO_LINE, type LineDef } from './lines'
 
@@ -43,7 +43,7 @@ export function lineRules(
   return {
     generate: generateRound,
     isCorrect: (chosen, question) => isLineCorrect(line, chosen, question),
-    attempt: harmonyAttempt,
+    attempt: dictationAttempt(line.voice === 'soprano' ? 'soprano' : 'bass'),
     answerKey: lineAnswerKey,
   }
 }

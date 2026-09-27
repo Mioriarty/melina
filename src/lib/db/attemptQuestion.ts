@@ -22,7 +22,10 @@ import {
 import { CHORD_MEMBERS, type ChordMember } from '@/lib/music/chord'
 import { parseEvents } from '@/lib/music/harmony'
 import { degreeOf, keySignatureOf, parseKeyKey } from '@/lib/music/key'
-import { parseAnalysis } from '@/lib/music/progression'
+import { numeralsKey, progressionNumerals } from '@/lib/music/numeral'
+import { DEFAULT_METER, parseAnalysis, parseProgression } from '@/lib/music/progression'
+import { voiceProgression } from '@/lib/music/satb'
+import { sopranoDegrees } from '@/lib/music/soprano'
 import { getBlock } from '@/lib/music/satzmodell'
 import { isMeterKey, parseMeter, type TimeSignature } from '@/lib/music/meter'
 import { parsePhraseBars, phraseOnsets, phraseRhythms } from '@/lib/music/phrase'
@@ -248,6 +251,14 @@ export interface HarmonyAttempt {
    * spans intervals and scales.
    */
   lage?: ChordMember
+  /**
+   * Which voice or reading a dictation asked for. Absent is the bass, which is
+   * what every harmony row meant before there was a choice — so old rows still
+   * read — and a cadence row has `lage` instead.
+   */
+  asks?: 'soprano' | 'stufen'
+  /** Whether the Stufen were asked with their inversions. */
+  inversions?: true
 }
 
 export type AttemptQuestion =
@@ -283,10 +294,12 @@ export function correctAnswer(question: AttemptQuestion): string {
 }
 
 /**
- * The bass line a harmony question wanted, as scale degrees.
+ * What a harmony question wanted: its bass, its soprano or its Stufen.
  *
  * Derived from the stored figures rather than kept beside them, which is the
  * rule this whole file follows: what a row implies is never also written down.
+ * The soprano comes from the voicing, which is a pure function of the
+ * progression, and the Stufen from the chords over each bass note.
  */
 export function harmonyAnswerKey(question: HarmonyAttempt): string {
   // **A four-part setting has no single right answer**, which is the whole
@@ -295,8 +308,36 @@ export function harmonyAnswerKey(question: HarmonyAttempt): string {
   // though it were the answer.
   if (question.lage !== undefined) return ''
 
+  if (question.asks === 'soprano') return harmonySopranoKey(question)
+  if (question.asks === 'stufen') return harmonyStufenKey(question)
+
   const degrees = harmonyBassDegrees(question)
   return degrees === undefined ? '' : degreesKey(degrees)
+}
+
+function harmonySopranoKey(question: HarmonyAttempt): string {
+  const key = parseKeyKey(question.key)
+  if (key === undefined) return ''
+
+  const progression = parseProgression(key, DEFAULT_METER, question)
+  const satz =
+    progression === undefined
+      ? undefined
+      : voiceProgression(progression, { constraints: progression.constraints })
+  const degrees = satz === undefined ? undefined : sopranoDegrees(key, satz)
+  return degrees === undefined ? '' : degreesKey(degrees)
+}
+
+function harmonyStufenKey(question: HarmonyAttempt): string {
+  const key = parseKeyKey(question.key)
+  if (key === undefined) return ''
+
+  const events = parseEvents(key, question)
+  const numerals =
+    events === undefined
+      ? undefined
+      : progressionNumerals(key, events, question.inversions === true)
+  return numerals === undefined ? '' : numeralsKey(numerals)
 }
 
 function harmonyBassDegrees(question: HarmonyAttempt): readonly Degree[] | undefined {

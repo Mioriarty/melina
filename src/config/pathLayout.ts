@@ -181,6 +181,7 @@ export const PATH_NODES: readonly PathNodePosition[] = [
   { stationId: 'guide/voice-leading', x: 30, y: 2670 },
   { stationId: 'harmony/cadence', x: 68, y: 2900 },
   { stationId: 'harmony/soprano', x: 26, y: 3140 },
+  { stationId: 'harmony/stufen', x: 74, y: 3190 },
   { stationId: 'harmony/bass', x: 50, y: 3390 },
   { stationId: 'harmonic-prediction', x: 68, y: 3600 },
   { stationId: 'harmonic-completion', x: 34, y: 3865 },
@@ -226,8 +227,10 @@ export const PATH_EDGES: readonly PathEdge[] = [
   { from: 'guide/voice-leading', to: 'harmony/cadence' },
   { from: 'harmony/cadence', to: 'harmony/soprano' },
   { from: 'harmony/cadence', to: 'harmony/bass' },
+  { from: 'harmony/cadence', to: 'harmony/stufen' },
   { from: 'harmony/soprano', to: 'harmonic-prediction' },
   { from: 'harmony/bass', to: 'harmonic-prediction' },
+  { from: 'harmony/stufen', to: 'harmonic-prediction' },
   // **Thoroughbass is off the path, joined only to itself.** Nothing leads
   // into it and nothing leads out, so `PATH_EDGES` has exactly two components
   // and the walk from the top of the column does not reach this one. That is

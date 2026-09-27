@@ -548,6 +548,22 @@ const FUNCTIONS: readonly {
     quality: 'minor',
     symbol: { base: 'S', minor: true },
   },
+  // The natural minor's own dominant, which a sequence keeps: `d`, the minor
+  // dominant, rather than `D`.
+  {
+    mode: 'aeolian',
+    degree: 5,
+    alteration: 0,
+    quality: 'minor',
+    symbol: { base: 'D', minor: true },
+  },
+  {
+    mode: 'aeolian',
+    degree: 5,
+    alteration: 0,
+    quality: 'minor-seventh',
+    symbol: { base: 'D', minor: true },
+  },
   {
     mode: 'aeolian',
     degree: 5,
@@ -594,13 +610,16 @@ const FUNCTIONS: readonly {
 
 export function stufeFunction(key: Key, stufe: Stufe): FunctionSymbol | undefined {
   const mode = isMinor(key) ? 'aeolian' : 'ionian'
-  const found = FUNCTIONS.find(
-    (entry) =>
-      entry.mode === mode &&
-      entry.degree === stufe.number &&
-      entry.alteration === stufe.alteration &&
-      entry.quality === stufe.quality,
-  )
+  const entryFor = (quality: ChordQuality) =>
+    FUNCTIONS.find(
+      (entry) =>
+        entry.mode === mode &&
+        entry.degree === stufe.number &&
+        entry.alteration === stufe.alteration &&
+        entry.quality === quality,
+    )
+
+  const found = entryFor(stufe.quality) ?? diatonicSeventhEntry(key, stufe, entryFor)
   if (found === undefined) return undefined
 
   return {
@@ -608,6 +627,32 @@ export function stufeFunction(key: Key, stufe: Stufe): FunctionSymbol | undefine
     ...(chordSize(stufe.quality) === 4 ? { seventh: true } : {}),
     inversion: stufe.inversion,
   }
+}
+
+/**
+ * A seventh chord the scale itself spells on a degree reads as the triad's
+ * function with a seventh: `ii7` is `Sp7`, `iv7` is `s7`, `VII7` in natural
+ * minor is `dP7`.
+ *
+ * **Only the scale's own seventh chord.** A dominant seventh built on the
+ * first degree of a major key is not the tonic with a seventh but the dominant
+ * of the subdominant — its seventh is borrowed — so it takes no symbol here,
+ * exactly as it took none before.
+ */
+function diatonicSeventhEntry<T>(
+  key: Key,
+  stufe: Stufe,
+  entryFor: (quality: ChordQuality) => T | undefined,
+): T | undefined {
+  if (chordSize(stufe.quality) !== 4 || stufe.alteration !== 0) return undefined
+
+  const seventh = scaleStack(key, stufe.number, 4)
+  const triad = scaleStack(key, stufe.number, 3)
+  if (seventh === undefined || triad === undefined) return undefined
+  if (qualityOf(seventh) !== stufe.quality) return undefined
+
+  const triadQuality = qualityOf(triad)
+  return triadQuality === undefined ? undefined : entryFor(triadQuality)
 }
 
 export function eventFunction(

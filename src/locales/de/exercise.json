@@ -229,7 +229,8 @@
       "realizing": "Schreibe den Akkord zur Bezifferung",
       "bass": "Schreibe die Basslinie auf.",
       "cadence": "Setzen Sie diese Kadenz vierstimmig aus",
-      "soprano": "Schreibe die Sopranstimme auf."
+      "soprano": "Schreibe die Sopranstimme auf.",
+      "stufen": "Benenne jeden Akkord, den du hörst."
     }
   },
   "score": {
@@ -485,6 +486,26 @@
       "staff": "Eine Kadenz in {{key}}, beginnend in der {{lage}}: {{events}}",
       "plain": "{{bass}}",
       "figured": "{{bass}} mit {{figure}}"
+    }
+  },
+  "stufen": {
+    "keyboard": {
+      "label": "Akkorde",
+      "seventh": "Septakkord",
+      "applied": "Zwischendominante: die Dominante des als Nächstes gedrückten Akkords",
+      "delete": "Letzten Akkord löschen"
+    },
+    "answerLabel": "Die bisher benannten Akkorde",
+    "slot": {
+      "correct": "richtig",
+      "wrong": "falsch"
+    },
+    "setup": {
+      "inversions": {
+        "title": "Umkehrungen",
+        "hint": "Benenne auch, welcher Akkordton im Bass liegt: 6, 6/4, 6/5, 4/3, 2. Ein kadenzierender Quartsextakkord wird nach der Dominante benannt, in die er sich auflöst.",
+        "allow": "Umkehrungen benennen"
+      }
     }
   }
 }

@@ -14,10 +14,10 @@ import type { RuleId } from '@/lib/music/voiceLeading'
 
 import { bassLine } from '@/lib/music/progression'
 import { buildEvents, type ChordSpec, type HarmonicEvent } from '@/lib/music/harmony'
-import { degreePitch, isDegreeAlteration, stepAt, type Degree } from '@/lib/music/degree'
-import { chromaticValue, diatonicValue, pitch, type Pitch } from '@/lib/music/pitch'
+import { isDegreeAlteration, type Degree } from '@/lib/music/degree'
+import { chromaticValue, pitch, type Pitch } from '@/lib/music/pitch'
 import { voiceProgression } from '@/lib/music/satb'
-import { SATB_RANGES, type Satz } from '@/lib/music/satbVoicing'
+import type { Satz } from '@/lib/music/satbVoicing'
 import type { SatztechnikId } from '@/lib/music/satzmodell'
 
 import type { CadenceSettings, HarmonySettings } from './settings'
@@ -38,6 +38,12 @@ export interface HarmonyQuestion {
   /** The four-chord cadence that fixes the key before the question is played. */
   establish: Satz | undefined
   tempo: number
+  /**
+   * Whether a chord is named with its inversion. On the question rather than
+   * beside it, for the reason `CadenceQuestion.rules` is: what an answer is
+   * held to is a fact about the question that was asked.
+   */
+  inversions?: true
 }
 
 export interface HarmonyRoundSpec extends HarmonySettings {
@@ -145,6 +151,7 @@ export function buildQuestion(
       satz,
       establish: spec.establish ? establishingCadence(key) : undefined,
       tempo: spec.tempo,
+      ...(spec.inversions ? { inversions: true } : {}),
     }
   }
   return undefined
@@ -223,81 +230,6 @@ export function bassDegrees(progression: Progression): readonly Degree[] | undef
 /** How many notes the bass line has, which is how many the player writes. */
 export function bassLength(progression: Progression): number {
   return bassLine(progression).length
-}
-
-/* ------------------------------------------------------------- the soprano */
-
-/**
- * The tonic a soprano line is counted from: the one in the fourth octave.
- *
- * **Unlike the bass, the soprano is answered with its octave**, so this is not
- * only where the ink goes — `1` is this note, `↓7` the leading note under it
- * and `↑1` the octave above. The fourth octave is where the soprano's compass
- * (C4 to G5) begins, so every tonic lands inside it.
- */
-export function sopranoTonic(key: Key): Pitch {
-  return { ...key.tonic, octave: 4 }
-}
-
-/**
- * Every step of the key the soprano can sing, low to high — one key each.
- *
- * **The compass, not the question**: a keyboard reaching exactly as far as the
- * melody would give its highest and lowest notes away. So it is every step
- * whose plain note lies within `SATB_RANGES.soprano`, which in any key is
- * twelve of them.
- */
-export function sopranoSteps(key: Key): readonly Degree[] {
-  const tonic = sopranoTonic(key)
-  const { lowest, highest } = SATB_RANGES.soprano
-  const steps: Degree[] = []
-
-  for (let rung = -DEGREE_REACH; rung <= 2 * DEGREE_REACH; rung += 1) {
-    const step = stepAt(rung)
-    const note = degreePitch(tonic, key.mode, step)
-    if (note === undefined) continue
-    if (
-      chromaticValue(note) >= chromaticValue(lowest) &&
-      chromaticValue(note) <= chromaticValue(highest)
-    ) {
-      steps.push(step)
-    }
-  }
-
-  return steps
-}
-
-/** How far either side of the tonic a step search looks, in scale steps. */
-const DEGREE_REACH = 7
-
-/**
- * The soprano line as scale degrees, **with its octave** — one per sonority.
- *
- * Every chord restrikes the soprano, a suspension's resolution included, so the
- * line has as many notes as the setting has events. The octave is counted from
- * `sopranoTonic` by staff position, so a B♯3 in C♯ major is the seventh *below*
- * the tonic whatever it sounds like.
- */
-export function sopranoDegrees(question: HarmonyQuestion): readonly Degree[] | undefined {
-  const { key } = question.progression
-  const tonic = sopranoTonic(key)
-  const degrees: Degree[] = []
-
-  for (const voicing of question.satz.voicings) {
-    const note = voicing.soprano
-    const found = degreeOf(key, note)
-    if (found === undefined || !isDegreeAlteration(found.alteration)) return undefined
-
-    const steps = diatonicValue(note) - diatonicValue(tonic)
-    const octave = Math.floor(steps / 7)
-    degrees.push(
-      octave === 0
-        ? { number: found.number, alteration: found.alteration }
-        : { number: found.number, alteration: found.alteration, octave },
-    )
-  }
-
-  return degrees
 }
 
 /* ------------------------------------------------- writing one down, in four parts */

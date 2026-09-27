@@ -229,7 +229,8 @@
       "realizing": "Write the chord the figure asks for",
       "bass": "Write down the bass line.",
       "cadence": "Set this cadence in four parts",
-      "soprano": "Write down the soprano line."
+      "soprano": "Write down the soprano line.",
+      "stufen": "Name every chord you hear."
     }
   },
   "score": {
@@ -485,6 +486,26 @@
       "staff": "A cadence in {{key}}, beginning in {{lage}}: {{events}}",
       "plain": "{{bass}}",
       "figured": "{{bass}} with {{figure}}"
+    }
+  },
+  "stufen": {
+    "keyboard": {
+      "label": "Chords",
+      "seventh": "Seventh chord",
+      "applied": "Secondary dominant: the dominant of the chord pressed next",
+      "delete": "Delete the last chord"
+    },
+    "answerLabel": "The chords you have named",
+    "slot": {
+      "correct": "right",
+      "wrong": "wrong"
+    },
+    "setup": {
+      "inversions": {
+        "title": "Inversions",
+        "hint": "Also name which member is in the bass: 6, 6/4, 6/5, 4/3, 2. A cadential six-four is named by the dominant it resolves to.",
+        "allow": "Name the inversions"
+      }
     }
   }
 }

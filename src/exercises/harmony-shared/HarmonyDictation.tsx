@@ -47,7 +47,7 @@ export interface HarmonySummaryProps<TAnswer> {
 
 export interface HarmonyDictationProps<TAnswer> {
   /** The id under the harmony category, which names its levels group too. */
-  exercise: 'bass' | 'soprano'
+  exercise: 'bass' | 'soprano' | 'stufen'
   levels: readonly Difficulty<HarmonySettings>[]
   settings: SettingSpec<HarmonySettings>
   rules: RoundRules<HarmonyRoundSpec, HarmonyQuestion, TAnswer>
