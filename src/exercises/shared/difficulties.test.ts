@@ -706,9 +706,12 @@ describe('scale degree levels', () => {
     expect(DEGREE_DIFFICULTIES.some((level) => !level.settings.alterations)).toBe(true)
   })
 
-  it('has a level that gives the tonic away and one that does not', () => {
-    expect(DEGREE_DIFFICULTIES.some((level) => level.settings.startOnTonic)).toBe(true)
-    expect(DEGREE_DIFFICULTIES.some((level) => !level.settings.startOnTonic)).toBe(true)
+  it('gives the tonic away on the first level and nowhere else', () => {
+    // A melody always opening on its tonic is a simplification real music
+    // never offers, so it is dropped as soon as the player has their bearings.
+    expect(DEGREE_DIFFICULTIES.map((level) => level.settings.startOnTonic)).toEqual(
+      DEGREE_DIFFICULTIES.map((_, index) => index === 0),
+    )
   })
 
   it('covers major and minor somewhere', () => {

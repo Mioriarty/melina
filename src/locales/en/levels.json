@@ -172,7 +172,7 @@
   "scale-degrees": {
     "tonic-and-fifth": {
       "title": "Tonic and Fifth",
-      "blurb": "The three notes of the chord you just heard, and nothing else."
+      "blurb": "The three notes of the chord you just heard, and the melody opens on the tonic."
     },
     "first-five": {
       "title": "First Five",
@@ -190,10 +190,6 @@
       "title": "Harmonic Minor",
       "blurb": "The raised seventh, a semitone under the tonic and pulling towards it."
     },
-    "no-anchor": {
-      "title": "No Anchor",
-      "blurb": "The melody may begin anywhere, so there is no free first note."
-    },
     "longer-melodies": {
       "title": "Longer Melodies",
       "blurb": "Six notes to hold on to, in the treble and the bass."
@@ -204,7 +200,7 @@
     },
     "everything": {
       "title": "Everything",
-      "blurb": "Every mode, every clef, altered notes, and no opening tonic."
+      "blurb": "Every mode, every clef, and altered notes."
     }
   },
   "melodic-dictation": {

@@ -10,7 +10,8 @@ import { DEFAULT_SETTINGS, type DegreeSettings } from './settings'
  * task hard: three notes around the tonic is a different exercise from all
  * seven, and telling the sixth from the seventh is the last thing to come. How
  * long the melody is comes second — it is memory rather than hearing — and
- * notes from outside the key come last of all.
+ * notes from outside the key come last of all. Only the very first level opens
+ * every melody on the tonic.
  */
 export const DEGREE_DIFFICULTIES: readonly Difficulty<DegreeSettings>[] = [
   {
@@ -20,6 +21,10 @@ export const DEGREE_DIFFICULTIES: readonly Difficulty<DegreeSettings>[] = [
       degrees: [1, 3, 5],
       tonics: [...NATURAL_TONIC_KEYS],
       melodyLength: 3,
+      // The only level that hands over the first note. A melody opening on
+      // its tonic is a crutch real music does not offer — the tonic triad
+      // before every question is anchor enough — so it is let go at once.
+      startOnTonic: true,
     },
   },
   {
@@ -58,15 +63,6 @@ export const DEGREE_DIFFICULTIES: readonly Difficulty<DegreeSettings>[] = [
     },
   },
   {
-    id: 'no-anchor',
-    settings: {
-      ...DEFAULT_SETTINGS,
-      degrees: [1, 2, 3, 4, 5, 6, 7],
-      startOnTonic: false,
-      melodyLength: 4,
-    },
-  },
-  {
     id: 'longer-melodies',
     settings: {
       ...DEFAULT_SETTINGS,
@@ -100,7 +96,6 @@ export const DEGREE_DIFFICULTIES: readonly Difficulty<DegreeSettings>[] = [
       degrees: [1, 2, 3, 4, 5, 6, 7],
       clefs: ['treble', 'bass', 'alto', 'tenor'],
       alterations: true,
-      startOnTonic: false,
       melodyLength: 5,
       questionsPerRound: 20,
     },

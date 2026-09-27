@@ -43,7 +43,7 @@ export const DEFAULT_SETTINGS: DegreeSettings = {
   degrees: [1, 2, 3, 4, 5],
   alterations: false,
   melodyLength: 3,
-  startOnTonic: true,
+  startOnTonic: false,
   questionsPerRound: 10,
 }
 

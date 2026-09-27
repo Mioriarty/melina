@@ -172,7 +172,7 @@
   "scale-degrees": {
     "tonic-and-fifth": {
       "title": "Grundton und Quinte",
-      "blurb": "Die drei Töne des eben gehörten Akkords, sonst nichts."
+      "blurb": "Die drei Töne des eben gehörten Akkords, und die Melodie beginnt auf dem Grundton."
     },
     "first-five": {
       "title": "Erste fünf",
@@ -190,10 +190,6 @@
       "title": "Harmonisch Moll",
       "blurb": "Die erhöhte Septime, einen Halbton unter dem Grundton und zu ihm hin gezogen."
     },
-    "no-anchor": {
-      "title": "Ohne Anker",
-      "blurb": "Die Melodie darf überall beginnen, der erste Ton ist nicht geschenkt."
-    },
     "longer-melodies": {
       "title": "Längere Melodien",
       "blurb": "Sechs Töne zu behalten, im Violin- und im Bassschlüssel."
@@ -204,7 +200,7 @@
     },
     "everything": {
       "title": "Alles",
-      "blurb": "Jeder Modus, jeder Schlüssel, alterierte Töne und kein Grundton zu Beginn."
+      "blurb": "Jeder Modus, jeder Schlüssel und alterierte Töne."
     }
   },
   "melodic-dictation": {
