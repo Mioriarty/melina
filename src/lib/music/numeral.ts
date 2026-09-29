@@ -6,7 +6,7 @@ import {
   type ChordSpec,
   type HarmonicEvent,
 } from './harmony'
-import { isMinor, type Key } from './key'
+import { isMinor, keyKey, type Key } from './key'
 import { chromaticValue } from './pitch'
 import type { PitchClass } from './scale'
 
@@ -165,6 +165,42 @@ export function namesChord(
  * write: `VII7` in natural minor rather than `V7/III`.
  */
 export function typeableNumerals(key: Key): readonly Numeral[] {
+  return typeableSounds(key).map((entry) => entry.numeral)
+}
+
+interface TypeableSound {
+  numeral: Numeral
+  notes: ReadonlySet<number>
+  bass: number
+}
+
+/**
+ * The typeable vocabulary of a key with each entry's sound worked out once.
+ *
+ * Cached per key, because naming a progression asks it of every chord and a
+ * summary asks it of every chord of every question: rebuilding a hundred-odd
+ * chords each time is what made naming a round measurably slow. The cache is
+ * bounded by the thirty-odd keys there are.
+ */
+const TYPEABLE = new Map<string, readonly TypeableSound[]>()
+
+function typeableSounds(key: Key): readonly TypeableSound[] {
+  const cached = TYPEABLE.get(keyKey(key))
+  if (cached !== undefined) return cached
+
+  const found = collectTypeable(key).flatMap((numeral): TypeableSound[] => {
+    const chord = numeralChord(key, numeral)
+    const sound =
+      chord === undefined
+        ? undefined
+        : soundOf(chord.root, chord.quality, numeral.inversion)
+    return sound === undefined ? [] : [{ numeral, ...sound }]
+  })
+  TYPEABLE.set(keyKey(key), found)
+  return found
+}
+
+function collectTypeable(key: Key): readonly Numeral[] {
   const found: Numeral[] = []
   const add = (numeral: Numeral) => {
     if (isNumeral(key, numeral)) found.push(numeral)
@@ -202,11 +238,20 @@ export function numeralOf(
   event: HarmonicEvent,
   withInversion: boolean,
 ): Numeral | undefined {
-  const found = typeableNumerals(key).find((numeral) =>
-    namesChord(key, numeral, event, withInversion),
+  const chord = eventChord(event)
+  const heard =
+    chord === undefined ? undefined : soundOf(chord.root, chord.quality, chord.inversion)
+  if (heard === undefined) return undefined
+
+  // The same comparison `namesChord` makes, against sounds worked out once.
+  const found = typeableSounds(key).find(
+    (entry) =>
+      entry.notes.size === heard.notes.size &&
+      [...heard.notes].every((note) => entry.notes.has(note)) &&
+      (!withInversion || entry.bass === heard.bass),
   )
   if (found === undefined) return undefined
-  return withInversion ? found : { ...found, inversion: 0 }
+  return withInversion ? found.numeral : { ...found.numeral, inversion: 0 }
 }
 
 /**
