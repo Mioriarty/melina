@@ -167,6 +167,41 @@ export interface SatzOptions {
   shape?: MelodicShape
   /** A soprano given in advance — chorale harmonisation, when it arrives. */
   soprano?: readonly Pitch[]
+  /**
+   * A setting to stay as close to as the rules allow, chord by chord.
+   *
+   * What turns the search into a **corrector**: given a player's wrong
+   * setting, it finds the legal one that changes the fewest notes of it. The
+   * rules are hard constraints in this search, so however strong the pull, the
+   * result breaks none of them — the pull only decides *which* legal setting.
+   */
+  near?: readonly Voicing[]
+}
+
+/**
+ * What straying from `near` costs: a flat price per voice that moved, so the
+ * fewest changed notes wins, plus a little per semitone, so a changed note
+ * moves no further than it has to.
+ *
+ * The flat price is well above anything in `Weights` — a warning costs 14 —
+ * because what is wanted is the player's own setting mended, and a style
+ * preference outvoting their notes would be a different setting in disguise.
+ */
+const NEAR_PER_VOICE = 40
+const NEAR_PER_SEMITONE = 1
+
+function nearCost(voicing: Voicing, reference: Voicing | undefined): number {
+  if (reference === undefined) return 0
+  let cost = 0
+  for (const voice of VOICES) {
+    const apart = Math.abs(
+      chromaticValue(voicing[voice]) - chromaticValue(reference[voice]),
+    )
+    if (apart !== 0 || voicing[voice].letter !== reference[voice].letter) {
+      cost += NEAR_PER_VOICE + apart * NEAR_PER_SEMITONE
+    }
+  }
+  return cost
 }
 
 /** How hard the soprano's own line pulls against plain economy of motion. */
@@ -320,7 +355,7 @@ export function voiceProgression(
 
   const first = layers[0] as readonly Voicing[]
   let previous: Step[] = first.map((voicing) => ({
-    cost: voicingCost(voicing, weights),
+    cost: voicingCost(voicing, weights) + nearCost(voicing, options.near?.[0]),
     from: -1,
   }))
   const trail: Step[][] = [previous]
@@ -350,7 +385,8 @@ export function voiceProgression(
 
     for (const [j, after] of here.entries()) {
       const slot = current[j] as Step
-      const settled = voicingCost(after, weights)
+      // Never negative, so the bound below stays exact.
+      const settled = voicingCost(after, weights) + nearCost(after, options.near?.[index])
 
       for (const { index: i, cost: reached } of order) {
         if (reached + floor + settled >= slot.cost) break

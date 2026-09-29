@@ -485,8 +485,13 @@
     "scoreLabel": {
       "staff": "Eine Kadenz in {{key}}, beginnend in der {{lage}}: {{events}}",
       "plain": "{{bass}}",
-      "figured": "{{bass}} mit {{figure}}"
-    }
+      "figured": "{{bass}} mit {{figure}}",
+      "corrected_one": "Ein richtiger Satz in {{key}}, ein Ton gegenüber deinem geändert",
+      "corrected_other": "Ein richtiger Satz in {{key}}, {{count}} Töne gegenüber deinem geändert"
+    },
+    "yours": "Deine",
+    "corrected": "Korrigiert",
+    "toggle": "Welcher Satz im Notensystem steht"
   },
   "stufen": {
     "keyboard": {

@@ -17,9 +17,10 @@ import { RoundScreen } from '@/exercises/shared/RoundScreen'
 import type { ActivePhase } from '@/exercises/shared/round'
 import type { PlaybackStatus } from '@/exercises/shared/usePlayback'
 import { keySignatureOf } from '@/lib/music/key'
-import type { VoiceId } from '@/lib/music/satbVoicing'
+import type { Satz, VoiceId } from '@/lib/music/satbVoicing'
 
 import { cadenceReport, type CadenceAnswer } from './rules'
+import { SettingToggle } from './SettingToggle'
 
 /**
  * One question of writing a cadence out in four parts.
@@ -30,10 +31,13 @@ import { cadenceReport, type CadenceAnswer } from './rules'
  * the last chord is the press that answers.
  *
  * **The staff is not pressable until the answer is in**, and then it sounds
- * what the player wrote rather than what the app would have written. There is
- * no model answer on the page at all: a cadence can be set a dozen ways, all of
- * them right, and printing one beside a wrong answer would claim otherwise.
- * What is printed instead is which rules the setting broke.
+ * what the player wrote rather than what the app would have written. What is
+ * printed is which rules the setting broke — and, when it broke one, **the
+ * player's own setting mended** under it (`correctedSetting`): the legal
+ * setting that changes fewest of their notes, with those notes marked. Not the
+ * question's model answer: a cadence can be set a dozen ways, and printing an
+ * unrelated one would suggest that one was *the* answer. A mended setting says
+ * exactly what had to change.
  */
 
 /** The bass is given; these are written, bottom up, as a chorale is built. */
@@ -45,6 +49,10 @@ export interface CadenceRoundScreenProps {
   question: CadenceQuestion
   onPlay: () => void
   playStatus: PlaybackStatus
+  /** A correct setting close to the player's, once a wrong one is in. */
+  correction?: Satz | undefined
+  onPlayCorrection?: () => void
+  correctionStatus?: PlaybackStatus
   onAnswer: (chosen: CadenceAnswer, ms: number) => void
   onNext: () => void
   onQuit: () => void
@@ -56,6 +64,9 @@ export function CadenceRoundScreen({
   question,
   onPlay,
   playStatus,
+  correction,
+  onPlayCorrection,
+  correctionStatus,
   onAnswer,
   onNext,
   onQuit,
@@ -70,6 +81,10 @@ export function CadenceRoundScreen({
   )
 
   const revealed = phase.name === 'revealed'
+  // A wrong setting opens on its correction, which is what the player needs
+  // to see first; their own is one press away.
+  const [showCorrection, setShowCorrection] = useState(true)
+  const correcting = revealed && correction !== undefined
   const cursor = revealed ? undefined : cursorOf(draft)
 
   // Only worth computing once there is a finished setting to report on.
@@ -94,11 +109,29 @@ export function CadenceRoundScreen({
             revealed={revealed}
             cursor={cursor}
             {...(revealed ? { onPlay, status: playStatus } : {})}
+            {...(correcting
+              ? {
+                  correction,
+                  showCorrection,
+                  ...(onPlayCorrection === undefined ? {} : { onPlayCorrection }),
+                  ...(correctionStatus === undefined ? {} : { correctionStatus }),
+                }
+              : {})}
           />
           {/* Drawn empty while the question is open, because the room it
               takes is reserved either way — see `FindingList`. */}
           <FindingList
             findings={report?.findings ?? []}
+            {...(correcting
+              ? {
+                  header: (
+                    <SettingToggle
+                      showCorrection={showCorrection}
+                      onChange={setShowCorrection}
+                    />
+                  ),
+                }
+              : {})}
             {...(report === undefined || report.lage
               ? {}
               : { missedLage: question.lage })}

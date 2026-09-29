@@ -50,24 +50,31 @@ const SHOWN = 3
  * of it — the staff shrinks at the exact moment the player looks at it, which
  * is the failure the fixed page exists to prevent, arriving by another door.
  */
-const RESERVED = 'min-h-[5.5rem]'
+const RESERVED = 'min-h-[6rem]'
 
 export interface FindingListProps {
   findings: readonly Finding[]
   /** The Lage the prompt named, given only when the setting did not open in it. */
   missedLage?: ChordMember | undefined
+  /**
+   * A first line that is not a finding — the switch to the corrected setting.
+   * It takes the place of one, so the room reserved for the list is unchanged.
+   */
+  header?: ReactNode
 }
 
-export function FindingList({ findings, missedLage }: FindingListProps) {
+export function FindingList({ findings, missedLage, header }: FindingListProps) {
   const { t } = useTranslation('exercise')
   const names = useMusicNames()
 
   const ordered = orderFindings(findings)
-  const shown = ordered.slice(0, missedLage === undefined ? SHOWN : SHOWN - 1)
+  const room = SHOWN - (missedLage === undefined ? 0 : 1) - (header === undefined ? 0 : 1)
+  const shown = ordered.slice(0, room)
   const rest = ordered.length - shown.length
 
   return (
     <ul className={cn('flex w-full shrink-0 flex-col gap-1 text-left text-sm', RESERVED)}>
+      {header !== undefined && <li className="flex justify-center">{header}</li>}
       {missedLage !== undefined && (
         <Line severity="error">
           {t('satb.findings.wrongLage', { lage: names.lage(missedLage) })}

@@ -56,6 +56,12 @@ export const VOICE_PARTS: Readonly<
 }
 
 const HIDDEN = ' visible="false"'
+/**
+ * A note singled out — the ones a corrected setting had to change. Verovio
+ * copies `@type` into the rendered element's `class`, so how it is drawn stays
+ * in the stylesheet (`CHANGED_NOTE`) rather than being a colour in the MEI.
+ */
+const CHANGED = ' type="changed"'
 
 /**
  * The note value a span of ticks is written as.
@@ -81,10 +87,11 @@ function voiceNote(
   stem: 'up' | 'down',
   id: string,
   hidden: boolean,
+  marked = false,
 ): string {
   const { dur, dots } = duration(ticks)
   const accidental = accidentalAttributes(value, keySignature)
-  return `<note xml:id="${id}" pname="${value.letter.toLowerCase()}" oct="${value.octave}" dur="${dur}"${dots} stem.dir="${stem}"${accidental}${hidden ? HIDDEN : ''}/>`
+  return `<note xml:id="${id}" pname="${value.letter.toLowerCase()}" oct="${value.octave}" dur="${dur}"${dots} stem.dir="${stem}"${accidental}${hidden ? HIDDEN : ''}${marked ? CHANGED : ''}/>`
 }
 
 function escapeText(value: string): string {
@@ -114,6 +121,8 @@ export interface SatbEvent {
    * `@visible="false"` keeps the page identical and simply does not paint.
    */
   hide?: readonly VoiceId[]
+  /** Voices whose note is singled out as changed — see `CHANGED`. */
+  mark?: readonly VoiceId[]
 }
 
 export interface SatbMeiOptions {
@@ -201,6 +210,7 @@ export function satbMei({
                         part.stem,
                         `${voice}${index + 1}`,
                         hidden || (opening.hide ?? []).includes(voice),
+                        (opening.mark ?? []).includes(voice),
                       ),
                     ]
                   : group.map((event, position) =>
@@ -211,6 +221,7 @@ export function satbMei({
                         part.stem,
                         `${voice}${index + 1}-${position + 1}`,
                         hidden || (event.hide ?? []).includes(voice),
+                        (event.mark ?? []).includes(voice),
                       ),
                     )
 

@@ -17,7 +17,7 @@ import { buildEvents, type ChordSpec, type HarmonicEvent } from '@/lib/music/har
 import { isDegreeAlteration, type Degree } from '@/lib/music/degree'
 import { chromaticValue, pitch, type Pitch } from '@/lib/music/pitch'
 import { voiceProgression } from '@/lib/music/satb'
-import type { Satz } from '@/lib/music/satbVoicing'
+import type { Satz, Voicing } from '@/lib/music/satbVoicing'
 import type { SatztechnikId } from '@/lib/music/satzmodell'
 
 import type { CadenceSettings, HarmonySettings } from './settings'
@@ -298,6 +298,31 @@ export function openingConstraint(
  * of the attempt log — and a row that rebuilt its chords under different
  * constraints would disagree with the notation it produced.
  */
+/**
+ * A correct setting of a cadence, as close to the player's as the rules allow.
+ *
+ * The search that voiced the question, run again with the player's own
+ * setting as the thing to stay near: under the same constraints — the prompt's
+ * Lage and the blocks' own sopranos — and every rule in force, it keeps every
+ * note it can and moves only what it must. So a wrong answer is shown mended
+ * rather than replaced, and what changed is exactly what was wrong.
+ *
+ * Falls back to the question's own setting in the rare case the player's is so
+ * far from any legal one that nothing near it can be found.
+ */
+export function correctedSetting(
+  question: CadenceQuestion,
+  written: readonly Voicing[],
+): Satz {
+  const constraints = cadenceConstraints(question.progression, question.lage)
+  return (
+    voiceProgression(question.progression, {
+      ...(constraints === undefined ? {} : { constraints }),
+      near: written,
+    }) ?? question.model
+  )
+}
+
 export function cadenceConstraints(
   progression: Progression,
   lage: ChordMember,

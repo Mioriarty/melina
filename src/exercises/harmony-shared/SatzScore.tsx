@@ -7,7 +7,9 @@ import type { PlaybackStatus } from '@/exercises/shared/usePlayback'
 import { useMusicNames } from '@/hooks/useMusicNames'
 import { keySignatureOf } from '@/lib/music/key'
 import { getKeySignature } from '@/lib/music/keySignature'
-import { VOICES, type VoiceId, type Voicing } from '@/lib/music/satbVoicing'
+import { VOICES, type Satz, type VoiceId, type Voicing } from '@/lib/music/satbVoicing'
+import { chromaticValue } from '@/lib/music/pitch'
+import { cn } from '@/lib/utils/cn'
 import { tonicKey } from '@/lib/music/scale'
 import { figureText } from '@/lib/notation/figureNotation'
 import { satbMei, type SatbEvent } from '@/lib/notation/satbMei'
@@ -15,6 +17,7 @@ import { markSlot, type ScoreCursor } from '@/lib/notation/scoreCursor'
 import { satbProfile } from '@/lib/notation/verovio'
 
 import { analysisRows } from './analysis'
+import { CHANGED_NOTE } from './changedClasses'
 import type { CadenceQuestion } from './generate'
 
 /**
@@ -37,6 +40,14 @@ import type { CadenceQuestion } from './generate'
  * **The staff is not pressable until the answer is in.** Before that it would
  * sound the setting being asked for, which is the answer; afterwards it sounds
  * what the player actually wrote, which is most of why they wrote it down.
+ *
+ * **A wrong setting can be shown mended** — see `correctedSetting` — in the
+ * same place and at the same size as the player's own, switched between rather
+ * than stacked: two grand staves on a phone are two thumbnails. It is *a*
+ * correct setting, never *the* answer, because a cadence has many; and the
+ * notes it had to change are drawn in the accent colour, so what was wrong can
+ * be read off the page rather than found by comparing two pictures. Whichever
+ * is shown is what the staff sounds.
  */
 
 export interface SatzScoreProps {
@@ -47,6 +58,28 @@ export interface SatzScoreProps {
   cursor?: ScoreCursor | undefined
   onPlay?: (() => void) | undefined
   status?: PlaybackStatus
+  /** A correct setting close to the player's, once a wrong one is in. */
+  correction?: Satz | undefined
+  /** Whether the staff shows `correction` rather than what was written. */
+  showCorrection?: boolean
+  onPlayCorrection?: (() => void) | undefined
+  correctionStatus?: PlaybackStatus
+}
+
+/** Which voices of each chord differ between two settings. */
+function differences(
+  from: readonly (Voicing | undefined)[],
+  to: readonly Voicing[],
+): readonly (readonly VoiceId[])[] {
+  return to.map((voicing, index) => {
+    const before = from[index]
+    return VOICES.filter(
+      (voice) =>
+        before === undefined ||
+        chromaticValue(before[voice]) !== chromaticValue(voicing[voice]) ||
+        before[voice].letter !== voicing[voice].letter,
+    )
+  })
 }
 
 export function SatzScore({
@@ -56,6 +89,10 @@ export function SatzScore({
   cursor,
   onPlay,
   status,
+  correction,
+  showCorrection = false,
+  onPlayCorrection,
+  correctionStatus,
 }: SatzScoreProps) {
   const { t } = useTranslation('exercise')
   const names = useMusicNames()
@@ -88,6 +125,31 @@ export function SatzScore({
     analysis: revealed ? rows : { figures: rows.figures },
   })
 
+  const profile = satbProfile(progression.events.length, getKeySignature(signature).count)
+  const written = progression.events.map((_, index) => {
+    const voices = voicesAt(draft, index)
+    return VOICES.every((voice) => voices[voice] !== undefined)
+      ? (voices as Voicing)
+      : undefined
+  })
+  const changes =
+    correction === undefined ? [] : differences(written, correction.voicings)
+  const correctionMei =
+    correction === undefined
+      ? undefined
+      : satbMei({
+          keySignature: signature,
+          events: progression.events.map((event, index) => ({
+            voicing: correction.voicings[index] as Voicing,
+            ticks: event.ticks,
+            ...(event.held === true ? { held: true } : {}),
+            mark: changes[index] ?? [],
+          })),
+          analysis: rows,
+        })
+  const showing = showCorrection && correctionMei !== undefined
+  const shownMei = showing ? correctionMei : mei
+
   const spoken = progression.events
     .map((event, index) => {
       const bass = names.pitchSpoken(
@@ -116,19 +178,33 @@ export function SatzScore({
       </div>
 
       <PlayableScore
-        mei={mei}
-        label={t('satb.scoreLabel.staff', {
-          key: names.keyName(signature),
-          lage: names.lage(lage),
-          events: spoken,
-        })}
-        profile={satbProfile(progression.events.length, getKeySignature(signature).count)}
-        box={PHRASE_SCORE_BOX}
+        mei={shownMei}
+        label={
+          showing
+            ? t('satb.scoreLabel.corrected', {
+                key: names.keyName(signature),
+                count: changes.reduce((total, voices) => total + voices.length, 0),
+              })
+            : t('satb.scoreLabel.staff', {
+                key: names.keyName(signature),
+                lage: names.lage(lage),
+                events: spoken,
+              })
+        }
+        profile={profile}
+        box={showing ? cn(PHRASE_SCORE_BOX, CHANGED_NOTE) : PHRASE_SCORE_BOX}
         {...(cursor === undefined
           ? {}
           : { decorate: (svg: string) => markSlot(svg, cursor) })}
-        {...(onPlay === undefined ? {} : { onPlay })}
-        {...(status === undefined ? {} : { status })}
+        {...(showing
+          ? {
+              ...(onPlayCorrection === undefined ? {} : { onPlay: onPlayCorrection }),
+              ...(correctionStatus === undefined ? {} : { status: correctionStatus }),
+            }
+          : {
+              ...(onPlay === undefined ? {} : { onPlay }),
+              ...(status === undefined ? {} : { status }),
+            })}
       />
     </>
   )

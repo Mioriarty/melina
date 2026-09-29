@@ -4,7 +4,11 @@ import { useSearchParams } from 'react-router'
 
 import { exerciseTitleKey } from '@/config/curriculum'
 import { cadenceFilter } from '@/exercises/harmony-shared/attempt'
-import { cadenceSpec, type CadenceRoundSpec } from '@/exercises/harmony-shared/generate'
+import {
+  cadenceSpec,
+  correctedSetting,
+  type CadenceRoundSpec,
+} from '@/exercises/harmony-shared/generate'
 import { satzSchedule } from '@/exercises/harmony-shared/schedule'
 import type { CadenceSettings } from '@/exercises/harmony-shared/settings'
 import { LevelsScreen } from '@/exercises/shared/LevelsScreen'
@@ -80,6 +84,25 @@ export default function CadenceWritingExercise() {
 
   const audio = usePlayback(sound)
 
+  // A wrong setting is shown mended — the legal setting nearest to what was
+  // written. Memoised, because its playback hangs its silence on the sound's
+  // identity changing.
+  const correction = useMemo(
+    () =>
+      current === undefined || answered === undefined || answered.correct
+        ? undefined
+        : correctedSetting(current, answered.chosen),
+    [answered, current],
+  )
+  const correctionSound = useCallback(
+    () =>
+      current === undefined || correction === undefined
+        ? Promise.resolve()
+        : playStruck(satzSchedule(correction, current.tempo)),
+    [correction, current],
+  )
+  const correctionAudio = usePlayback(correctionSound)
+
   useEffect(preloadEngraver, [])
 
   if (settings === undefined || spec === undefined) {
@@ -151,6 +174,9 @@ export default function CadenceWritingExercise() {
       question={question}
       onPlay={audio.play}
       playStatus={audio.status}
+      correction={correction}
+      onPlayCorrection={correctionAudio.play}
+      correctionStatus={correctionAudio.status}
       onAnswer={round.answer}
       onNext={round.next}
       onQuit={round.toLevels}

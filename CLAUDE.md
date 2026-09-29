@@ -993,8 +993,20 @@ the Satzfehler the level names, of which **only errors fail**. A level names
 rule families (parallels, spacing, doubling, resolutions) — weaknesses, not
 rungs. `cadenceConstraints` lets the prompt's Lage outrank a block's own
 soprano, for both generator and attempt read-back. Nothing sounds until the
-answer is in; then the staff sounds what the player wrote. No model answer is
-drawn.
+answer is in; then the staff sounds what the player wrote.
+
+**A wrong setting is shown mended, not replaced** (`correctedSetting`): the
+voicing search run again under the question's own constraints with the
+player's setting as `near` — a flat cost per changed note — so it finds the
+legal setting that keeps the most of theirs. The rules are hard constraints in
+that search, so however strong the pull the result is always graded correct
+(`rules.test.ts` holds it to the player's own verdict). It is labelled _a_
+correct setting, never _the_ answer. A switch (**Corrected | Yours**) in the
+findings area's first line flips the one staff between the two — stacked, two
+grand staves were thumbnails on a phone — opening on the correction, and the
+notes it changed are marked `@type="changed"` and drawn in the accent colour
+(`CHANGED_NOTE`: `fill` for noteheads, `color` for stems). Whichever is shown is
+what the staff sounds.
 
 `SatbKeyboard`: seven letter keys, with `placedPitch` following each voice from
 the chord before, and one one-shot **other octave** switch (a voice's compass

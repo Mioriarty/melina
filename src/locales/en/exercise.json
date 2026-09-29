@@ -485,8 +485,13 @@
     "scoreLabel": {
       "staff": "A cadence in {{key}}, beginning in {{lage}}: {{events}}",
       "plain": "{{bass}}",
-      "figured": "{{bass}} with {{figure}}"
-    }
+      "figured": "{{bass}} with {{figure}}",
+      "corrected_one": "A correct setting in {{key}}, one note changed from yours",
+      "corrected_other": "A correct setting in {{key}}, {{count}} notes changed from yours"
+    },
+    "yours": "Yours",
+    "corrected": "Corrected",
+    "toggle": "Which setting the staff shows"
   },
   "stufen": {
     "keyboard": {
