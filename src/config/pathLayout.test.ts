@@ -428,6 +428,19 @@ describe('path layout', () => {
     for (const mark of MUSIC) expect(mark.opacity).toBeLessThan(0.22)
   })
 
+  it('keeps notation off the route where it runs down the middle', () => {
+    // Between the soprano and the Stufen the channel is not empty — the line
+    // from cadence writing to the bass runs down it — so a mark there would sit
+    // on the route and touch both labels. Regression guard for a ♯ that did.
+    const at = (id: string) => PATH_NODES.find((node) => node.stationId === id)!
+    const top = at('harmony/cadence').y
+    const bottom = at('harmony/bass').y
+    for (const mark of MUSIC) {
+      const inChannel = mark.x > 40 && mark.x < 60
+      expect(inChannel && mark.y > top && mark.y < bottom, mark.id).toBe(false)
+    }
+  })
+
   it('keeps notation upright enough to read as notation', () => {
     for (const mark of MUSIC) expect(Math.abs(mark.rotation)).toBeLessThanOrEqual(11)
   })

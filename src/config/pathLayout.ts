@@ -187,14 +187,18 @@ export const PATH_NODES: readonly PathNodePosition[] = [
   // little lower in the middle, where it cannot stand level with either or its
   // label would meet theirs. All three join chorale dictation below, which is
   // every voice at once.
-  { stationId: 'harmony/soprano', x: 24, y: 3140 },
-  { stationId: 'harmony/stufen', x: 76, y: 3190 },
-  { stationId: 'harmony/bass', x: 50, y: 3390 },
-  { stationId: 'harmony/chorale', x: 50, y: 3690 },
-  { stationId: 'harmonic-prediction', x: 68, y: 3910 },
-  { stationId: 'harmonic-completion', x: 34, y: 4175 },
-  { stationId: 'counterpoint', x: 68, y: 4410 },
-  { stationId: 'daily', x: 32, y: 4700 },
+  //
+  // The Stufen stand a touch *higher* than the soprano, not lower: their title
+  // is the one that wraps to two lines on a phone, so theirs is the label the
+  // bass's medallion has to clear, and the bass sits as high as that allows.
+  { stationId: 'harmony/stufen', x: 76, y: 3100 },
+  { stationId: 'harmony/soprano', x: 24, y: 3120 },
+  { stationId: 'harmony/bass', x: 50, y: 3280 },
+  { stationId: 'harmony/chorale', x: 50, y: 3540 },
+  { stationId: 'harmonic-prediction', x: 68, y: 3760 },
+  { stationId: 'harmonic-completion', x: 34, y: 4025 },
+  { stationId: 'counterpoint', x: 68, y: 4260 },
+  { stationId: 'daily', x: 32, y: 4550 },
 ]
 
 /**
@@ -209,6 +213,13 @@ export const PATH_NODES: readonly PathNodePosition[] = [
 export interface PathEdge {
   from: string
   to: string
+  /**
+   * Hold the line vertical until near the end, then turn in. For a join that
+   * has to pass *beside* a station between its ends — the outer dictations
+   * merging under the bass — where the ordinary mid-way bend would cut across
+   * that station's label.
+   */
+  late?: true
 }
 
 export const PATH_EDGES: readonly PathEdge[] = [
@@ -236,9 +247,9 @@ export const PATH_EDGES: readonly PathEdge[] = [
   { from: 'harmony/cadence', to: 'harmony/soprano' },
   { from: 'harmony/cadence', to: 'harmony/bass' },
   { from: 'harmony/cadence', to: 'harmony/stufen' },
-  { from: 'harmony/soprano', to: 'harmony/chorale' },
+  { from: 'harmony/soprano', to: 'harmony/chorale', late: true },
   { from: 'harmony/bass', to: 'harmony/chorale' },
-  { from: 'harmony/stufen', to: 'harmony/chorale' },
+  { from: 'harmony/stufen', to: 'harmony/chorale', late: true },
   { from: 'harmony/chorale', to: 'harmonic-prediction' },
   // **Thoroughbass is off the path, joined only to itself.** Nothing leads
   // into it and nothing leads out, so `PATH_EDGES` has exactly two components
@@ -274,16 +285,23 @@ export const CONNECTOR_ARRIVE = MEDALLION_SIZE / 2 + 14
  * Strokes use `vector-effect="non-scaling-stroke"` so the dashes stay round
  * and evenly spaced instead of being stretched by the horizontal scale.
  */
-export function connectorPath(from: PathNodePosition, to: PathNodePosition): string {
+export function connectorPath(
+  from: PathNodePosition,
+  to: PathNodePosition,
+  late = false,
+): string {
   const startY = from.y + CONNECTOR_LEAVE
   const endY = to.y - CONNECTOR_ARRIVE
+  const span = endY - startY
   // Leave and arrive vertically, bending sideways in between: the S-curve
-  // that makes a serpentine read as one continuous route.
-  const bend = (endY - startY) * 0.45
+  // that makes a serpentine read as one continuous route. A late join keeps
+  // to its own side for most of the way and turns in over the last stretch.
+  const leave = span * (late ? 0.8 : 0.45)
+  const arrive = span * (late ? 0.15 : 0.45)
 
   return (
     `M ${from.x} ${startY}` +
-    ` C ${from.x} ${startY + bend} ${to.x} ${endY - bend} ${to.x} ${endY}`
+    ` C ${from.x} ${startY + leave} ${to.x} ${endY - arrive} ${to.x} ${endY}`
   )
 }
 
@@ -379,7 +397,7 @@ export const CONNECTORS: readonly { id: string; d: string }[] = PATH_EDGES.flatM
     // An edge naming a station with no position draws nothing rather than a
     // path full of NaN. `pathLayout.test.ts` asserts it never happens.
     if (from === undefined || to === undefined) return []
-    return [{ id: `${edge.from}-${edge.to}`, d: connectorPath(from, to) }]
+    return [{ id: `${edge.from}-${edge.to}`, d: connectorPath(from, to, edge.late) }]
   },
 )
 
@@ -440,6 +458,40 @@ function braidedAt(y: number): boolean {
 }
 
 /**
+ * Whether the route itself runs down the middle of the column at this depth.
+ *
+ * Where it does, the channel between two side-by-side stations is not free: it
+ * carries a connector — the line from cadence writing down to the bass, between
+ * the soprano and the Stufen — and a mark placed there sits on the route.
+ */
+function routeDownTheMiddle(y: number): boolean {
+  return PATH_EDGES.some((edge) => {
+    const from = POSITIONS.get(edge.from)
+    const to = POSITIONS.get(edge.to)
+    if (from === undefined || to === undefined) return false
+    const centred = Math.abs(from.x - 50) < 10 && Math.abs(to.x - 50) < 10
+    return centred && y > from.y && y < to.y
+  })
+}
+
+/**
+ * Whether a point falls on a station's label — the title and overline that
+ * hang below its medallion, as wide as `labelWidthPx` draws them at the
+ * reference width and as tall as a two-line title.
+ */
+function onLabel(x: number, y: number, size: number): boolean {
+  return PATH_NODES.some((node) => {
+    const half = labelWidthPx(node, REFERENCE_WIDTH) / 2 + size / 2
+    const top = node.y + MEDALLION_SIZE / 2 - size / 2
+    const bottom = node.y + MEDALLION_SIZE / 2 + LABEL_HEIGHT + size / 2
+    return Math.abs(toPx(x) - toPx(node.x)) < half && y > top && y < bottom
+  })
+}
+
+/** A two-line title and its overline, the tallest a label is drawn. */
+const LABEL_HEIGHT = 80
+
+/**
  * Pick an x on the opposite side of the column from whichever station sits at
  * this depth. Purely random placement clumps, and clumps land on the path;
  * pushing decorations into the outside of each bend balances the page and
@@ -457,7 +509,12 @@ function oppositeSide(
   middle?: readonly [number, number],
 ): number {
   if (middle !== undefined && braidedAt(y)) {
-    return randomBetween(random, middle[0], middle[1])
+    if (!routeDownTheMiddle(y)) return randomBetween(random, middle[0], middle[1])
+    // Both edges taken and the route down the middle: no side is the free
+    // one, so try either and let the caller keep whichever clears the most.
+    return random() < 0.5
+      ? randomBetween(random, near[0], near[1])
+      : randomBetween(random, far[0], far[1])
   }
 
   return nearestNode(y).x >= 50
@@ -536,6 +593,13 @@ function scatterSplats(seed: number, count: number): SplatDecoration[] {
   return splats
 }
 
+/**
+ * How many spots a mark tries before settling for the best of them. Generous,
+ * because beside the harmony triplet most of a band is taken and the clear
+ * spots — the outer edges above it — are a small target. Run once, at load.
+ */
+const MUSIC_ATTEMPTS = 80
+
 function scatterMusic(
   seed: number,
   count: number,
@@ -551,23 +615,36 @@ function scatterMusic(
     const [minSize, maxSize] = MUSIC_MARKS[name].size
     const size = randomBetween(random, minSize, maxSize)
 
+    // Where a band has no spot that clears everything — beside the harmony
+    // triplet every side is taken — the best attempt is kept rather than the
+    // last one: off any label first, then as far from a station as it got.
+    // Taking the last was how a ♯ ended up tucked behind a medallion.
     let x = 0
     let y = 0
-    for (let attempt = 0; attempt < 24; attempt += 1) {
-      y = DECOR_TOP + 60 + band * (i + randomBetween(random, 0.2, 0.8))
+    let best = Number.NEGATIVE_INFINITY
+    for (let attempt = 0; attempt < MUSIC_ATTEMPTS; attempt += 1) {
+      const tryY = DECOR_TOP + 60 + band * (i + randomBetween(random, 0.2, 0.8))
       // Notation stays inside the column — a clef half off the screen reads
       // as a mistake, where a splat bleeding off the edge reads as intent.
       // Beside the braid the only room left is between its two tracks.
-      x = oppositeSide(random, y, [10, 34], [66, 90], [42, 58])
+      const tryX = oppositeSide(random, tryY, [10, 34], [66, 90], [42, 58])
 
-      if (distanceToNearestNode(x, y) < 110) continue
+      const distance = distanceToNearestNode(tryX, tryY)
       // Notation sitting on a splat turns into mud.
       const onSplat = splats.some(
         (splat) =>
-          Math.hypot(toPx(splat.x) - toPx(x), splat.y - y) <
+          Math.hypot(toPx(splat.x) - toPx(tryX), splat.y - tryY) <
           splat.size * 0.45 + size * 0.5,
       )
-      if (!onSplat) break
+      const clear = distance >= 110 && !onLabel(tryX, tryY, size) && !onSplat
+      const score =
+        (onLabel(tryX, tryY, size) ? -10_000 : 0) + (onSplat ? -1_000 : 0) + distance
+      if (score > best) {
+        best = score
+        x = tryX
+        y = tryY
+      }
+      if (clear) break
     }
 
     marks.push({

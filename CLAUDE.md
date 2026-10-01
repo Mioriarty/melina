@@ -270,8 +270,12 @@ From the top:
   line, which **splits three ways**: soprano dictation (left) and Stufen
   dictation (right) level with each other, bass dictation lower in the middle —
   low enough not to stand level with either, or its label would meet theirs.
-  All three merge into chorale dictation (locked) straight under the bass, then
-  the planned categories to the daily round. A station on the centre line
+  The Stufen stand a touch higher than the soprano because their title wraps
+  to two lines on a phone and is the label the bass's medallion must clear. All
+  three merge into chorale dictation (locked) straight under the bass; the two
+  outer joins are `late` edges that hold their line and turn in near the end,
+  so they pass beside the bass's label rather than through it. Then the planned
+  categories to the daily round. A station on the centre line
   leans neither way, which is what the alternation guard allows for.
 - **Thoroughbass is an island**: its guide and two exercises, joined to each
   other and to nothing else, beside the main line. It is a subject taken up
@@ -314,7 +318,10 @@ decoration counts, no label overflowing at any width from 320px.
 
 Splats and notation are placed one per horizontal band, on the side opposite
 the nearest station (beside a braid, notation goes down the channel between the
-tracks). Splats come from `lib/utils/splat.ts`, seeded so they are identical on
+tracks) — unless the route itself runs down that channel, as it does between
+the soprano and the Stufen. Notation never lands on a label, and where a band
+has no clear spot the best of its attempts is kept rather than the last.
+Splats come from `lib/utils/splat.ts`, seeded so they are identical on
 every launch. The layer is **unclipped** — splats bleed off the column and only
 the viewport crops them — so parallax depth stays small or drift adds dead
 scroll. Parallax reads a single `--scroll` custom property that `PathView`
